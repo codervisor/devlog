@@ -5,15 +5,14 @@ import { Button, Layout, Menu, Tooltip, Typography } from 'antd';
 import {
   DashboardOutlined,
   FileTextOutlined,
-  PlusOutlined,
   LeftOutlined,
+  PlusOutlined,
   RightOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@devlog/types';
-import { OverviewStats } from '@/components';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
@@ -140,11 +139,28 @@ export function NavigationSidebar({
         borderRight: '1px solid #f0f0f0',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
       }}
     >
       <div className={styles.sidebarHeader}>
         <div className={styles.sidebarBrand}>
-          <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
+          {collapsed ? (
+            <Image
+              src="/devlog-logo.svg"
+              alt="Devlog Logo"
+              width={24}
+              height={24}
+              className={styles.sidebarBrandIcon}
+            />
+          ) : (
+            <Image
+              src="/devlog-logo-text.svg"
+              alt="Devlog Logo"
+              width={200}
+              height={24}
+              className={styles.sidebarBrandIcon}
+            />
+          )}
         </div>
       </div>
 
@@ -156,33 +172,38 @@ export function NavigationSidebar({
         onClick={handleMenuClick}
       />
 
-      <OverviewStats stats={stats || null} variant="compact" title="QUICK STATS" />
+      {/*<OverviewStats stats={stats || null} variant="compact" title="QUICK STATS" />*/}
 
       <div className={styles.sidebarFooter}>
         <div className={styles.sidebarFooterContent}>
-          <Tooltip
-            title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-            placement="top"
-          >
-            <WifiOutlined
-              style={{
-                color: connected ? '#52c41a' : '#ff4d4f',
-                fontSize: '16px',
-                cursor: 'default',
-              }}
-            />
-          </Tooltip>
-          {onToggle && (
-            <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
-              <Button
-                type="text"
-                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                onClick={onToggle}
-                className={styles.sidebarToggle}
-                size="small"
+          <div className={styles.sidebarFooterContentLeft}>
+            <Tooltip
+              title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
+              placement="top"
+            >
+              <WifiOutlined
+                style={{
+                  color: connected ? '#52c41a' : '#ff4d4f',
+                  fontSize: '16px',
+                  cursor: 'default',
+                }}
               />
             </Tooltip>
-          )}
+          </div>
+
+          <div className={styles.sidebarFooterContentRight}>
+            {onToggle && (
+              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
+                <Button
+                  type="text"
+                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
+                  onClick={onToggle}
+                  className={styles.sidebarToggle}
+                  size="small"
+                />
+              </Tooltip>
+            )}
+          </div>
         </div>
       </div>
     </Sider>
