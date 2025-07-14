@@ -21,9 +21,15 @@
 }
 
 .devlogListHeader {
-  padding: 12px 24px;
+  padding: 16px 24px;
   background: #fff;
-  height: 80px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.devlogStatsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .devlogTitleRow {

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Avatar, Col, Empty, FloatButton, List, Row, Skeleton, Tag, Typography } from 'antd';
+import { Avatar, Col, Empty, FloatButton, List, Row, Skeleton, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   Area,
@@ -24,12 +24,10 @@ import {
 } from '@/lib/devlog-ui-utils';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import { OverviewStats } from '@/components';
 import styles from './Dashboard.module.css';
 import { Gutter } from 'antd/es/grid/row';
-import classNames from 'classnames';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 interface DashboardProps {
   stats: DevlogStats | null;
@@ -81,21 +79,6 @@ export function Dashboard({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      {/* Fixed Header */}
-      <div className={styles.dashboardHeaderSection}>
-        <div className={styles.dashboardTitleRow}>
-          <div>
-            <Title level={2} className={styles.dashboardTitle}>
-              Dashboard
-            </Title>
-            <Paragraph type="secondary" className={styles.dashboardSubtitle}>
-              Overview of your development progress
-            </Paragraph>
-          </div>
-          <OverviewStats stats={stats} variant="detailed" />
-        </div>
-      </div>
-
       <div className="scrollable-content">
         {/* Charts Section */}
         <div className={styles.dashboardChartsSection}>

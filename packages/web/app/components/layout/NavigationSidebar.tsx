@@ -157,7 +157,7 @@ export function NavigationSidebar({
             <Image
               src="/devlog-logo-text.svg"
               alt="Devlog Logo"
-              width={200}
+              width={(200 / 64) * 48}
               height={24}
               className={styles.sidebarBrandIcon}
             />
@@ -188,10 +188,8 @@ export function NavigationSidebar({
                 }}
               />
             </Tooltip>
-            
-            {stats && (
-              <OverviewStats stats={stats} variant="icon" />
-            )}
+
+            {stats && <OverviewStats stats={stats} variant="icon" />}
           </div>
 
           <div className={styles.sidebarFooterContentRight}>

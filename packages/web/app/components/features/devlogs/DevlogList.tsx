@@ -27,41 +27,6 @@ interface DevlogListProps {
 }
 
 export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: DevlogListProps) {
-  // Calculate stats from devlogs array
-  const calculateStats = (): DevlogStats => {
-    const byStatus = devlogs.reduce(
-      (acc, devlog) => {
-        acc[devlog.status] = (acc[devlog.status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<DevlogStatus, number>,
-    );
-
-    const byType = devlogs.reduce(
-      (acc, devlog) => {
-        acc[devlog.type] = (acc[devlog.type] || 0) + 1;
-        return acc;
-      },
-      {} as Record<DevlogType, number>,
-    );
-
-    const byPriority = devlogs.reduce(
-      (acc, devlog) => {
-        acc[devlog.priority] = (acc[devlog.priority] || 0) + 1;
-        return acc;
-      },
-      {} as Record<DevlogPriority, number>,
-    );
-
-    return {
-      totalEntries: devlogs.length,
-      byStatus,
-      byType,
-      byPriority,
-    };
-  };
-
-  const stats = calculateStats();
   const columns: ColumnsType<DevlogEntry> = [
     {
       title: 'ID',
@@ -208,27 +173,6 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: D
   if (loading) {
     return (
       <div className={styles.devlogListContainer}>
-        {/* Sticky Header with Summary Skeleton */}
-        <div className="page-header-sticky">
-          <div className={styles.devlogListHeader}>
-            <div className={styles.devlogTitleRow}>
-              <div>
-                <Title level={2} className={styles.devlogListTitle}>
-                  All Devlogs
-                </Title>
-                <Text type="secondary">List of all development items</Text>
-              </div>
-              {/* OverviewStats skeleton */}
-              <div className={styles.skeletonStats}>
-                <Skeleton.Button style={{ width: '120px', height: '32px' }} active />
-                <Skeleton.Button style={{ width: '120px', height: '32px' }} active />
-                <Skeleton.Button style={{ width: '120px', height: '32px' }} active />
-                <Skeleton.Button style={{ width: '120px', height: '32px' }} active />
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className={styles.devlogListTable}>
           {/* Table skeleton */}
           <Table
@@ -355,21 +299,6 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: D
 
   return (
     <div className={styles.devlogListContainer}>
-      {/* Sticky Header with Summary */}
-      <div className="page-header-sticky">
-        <div className={styles.devlogListHeader}>
-          <div className={styles.devlogTitleRow}>
-            <div>
-              <Title level={2} className={styles.devlogListTitle}>
-                All Devlogs
-              </Title>
-              <Text type="secondary">List of all development items</Text>
-            </div>
-            <OverviewStats stats={stats} variant="detailed" />
-          </div>
-        </div>
-      </div>
-
       <div className={styles.devlogListTable}>
         {devlogs.length === 0 ? (
           <Empty description="No devlogs found" style={{ padding: '40px' }} />
@@ -378,12 +307,12 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: D
             columns={columns}
             dataSource={devlogs}
             rowKey="id"
-            scroll={{ x: 1200, y: 'calc(100vh - 300px)' }}
+            scroll={{ x: 1200, y: 'calc(100vh - 64px - 24px)' }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showQuickJumper: true,
               showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} devlogs`,
+              responsive: true,
             }}
             size="middle"
             onHeaderRow={() => ({

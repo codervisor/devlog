@@ -14,10 +14,6 @@ interface PageLayoutProps {
    */
   actions?: React.ReactNode;
   /**
-   * Whether to show the default navigation breadcrumb (true by default)
-   */
-  showBreadcrumb?: boolean;
-  /**
    * Custom header content that replaces the entire breadcrumb area
    */
   headerContent?: React.ReactNode;
@@ -35,7 +31,6 @@ export function PageLayout({
   children,
   breadcrumb,
   actions,
-  showBreadcrumb = true,
   headerContent,
   className = '',
   stickyHeader = true,
@@ -50,28 +45,17 @@ export function PageLayout({
     );
   }
 
-  // If no breadcrumb should be shown and no actions, render children directly
-  if (!showBreadcrumb && !actions) {
-    return (
-      <div className={`page-layout scrollable-content ${className}`}>
-        <div className="page-content scrollable-content">{children}</div>
-      </div>
-    );
-  }
-
   // Default layout with breadcrumb and/or actions
   return (
     <div className={`page-layout scrollable-content ${className}`}>
-      {(showBreadcrumb || actions) && (
-        <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>
-          <div className="page-header-content">
-            <div className="page-header-left">
-              {showBreadcrumb && (breadcrumb || <NavigationBreadcrumb />)}
-            </div>
-            {actions && <div className="page-header-right">{actions}</div>}
+      <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>
+        <div className="page-header-content">
+          <div className="page-header-left">
+            {breadcrumb || <NavigationBreadcrumb />}
           </div>
+          {actions && <div className="page-header-right">{actions}</div>}
         </div>
-      )}
+      </div>
       <div className="page-content scrollable-content">{children}</div>
     </div>
   );

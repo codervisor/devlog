@@ -557,8 +557,26 @@
       "priority": "medium",
       "createdAt": "2025-07-14T15:06:05.770Z",
       "updatedAt": "2025-07-14T15:06:14.469Z"
+    },
+    "92": {
+      "filename": "092-optimize-ui-layout-by-moving-breadcrumbs-to-header.json",
+      "title": "Optimize UI layout by moving breadcrumbs to header and removing duplicate titles",
+      "status": "done",
+      "type": "refactor",
+      "priority": "medium",
+      "createdAt": "2025-07-14T15:11:18.078Z",
+      "updatedAt": "2025-07-14T15:25:06.650Z"
+    },
+    "93": {
+      "filename": "093-fix-vertical-alignment-issues-in-navigationbreadcr.json",
+      "title": "Fix vertical alignment issues in NavigationBreadcrumb component",
+      "status": "done",
+      "type": "bugfix",
+      "priority": "medium",
+      "createdAt": "2025-07-14T15:37:07.077Z",
+      "updatedAt": "2025-07-14T15:51:18.258Z"
     }
   },
-  "lastId": 91,
+  "lastId": 93,
   "version": "1.0.0"
 }

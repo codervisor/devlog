@@ -4,6 +4,7 @@ import React from 'react';
 import { Breadcrumb } from 'antd';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { HomeIcon } from 'lucide-react';
 
 export function NavigationBreadcrumb() {
   const pathname = usePathname();
@@ -11,7 +12,11 @@ export function NavigationBreadcrumb() {
   const getBreadcrumbItems = () => {
     const items = [
       {
-        title: <Link href="/">Dashboard</Link>,
+        title: (
+          <Link href="/">
+            <HomeIcon size={16} />
+          </Link>
+        ),
       },
     ];
 
@@ -26,7 +31,7 @@ export function NavigationBreadcrumb() {
         },
         {
           title: <span>Create</span>,
-        }
+        },
       );
     } else if (pathname.startsWith('/devlogs/') && pathname !== '/devlogs/create') {
       const id = pathname.split('/')[2];
@@ -36,22 +41,17 @@ export function NavigationBreadcrumb() {
         },
         {
           title: <span>Devlog #{id}</span>,
-        }
+        },
       );
     }
 
     return items;
   };
 
-  // Only show breadcrumb if we're not on the homepage
-  if (pathname === '/') {
-    return null;
-  }
-
   return (
-    <Breadcrumb
-      className="navigation-breadcrumb"
-      items={getBreadcrumbItems()}
+    <Breadcrumb 
+      className="navigation-breadcrumb" 
+      items={getBreadcrumbItems()} 
     />
   );
 }

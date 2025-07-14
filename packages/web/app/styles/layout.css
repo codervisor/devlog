@@ -45,7 +45,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  min-height: 48px;
+  border-bottom: 1px solid #e8e8e8;
+  height: 64px;
 }
 
 .page-header-left {
@@ -74,7 +75,6 @@
   top: 0;
   z-index: 10;
   background-color: #fff;
-  border-bottom: 1px solid #e8e8e8;
   padding: 0;
   margin: 0;
   -webkit-backdrop-filter: blur(8px);
@@ -233,6 +233,21 @@
 /* Navigation breadcrumb styles */
 .navigation-breadcrumb {
   margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Fix breadcrumb item alignment */
+.navigation-breadcrumb .ant-breadcrumb-link {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* Ensure all breadcrumb items are properly aligned */
+.navigation-breadcrumb .ant-breadcrumb-separator {
+  display: flex;
+  align-items: center;
 }
 
 /* Breadcrumb with tags layout */

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Dashboard, PageLayout } from '@/components';
+import { Dashboard, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { DevlogStats, DevlogEntry, TimeSeriesStats } from '@devlog/types';
 import { useRouter } from 'next/navigation';
@@ -56,8 +56,10 @@ export function DashboardPage() {
     router.push(`/devlogs/${devlog.id}`);
   };
 
+  const actions = stats ? <OverviewStats stats={stats} variant="detailed" /> : null;
+
   return (
-    <PageLayout showBreadcrumb={false}>
+    <PageLayout actions={actions}>
       <Dashboard
         stats={stats}
         timeSeriesData={timeSeriesData}

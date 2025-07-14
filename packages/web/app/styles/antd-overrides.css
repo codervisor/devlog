@@ -88,3 +88,28 @@
 .ant-table-wrapper .ant-table-thead > tr > th {
     background: #fff;
 }
+
+/* Breadcrumb alignment fixes */
+.ant-breadcrumb {
+    display: flex;
+    align-items: center;
+    line-height: 1.5;
+}
+
+.ant-breadcrumb ol li,
+.ant-breadcrumb ol li a {
+    display: flex;
+    align-items: center;
+}
+
+.ant-breadcrumb .ant-breadcrumb-link {
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.ant-breadcrumb .ant-breadcrumb-separator {
+    display: flex;
+    align-items: center;
+    margin: 0 8px;
+}
