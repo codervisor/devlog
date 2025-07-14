@@ -19,14 +19,10 @@ export function Header({ connected, sidebarCollapsed, onSidebarToggle }: HeaderP
     <AntHeader className={styles.headerContainer}>
       <div className={styles.headerLeft}>
         {onSidebarToggle && (
-          <Button
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={onSidebarToggle}
-          />
+          <Button type="text" icon={<MenuOutlined />} onClick={onSidebarToggle} />
         )}
         <Typography.Title level={3} className={styles.headerTitle}>
-          Devlog Dashboard
+          Dashboard
         </Typography.Title>
       </div>
 

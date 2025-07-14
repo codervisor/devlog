@@ -57,7 +57,7 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (!mounted) return;
-    
+
     switch (key) {
       case 'dashboard':
         router.push('/');
@@ -88,16 +88,16 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
       >
         <div className={styles.sidebarHeader}>
           <div className={styles.sidebarBrand}>
-            <Image 
-              src="/devlog-logo.svg" 
-              alt="Devlog Logo" 
-              width={24} 
-              height={24} 
+            <Image
+              src="/devlog-logo-text.svg"
+              alt="Devlog Logo"
+              width={240}
+              height={24}
               className={styles.sidebarBrandIcon}
             />
-            <Title level={3} className={styles.sidebarBrandTitle}>
+            {/* <Title level={3} className={styles.sidebarBrandTitle}>
               Devlog
-            </Title>
+            </Title> */}
           </div>
           <Text type="secondary">Development Tracker</Text>
         </div>
@@ -120,18 +120,9 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
     >
       <div className={styles.sidebarHeader}>
         <div className={styles.sidebarBrand}>
-          <Image 
-            src="/devlog-logo.svg" 
-            alt="Devlog Logo" 
-            width={24} 
-            height={24} 
-            className={styles.sidebarBrandIcon}
-          />
-          <Title level={3} className={styles.sidebarBrandTitle}>
-            Devlog
-          </Title>
+          <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
         </div>
-        <Text type="secondary">Development Tracker</Text>
+        <Text type="secondary">AI Development Tracker</Text>
       </div>
 
       <Menu
@@ -142,11 +133,7 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
         onClick={handleMenuClick}
       />
 
-      <OverviewStats 
-        stats={stats || null} 
-        variant="compact" 
-        title="QUICK STATS" 
-      />
+      <OverviewStats stats={stats || null} variant="compact" title="QUICK STATS" />
     </Sider>
   );
 }
