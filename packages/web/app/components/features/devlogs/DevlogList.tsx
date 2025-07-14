@@ -307,7 +307,7 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: D
             columns={columns}
             dataSource={devlogs}
             rowKey="id"
-            scroll={{ x: 1200, y: 'calc(100vh - 64px - 24px)' }}
+            scroll={{ x: 1200, y: 'calc(100vh - 64px - 56px - 48px)' }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
