@@ -1,0 +1,40 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="progGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#93c5fd" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="progGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="progGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <!-- Document stack -->
+  <rect x="12" y="12" width="32" height="38" rx="4" fill="url(#progGrad1)"/>
+  <rect x="16" y="16" width="32" height="38" rx="4" fill="url(#progGrad2)"/>
+  <rect x="20" y="20" width="32" height="38" rx="4" fill="url(#progGrad3)"/>
+  <!-- Progress circles on right -->
+  <circle cx="56" cy="20" r="3" fill="#22c55e"/>
+  <circle cx="56" cy="32" r="3" fill="#60a5fa"/>
+  <circle cx="56" cy="44" r="3" fill="#e5e7eb"/>
+  <!-- Progress lines -->
+  <line x1="56" y1="23" x2="56" y2="29" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="56" y1="35" x2="56" y2="41" stroke="#94a3b8" stroke-width="2"/>
+  <!-- Connection to documents -->
+  <line x1="52" y1="20" x2="44" y2="24" stroke="#22c55e" stroke-width="1" opacity="0.4"/>
+  <line x1="52" y1="32" x2="48" y2="34" stroke="#60a5fa" stroke-width="1" opacity="0.4"/>
+  <line x1="52" y1="44" x2="52" y2="44" stroke="#e5e7eb" stroke-width="1" opacity="0.4"/>
+  <!-- Status indicators inside documents -->
+  <circle cx="24" cy="26" r="1" fill="#22c55e" opacity="0.8"/>
+  <circle cx="24" cy="38" r="1" fill="#60a5fa" opacity="0.8"/>
+  <circle cx="24" cy="50" r="1" fill="#e5e7eb" opacity="0.8"/>
+  <!-- Content lines -->
+  <rect x="28" y="24" width="16" height="2" rx="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="28" y="28" width="12" height="2" rx="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="28" y="36" width="18" height="2" rx="1" fill="#ffffff" opacity="0.8"/>
+  <rect x="28" y="40" width="14" height="2" rx="1" fill="#ffffff" opacity="0.8"/>
+</svg>

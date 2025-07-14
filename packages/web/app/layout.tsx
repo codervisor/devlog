@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Devlog Management',
   description: 'Development log tracking and management dashboard',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

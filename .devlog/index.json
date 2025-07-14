@@ -494,8 +494,17 @@
       "priority": "high",
       "createdAt": "2025-07-11T05:50:17.797Z",
       "updatedAt": "2025-07-11T05:59:33.921Z"
+    },
+    "85": {
+      "filename": "085-add-devlog-logo-svg-as-favicon-for-devlog-web-pack.json",
+      "title": "Add devlog-logo.svg as favicon for @devlog/web package",
+      "status": "done",
+      "type": "task",
+      "priority": "medium",
+      "createdAt": "2025-07-14T07:20:12.757Z",
+      "updatedAt": "2025-07-14T07:20:47.098Z"
     }
   },
-  "lastId": 84,
+  "lastId": 85,
   "version": "1.0.0"
 }
