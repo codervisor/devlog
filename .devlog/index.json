@@ -548,8 +548,17 @@
       "priority": "medium",
       "createdAt": "2025-07-14T14:25:09.663Z",
       "updatedAt": "2025-07-14T14:39:18.087Z"
+    },
+    "91": {
+      "filename": "091-add-quick-stats-icon-with-popover-to-navigationsid.json",
+      "title": "Add Quick Stats icon with popover to NavigationSidebar footer",
+      "status": "done",
+      "type": "feature",
+      "priority": "medium",
+      "createdAt": "2025-07-14T15:06:05.770Z",
+      "updatedAt": "2025-07-14T15:06:14.469Z"
     }
   },
-  "lastId": 90,
+  "lastId": 91,
   "version": "1.0.0"
 }

@@ -13,6 +13,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@devlog/types';
+import { OverviewStats } from '@/components';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
@@ -172,8 +173,6 @@ export function NavigationSidebar({
         onClick={handleMenuClick}
       />
 
-      {/*<OverviewStats stats={stats || null} variant="compact" title="QUICK STATS" />*/}
-
       <div className={styles.sidebarFooter}>
         <div className={styles.sidebarFooterContent}>
           <div className={styles.sidebarFooterContentLeft}>
@@ -189,6 +188,10 @@ export function NavigationSidebar({
                 }}
               />
             </Tooltip>
+            
+            {stats && (
+              <OverviewStats stats={stats} variant="icon" />
+            )}
           </div>
 
           <div className={styles.sidebarFooterContentRight}>

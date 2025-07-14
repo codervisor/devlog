@@ -6,7 +6,8 @@ import {
   NumberOutlined, 
   PlusCircleOutlined,
   ClockCircleOutlined,
-  CheckCircleOutlined 
+  CheckCircleOutlined,
+  BarChartOutlined 
 } from '@ant-design/icons';
 import { Popover, Typography, Tooltip } from 'antd';
 import { DevlogStats } from '@devlog/types';
@@ -14,7 +15,7 @@ import styles from './OverviewStats.module.css';
 
 const { Title } = Typography;
 
-export type OverviewStatsVariant = 'detailed' | 'compact';
+export type OverviewStatsVariant = 'detailed' | 'compact' | 'icon';
 
 interface OverviewStatsProps {
   stats: DevlogStats | null;
@@ -193,6 +194,26 @@ export function OverviewStats({
           </Tooltip>
         </div>
       </div>
+    );
+  }
+
+  // Render icon variant (for footer)
+  if (variant === 'icon') {
+    return (
+      <Popover
+        content={detailedContent}
+        title="Quick Stats"
+        trigger="hover"
+        placement="top"
+      >
+        <BarChartOutlined
+          style={{
+            color: '#8c8c8c',
+            fontSize: '16px',
+            cursor: 'default',
+          }}
+        />
+      </Popover>
     );
   }
 

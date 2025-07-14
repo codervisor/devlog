@@ -55,9 +55,13 @@
 }
 
 .sidebarFooterContentLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .sidebarFooterContentRight {
+  flex-shrink: 0;
 }
 
 .connectionStatus {
