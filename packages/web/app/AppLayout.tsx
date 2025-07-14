@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Layout } from 'antd';
 import { DevlogStats } from '@devlog/types';
-import { NavigationSidebar, Header, ErrorBoundary, AppLayoutSkeleton } from '@/components';
+import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 
 const { Content } = Layout;
@@ -52,13 +52,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         <NavigationSidebar
           stats={stats}
           collapsed={sidebarCollapsed}
+          connected={connected}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
         <Layout>
-          <Header
-            connected={connected}
-            sidebarCollapsed={sidebarCollapsed}
-            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          />
           <Content className="app-content">
             <div className="app-content-wrapper">
               {error && (

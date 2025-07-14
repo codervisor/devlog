@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Typography } from 'antd';
-import { DashboardOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Layout, Menu, Tooltip, Typography } from 'antd';
+import {
+  DashboardOutlined,
+  FileTextOutlined,
+  PlusOutlined,
+  LeftOutlined,
+  RightOutlined,
+  WifiOutlined,
+} from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@devlog/types';
@@ -10,14 +17,21 @@ import { OverviewStats } from '@/components';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface NavigationSidebarProps {
   stats?: DevlogStats | null;
   collapsed?: boolean;
+  connected: boolean;
+  onToggle?: () => void;
 }
 
-export function NavigationSidebar({ stats, collapsed = false }: NavigationSidebarProps) {
+export function NavigationSidebar({
+  stats,
+  collapsed = false,
+  connected,
+  onToggle,
+}: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -77,29 +91,37 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
       <Sider
         width={280}
         collapsed={collapsed}
-        collapsedWidth={0}
+        collapsedWidth={60}
         breakpoint="md"
         collapsible={false}
         trigger={null}
         style={{
           background: '#fff',
           borderRight: '1px solid #f0f0f0',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <div className={styles.sidebarHeader}>
           <div className={styles.sidebarBrand}>
-            <Image
-              src="/devlog-logo-text.svg"
-              alt="Devlog Logo"
-              width={240}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-            {/* <Title level={3} className={styles.sidebarBrandTitle}>
-              Devlog
-            </Title> */}
+            <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
           </div>
-          <Text type="secondary">Development Tracker</Text>
+        </div>
+
+        <div className={styles.sidebarFooter}>
+          <div className={styles.sidebarFooterContent}>
+            {onToggle && (
+              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
+                <Button
+                  type="text"
+                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
+                  onClick={onToggle}
+                  className={styles.sidebarToggle}
+                  size="small"
+                />
+              </Tooltip>
+            )}
+          </div>
         </div>
       </Sider>
     );
@@ -109,20 +131,21 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
     <Sider
       width={280}
       collapsed={collapsed}
-      collapsedWidth={0}
+      collapsedWidth={60}
       breakpoint="md"
       collapsible={false}
       trigger={null}
       style={{
         background: '#fff',
         borderRight: '1px solid #f0f0f0',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <div className={styles.sidebarHeader}>
         <div className={styles.sidebarBrand}>
           <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
         </div>
-        <Text type="secondary">AI Development Tracker</Text>
       </div>
 
       <Menu
@@ -134,6 +157,34 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
       />
 
       <OverviewStats stats={stats || null} variant="compact" title="QUICK STATS" />
+
+      <div className={styles.sidebarFooter}>
+        <div className={styles.sidebarFooterContent}>
+          <Tooltip
+            title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
+            placement="top"
+          >
+            <WifiOutlined
+              style={{
+                color: connected ? '#52c41a' : '#ff4d4f',
+                fontSize: '16px',
+                cursor: 'default',
+              }}
+            />
+          </Tooltip>
+          {onToggle && (
+            <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
+              <Button
+                type="text"
+                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
+                onClick={onToggle}
+                className={styles.sidebarToggle}
+                size="small"
+              />
+            </Tooltip>
+          )}
+        </div>
+      </div>
     </Sider>
   );
 }

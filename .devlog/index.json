@@ -539,8 +539,17 @@
       "priority": "medium",
       "createdAt": "2025-07-14T13:29:46.311Z",
       "updatedAt": "2025-07-14T13:31:46.613Z"
+    },
+    "90": {
+      "filename": "090-remove-header-component-and-migrate-sidebar-toggle.json",
+      "title": "Remove Header component and migrate sidebar toggle to NavigationSidebar",
+      "status": "done",
+      "type": "refactor",
+      "priority": "medium",
+      "createdAt": "2025-07-14T14:25:09.663Z",
+      "updatedAt": "2025-07-14T14:39:18.087Z"
     }
   },
-  "lastId": 89,
+  "lastId": 90,
   "version": "1.0.0"
 }

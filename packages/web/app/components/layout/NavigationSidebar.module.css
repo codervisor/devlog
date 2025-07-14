@@ -1,7 +1,7 @@
 /* NavigationSidebar Component Styles */
 
 .sidebarHeader {
-  padding: 24px 24px 16px;
+  padding: 4px 16px;
 }
 
 .sidebarBrand {
@@ -35,6 +35,58 @@
   background: #fafafa;
 }
 
+.sidebarFooter {
+  margin-top: auto;
+  padding: 16px 24px 24px;
+  border-top: 1px solid #f0f0f0;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+}
+
+.sidebarFooterContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.connectionStatus {
+  flex: 1;
+}
+
+.connectionText {
+  font-size: 12px;
+}
+
+.sidebarToggle {
+  color: #6b7280;
+  border: none;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.sidebarToggle:hover {
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+/* Collapsed sidebar styles */
+:global(.ant-layout-sider-collapsed) .sidebarHeader,
+:global(.ant-layout-sider-collapsed) .sidebarStats {
+  display: none;
+}
+
+:global(.ant-layout-sider-collapsed) .sidebarFooter {
+  padding: 16px 12px 24px;
+}
+
+:global(.ant-layout-sider-collapsed) .sidebarFooterContent {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
   .sidebarHeader {
@@ -43,5 +95,23 @@
 
   .sidebarStats {
     padding: 16px 12px;
+  }
+
+  .sidebarFooter {
+    padding: 12px 16px 16px;
+  }
+
+  .sidebarFooterContent {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .connectionStatus {
+    justify-content: center;
+  }
+
+  .sidebarToggle {
+    align-self: center;
   }
 }
