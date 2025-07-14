@@ -503,8 +503,17 @@
       "priority": "medium",
       "createdAt": "2025-07-14T07:20:12.757Z",
       "updatedAt": "2025-07-14T07:20:47.098Z"
+    },
+    "86": {
+      "filename": "086-optimize-logo-margins-for-better-favicon-visibilit.json",
+      "title": "Optimize logo margins for better favicon visibility",
+      "status": "done",
+      "type": "task",
+      "priority": "medium",
+      "createdAt": "2025-07-14T07:23:46.197Z",
+      "updatedAt": "2025-07-14T07:24:36.163Z"
     }
   },
-  "lastId": 85,
+  "lastId": 86,
   "version": "1.0.0"
 }
