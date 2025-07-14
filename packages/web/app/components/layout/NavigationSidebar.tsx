@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Typography } from 'antd';
-import { CodeOutlined, DashboardOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
+import { DashboardOutlined, FileTextOutlined, PlusOutlined } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { DevlogStats } from '@devlog/types';
 import { OverviewStats } from '@/components';
 import styles from './NavigationSidebar.module.css';
@@ -87,7 +88,13 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
       >
         <div className={styles.sidebarHeader}>
           <div className={styles.sidebarBrand}>
-            <CodeOutlined className={styles.sidebarBrandIcon} />
+            <Image 
+              src="/devlog-logo.svg" 
+              alt="Devlog Logo" 
+              width={24} 
+              height={24} 
+              className={styles.sidebarBrandIcon}
+            />
             <Title level={3} className={styles.sidebarBrandTitle}>
               Devlog
             </Title>
@@ -113,7 +120,13 @@ export function NavigationSidebar({ stats, collapsed = false }: NavigationSideba
     >
       <div className={styles.sidebarHeader}>
         <div className={styles.sidebarBrand}>
-          <CodeOutlined className={styles.sidebarBrandIcon} />
+          <Image 
+            src="/devlog-logo.svg" 
+            alt="Devlog Logo" 
+            width={24} 
+            height={24} 
+            className={styles.sidebarBrandIcon}
+          />
           <Title level={3} className={styles.sidebarBrandTitle}>
             Devlog
           </Title>

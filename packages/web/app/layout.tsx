@@ -10,22 +10,16 @@ export const metadata: Metadata = {
   title: 'Devlog Management',
   description: 'Development log tracking and management dashboard',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/devlog-logo.svg',
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
         <ConfigProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
+          <AppLayout>{children}</AppLayout>
         </ConfigProvider>
       </body>
     </html>

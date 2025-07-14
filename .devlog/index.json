@@ -516,13 +516,31 @@
     "87": {
       "filename": "087-create-simplified-favicon-variations-from-terminal.json",
       "title": "Create simplified favicon variations from terminal logo design",
-      "status": "in-progress",
+      "status": "done",
       "type": "task",
       "priority": "medium",
       "createdAt": "2025-07-14T07:33:28.877Z",
-      "updatedAt": "2025-07-14T07:38:46.524Z"
+      "updatedAt": "2025-07-14T13:29:13.163Z"
+    },
+    "88": {
+      "filename": "088-reference-devlog-logo-svg-from-devlog-core-instead.json",
+      "title": "Reference devlog-logo.svg from @devlog/core instead of hardcoded copy in @devlog/web",
+      "status": "done",
+      "type": "refactor",
+      "priority": "medium",
+      "createdAt": "2025-07-14T13:05:34.567Z",
+      "updatedAt": "2025-07-14T13:09:08.032Z"
+    },
+    "89": {
+      "filename": "089-replace-sidebar-top-logo-with-devlog-logo-svg.json",
+      "title": "Replace sidebar top logo with devlog-logo.svg",
+      "status": "done",
+      "type": "task",
+      "priority": "medium",
+      "createdAt": "2025-07-14T13:29:46.311Z",
+      "updatedAt": "2025-07-14T13:31:46.613Z"
     }
   },
-  "lastId": 87,
+  "lastId": 89,
   "version": "1.0.0"
 }
