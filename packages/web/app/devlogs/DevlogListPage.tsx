@@ -30,9 +30,9 @@ export function DevlogListPage() {
     router.push('/devlogs/create');
   };
 
-  // Calculate stats from filtered devlogs
+  // Calculate stats from all devlogs (not filtered)
   const calculateStats = (): DevlogStats => {
-    const dataSource = filteredDevlogs;
+    const dataSource = devlogs;
     
     const byStatus = dataSource.reduce(
       (acc, devlog) => {

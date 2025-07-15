@@ -575,8 +575,17 @@
       "priority": "medium",
       "createdAt": "2025-07-14T15:37:07.077Z",
       "updatedAt": "2025-07-14T15:51:18.258Z"
+    },
+    "94": {
+      "filename": "094-fix-overview-stats-numbers-changing-when-filtering.json",
+      "title": "Fix overview stats numbers changing when filtering devlogs",
+      "status": "done",
+      "type": "bugfix",
+      "priority": "medium",
+      "createdAt": "2025-07-15T03:23:37.303Z",
+      "updatedAt": "2025-07-15T03:46:38.785Z"
     }
   },
-  "lastId": 93,
+  "lastId": 94,
   "version": "1.0.0"
 }
