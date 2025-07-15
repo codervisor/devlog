@@ -15,7 +15,7 @@ export * from './requests.js';
 export * from './storage.js';
 
 // Workspace isolation and management types
-export * from './workspace.js';
+// export * from './workspace.js';
 
 // Integration service and enterprise types
 export * from './integration.js';

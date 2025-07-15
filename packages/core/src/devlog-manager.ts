@@ -50,7 +50,7 @@ export class DevlogManager {
     const config = await this.configManager.loadConfig();
     console.debug('Initialized devlog config', config);
 
-    this.storageProvider = await StorageProviderFactory.create(config.storage);
+    this.storageProvider = await StorageProviderFactory.create(config.storage!);
     await this.storageProvider.initialize();
 
     // TODO: Initialize integration service if integrations are configured
@@ -150,38 +150,38 @@ export class DevlogManager {
     if (request.files !== undefined) updated.files = request.files;
 
     // Update enhanced context fields
-    if (request.businessContext !== undefined)
+    if (request.businessContext !== undefined && updated.context)
       updated.context.businessContext = request.businessContext;
-    if (request.technicalContext !== undefined)
+    if (request.technicalContext !== undefined && updated.context)
       updated.context.technicalContext = request.technicalContext;
-    if (request.acceptanceCriteria !== undefined)
+    if (request.acceptanceCriteria !== undefined && updated.context)
       updated.context.acceptanceCriteria = request.acceptanceCriteria;
-    if (request.initialInsights !== undefined)
+    if (request.initialInsights !== undefined && updated.aiContext)
       updated.aiContext.keyInsights = request.initialInsights;
-    if (request.relatedPatterns !== undefined)
+    if (request.relatedPatterns !== undefined && updated.aiContext)
       updated.aiContext.relatedPatterns = request.relatedPatterns;
 
     // Update AI context fields (embedded from updateAIContext functionality)
     let aiContextUpdated = false;
-    if (request.currentSummary !== undefined) {
+    if (request.currentSummary !== undefined && updated.aiContext) {
       updated.aiContext.currentSummary = request.currentSummary;
       aiContextUpdated = true;
     }
-    if (request.keyInsights !== undefined) {
+    if (request.keyInsights !== undefined && updated.aiContext) {
       updated.aiContext.keyInsights = request.keyInsights;
       aiContextUpdated = true;
     }
-    if (request.openQuestions !== undefined) {
+    if (request.openQuestions !== undefined && updated.aiContext) {
       updated.aiContext.openQuestions = request.openQuestions;
       aiContextUpdated = true;
     }
-    if (request.suggestedNextSteps !== undefined) {
+    if (request.suggestedNextSteps !== undefined && updated.aiContext) {
       updated.aiContext.suggestedNextSteps = request.suggestedNextSteps;
       aiContextUpdated = true;
     }
 
     // Update AI context metadata if any AI fields were modified
-    if (aiContextUpdated) {
+    if (aiContextUpdated && updated.aiContext) {
       updated.aiContext.lastAIUpdate = new Date().toISOString();
       updated.aiContext.contextVersion = (updated.aiContext.contextVersion || 0) + 1;
     }
@@ -417,10 +417,10 @@ export class DevlogManager {
     // Convert to updateDevlog call for consistency
     const updateRequest: UpdateDevlogRequest = {
       id,
-      currentSummary: context.currentSummary,
-      keyInsights: context.keyInsights,
-      openQuestions: context.openQuestions,
-      suggestedNextSteps: context.suggestedNextSteps,
+      currentSummary: context?.currentSummary,
+      keyInsights: context?.keyInsights,
+      openQuestions: context?.openQuestions,
+      suggestedNextSteps: context?.suggestedNextSteps,
     };
 
     return await this.updateDevlog(updateRequest);
@@ -454,7 +454,7 @@ export class DevlogManager {
     // 1. Direct text matching in title/description/context
     for (const entry of allEntries) {
       const entryText =
-        `${entry.title} ${entry.description} ${entry.context.businessContext || ''} ${entry.context.technicalContext || ''}`.toLowerCase();
+        `${entry.title} ${entry.description} ${entry.context?.businessContext || ''} ${entry.context?.technicalContext || ''}`.toLowerCase();
       const matchedTerms = searchTerms.filter(
         (term): term is string => term !== undefined && entryText.includes(term.toLowerCase()),
       );
@@ -470,7 +470,7 @@ export class DevlogManager {
 
     // 2. Same type entries (if not already included)
     const sameTypeEntries = allEntries.filter(
-      (entry) => entry.type === workType && !relatedEntries.some((r) => r.entry.id === entry.id),
+      (entry) => entry.type === workType && !relatedEntries.some((r) => r.entry.key === entry.key),
     );
 
     for (const entry of sameTypeEntries) {
@@ -483,13 +483,13 @@ export class DevlogManager {
 
     // 3. Keyword matching in notes and decisions
     for (const entry of allEntries) {
-      if (relatedEntries.some((r) => r.entry.id === entry.id)) continue;
+      if (relatedEntries.some((r) => r.entry.key === entry.key)) continue;
 
       const noteText = entry.notes
         .map((n) => n.content)
         .join(' ')
         .toLowerCase();
-      const decisionText = entry.context.decisions
+      const decisionText = (entry.context?.decisions || [])
         .map((d) => `${d.decision} ${d.rationale}`)
         .join(' ')
         .toLowerCase();

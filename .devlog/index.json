@@ -448,7 +448,7 @@
       "type": "bugfix",
       "priority": "high",
       "createdAt": "2025-07-10T15:11:15.344Z",
-      "updatedAt": "2025-07-10T15:17:15.866Z"
+      "updatedAt": "2025-07-15T04:31:29.165Z"
     },
     "80": {
       "filename": "080-design-human-intervention-and-ai-work-effort-track.json",
@@ -584,8 +584,17 @@
       "priority": "medium",
       "createdAt": "2025-07-15T03:23:37.303Z",
       "updatedAt": "2025-07-15T03:46:38.785Z"
+    },
+    "95": {
+      "filename": "095-improve-json-storage-index-json-resilience-for-con.json",
+      "title": "Improve JSON storage index.json resilience for concurrent AI agent access",
+      "status": "in-progress",
+      "type": "feature",
+      "priority": "high",
+      "createdAt": "2025-07-15T03:50:43.870Z",
+      "updatedAt": "2025-07-15T04:13:09.864Z"
     }
   },
-  "lastId": 94,
+  "lastId": 95,
   "version": "1.0.0"
 }

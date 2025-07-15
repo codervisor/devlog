@@ -7,7 +7,7 @@ import { GitHubIssue, CreateIssueRequest, UpdateIssueRequest } from './github-ap
 
 export interface DevlogMetadata {
   version: string;
-  devlogKey: string;
+  devlogKey?: string;
   notes: DevlogNote[];
   decisions: Decision[];
   context: {

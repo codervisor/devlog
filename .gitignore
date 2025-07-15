@@ -141,6 +141,7 @@ build/
 
 # Local development files
 .devlog-counter
+.devlog.backup*
 
 # Devlog configuration with credentials
 devlog.config.json

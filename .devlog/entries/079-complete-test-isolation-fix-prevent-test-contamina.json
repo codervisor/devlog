@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "high",
   "createdAt": "2025-07-10T15:11:15.344Z",
-  "updatedAt": "2025-07-10T15:17:15.866Z",
+  "updatedAt": "2025-07-15T04:31:29.165Z",
   "notes": [
     {
       "id": "891da28e-d181-468d-a6f9-f20f9c7a05cd",
@@ -23,6 +23,18 @@
         "packages/core/src/__tests__/devlog-manager.test.ts"
       ],
       "codeChanges": "Modified devlog-manager.test.ts beforeEach to: 1) Store originalCwd before changing directory, 2) Call await manager.initialize() while still in test directory, 3) Restore original directory in afterEach with safety check"
+    },
+    {
+      "id": "bb257c2a-5823-463f-b1a4-73f21282894c",
+      "timestamp": "2025-07-15T04:31:29.165Z",
+      "category": "solution",
+      "content": "✅ COMPLETED: Fixed JSON storage test failures caused by directory initialization issues and GitHub storage test mismatches.",
+      "files": [
+        "/home/marvin/projects/codervisor/devlog/packages/core/src/__tests__/json-storage.test.ts",
+        "/home/marvin/projects/codervisor/devlog/packages/core/src/utils/storage.ts",
+        "/home/marvin/projects/codervisor/devlog/packages/core/src/__tests__/github-storage.test.ts"
+      ],
+      "codeChanges": "Fixed multiple test issues: 1) JSON storage tests failing due to project root detection not recognizing package.json, 2) Added proper test isolation with temp directories and mock package.json creation, 3) Updated GitHub storage tests to match new native label/type behavior defaults, 4) Enhanced findProjectRoot to recognize basic project files like package.json as valid project roots."
     }
   ],
   "files": [],

@@ -145,23 +145,6 @@ export interface StorageProvider {
   getNextId(): Promise<DevlogId>;
 }
 
-// Internal Storage Index Types (for JSON storage implementation)
-export interface DevlogIndex {
-  entries: Record<string, DevlogIndexEntry>;
-  lastId: number;
-  version: string;
-}
-
-export interface DevlogIndexEntry {
-  filename: string;
-  title: string;
-  status: DevlogStatus;
-  type: DevlogType;
-  priority: DevlogPriority;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // Configuration Types
 export interface DevlogConfig {
   // Traditional single workspace mode (backward compatibility)

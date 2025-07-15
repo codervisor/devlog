@@ -35,17 +35,17 @@ describe('GitHubStorageProvider', () => {
   describe('buildSearchQuery', () => {
     it('should build basic search query', () => {
       const query = provider['buildSearchQuery']();
-      expect(query).toBe('repo:testorg/testrepo is:issue label:"devlog-type"');
+      expect(query).toBe('repo:testorg/testrepo is:issue label:"devlog"');
     });
 
     it('should build query with status filter', () => {
       const query = provider['buildSearchQuery']({ status: ['in-progress', 'done'] });
-      expect(query).toContain('(label:"devlog-status:in-progress" OR is:closed)');
+      expect(query).toContain('(is:open OR is:closed state:completed)');
     });
 
     it('should build query with type filter', () => {
       const query = provider['buildSearchQuery']({ type: ['feature', 'bugfix'] });
-      expect(query).toContain('(label:"devlog-type:feature" OR label:"devlog-type:bugfix")');
+      expect(query).toContain('(type:"enhancement" OR type:"bug")');
     });
 
     it('should build query with assignee filter', () => {
@@ -107,8 +107,9 @@ describe('GitHubStorageProvider', () => {
 
       const issueData = provider['dataMapper'].devlogToIssue(entry);
       expect(issueData.title).toBe('Test Feature');
-      expect(issueData.labels).toContain('devlog-type:feature');
-      expect(issueData.labels).toContain('devlog-priority:medium');
+      expect(issueData.labels).toContain('enhancement');
+      // Priority labels are not added when useNativeType is true
+      expect(issueData.type).toBe('feature'); // Native type field is used instead
     });
   });
 

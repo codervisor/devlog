@@ -8,11 +8,11 @@ import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, StorageConfig, Storag
  * Factory for creating storage providers based on configuration
  */
 export class StorageProviderFactory {
-  static async create(config: StorageConfig): Promise<StorageProvider> {
+  static async create(config?: StorageConfig): Promise<StorageProvider> {
     // Handle new storage strategies
-    switch (config.type) {
+    switch (config?.type) {
       case 'github':
-        if (!config.github) {
+        if (!config?.github) {
           throw new Error('GitHub configuration is required for github storage type');
         }
         const { GitHubStorageProvider } = await import('./github-storage.js');
@@ -33,7 +33,7 @@ export class StorageProviderFactory {
       case 'json':
       default:
         const { JsonStorageProvider } = await import('./json-storage.js');
-        return new JsonStorageProvider(config.json || {});
+        return new JsonStorageProvider(config?.json || {});
     }
   }
 }

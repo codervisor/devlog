@@ -57,6 +57,50 @@ export function findProjectRoot(startPath: string = process.cwd()): string {
       return currentDir;
     }
 
+    // Check for basic project indicators (package.json, etc.)
+    const basicIndicators = [
+      path.join(currentDir, 'package.json'),
+      path.join(currentDir, 'pyproject.toml'),
+      path.join(currentDir, 'Cargo.toml'),
+      path.join(currentDir, 'composer.json'),
+    ];
+
+    for (const indicator of basicIndicators) {
+      if (fs.existsSync(indicator)) {
+        // Found a basic project file, use this as fallback but continue looking for stronger indicators
+        const potentialRoot = currentDir;
+        
+        // Check parent directories for stronger indicators
+        let parentDir = path.dirname(currentDir);
+        let foundStrongerIndicator = false;
+
+        while (parentDir !== path.dirname(parentDir)) {
+          // Check for strong monorepo indicators in parent
+          const parentStrongIndicators = [
+            path.join(parentDir, 'pnpm-workspace.yaml'),
+            path.join(parentDir, 'lerna.json'),
+            path.join(parentDir, 'nx.json'),
+            path.join(parentDir, 'rush.json'),
+          ];
+
+          for (const strongIndicator of parentStrongIndicators) {
+            if (fs.existsSync(strongIndicator)) {
+              foundStrongerIndicator = true;
+              break;
+            }
+          }
+
+          if (foundStrongerIndicator) break;
+          parentDir = path.dirname(parentDir);
+        }
+
+        // If no stronger indicator found above, use this directory
+        if (!foundStrongerIndicator) {
+          return potentialRoot;
+        }
+      }
+    }
+
     // Check for git root (but continue searching if we find a monorepo indicator later)
     const gitDir = path.join(currentDir, '.git');
     let gitRoot: string | null = null;

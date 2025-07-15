@@ -51,7 +51,7 @@ export interface DevlogNote {
 
 export interface DevlogEntry {
   id?: DevlogId;
-  key: string; // Semantic key (e.g., "web-ui-issues-investigation")
+  key?: string; // Semantic key (e.g., "web-ui-issues-investigation")
   title: string;
   type: DevlogType;
   description: string;
@@ -61,14 +61,14 @@ export interface DevlogEntry {
   updatedAt: string;
   assignee?: string;
   notes: DevlogNote[];
-  files: string[];
-  relatedDevlogs: string[];
+  files?: string[];
+  relatedDevlogs?: string[];
 
   // Enhanced AI agent context
-  context: DevlogContext;
+  context?: DevlogContext;
 
   // AI-specific context for cross-session persistence
-  aiContext: AIContext;
+  aiContext?: AIContext;
 
   // Enterprise tool integration (optional for now)
   externalReferences?: ExternalReference[];
