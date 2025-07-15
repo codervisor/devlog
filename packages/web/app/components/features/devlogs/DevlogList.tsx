@@ -106,11 +106,6 @@ export function DevlogList({
           </Text>
         </Link>
       ),
-      onHeaderCell: (column) => ({
-        style: {
-          paddingLeft: '24px',
-        },
-      }),
     },
     {
       title: 'Title',
