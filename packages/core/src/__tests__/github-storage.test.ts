@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { GitHubStorageProvider } from '../storage/github-storage.js';
-import { GitHubStorageConfig, DevlogEntry } from '@devlog/types';
+import { GitHubStorageConfig, DevlogEntry } from '../types/index.js';
 
 // Mock fetch globally
 global.fetch = vi.fn();

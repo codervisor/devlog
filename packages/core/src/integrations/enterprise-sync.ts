@@ -287,15 +287,15 @@ export class EnterpriseSync {
   private formatDescriptionForJira(entry: DevlogEntry): string {
     let description = entry.description;
 
-    if (entry.context.businessContext) {
+    if (entry.context?.businessContext) {
       description += `\n\n*Business Context:* ${entry.context.businessContext}`;
     }
 
-    if (entry.context.technicalContext) {
+    if (entry.context?.technicalContext) {
       description += `\n\n*Technical Context:* ${entry.context.technicalContext}`;
     }
 
-    if (entry.context.acceptanceCriteria.length > 0) {
+    if (entry.context?.acceptanceCriteria && entry.context.acceptanceCriteria.length > 0) {
       description += `\n\n*Acceptance Criteria:*\n${entry.context.acceptanceCriteria.map((c) => `• ${c}`).join('\n')}`;
     }
 
@@ -305,15 +305,15 @@ export class EnterpriseSync {
   private formatDescriptionForADO(entry: DevlogEntry): string {
     let description = `<p>${entry.description}</p>`;
 
-    if (entry.context.businessContext) {
+    if (entry.context?.businessContext) {
       description += `<p><strong>Business Context:</strong> ${entry.context.businessContext}</p>`;
     }
 
-    if (entry.context.technicalContext) {
+    if (entry.context?.technicalContext) {
       description += `<p><strong>Technical Context:</strong> ${entry.context.technicalContext}</p>`;
     }
 
-    if (entry.context.acceptanceCriteria.length > 0) {
+    if (entry.context?.acceptanceCriteria && entry.context.acceptanceCriteria.length > 0) {
       description += `<p><strong>Acceptance Criteria:</strong></p><ul>${entry.context.acceptanceCriteria.map((c) => `<li>${c}</li>`).join('')}</ul>`;
     }
 
@@ -323,15 +323,15 @@ export class EnterpriseSync {
   private formatDescriptionForGitHub(entry: DevlogEntry): string {
     let description = entry.description;
 
-    if (entry.context.businessContext) {
+    if (entry.context?.businessContext) {
       description += `\n\n## Business Context\n${entry.context.businessContext}`;
     }
 
-    if (entry.context.technicalContext) {
+    if (entry.context?.technicalContext) {
       description += `\n\n## Technical Context\n${entry.context.technicalContext}`;
     }
 
-    if (entry.context.acceptanceCriteria.length > 0) {
+    if (entry.context?.acceptanceCriteria && entry.context.acceptanceCriteria.length > 0) {
       description += `\n\n## Acceptance Criteria\n${entry.context.acceptanceCriteria.map((c) => `- [ ] ${c}`).join('\n')}`;
     }
 

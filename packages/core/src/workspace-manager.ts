@@ -16,11 +16,6 @@ import {
     WorkspaceManager
  } from './types/index.js';
 
-// Import workspace types directly to avoid build issues
-import { 
-   
-} from './types/index.js';
-
 export interface WorkspaceManagerOptions {
   /** Path to the workspaces configuration file */
   configPath: string;
@@ -54,19 +49,20 @@ export class FileWorkspaceManager implements WorkspaceManager {
     
     try {
       const content = await fs.readFile(this.options.configPath, 'utf-8');
-      this.config = JSON.parse(content, (key, value) => {
+      const parsedConfig: WorkspacesConfig = JSON.parse(content, (key, value) => {
         // Parse date strings back to Date objects
         if (key === 'createdAt' || key === 'lastAccessedAt') {
           return new Date(value);
         }
         return value;
       });
-      return this.config;
+      this.config = parsedConfig;
+      return parsedConfig;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT' && this.options.createIfMissing) {
         return this.createDefaultConfig();
       }
-      throw new Error(`Failed to load workspace configuration: ${error.message}`);
+      throw new Error(`Failed to load workspace configuration: ${(error as Error).message}`);
     }
   }
   
@@ -90,7 +86,7 @@ export class FileWorkspaceManager implements WorkspaceManager {
     const defaultWorkspaceId = 'default';
     const now = new Date();
     
-    const defaultWorkspace: WorkspaceInfo = {
+    const defaultWorkspace: WorkspaceMetadata = {
       id: defaultWorkspaceId,
       name: 'Default Workspace',
       description: 'Default devlog workspace',
@@ -103,8 +99,9 @@ export class FileWorkspaceManager implements WorkspaceManager {
     
     const defaultStorage: StorageConfig = this.options.defaultWorkspaceConfig?.storage || {
       type: 'json',
-      config: {
-        filePath: './devlog.json'
+      json: {
+        directory: '.devlog',
+        global: false
       }
     };
     
@@ -133,12 +130,12 @@ export class FileWorkspaceManager implements WorkspaceManager {
     return config;
   }
   
-  async listWorkspaces(): Promise<WorkspaceInfo[]> {
+  async listWorkspaces(): Promise<WorkspaceMetadata[]> {
     const config = await this.loadConfig();
     return Object.values(config.workspaces).map(wc => wc.workspace);
   }
   
-  async getWorkspace(id: string): Promise<WorkspaceInfo | null> {
+  async getWorkspace(id: string): Promise<WorkspaceMetadata | null> {
     const config = await this.loadConfig();
     const workspaceConfig = config.workspaces[id];
     
@@ -152,11 +149,10 @@ export class FileWorkspaceManager implements WorkspaceManager {
     
     return workspaceConfig.workspace;
   }
-  
-  async createWorkspace(
-    workspace: Omit<WorkspaceInfo, 'createdAt' | 'lastAccessedAt'>, 
+   async createWorkspace(
+    workspace: Omit<WorkspaceMetadata, 'createdAt' | 'lastAccessedAt'>,
     storage: StorageConfig
-  ): Promise<WorkspaceInfo> {
+  ): Promise<WorkspaceMetadata> {
     const config = await this.loadConfig();
     
     // Check if workspace already exists
@@ -179,7 +175,7 @@ export class FileWorkspaceManager implements WorkspaceManager {
     }
     
     const now = new Date();
-    const newWorkspace: WorkspaceInfo = {
+    const newWorkspace: WorkspaceMetadata = {
       ...workspace,
       createdAt: now,
       lastAccessedAt: now
@@ -194,7 +190,7 @@ export class FileWorkspaceManager implements WorkspaceManager {
     return newWorkspace;
   }
   
-  async updateWorkspace(id: string, updates: Partial<WorkspaceInfo>): Promise<WorkspaceInfo> {
+  async updateWorkspace(id: string, updates: Partial<WorkspaceMetadata>): Promise<WorkspaceMetadata> {
     const config = await this.loadConfig();
     const workspaceConfig = config.workspaces[id];
     

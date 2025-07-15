@@ -7,13 +7,14 @@ import type {
   DevlogEntry,
   DevlogFilter,
   DevlogId,
+  DevlogNote,
   DevlogPriority,
   DevlogStats,
   DevlogStatus,
   DevlogType,
   JsonConfig,
   StorageProvider,
-} from '@devlog/types';
+} from '../types/index.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { getDevlogDirFromJsonConfig } from '../utils/storage.js';
