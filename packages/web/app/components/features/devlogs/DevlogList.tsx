@@ -377,28 +377,27 @@ export function DevlogList({
   return (
     <div className={styles.devlogListContainer}>
       <div className={styles.devlogListTable}>
-        {devlogs.length === 0 ? (
-          <Empty description="No devlogs found" style={{ padding: '40px' }} />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={devlogs}
-            rowKey="id"
-            scroll={{ x: 1200, y: 'calc(100vh - 64px - 56px - 48px)' }}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} devlogs`,
-              responsive: true,
-            }}
-            size="middle"
-            onHeaderRow={() => ({
-              style: {
-                backgroundColor: '#fff',
-              },
-            })}
-          />
-        )}
+        <Table
+          columns={columns}
+          dataSource={devlogs}
+          rowKey="id"
+          scroll={{ x: 1200, y: 'calc(100vh - 64px - 56px - 48px)' }}
+          pagination={devlogs.length > 0 ? {
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} devlogs`,
+            responsive: true,
+          } : false}
+          size="middle"
+          onHeaderRow={() => ({
+            style: {
+              backgroundColor: '#fff',
+            },
+          })}
+          locale={{
+            emptyText: <Empty description="No devlogs found" style={{ padding: '40px' }} />
+          }}
+        />
       </div>
     </div>
   );

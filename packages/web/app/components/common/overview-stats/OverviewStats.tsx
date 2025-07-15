@@ -100,7 +100,7 @@ export function OverviewStats({
   // Helper to get active status labels for collapsed view
   const getActiveStatusLabels = () => {
     if (!currentFilters?.status || currentFilters.status.length === 0) {
-      return 'All';
+      return 'Total';
     }
     if (currentFilters.status.length === 1) {
       return currentFilters.status[0].charAt(0).toUpperCase() + currentFilters.status[0].slice(1);
@@ -108,15 +108,42 @@ export function OverviewStats({
     return `${currentFilters.status.length} filters`;
   };
 
+  // Helper to get primary active status for styling
+  const getPrimaryActiveStatus = (): DevlogStatus | 'total' => {
+    if (!currentFilters?.status || currentFilters.status.length === 0) {
+      return 'total';
+    }
+    // Return the first status if only one is active, or 'total' if multiple
+    if (currentFilters.status.length === 1) {
+      return currentFilters.status[0];
+    }
+    return 'total';
+  };
+
   // Render collapsed view for detailed variant
   const renderCollapsedView = () => {
     const activeCount = getActiveStatusCount();
     const activeLabel = getActiveStatusLabels();
+    const primaryStatus = getPrimaryActiveStatus();
+    
+    // Get the appropriate CSS class for the primary status
+    const getStatusClass = (status: DevlogStatus | 'total') => {
+      switch (status) {
+        case 'new': return styles.new;
+        case 'in-progress': return styles.inProgress;
+        case 'blocked': return styles.blocked;
+        case 'in-review': return styles.inReview;
+        case 'testing': return styles.testing;
+        case 'done': return styles.completed;
+        case 'closed': return styles.closed;
+        default: return ''; // 'total' - no specific class
+      }
+    };
     
     return (
       <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
         <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
-          <span className={styles.statValue}>{activeCount}</span>
+          <span className={`${styles.statValue} ${getStatusClass(primaryStatus)}`}>{activeCount}</span>
           <span className={styles.statLabel}>{activeLabel}</span>
         </div>
         <Button
