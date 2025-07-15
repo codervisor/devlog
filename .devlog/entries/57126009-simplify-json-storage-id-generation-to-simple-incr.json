@@ -1,0 +1,38 @@
+{
+  "key": "simplify-json-storage-id-generation-to-simple-incr",
+  "title": "Simplify JSON storage ID generation to simple incremental numbers",
+  "type": "refactor",
+  "description": "Replace the current complex multi-dimensional ID structure ({agent}{julianDay}{sequence}) with simple incremental numbers (1, 2, 3, 4, ...). While the multi-dimensional approach successfully reduced IDs from 16 digits to 8-9 digits, it's still too user-unfriendly for basic workflows.\n\n## Current Problem:\n- Multi-dimensional IDs: `57126001`, `57126002` (8 digits)\n- Complex to remember and communicate\n- Over-engineered for most use cases\n\n## Simple Solution:\n- Sequential IDs: `1`, `2`, `3`, `4`, `5`\n- Much more user-friendly\n- Easy to remember and reference\n- Perfect for single-developer or small team workflows\n\n## Multi-Agent Consideration:\nFor scenarios with multiple agents working in parallel, JSON storage is not the optimal choice. Users should be directed to more advanced storage types (like database storage) that handle concurrent access better.\n\nJSON storage with simple incremental IDs is perfect for:\n- Personal development tracking\n- Small teams with coordinated work\n- Rapid prototyping and experimentation",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-15T08:29:25.947Z",
+  "updatedAt": "2025-07-15T08:29:25.947Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Developer experience is paramount. Most developers expect simple, readable IDs like 1, 2, 3 when working with local development tools. The complexity of multi-dimensional IDs creates cognitive overhead that outweighs the multi-agent safety benefits for the typical JSON storage use case.",
+    "technicalContext": "Current implementation in packages/core/src/storage/json-storage.ts uses complex multi-dimensional ID structure with agent hashing, Julian day calculation, and sequence numbers. This creates IDs like 57126001 which, while better than 16-digit timestamps, are still not user-friendly. Simple incremental numbers will provide the best developer experience for the primary JSON storage use case.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Replace getNextId() method to use simple incremental logic",
+      "Maintain filesystem-based ID collision detection",
+      "Start from ID 1 and increment sequentially",
+      "Keep existing findFileById() logic for backward compatibility",
+      "Remove complex agent hash and Julian day calculations",
+      "Add clear documentation about multi-agent limitations"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T08:29:25.947Z",
+    "contextVersion": 1
+  },
+  "id": 57126009
+}
