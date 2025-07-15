@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/types';
+import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 import {
   getStatusColor,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DevlogEntry, DevlogId } from '@devlog/types';
+import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useServerSentEvents } from './useServerSentEvents';
 
 export function useDevlogs() {

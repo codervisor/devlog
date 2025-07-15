@@ -40,7 +40,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@devlog/types": "workspace:*",
     "dotenv": "16.5.0"
   },
   "peerDependencies": {
@@ -49,7 +48,6 @@
     "pg": "^8.12.0"
   },
   "devDependencies": {
-    "@devlog/types": "workspace:*",
     "@types/node": "^20.0.0",
     "@vitest/ui": "^2.1.9",
     "typescript": "^5.0.0",

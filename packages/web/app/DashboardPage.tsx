@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Dashboard, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
-import { DevlogStats, DevlogEntry, TimeSeriesStats } from '@devlog/types';
+import { DevlogStats, DevlogEntry, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {

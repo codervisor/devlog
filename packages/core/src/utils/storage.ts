@@ -1,7 +1,7 @@
 import path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { JsonConfig } from '@devlog/types';
+import { JsonConfig } from '../types/index.js';
 import { parseBoolean } from './common.js';
 
 export function getDevlogDirFromJsonConfig(config: JsonConfig): string {

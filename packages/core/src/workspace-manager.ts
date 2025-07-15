@@ -14,12 +14,12 @@ import {
     WorkspacesConfig,
     WorkspaceContext,
     WorkspaceManager
- } from '@devlog/types';
+ } from './types/index.js';
 
 // Import workspace types directly to avoid build issues
 import { 
    
-} from '@devlog/types';
+} from './types/index.js';
 
 export interface WorkspaceManagerOptions {
   /** Path to the workspaces configuration file */
@@ -30,7 +30,7 @@ export interface WorkspaceManagerOptions {
   
   /** Default workspace configuration for auto-creation */
   defaultWorkspaceConfig?: {
-    workspace: Omit<WorkspaceInfo, 'id' | 'createdAt' | 'lastAccessedAt'>;
+    workspace: Omit<WorkspaceMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>;
     storage: StorageConfig;
   };
 }
@@ -300,7 +300,7 @@ export class FileWorkspaceManager implements WorkspaceManager {
   /**
    * Get workspace configuration (including storage config)
    */
-  async getWorkspaceConfig(id: string): Promise<WorkspaceConfig | null> {
+  async getWorkspaceConfig(id: string): Promise<WorkspaceConfiguration | null> {
     const config = await this.loadConfig();
     return config.workspaces[id] || null;
   }

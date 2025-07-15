@@ -8,7 +8,7 @@ import {
   CommentOutlined,
   TrophyOutlined,
 } from '@ant-design/icons';
-import { NoteCategory } from '@devlog/types';
+import { NoteCategory } from '@devlog/core';
 
 /**
  * Note category configuration with metadata for each category

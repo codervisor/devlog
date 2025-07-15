@@ -10,7 +10,7 @@ import {
   BarChartOutlined 
 } from '@ant-design/icons';
 import { Popover, Typography, Tooltip } from 'antd';
-import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/types';
+import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/core';
 import styles from './OverviewStats.module.css';
 
 const { Title } = Typography;

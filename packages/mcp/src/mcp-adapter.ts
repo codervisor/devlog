@@ -3,8 +3,15 @@
  */
 
 import * as crypto from 'crypto';
-import { DevlogManager } from '@devlog/core';
-import { CreateDevlogRequest, DevlogStatus, DevlogType, UpdateDevlogRequest, DevlogConfig, NoteCategory } from '@devlog/types';
+import { AIContext, DevlogContext, DevlogManager } from '@devlog/core';
+import {
+  CreateDevlogRequest,
+  DevlogStatus,
+  DevlogType,
+  UpdateDevlogRequest,
+  DevlogConfig,
+  NoteCategory,
+} from '@devlog/core';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 
 export class MCPDevlogAdapter {
@@ -32,7 +39,7 @@ export class MCPDevlogAdapter {
       content: [
         {
           type: 'text',
-          text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nPriority: ${entry.priority}\nStatus: ${entry.status}\n\nBusiness Context: ${entry.context.businessContext}\nTechnical Context: ${entry.context.technicalContext}`,
+          text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nPriority: ${entry.priority}\nStatus: ${entry.status}\n\nBusiness Context: ${entry.context?.businessContext}\nTechnical Context: ${entry.context?.technicalContext}`,
         },
       ],
     };
@@ -44,8 +51,15 @@ export class MCPDevlogAdapter {
     const entry = await this.devlogManager.updateDevlog(args);
 
     // Check if AI context was updated
-    const aiFieldsProvided = !!(args.currentSummary || args.keyInsights || args.openQuestions || args.suggestedNextSteps);
-    const aiContextNote = aiFieldsProvided ? `\nAI Context Updated: ${entry.aiContext.lastAIUpdate}` : '';
+    const aiFieldsProvided = !!(
+      args.currentSummary ||
+      args.keyInsights ||
+      args.openQuestions ||
+      args.suggestedNextSteps
+    );
+    const aiContextNote = aiFieldsProvided
+      ? `\nAI Context Updated: ${entry.aiContext?.lastAIUpdate}`
+      : '';
 
     return {
       content: [
@@ -166,15 +180,10 @@ export class MCPDevlogAdapter {
     await this.ensureInitialized();
 
     const category = (args.category as any) || 'progress';
-    const entry = await this.devlogManager.addNote(
-      args.id, 
-      args.note, 
-      category,
-      {
-        files: args.files,
-        codeChanges: args.codeChanges,
-      }
-    );
+    const entry = await this.devlogManager.addNote(args.id, args.note, category, {
+      files: args.files,
+      codeChanges: args.codeChanges,
+    });
 
     return {
       content: [
@@ -217,6 +226,12 @@ export class MCPDevlogAdapter {
       decisionMaker: args.decisionMaker,
     };
 
+    if (!entry.context) {
+      entry.context = {} as DevlogContext;
+    }
+    if (!entry.context.decisions) {
+      entry.context.decisions = [];
+    }
     entry.context.decisions.push(decision);
 
     // Update the entry to trigger save
@@ -464,16 +479,11 @@ export class MCPDevlogAdapter {
     if (args.status) updates.status = args.status;
     if (args.priority) updates.priority = args.priority;
 
-    const entry = await this.devlogManager.updateWithProgress(
-      args.id,
-      updates,
-      args.note,
-      {
-        category: args.category || 'progress',
-        files: args.files,
-        codeChanges: args.codeChanges,
-      }
-    );
+    const entry = await this.devlogManager.updateWithProgress(args.id, updates, args.note, {
+      category: args.category || 'progress',
+      files: args.files,
+      codeChanges: args.codeChanges,
+    });
 
     return {
       content: [

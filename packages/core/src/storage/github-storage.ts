@@ -12,7 +12,7 @@ import {
   DevlogStatus,
   DevlogType,
   DevlogPriority,
-} from '@devlog/types';
+} from '../types/index.js';
 import { GitHubAPIClient, GitHubAPIError, GitHubIssue } from '../utils/github-api.js';
 import { RateLimiter } from '../utils/rate-limiter.js';
 import { LRUCache } from '../utils/lru-cache.js';

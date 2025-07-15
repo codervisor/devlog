@@ -10,8 +10,8 @@ import {
   DevlogStats,
   DevlogStatus,
   DevlogType,
-} from '@devlog/types';
-import { StorageProvider } from '@devlog/types';
+} from '../types/index.js';
+import { StorageProvider } from '../types/index.js';
 
 export class SQLiteStorageProvider implements StorageProvider {
   private db: any = null;

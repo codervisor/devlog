@@ -2,7 +2,7 @@
  * Abstract storage interface that supports different storage backends
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, StorageConfig, StorageProvider } from '@devlog/types';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, StorageConfig, StorageProvider } from '../types/index.js';
 
 /**
  * Factory for creating storage providers based on configuration

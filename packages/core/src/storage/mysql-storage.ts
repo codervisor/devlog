@@ -2,8 +2,8 @@
  * MySQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats } from '@devlog/types';
-import { StorageProvider } from '@devlog/types';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats } from '../types/index.js';
+import { StorageProvider } from '../types/index.js';
 
 export class MySQLStorageProvider implements StorageProvider {
   private connectionString: string;

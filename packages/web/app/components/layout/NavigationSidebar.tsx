@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { DevlogStats } from '@devlog/types';
+import { DevlogStats } from '@devlog/core';
 import { OverviewStats } from '@/components';
 import styles from './NavigationSidebar.module.css';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tag } from 'antd';
-import { DevlogStatus, DevlogPriority, DevlogType } from '@devlog/types';
+import { DevlogStatus, DevlogPriority, DevlogType } from '@devlog/core';
 import {
   getStatusColor,
   getStatusIcon,

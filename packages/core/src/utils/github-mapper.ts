@@ -2,7 +2,7 @@
  * Data mapper for converting between DevlogEntry and GitHub Issues
  */
 
-import { DevlogEntry, DevlogStatus, DevlogType, DevlogPriority, DevlogNote, Decision, GitHubStorageConfig, ExternalReference } from '@devlog/types';
+import { DevlogEntry, DevlogStatus, DevlogType, DevlogPriority, DevlogNote, Decision, GitHubStorageConfig, ExternalReference } from '../types/index.js';
 import { GitHubIssue, CreateIssueRequest, UpdateIssueRequest } from './github-api.js';
 
 export interface DevlogMetadata {

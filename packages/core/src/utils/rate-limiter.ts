@@ -2,7 +2,7 @@
  * Rate limiter for GitHub API requests
  */
 
-import { GitHubStorageConfig } from '@devlog/types';
+import { GitHubStorageConfig } from '../types/index.js';
 
 export class RateLimiter {
   private requestsPerHour: number;

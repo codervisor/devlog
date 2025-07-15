@@ -5,7 +5,7 @@
 // Load environment variables from .env file if available
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { DevlogConfig, StorageConfig } from '@devlog/types';
+import type { DevlogConfig, StorageConfig } from './types/index.js';
 import { getWorkspaceRoot } from './utils/storage.js';
 
 export class ConfigurationManager {

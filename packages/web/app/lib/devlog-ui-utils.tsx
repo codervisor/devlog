@@ -16,7 +16,7 @@ import {
   ToolOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { DevlogPriority, DevlogStatus, DevlogType } from '@devlog/types';
+import { DevlogPriority, DevlogStatus, DevlogType } from '@devlog/core';
 
 /**
  * Gets the Ant Design tag color for a devlog status

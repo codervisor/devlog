@@ -14,11 +14,10 @@
     "clean": "pnpm -r clean && rm -f *.tsbuildinfo",
     "install-all": "pnpm install",
     "build:mcp": "pnpm --filter @devlog/mcp build",
-    "build:types": "pnpm --filter @devlog/types build",
     "build:core": "pnpm --filter @devlog/core build",
     "build:web": "pnpm --filter @devlog/web build",
-    "dev:mcp": "concurrently --names \"TYPES,CORE,MCP\" --prefix-colors \"cyan,green,yellow\" \"pnpm --filter @devlog/types dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
-    "dev:web": "concurrently --names \"TYPES,CORE,WEB\" --prefix-colors \"cyan,green,blue\" \"pnpm --filter @devlog/types dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
+    "dev:mcp": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
+    "dev:web": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
     "start:web": "pnpm --filter @devlog/web start"
   },
   "keywords": [

@@ -1,4 +1,4 @@
-import { DevlogStatus, DevlogPriority, DevlogType } from '@devlog/types';
+import { DevlogStatus, DevlogPriority, DevlogType } from '@devlog/core';
 
 export interface SelectOption {
   label: string;

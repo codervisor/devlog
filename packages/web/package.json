@@ -5,7 +5,7 @@
   "main": "./next.config.js",
   "scripts": {
     "dev": "next dev",
-    "dev:full": "concurrently --names \"TYPES,CORE,WEB\" --prefix-colors \"cyan,green,blue\" \"pnpm --filter @devlog/types dev\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
+    "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
     "dev:server": "next dev --port 3000",
     "dev:client": "next dev --port 3001",
     "build": "next build",
@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@devlog/core": "workspace:*",
-    "@devlog/types": "workspace:*",
     "@monaco-editor/react": "4.7.0",
     "classnames": "2.5.1",
     "highlight.js": "11.11.1",

@@ -21,7 +21,7 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
   UpdateDevlogRequest,
-} from '@devlog/types';
+} from './types/index.js';
 import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
 

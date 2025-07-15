@@ -26,7 +26,7 @@
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsx src/index.ts",
-    "dev:full": "concurrently --names \"TYPES,CORE,MCP\" --prefix-colors \"cyan,green,yellow\" \"pnpm --filter @devlog/types dev\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
+    "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -45,14 +45,12 @@
   "license": "MIT",
   "dependencies": {
     "@devlog/core": "workspace:*",
-    "@devlog/types": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0"
   },
   "devDependencies": {
     "@devlog/core": "workspace:*",
-    "@devlog/types": "workspace:*",
     "@types/node": "^20.0.0",
     "@vitest/ui": "^2.1.9",
     "concurrently": "9.2.0",

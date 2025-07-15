@@ -6,7 +6,7 @@ import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UndoOutlined } from '@
 import Link from 'next/link';
 import { DevlogDetails, LoadingPage, PageLayout } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
-import { DevlogEntry } from '@devlog/types';
+import { DevlogEntry } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 import {
   getPriorityColor,

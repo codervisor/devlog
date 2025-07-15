@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@devlog/core', '@devlog/types'],
+  transpilePackages: ['@devlog/core'],
   experimental: {
     serverComponentsExternalPackages: [],
   },

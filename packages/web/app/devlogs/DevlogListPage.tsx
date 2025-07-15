@@ -6,7 +6,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useDevlogFilters } from '@/hooks/useDevlogFilters';
-import { DevlogEntry, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from '@devlog/types';
+import { DevlogEntry, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DevlogListPage() {

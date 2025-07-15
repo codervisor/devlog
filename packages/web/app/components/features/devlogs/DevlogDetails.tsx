@@ -18,7 +18,7 @@ import {
   ToolOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { DevlogEntry } from '@devlog/types';
+import { DevlogEntry } from '@devlog/core';
 import { EditableField, MarkdownRenderer } from '@/components/ui';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import styles from './DevlogDetails.module.css';
@@ -686,8 +686,8 @@ export function DevlogDetails({
                 <div>
                   <Text type="secondary" className={styles.aiUpdateInfo}>
                     Last AI Update:{' '}
-                    <span title={formatTimeAgoWithTooltip(devlog.aiContext.lastAIUpdate).fullDate}>
-                      {formatTimeAgoWithTooltip(devlog.aiContext.lastAIUpdate).timeAgo}
+                    <span title={formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.fullDate}>
+                      {formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.timeAgo}
                     </span>{' '}
                     • Version: {devlog.aiContext.contextVersion}
                   </Text>

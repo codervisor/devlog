@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Alert, Layout } from 'antd';
-import { DevlogStats } from '@devlog/types';
+import { DevlogStats } from '@devlog/core';
 import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 

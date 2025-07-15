@@ -14,32 +14,7 @@ export { GitHubStorageProvider } from './storage/github-storage.js';
 export { EnterpriseSync } from './integrations/enterprise-sync.js';
 
 // Re-export types for convenience
-export type {
-  DevlogEntry,
-  DevlogNote,
-  DevlogType,
-  DevlogStatus,
-  DevlogPriority,
-  NoteCategory,
-  DevlogContext,
-  AIContext,
-  CreateDevlogRequest,
-  UpdateDevlogRequest,
-  DevlogFilter,
-  DevlogStats,
-  Dependency,
-  Decision,
-  Risk,
-  ExternalReference,
-  EnterpriseIntegration,
-  JiraConfig,
-  AdoConfig,
-  GitHubConfig,
-  SlackConfig,
-  GitHubStorageConfig,
-  StorageConfig,
-  StorageType,
-} from '@devlog/types';
+export * from './types/index.js';
 
 // Utilities
 export * from './utils/common.js';

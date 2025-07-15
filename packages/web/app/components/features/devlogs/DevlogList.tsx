@@ -12,7 +12,7 @@ import {
   DevlogStats,
   DevlogType,
   DevlogFilter,
-} from '@devlog/types';
+} from '@devlog/core';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { OverviewStats } from '@/components';

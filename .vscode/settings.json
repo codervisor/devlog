@@ -1,4 +1,14 @@
 {
     "vscode-edge-devtools.defaultUrl": "http://localhost:3000",
-    "vscode-edge-devtools.headless": false
+    "vscode-edge-devtools.headless": false,
+    "github.copilot.chat.editor.temporalContext.enabled": true,
+    "github.copilot.chat.agent.thinkingTool": true,
+    "github.copilot.chat.edits.temporalContext.enabled": true,
+    "github.copilot.chat.generateTests.codeLens": true,
+    "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+    "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+    "chat.agent.maxRequests": 100,
+    "github.copilot.chat.languageContext.typescript.enabled": true,
+    "github.copilot.chat.codesearch.enabled": true,
+    "github.copilot.chat.scopeSelection": true
 }
