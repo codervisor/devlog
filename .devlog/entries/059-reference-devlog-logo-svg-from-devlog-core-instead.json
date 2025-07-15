@@ -1,0 +1,74 @@
+{
+  "key": "reference-devlog-logo-svg-from-devlog-core-instead",
+  "title": "Reference devlog-logo.svg from @devlog/core instead of hardcoded copy in @devlog/web",
+  "type": "refactor",
+  "description": "Replace the hardcoded favicon.svg copy in @devlog/web/public/ with a proper reference to the shared devlog-logo.svg in @devlog/core package. This improves maintainability by having a single source of truth for the logo and prevents version drift between packages.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-14T13:05:34.567Z",
+  "updatedAt": "2025-07-14T13:09:08.032Z",
+  "notes": [
+    {
+      "id": "814d710a-268b-4c2e-8d4d-5ba107d3b776",
+      "timestamp": "2025-07-14T13:07:01.815Z",
+      "category": "progress",
+      "content": "Successfully implemented the asset referencing system. Added prepare-assets script to package.json that copies devlog-logo.svg from @devlog/core to public/favicon.svg. Updated dev, build scripts to run prepare-assets automatically. Added generated favicon.svg to .gitignore. Removed hardcoded favicon.svg file.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/packages/web/package.json",
+        "/Users/marvzhang/projects/codervisor/devlog/.gitignore"
+      ],
+      "codeChanges": "Added prepare-assets script, updated build scripts, removed hardcoded favicon.svg, added gitignore entry"
+    },
+    {
+      "id": "0cf90e23-9859-43e4-852c-dec5e6597ae0",
+      "timestamp": "2025-07-14T13:08:09.278Z",
+      "category": "issue",
+      "content": "User feedback: current approach breaks running dev:web process when build is run. Need to modify approach to avoid interference with development server."
+    },
+    {
+      "id": "6eee4e9d-02df-4bee-b47b-77c9afc2c7b2",
+      "timestamp": "2025-07-14T13:09:01.979Z",
+      "category": "solution",
+      "content": "Fixed the development interference issue. Updated prepare-assets script to only copy favicon when it doesn't exist using conditional shell logic. Added postinstall hook to ensure favicon is available after dependency installation. Removed prepare-assets from dev commands to prevent interference with running development servers.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/packages/web/package.json"
+      ],
+      "codeChanges": "Updated prepare-assets script with conditional copy, added postinstall hook, removed prepare-assets from dev commands"
+    },
+    {
+      "id": "7e28cc09-f075-4692-8b99-d45821f74d95",
+      "timestamp": "2025-07-14T13:09:08.032Z",
+      "category": "progress",
+      "content": "Completed: Successfully refactored favicon handling to reference devlog-logo.svg from @devlog/core package instead of maintaining a hardcoded copy. Implemented smart asset copying that avoids development server interference."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Having multiple copies of the same logo creates maintenance overhead and potential for version drift. A single source of truth ensures consistency across all packages.",
+    "technicalContext": "The @devlog/web package currently has a hardcoded copy of favicon.svg in its public directory. Since it already depends on @devlog/core which contains the canonical devlog-logo.svg, we should reference that file instead. In Next.js, this can be achieved by either copying the file during build or serving it dynamically.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Logo is referenced from @devlog/core package",
+      "No hardcoded copy exists in @devlog/web/public/",
+      "Favicon still displays correctly in browser",
+      "Build process handles the logo reference automatically"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "DRY principle - single source of truth",
+      "Package dependency management",
+      "Asset sharing in monorepos"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-14T13:05:34.567Z",
+    "contextVersion": 1
+  },
+  "id": 59
+}

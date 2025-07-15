@@ -1,0 +1,81 @@
+{
+  "key": "optimize-ui-layout-by-moving-breadcrumbs-to-header",
+  "title": "Optimize UI layout by moving breadcrumbs to header and removing duplicate titles",
+  "type": "refactor",
+  "description": "Refactor the @devlog/web UI layout to move breadcrumb elements into a consolidated header section and remove duplicate page titles. This will create a cleaner, more space-efficient layout where the breadcrumb serves as both navigation and page identification.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-14T15:11:18.078Z",
+  "updatedAt": "2025-07-14T15:25:06.650Z",
+  "notes": [
+    {
+      "id": "553185c0-c2c0-42fd-9621-88e9deb4bf03",
+      "timestamp": "2025-07-14T15:16:40.063Z",
+      "category": "progress",
+      "content": "Completed the core layout optimization:\n- Simplified NavigationBreadcrumb to just show breadcrumb navigation without duplicate titles\n- Removed duplicate \"All Devlogs\" title from DevlogList component and streamlined the stats display\n- Updated CSS styling to match the new simplified header structure\n- Dashboard correctly hides breadcrumb since it doesn't need navigation context\n\nThe breadcrumb now serves purely as navigation, eliminating the visual redundancy.",
+      "files": [
+        "packages/web/app/components/layout/NavigationBreadcrumb.tsx",
+        "packages/web/app/components/features/devlogs/DevlogList.tsx",
+        "packages/web/app/components/features/devlogs/DevlogList.module.css",
+        "packages/web/app/styles/layout.css",
+        "packages/web/app/DashboardPage.tsx"
+      ]
+    },
+    {
+      "id": "727ecd7d-c90b-4685-a860-1636cce3049a",
+      "timestamp": "2025-07-14T15:20:07.758Z",
+      "category": "progress",
+      "content": "Moved overview stats to the header actions area alongside the Create Devlog button:\n- Stats are now calculated in DevlogListPage and passed to header actions with detailed variant\n- Removed stats display from DevlogList component to eliminate redundancy\n- Created a more compact layout with stats next to the action button\n- Maintains the detailed stats view the user preferred while optimizing space utilization\n\nThe layout now has minimal empty space with stats positioned logically near the primary action.",
+      "files": [
+        "packages/web/app/devlogs/DevlogListPage.tsx",
+        "packages/web/app/components/features/devlogs/DevlogList.tsx"
+      ]
+    },
+    {
+      "id": "fa23aa7a-c334-4162-ad18-f65e834d8d9c",
+      "timestamp": "2025-07-14T15:23:14.592Z",
+      "category": "solution",
+      "content": "Final refinements completed:\n- Removed showBreadcrumb prop from PageLayout since breadcrumbs should always be shown for navigation\n- Updated DashboardPage to show overview stats in header actions area (consistent with DevlogListPage)\n- NavigationBreadcrumb now returns null for dashboard (/) since no breadcrumb navigation is needed on root page\n- Eliminated useless title/subtitle display on dashboard as requested\n- All pages now have consistent header behavior with breadcrumb navigation and actions area\n\nThe layout is now fully optimized with consistent patterns across all pages.",
+      "files": [
+        "packages/web/app/components/layout/PageLayout.tsx",
+        "packages/web/app/DashboardPage.tsx",
+        "packages/web/app/components/layout/NavigationBreadcrumb.tsx"
+      ]
+    },
+    {
+      "id": "1357b8ce-6393-4b17-abf0-fb35440115c7",
+      "timestamp": "2025-07-14T15:25:06.650Z",
+      "category": "solution",
+      "content": "Completed cleanup of Dashboard component:\n- Removed unused header section with duplicate title, subtitle, and OverviewStats display\n- Cleaned up unused imports: OverviewStats, Paragraph, classNames, Tag\n- Dashboard component now focuses purely on content: charts and recent devlogs\n- All header information (stats, navigation) is now handled by PageLayout consistently\n\nThe optimization is now complete with no redundant elements remaining.",
+      "files": [
+        "packages/web/app/components/features/dashboard/Dashboard.tsx"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Currently the UI has redundant information - breadcrumbs in the PageLayout header and separate titles in page components (like \"All Devlogs\" in DevlogList). This creates visual clutter and wastes vertical space. A unified header approach will improve user experience and make better use of screen real estate.",
+    "technicalContext": "The current architecture uses PageLayout component for breadcrumbs and individual page components (DevlogList, DevlogDetails) render their own titles. Need to modify the header structure to incorporate page-specific information and remove title redundancy from page content areas.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Breadcrumbs moved to a unified header area for all pages",
+      "Duplicate page titles removed from component content areas",
+      "Header shows both navigation breadcrumb and relevant page actions",
+      "Layout maintains responsive behavior",
+      "Visual hierarchy remains clear and accessible"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-14T15:11:18.078Z",
+    "contextVersion": 1
+  },
+  "id": 63
+}

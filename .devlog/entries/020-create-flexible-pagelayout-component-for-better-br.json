@@ -1,0 +1,62 @@
+{
+  "key": "create-flexible-pagelayout-component-for-better-br",
+  "title": "Create flexible PageLayout component for better breadcrumb and header customization",
+  "type": "refactor",
+  "description": "Refactor the current rigid layout structure in @devlog/web to introduce a flexible PageLayout component that allows pages to customize the breadcrumb area, add action buttons on the right side, and have more control over the main content layout. The current AppLayout forces all pages into a fixed structure that doesn't allow for page-specific customizations.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-01T15:17:21.908Z",
+  "updatedAt": "2025-07-01T15:27:34.624Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "fbe39b9f-52a9-4e92-b7f8-0a5783b2bb12",
+      "timestamp": "2025-07-01T15:22:04.104Z",
+      "category": "progress",
+      "content": "Successfully implemented flexible PageLayout component with the following features:\n\n1. **Created PageLayout component** with customizable slots for breadcrumb, actions, and content\n2. **Removed hardcoded breadcrumb** from AppLayout to allow page-specific control\n3. **Refactored all pages** to use the new PageLayout:\n   - DevlogListPage: Added Refresh and Create buttons in actions slot\n   - DashboardPage: Hidden breadcrumb for home page\n   - DevlogCreatePage: Added Back button in actions slot\n   - DevlogDetailsPage: Custom breadcrumb with status/priority tags and action buttons\n4. **Added responsive CSS** for mobile layouts and proper spacing\n5. **Created comprehensive documentation** with usage examples and migration guide\n\nThe new PageLayout provides multiple customization options:\n- `actions` prop for right-side buttons\n- `breadcrumb` prop for custom breadcrumb elements  \n- `showBreadcrumb` to hide default breadcrumb\n- `headerContent` for completely custom headers\n- `stickyHeader` control and CSS classes for styling\n\nAll existing functionality is preserved while enabling much more flexible page layouts.",
+      "files": [
+        "packages/web/app/components/PageLayout.tsx",
+        "packages/web/app/styles/layout.css",
+        "packages/web/app/AppLayout.tsx",
+        "packages/web/app/devlogs/DevlogListPage.tsx",
+        "packages/web/app/DashboardPage.tsx",
+        "packages/web/app/devlogs/create/DevlogCreatePage.tsx",
+        "packages/web/app/devlogs/[id]/DevlogDetailsPage.tsx",
+        "packages/web/app/components/PageLayout.md"
+      ]
+    },
+    {
+      "id": "258c819f-dfcd-4d59-981b-26d1e543ff51",
+      "timestamp": "2025-07-01T15:27:34.624Z",
+      "category": "progress",
+      "content": "Completed: Successfully implemented and deployed a flexible PageLayout component that replaces the rigid layout structure in @devlog/web. The new system provides:\n\n**Key Features Implemented:**\n- ✅ Flexible PageLayout component with customizable slots\n- ✅ Breadcrumb customization with custom content support\n- ✅ Action slot for page-specific buttons on the right side\n- ✅ Support for completely custom headers\n- ✅ Responsive design with mobile optimizations\n- ✅ Sticky/non-sticky header options\n\n**Pages Updated:**\n- ✅ DevlogListPage: Added Refresh and Create buttons in actions\n- ✅ DashboardPage: Hidden breadcrumb for home page \n- ✅ DevlogCreatePage: Added Back button in actions\n- ✅ DevlogDetailsPage: Custom breadcrumb with status/priority tags + Edit/Delete actions\n\n**Component Architecture:**\n- ✅ Removed hardcoded breadcrumb from AppLayout\n- ✅ Updated DevlogDetails to support external edit state control\n- ✅ Created flexible prop interface for different usage patterns\n- ✅ Added comprehensive CSS classes for styling customization\n\n**Technical Improvements:**\n- ✅ TypeScript interfaces updated for new component props\n- ✅ Maintained backwards compatibility\n- ✅ Build passes successfully with no compilation errors\n- ✅ Responsive mobile layout support\n\nThe layout is now much more flexible and allows easy customization of the breadcrumb area while maintaining design consistency across the application."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The current layout implementation is too rigid and doesn't allow pages to customize the breadcrumb area or add page-specific actions. This limits the UX and makes it difficult to create rich, contextual page layouts. A flexible PageLayout component will enable better page-specific customizations while maintaining consistency.",
+    "technicalContext": "Current AppLayout component has hardcoded breadcrumb placement and no slot system for page-specific content. Need to create a PageLayout component that provides slots for breadcrumb customization, action areas, and flexible content layouts while maintaining the existing design system and responsive behavior.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Create PageLayout component with slots for breadcrumb, actions, and content",
+      "Refactor existing pages to use the new PageLayout",
+      "Maintain existing design consistency and responsive behavior",
+      "Allow pages to customize breadcrumb area with additional content",
+      "Provide action slot on the right side of breadcrumb area",
+      "Ensure backwards compatibility with existing page structure"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-01T15:17:21.908Z",
+    "contextVersion": 1
+  },
+  "id": 20
+}

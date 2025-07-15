@@ -1,0 +1,175 @@
+{
+  "key": "design-project-epic-management-feature-for-large-c",
+  "title": "Design Project/Epic Management Feature for Large Complex Projects",
+  "type": "feature",
+  "description": "Design and implement a project/epic management system that organizes large, complex features requiring multiple iterations and time-consuming tasks. This builds on the existing devlog system to add hierarchical project organization, iteration planning, milestone tracking, and cross-devlog dependencies.",
+  "status": "in-progress",
+  "priority": "high",
+  "createdAt": "2025-07-10T15:36:29.869Z",
+  "updatedAt": "2025-07-10T16:33:44.847Z",
+  "notes": [
+    {
+      "id": "560b9c5d-ea3d-4163-9cb3-7a45d07264d3",
+      "timestamp": "2025-07-10T15:36:56.735Z",
+      "category": "progress",
+      "content": "**Initial Architecture Analysis Complete**\n\nCurrent system strengths:\n- DevlogEntry has solid foundation with context, AI support, notes, and file tracking\n- MCP tools provide good CRUD operations and search functionality  \n- Web interface has basic list/detail views that can be extended\n- Type system is clean and extensible\n\nKey extension points identified:\n- DevlogType can add 'project' and 'epic' types\n- DevlogEntry.relatedDevlogs can be enhanced for hierarchical relationships\n- Dependency system in DevlogContext needs enhancement\n- New iteration/milestone tracking fields needed"
+    },
+    {
+      "id": "bb1917ba-6a7e-4116-89b0-8f2be4c24bfb",
+      "timestamp": "2025-07-10T15:37:16.108Z",
+      "category": "idea",
+      "content": "**Proposed Feature Design - Project/Epic Management System**\n\n## 1. Type System Extensions\n```typescript\n// Extend DevlogType\nexport type DevlogType = 'project' | 'epic' | 'feature' | 'bugfix' | 'task' | 'refactor' | 'docs';\n\n// New hierarchy levels\nexport type HierarchyLevel = 'project' | 'epic' | 'task';\n```\n\n## 2. Hierarchical Relationships\n- **Project**: Top-level container (months/quarters of work)\n- **Epic**: Mid-level feature grouping (weeks/sprints of work)  \n- **Task**: Existing leaf-level work items (current devlog entries)\n\n## 3. Enhanced Dependency Management\n- Upgrade current Dependency type to support blocking relationships\n- Add critical path calculation\n- Visual dependency graph in web UI\n\n## 4. Iteration & Milestone Support\n- Add iteration/sprint planning fields\n- Milestone tracking with deadlines\n- Progress rollup from child items\n\n## 5. Backward Compatibility\n- All existing devlog entries become \"task\" level by default\n- No breaking changes to existing data structures\n- Gradual migration path"
+    },
+    {
+      "id": "7a088786-5d76-4137-aa8b-52b282ccf2ee",
+      "timestamp": "2025-07-10T15:37:33.728Z",
+      "category": "solution",
+      "content": "**Detailed Technical Design Specification**\n\n## Core Type Extensions\n\n### 1. Enhanced DevlogEntry Interface\n```typescript\nexport interface DevlogEntry {\n  // ... existing fields ...\n  \n  // Hierarchy fields\n  parentId?: DevlogId;           // Parent project/epic ID\n  childIds: DevlogId[];          // Child epic/task IDs\n  hierarchyLevel: HierarchyLevel; // project | epic | task\n  rootProjectId?: DevlogId;      // Root project for quick lookups\n  \n  // Planning fields\n  estimatedHours?: number;       // Time estimate\n  actualHours?: number;          // Time spent\n  startDate?: string;            // Planned start date\n  dueDate?: string;              // Planned completion date\n  iteration?: string;            // Sprint/iteration name\n  milestone?: string;            // Milestone name\n  \n  // Enhanced dependency tracking\n  blockedBy: DevlogId[];         // Entries that block this one\n  blocks: DevlogId[];            // Entries this one blocks\n  criticalPath: boolean;         // Is this on the critical path?\n}\n```\n\n### 2. Project Template System\n```typescript\nexport interface ProjectTemplate {\n  id: string;\n  name: string;\n  description: string;\n  structure: ProjectTemplateNode[];\n}\n\nexport interface ProjectTemplateNode {\n  title: string;\n  type: DevlogType;\n  description?: string;\n  estimatedHours?: number;\n  children?: ProjectTemplateNode[];\n}\n```\n\n### 3. Progress Rollup System\n```typescript\nexport interface ProjectProgress {\n  totalTasks: number;\n  completedTasks: number;\n  completionPercentage: number;\n  estimatedHours: number;\n  actualHours: number;\n  criticalPathStatus: 'on-track' | 'at-risk' | 'delayed';\n}\n```"
+    },
+    {
+      "id": "23218d56-b241-403a-a48e-79229807a0fe",
+      "timestamp": "2025-07-10T15:37:52.484Z",
+      "category": "solution",
+      "content": "**Implementation Plan - MCP Tools & Web Interface**\n\n## Phase 1: Core Type System (Week 1)\n- [ ] Extend DevlogType to include 'project' and 'epic'\n- [ ] Add hierarchy fields to DevlogEntry interface\n- [ ] Update core CRUD operations to handle hierarchical relationships\n- [ ] Add new MCP tools for project/epic management\n\n## Phase 2: Dependency Management (Week 2)\n- [ ] Enhance dependency tracking system\n- [ ] Implement critical path calculation algorithms\n- [ ] Add dependency validation (prevent cycles)\n- [ ] Create MCP tools for dependency management\n\n## Phase 3: Web Interface Updates (Week 3)\n- [ ] Add project/epic creation forms\n- [ ] Implement hierarchical tree view for projects\n- [ ] Add Gantt chart or timeline view\n- [ ] Create dependency graph visualization\n- [ ] Add progress rollup dashboard\n\n## Phase 4: Advanced Features (Week 4)\n- [ ] Project template system\n- [ ] Iteration/sprint planning interface\n- [ ] Milestone tracking and reporting\n- [ ] Export/import capabilities\n- [ ] Integration with existing GitHub Issues feature (#49)\n\n## New MCP Tools Required:\n- `create_project` - Create new project with optional template\n- `create_epic` - Create epic under project\n- `add_child_devlog` - Add child devlog to parent\n- `update_dependencies` - Manage blocking relationships\n- `get_project_hierarchy` - Get full project tree\n- `get_project_progress` - Get progress rollup\n- `calculate_critical_path` - Identify critical path"
+    },
+    {
+      "id": "5c5aa075-ef05-475e-ae35-47a21577ab30",
+      "timestamp": "2025-07-10T15:38:08.940Z",
+      "category": "idea",
+      "content": "**User Experience Design - Key Use Cases**\n\n## Primary Use Cases\n\n### 1. Large Feature Development\n**Scenario**: Implementing authentication system across frontend, backend, and mobile\n- Create project \"Authentication System Overhaul\"\n- Create epics: \"Backend Auth API\", \"Frontend Auth UI\", \"Mobile Auth Integration\"\n- Break down each epic into tasks: API endpoints, UI components, tests, documentation\n- Track dependencies: Backend API must complete before frontend integration\n\n### 2. Multi-Sprint Initiative  \n**Scenario**: Database migration requiring 3 sprints\n- Create project \"Database Migration to PostgreSQL\"\n- Define milestones: \"Schema Design\", \"Migration Scripts\", \"Production Rollout\"\n- Plan iterations with capacity and timelines\n- Track blockers and risks across the initiative\n\n### 3. Cross-Team Coordination\n**Scenario**: Platform feature affecting multiple teams\n- Create project visible to all teams\n- Define clear ownership at epic/task level\n- Track cross-team dependencies and integration points\n- Monitor progress and identify bottlenecks\n\n## Visual Interface Ideas\n- **Project Dashboard**: Kanban view with project → epic → task hierarchy\n- **Timeline View**: Gantt-style chart showing dependencies and critical path\n- **Dependency Graph**: Visual network showing blocking relationships\n- **Progress Dashboard**: Burndown charts and completion metrics\n- **Resource Planning**: Team capacity and allocation views\n\n## Integration Benefits\n- Seamless with existing devlog workflow\n- Enhanced AI context with project scope awareness\n- Better planning and estimation accuracy\n- Improved cross-project visibility and coordination"
+    },
+    {
+      "id": "0362c4ae-bf6e-40cd-89d7-c488ee51f083",
+      "timestamp": "2025-07-10T15:44:30.153Z",
+      "category": "progress",
+      "content": "**📚 Comprehensive Documentation Package Created**\n\nCreated complete documentation suite for future implementation:\n\n## Core Documents Created:\n1. **[Design Document](docs/project/project-management-design.md)** - Executive summary, architecture overview, use cases\n2. **[Technical Specification](docs/project/project-management-technical-spec.md)** - Detailed implementation specs, type definitions, database schema\n3. **[Implementation Roadmap](docs/project/project-management-roadmap.md)** - 4-week phased implementation plan with tasks, metrics, and risk assessment\n4. **[Quick Reference](docs/project/project-management-quick-reference.md)** - Developer guide with key concepts, examples, and getting started info\n\n## Documentation Features:\n✅ **Complete technical specifications** with TypeScript interfaces  \n✅ **Detailed implementation roadmap** with 406 hours across 4 phases  \n✅ **Database migration scripts** and schema changes  \n✅ **New MCP tools specification** (15+ new tools)  \n✅ **UI component specifications** and user workflows  \n✅ **Testing strategy** with unit, integration, and E2E tests  \n✅ **Performance considerations** and scalability limits  \n✅ **Risk assessment** and mitigation strategies  \n✅ **Success metrics** and adoption criteria  \n\n## Ready for Implementation:\n- All type definitions specified\n- Database changes documented  \n- API interfaces defined\n- UI component requirements clear\n- Testing approach established\n- Implementation phases planned\n\nThis provides a complete blueprint for any developer to implement the project management feature following the established patterns and architecture.",
+      "files": [
+        "docs/project/project-management-design.md",
+        "docs/project/project-management-technical-spec.md",
+        "docs/project/project-management-roadmap.md",
+        "docs/project/project-management-quick-reference.md"
+      ]
+    },
+    {
+      "id": "269e2c31-6d8c-4f0a-87b1-6fa7a7bac45f",
+      "timestamp": "2025-07-10T15:48:45.534Z",
+      "category": "idea",
+      "content": "**🤖 Critical Insight: AI-Native Project Management Paradigm**\n\nThe user raised a crucial point - DevLog is designed for AI agents, not humans, so traditional project management concepts need fundamental rethinking:\n\n## Traditional vs AI-Native Concepts:\n\n### ❌ Traditional (Human-Centric):\n- **Time estimates**: Hours/days/weeks based on human cognitive load\n- **Velocity**: Tasks completed per sprint by human teams\n- **Capacity planning**: Based on human availability and skills\n- **Dependencies**: Often due to human coordination needs\n- **Progress tracking**: Manual status updates and standups\n\n### ✅ AI-Native (Agent-Centric):\n- **Complexity estimates**: Based on problem complexity, not time\n- **Velocity**: Problems solved per session, context switching costs\n- **Capacity planning**: Based on token limits, context windows, tool availability\n- **Dependencies**: Based on logical prerequisites and data flow\n- **Progress tracking**: Automatic based on code changes and outcomes\n\n## Key Questions to Address:\n1. How do AI agents experience \"effort\" vs humans?\n2. What are the real bottlenecks in AI development workflows?\n3. How should we measure AI agent productivity?\n4. What dependencies matter in AI-native development?\n5. How does context persistence affect project planning?\n\nNeed to redesign the entire framework around AI agent workflows, not human project management paradigms."
+    },
+    {
+      "id": "8c61eed2-7cb8-402b-b7a9-e5a2ec234055",
+      "timestamp": "2025-07-10T15:49:04.753Z",
+      "category": "solution",
+      "content": "**🧠 AI-Native Project Management Framework Design**\n\n## Core Paradigm Shifts:\n\n### 1. **Complexity-Based Planning (Not Time-Based)**\n```typescript\ninterface TaskComplexity {\n  cognitiveLoad: 'trivial' | 'simple' | 'moderate' | 'complex' | 'research';\n  contextRequirement: 'local' | 'cross-file' | 'cross-module' | 'system-wide';\n  toolDependency: 'basic' | 'standard' | 'specialized' | 'external-api';\n  uncertaintyLevel: 'known' | 'exploratory' | 'research' | 'experimental';\n}\n```\n\n### 2. **Session-Based Velocity (Not Sprint-Based)**\n```typescript\ninterface AIVelocity {\n  problemsSolvedPerSession: number;\n  averageContextSwitchCost: number;  // tokens to rebuild context\n  successRate: number;               // % of attempts that succeed\n  iterationsToSolution: number;      // avg attempts needed\n}\n```\n\n### 3. **Token Economics & Context Management**\n```typescript\ninterface SessionCapacity {\n  maxTokensPerSession: number;\n  contextWindowUtilization: number;\n  toolCallsPerSession: number;\n  persistentContextSize: number;    // devlog context overhead\n}\n```\n\n### 4. **Knowledge-Based Dependencies (Not Coordination-Based)**\n```typescript\ninterface AIDependency {\n  type: 'knowledge' | 'data' | 'tool' | 'context' | 'capability';\n  description: string;\n  blockingReason: 'missing-info' | 'incomplete-context' | 'tool-limitation';\n  resolutionStrategy: 'research' | 'incremental' | 'parallel' | 'deferred';\n}\n```\n\n### 5. **Outcome-Driven Progress (Not Status-Driven)**\n```typescript\ninterface AIProgress {\n  knowledgeGained: string[];         // What the AI learned\n  contextBuilt: string[];            // Context accumulated\n  capabilitiesUnlocked: string[];    // New tools/abilities gained\n  problemsSolved: string[];          // Actual outcomes\n  uncertaintiesResolved: string[];   // Clarifications made\n}\n```"
+    },
+    {
+      "id": "e5facf5a-6fb2-4627-931b-05b8352fe787",
+      "timestamp": "2025-07-10T15:49:23.741Z",
+      "category": "solution",
+      "content": "**🎯 AI-Native Project Management: Real Bottlenecks & Metrics**\n\n## What Actually Constrains AI Development:\n\n### 1. **Context Rebuilding Cost** (Primary Bottleneck)\n- Each session requires rebuilding understanding of the project\n- Token cost increases with project complexity\n- DevLog serves as persistent memory to reduce this cost\n\n### 2. **Knowledge Discovery & Research**\n- AI needs to understand existing codebase patterns\n- Learning new APIs, frameworks, or domain concepts\n- Time spent exploring vs implementing\n\n### 3. **Tool Limitations & Error Recovery**\n- Available tools constrain what AI can accomplish\n- Error correction requires multiple iterations\n- Some tasks require human intervention\n\n### 4. **Uncertainty Resolution**\n- Ambiguous requirements need clarification\n- Design decisions require human input\n- Experimental approaches may fail\n\n## AI-Native Metrics That Actually Matter:\n\n### Project Velocity:\n- **Context Efficiency**: How quickly AI rebuilds project understanding\n- **Problem Resolution Rate**: Success rate on first attempt vs iterations needed\n- **Knowledge Transfer**: How well insights persist across sessions\n\n### Project Health:\n- **Context Fragmentation**: How scattered project knowledge is\n- **Dependency Clarity**: How well-defined prerequisites are\n- **Tool Coverage**: % of needed capabilities available\n\n### Planning Accuracy:\n- **Complexity Estimation**: How well AI predicts problem difficulty\n- **Scope Creep**: How often requirements change during implementation\n- **Blocker Prediction**: How well AI anticipates obstacles\n\n## Proposed AI-Centric Hierarchy:\n- **Initiative**: Large problem space requiring multiple AI sessions\n- **Problem**: Coherent challenge that can be tackled in 1-3 sessions\n- **Task**: Atomic action that AI can complete reliably"
+    },
+    {
+      "id": "03613f92-0647-48ea-ba64-f78d89b595a9",
+      "timestamp": "2025-07-10T15:54:45.641Z",
+      "category": "progress",
+      "content": "**🤖 Complete AI-Native Redesign of Quick Reference Guide**\n\nCompletely rewrote the quick reference guide to reflect the AI-native paradigm shift:\n\n## Major Changes:\n✅ **Initiative → Problem → Task hierarchy** (replacing Project → Epic → Task)  \n✅ **Complexity-based planning** (replacing time-based estimates)  \n✅ **Session-based velocity** (replacing sprint-based planning)  \n✅ **Context management and token economics** (core AI constraints)  \n✅ **Knowledge-based dependencies** (replacing coordination dependencies)  \n✅ **AI learning pattern tracking** (adaptive system behavior)  \n\n## AI-Native Features:\n- **ContextManager**: Session context optimization and persistence\n- **ComplexityAnalyzer**: AI-specific task complexity assessment  \n- **AIMetricsManager**: Context efficiency and learning metrics\n- **Knowledge Dependencies**: Track what AI needs to know vs coordinate\n- **Session Tracking**: Token usage and context costs\n- **Learning Patterns**: AI adaptation and pattern recognition\n\n## Key Metrics Shift:\n- **Context rebuilding time** < 30% of session time\n- **Problem resolution success rate** > 80% on first attempt  \n- **Knowledge transfer effectiveness** > 70% context reuse\n- **Session planning accuracy** ± 1 session estimate\n\n## Database Changes:\n- Added AI session tracking tables\n- Knowledge dependency mapping\n- Complexity and context metadata\n- Token usage and learning pattern storage\n\nThis represents a fundamental shift from human project management to AI agent workflow optimization, focusing on the real constraints AI faces: context costs, knowledge gaps, tool limitations, and uncertainty resolution.",
+      "files": [
+        "docs/project/project-management-quick-reference.md"
+      ]
+    },
+    {
+      "id": "91d8133c-cbf1-43d8-9ee0-ea77f86f064e",
+      "timestamp": "2025-07-10T16:00:39.374Z",
+      "category": "idea",
+      "content": "**🎯 Brilliant Insight: Keep Human-Friendly Terminology with AI-Native Concepts**\n\nUser correctly identified that we should:\n- **Keep familiar terms**: Project/Epic/Task (intuitive, low learning curve)\n- **Apply AI-native concepts**: Complexity estimation, session tracking, context management\n- **Hybrid approach**: Human-friendly surface with AI-optimized internals\n\n## Revised Approach:\n### Terminology Mapping:\n- **Project** = Large initiative (multi-session problem space)\n- **Epic** = Coherent problem (1-3 session challenge) \n- **Task** = Atomic action (AI can complete reliably)\n\n### AI-Native Under the Hood:\n- Complexity assessment instead of time estimates\n- Session-based velocity tracking\n- Context management and token economics\n- Knowledge-based dependencies\n- AI learning pattern recognition\n\n### Benefits:\n✅ **Familiar to humans** - No learning curve for PM terminology  \n✅ **AI-optimized internally** - Real AI constraints and workflows  \n✅ **Best of both worlds** - Human intuition + AI efficiency  \n✅ **Easier adoption** - Teams can use existing mental models  \n\nThis is much more practical for real-world usage while maintaining all the AI-native innovations."
+    },
+    {
+      "id": "956f7525-2c91-419b-a388-b5d17fb1d095",
+      "timestamp": "2025-07-10T16:06:16.675Z",
+      "category": "progress",
+      "content": "**📝 Streamlined Documentation for AI Agent Developers**\n\nSimplified the quick reference guide to focus on essential information for AI agent developers:\n\n## Key Simplifications:\n✅ **Removed roadmap** - Too complex and distracting for developers  \n✅ **Condensed to essentials** - Core concepts, key types, essential tools only  \n✅ **Kept familiar terminology** - Project/Epic/Task with AI-native internals  \n✅ **Focused on practical usage** - Real examples and implementation priorities  \n\n## Final Structure:\n- **Core Concept**: One paragraph explaining the AI-native approach\n- **Key Types**: Essential TypeScript interfaces only\n- **Essential MCP Tools**: 7 core tools (not 15+)\n- **Usage Examples**: Practical code snippets\n- **Success Metrics**: 4 key measurements\n- **Implementation Priority**: Clear 4-step approach\n\n## Benefits:\n- **Concise**: Developers can absorb quickly without information overload\n- **Actionable**: Clear next steps and priorities\n- **AI-Focused**: Optimized for AI constraints, not human project management\n- **Practical**: Real code examples and measurable outcomes\n\nThe documentation is now focused on what AI agent developers actually need to implement this feature effectively.",
+      "files": [
+        "docs/project/project-management-quick-reference.md"
+      ]
+    },
+    {
+      "id": "e9591692-ee29-40f0-9b10-094ee6118f24",
+      "timestamp": "2025-07-10T16:22:34.178Z",
+      "category": "progress",
+      "content": "Optimizing remaining sections of project-management-design.md to be more concise and AI-native focused. Working on sections after \"Use Cases and Examples\" to align with earlier optimizations.",
+      "files": [
+        "/workspaces/devlog/docs/project/project-management-design.md"
+      ]
+    },
+    {
+      "id": "e3bc6468-8bec-47bf-bdd1-4e7e1b5b1587",
+      "timestamp": "2025-07-10T16:25:13.150Z",
+      "category": "progress",
+      "content": "Successfully optimized remaining sections of project-management-design.md. Key changes: 1) Replaced traditional use cases with AI-native examples showing complexity/session estimates, 2) Streamlined Technical Considerations into concise Implementation Strategy, 3) Converted Success Metrics to AI-focused metrics (context efficiency, session accuracy), 4) Simplified Future Enhancements to focus on AI capabilities, 5) Made conclusion more concise and AI-focused. Document now fully aligned with AI-native approach.",
+      "files": [
+        "/workspaces/devlog/docs/project/project-management-design.md"
+      ],
+      "codeChanges": "Optimized sections after \"Use Cases and Examples\" to be concise and AI-native focused. Replaced traditional project management examples with AI session-based scenarios, streamlined technical considerations, and focused success metrics on AI performance indicators."
+    },
+    {
+      "id": "01c48d44-baa6-415a-8817-c1bc97b7090e",
+      "timestamp": "2025-07-10T16:31:36.095Z",
+      "category": "progress",
+      "content": "**📊 Enhanced Success Metrics with AI Autonomy Focus**\n\nAdded critical success metrics section to the technical specification focusing on human intervention measurement:\n\n## Key Additions:\n✅ **AI Agent Autonomy** as primary goal category  \n✅ **Human intervention rate** < 10% of total working time  \n✅ **Autonomous task completion** > 90% success rate without human guidance  \n✅ **Zero-touch operation time** measurement for continuous AI work periods  \n✅ **Clear objective statement** about AI working autonomously with no human interaction  \n\n## Metric Categories:\n1. **AI Agent Autonomy** (Primary Goal) - New section focusing on human-free operation\n2. **AI Performance Indicators** - Existing metrics reorganized under clear category\n\n## Strategic Impact:\nThis aligns with the core vision of AI agents that can work independently and deliver results without constant human supervision. The metrics now properly emphasize autonomy as the primary success indicator, with traditional performance metrics as supporting measures.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/docs/project/project-management-technical-spec.md"
+      ]
+    },
+    {
+      "id": "8791cb31-fe89-41e5-bac9-8d8b9f6da1a3",
+      "timestamp": "2025-07-10T16:33:44.847Z",
+      "category": "progress",
+      "content": "**🔄 Synchronized All Project Management Documents**\n\nAligned Design and Quick Reference documents with Technical Specification for consistency:\n\n## Key Synchronizations:\n✅ **Field Name Standardization**: Changed `sessionEstimate` → `expectedSessions` across all docs  \n✅ **AI Autonomy Metrics**: Added human intervention metrics to Design and Quick Reference docs  \n✅ **Consistent Success Metrics**: All three documents now have identical AI success indicators  \n✅ **Unified Objective Statement**: Clear autonomy goal stated consistently across all documents  \n\n## Updated Documents:\n- **Design Doc**: Enhanced AI Success Metrics section with autonomy focus\n- **Quick Reference**: Added AI Agent Autonomy section as primary goal\n- **Technical Spec**: Already contained the complete metrics (source of truth)\n\n## Benefits:\n- **Developer Clarity**: No confusion about field names or success criteria\n- **Implementation Alignment**: All docs point to same technical requirements\n- **Strategic Focus**: Autonomy metrics consistently emphasized as primary goal\n- **Documentation Quality**: Professional consistency across specification suite\n\nAll project management documentation is now fully synchronized and ready for implementation.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/docs/project/project-management-design.md",
+        "/Users/marvzhang/projects/codervisor/devlog/docs/project/project-management-quick-reference.md"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Large software projects often involve complex features that span multiple development cycles, require coordination between multiple developers, and involve numerous interdependent tasks. The current devlog system is excellent for individual tasks but lacks organization for larger initiatives. This feature will enable better planning, tracking, and coordination of complex projects while maintaining the existing devlog workflow that developers are familiar with.",
+    "technicalContext": "The feature will extend the existing DevlogEntry type system to support hierarchical relationships, add new \"project\" and \"epic\" types, implement dependency management between devlogs, and provide iteration/milestone planning capabilities. It will leverage the existing MCP tools architecture and web interface while maintaining backward compatibility with current devlog entries.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Create project/epic hierarchical structure extending existing devlog system",
+      "Implement dependency management between devlog entries",
+      "Add iteration/milestone planning and tracking",
+      "Provide visual project timeline and roadmap views",
+      "Support nested task organization under projects/epics",
+      "Maintain full backward compatibility with existing devlog entries",
+      "Enable cross-project dependency tracking",
+      "Implement project templates for common patterns"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "Major paradigm shift identified: The original design was too human-centric for an AI-native system. Need to completely rethink project management concepts around how AI agents actually work - complexity-based planning instead of time-based, session-based velocity instead of sprint-based, token economics and context management, knowledge-based dependencies, and outcome-driven progress tracking. The core bottlenecks for AI are context rebuilding, knowledge discovery, tool limitations, and uncertainty resolution - not human coordination issues.",
+    "keyInsights": [
+      "Current DevlogEntry already has relatedDevlogs field but it's underutilized",
+      "Existing types (feature, task, bugfix, refactor, docs) can remain as leaf nodes in hierarchy",
+      "Current dependency system in DevlogContext is basic and could be enhanced",
+      "The project has a solid foundation with MCP tools and web interface that can be extended",
+      "GitHub Issues integration (#49) could benefit from project organization features"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "Jira Epic/Story/Task hierarchy",
+      "GitHub Projects with milestones and dependencies",
+      "Azure DevOps Feature/User Story/Task structure",
+      "Agile epic breakdown patterns",
+      "Gantt chart project management"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-10T15:49:38.849Z",
+    "contextVersion": 4
+  },
+  "id": 50
+}

@@ -1,0 +1,31 @@
+{
+  "key": "final-test-of-simple-incremental-ids",
+  "title": "Final test of simple incremental IDs",
+  "type": "task",
+  "description": "Final test of the simplified incremental ID generation after proper build sequence (Core → MCP → Restart). This should now produce simple IDs like 1, 2, 3, etc.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-15T08:37:45.457Z",
+  "updatedAt": "2025-07-15T08:37:45.457Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T08:37:45.457Z",
+    "contextVersion": 1
+  },
+  "id": 79
+}

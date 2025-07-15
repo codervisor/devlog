@@ -1,0 +1,46 @@
+{
+  "key": "consolidate-duplicate-css-files-merge-layout-css-a",
+  "title": "Consolidate duplicate CSS files - merge layout.css and components.css",
+  "type": "refactor",
+  "description": "Remove duplication between components.css and layout.css by merging them into a single file. Both files contain overlapping page layout styles, header configurations, and responsive design rules that create maintenance overhead and potential conflicts.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-01T16:07:06.225Z",
+  "updatedAt": "2025-07-01T16:11:10.272Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "87cc1fd6-0658-48f9-b146-3459bf80be3f",
+      "timestamp": "2025-07-01T16:07:11.266Z",
+      "category": "progress",
+      "content": "Starting consolidation analysis. Found that both files are imported in globals.css with layout.css before components.css, meaning components.css rules take precedence for conflicts."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Code maintainability and developer experience. Having duplicate CSS rules across files makes it difficult to maintain consistent styling and increases the risk of conflicts or inconsistencies.",
+    "technicalContext": "Current structure has components.css and layout.css with significant overlap:\n- Page layout styles (.page-layout, .page-header, .page-content)\n- App layout styles (.app-layout, .app-content)\n- Responsive design rules for mobile breakpoints\n- Header and navigation styling\n\nBoth files are imported in globals.css sequentially, with layout.css imported before components.css.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Merge layout.css and components.css into a single, well-organized file",
+      "Remove duplicate CSS rules and consolidate conflicting styles",
+      "Update imports in globals.css to reflect the new structure",
+      "Ensure no visual regressions in the web application",
+      "Update CSS organization documentation"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-01T16:07:06.225Z",
+    "contextVersion": 1
+  },
+  "id": 23,
+  "assignee": ""
+}

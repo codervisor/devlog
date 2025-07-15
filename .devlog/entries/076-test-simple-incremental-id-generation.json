@@ -1,0 +1,31 @@
+{
+  "key": "test-simple-incremental-id-generation",
+  "title": "Test simple incremental ID generation",
+  "type": "task",
+  "description": "Test that the new simple incremental ID generation works correctly with the MCP devlog tools.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-15T08:32:49.379Z",
+  "updatedAt": "2025-07-15T08:32:49.379Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T08:32:49.379Z",
+    "contextVersion": 1
+  },
+  "id": 76
+}

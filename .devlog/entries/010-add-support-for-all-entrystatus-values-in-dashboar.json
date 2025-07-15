@@ -1,0 +1,44 @@
+{
+  "key": "add-support-for-all-entrystatus-values-in-dashboar",
+  "title": "Add support for all EntryStatus values in Dashboard statistics and UI utilities",
+  "type": "feature",
+  "description": "Update the Dashboard component and UI utilities to display statistics for all DevlogStatus values (todo, in-progress, review, testing, done, archived) instead of just a subset. Currently missing review, testing, and archived from both stats display and UI utility functions.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-06-27T09:01:42.931Z",
+  "updatedAt": "2025-06-27T09:25:45.662Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "c3164a8f-f49e-47b3-86ab-d0513548fab0",
+      "timestamp": "2025-06-27T09:25:45.662Z",
+      "category": "progress",
+      "content": "Successfully implemented support for all EntryStatus values in Dashboard component and UI utilities"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Better dashboard visibility helps users understand the full state of their work across all possible statuses, providing more accurate progress tracking.",
+    "technicalContext": "Need to update both the Dashboard component's stats cards and the devlog-ui-utils.tsx functions to handle all 6 DevlogStatus values defined in @devlog/types",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Dashboard shows stats cards for all 6 status values",
+      "UI utilities return appropriate colors and icons for review, testing, and archived statuses",
+      "Compact stats in header include all statuses",
+      "All status values display correctly in the recent devlogs list"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-06-27T09:01:42.931Z",
+    "contextVersion": 1
+  },
+  "id": 10
+}

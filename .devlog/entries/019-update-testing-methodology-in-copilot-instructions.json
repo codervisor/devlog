@@ -1,0 +1,45 @@
+{
+  "key": "update-testing-methodology-in-copilot-instructions",
+  "title": "Update testing methodology in copilot instructions for early stage development",
+  "type": "docs",
+  "description": "Update the global copilot instructions to reflect early stage development testing methodology, allowing temporary scripts and browser-based Playwright MCP testing instead of requiring formal Vitest test cases",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-01T14:54:56.548Z",
+  "updatedAt": "2025-07-01T14:55:27.686Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "232166bb-93b4-43e1-979b-22d1d2f1fe3f",
+      "timestamp": "2025-07-01T14:55:27.686Z",
+      "category": "progress",
+      "content": "Successfully updated the testing requirements section to reflect early stage development needs. Changed from mandatory Vitest testing to flexible approach allowing temporary scripts and Playwright MCP testing"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The project is in early development stage and requiring formal test frameworks is too restrictive. Developers need flexibility to use temporary scripts and browser-based testing tools like Playwright MCP for rapid prototyping and validation",
+    "technicalContext": "Current copilot instructions prohibit temporary scripts and mandate Vitest testing framework. This needs to be relaxed for early stage development while maintaining some testing discipline",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Update testing section in copilot-instructions.md",
+      "Allow temporary scripts in tmp/ directory",
+      "Enable browser-based Playwright MCP testing",
+      "Maintain prohibition against creating test scripts in tracked directories",
+      "Keep the essence of testing but make it more flexible for early development"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-01T14:54:56.548Z",
+    "contextVersion": 1
+  },
+  "id": 19
+}

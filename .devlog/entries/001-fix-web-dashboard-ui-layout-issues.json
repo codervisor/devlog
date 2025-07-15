@@ -1,0 +1,87 @@
+{
+  "key": "fix-web-dashboard-ui-layout-issues",
+  "title": "Fix Web Dashboard UI Layout Issues",
+  "type": "feature",
+  "description": "Improve the web dashboard UI by fixing layout issues including missing alignment, proper margins/paddings, spacing inconsistencies, and overall visual hierarchy. The current dashboard lacks proper spacing and alignment which affects usability and visual appeal.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-06-26T14:26:46.312Z",
+  "updatedAt": "2025-06-26T15:01:57.150Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "2e249733-cb5e-41fb-9602-235ffebaca84",
+      "timestamp": "2025-06-26T14:31:01.683Z",
+      "category": "progress",
+      "content": "Completed UI layout improvements including:\n- Added proper container with max-width and responsive padding\n- Improved dashboard header spacing and typography\n- Enhanced stats cards with better spacing, hover effects, and shadows\n- Fixed recent devlogs list with better typography and visual hierarchy\n- Added responsive design for mobile devices\n- Improved overall app content wrapper structure\n- Enhanced Ant Design component styling consistency\n- All changes built successfully without errors"
+    },
+    {
+      "id": "59bf282b-088c-43d3-a415-808f4e3d64ee",
+      "timestamp": "2025-06-26T14:37:27.477Z",
+      "category": "progress",
+      "content": "Further refined UI improvements:\n- Removed most inline styles and replaced with CSS classes\n- Added proper CSS specificity with !important declarations where needed\n- Preserved all avatar styling and alignment\n- Maintained tag spacing and alignment in recent devlogs\n- Added hover effects for better user interaction\n- Ensured responsive design works correctly\n- Double-checked that no existing functionality was broken"
+    },
+    {
+      "id": "0dd805fa-445b-4039-a417-d9af8b0e5e10",
+      "timestamp": "2025-06-26T14:40:40.413Z",
+      "category": "progress",
+      "content": "Working on adding missing DevlogEntry fields to the detail page for better visibility. Current detail page only shows basic fields like title, type, status, priority, description, businessContext, technicalContext, and notes. Missing important fields include: key, id, estimatedHours, actualHours, assignee, tags, files, relatedDevlogs, acceptanceCriteria, dependencies, decisions, risks, aiContext, and externalReferences."
+    },
+    {
+      "id": "b8d33b58-311a-4aa7-9edc-3468e9796b60",
+      "timestamp": "2025-06-26T14:44:17.813Z",
+      "category": "progress",
+      "content": "Successfully added all missing DevlogEntry fields to the detail page component. The DevlogDetails.tsx component now displays:\n\nNEW FIELDS ADDED TO VIEW MODE:\n- key (semantic key) and id displayed in header\n- estimatedHours and actualHours in metadata section\n- assignee field\n- tags display with purple color tags\n- acceptanceCriteria as bulleted list in card\n- dependencies with type tags and external IDs\n- decisions in timeline format with rationale and alternatives\n- risks with impact/probability tags and mitigation\n- files as code-formatted cards\n- relatedDevlogs as clickable tags\n- aiContext comprehensive section with summary, insights, questions, next steps, patterns\n- externalReferences with system tags and links\n\nNEW FIELDS ADDED TO EDIT MODE:\n- estimatedHours and actualHours number inputs\n- assignee text input\n- tags as multi-select with token separator\n\nBuild completed successfully with no errors. All new fields are properly integrated with TypeScript types and Ant Design components."
+    },
+    {
+      "id": "89d37de8-ef4d-4490-a4f1-199e3ac4d4a5",
+      "timestamp": "2025-06-26T15:00:09.093Z",
+      "category": "progress",
+      "content": "Testing markdown rendering with formatted content. Adding code examples and structured lists."
+    },
+    {
+      "id": "876fa9db-52b3-493c-a89a-08e60e1570d5",
+      "timestamp": "2025-06-26T15:00:18.776Z",
+      "category": "progress",
+      "content": "## Markdown Test Content\n\nThis note contains **bold text**, *italic text*, and `inline code`.\n\n### Code Block Example\n```typescript\ninterface DevlogEntry {\n  id: number;\n  title: string;\n  description: string;\n  // More fields...\n}\n```\n\n### List Example\n- ✅ Fixed layout issues\n- ✅ Added responsive design\n- ✅ Improved typography\n- 🔧 Need to test markdown rendering\n\n### Links\nCheck out the [Ant Design documentation](https://ant.design) for more component examples.\n\n> **Note**: This is a blockquote to test markdown styling integration with Ant Design."
+    },
+    {
+      "id": "d3c050ab-4974-403e-871a-75af743ae9a1",
+      "timestamp": "2025-06-26T15:00:26.366Z",
+      "category": "progress",
+      "content": "Testing markdown rendering - updated business context with markdown formatting to validate the MarkdownRenderer component."
+    },
+    {
+      "id": "f8821108-7b6f-4966-9c22-bfbcce32153b",
+      "timestamp": "2025-06-26T15:01:57.150Z",
+      "category": "progress",
+      "content": "Updated for markdown testing - Added markdown content examples in business/technical context and notes to demonstrate rich formatting capabilities of the new MarkdownRenderer component."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "A well-designed UI improves user experience and makes the devlog dashboard more professional and easier to use for development tracking.",
+    "technicalContext": "The web package uses Next.js with Ant Design components and custom CSS. Main layout issues are in Dashboard.tsx, AppLayout.tsx, and globals.css. Need to improve responsive design, component spacing, and visual consistency.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Proper margins and padding throughout the dashboard",
+      "Consistent spacing between components",
+      "Better visual hierarchy and alignment",
+      "Responsive design improvements",
+      "Clean and modern appearance"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-06-26T14:26:46.312Z",
+    "contextVersion": 1
+  },
+  "id": 1
+}

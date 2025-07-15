@@ -1,0 +1,54 @@
+{
+  "key": "fix-notes-ordering-in-devlogdetails-to-show-most-r",
+  "title": "Fix notes ordering in DevlogDetails to show most recent first",
+  "type": "bugfix",
+  "description": "Fix the ordering of notes in the DevlogDetails component to show the most recent notes first instead of last. Currently, notes are displayed in chronological order (oldest first), but users expect to see the latest updates at the top for better usability.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-03T16:39:21.675Z",
+  "updatedAt": "2025-07-03T16:40:53.391Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "02d4d659-f6b4-4d2b-b74b-22d144c0b59c",
+      "timestamp": "2025-07-03T16:39:51.036Z",
+      "category": "progress",
+      "content": "Successfully implemented the fix by reversing the notes array before rendering. Changed `devlog.notes.map()` to `[...devlog.notes].reverse().map()` to show most recent notes first while preserving the original data structure. The spread operator ensures we don't mutate the original array.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/packages/web/app/components/features/devlogs/DevlogDetails.tsx"
+      ],
+      "codeChanges": "Modified the notes rendering section to reverse the array before mapping: `{[...devlog.notes].reverse().map((note) => (...))}`"
+    },
+    {
+      "id": "ccc1a0d7-1748-4b50-b1a0-015824c4152e",
+      "timestamp": "2025-07-03T16:40:53.391Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed the notes ordering in DevlogDetails component. The notes now display in reverse chronological order (most recent first) by using `[...devlog.notes].reverse().map()` instead of `devlog.notes.map()`. This improves user experience by showing the latest updates first, which is what users naturally expect when reviewing devlog progress."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users naturally expect to see the most recent information first when reviewing devlog entries. Having the latest notes at the bottom forces users to scroll down to see recent updates, which creates a poor user experience especially for devlogs with many notes.",
+    "technicalContext": "The DevlogDetails component renders notes using a Timeline component that maps over the devlog.notes array. The notes array is stored in chronological order (oldest first) in the data model. To display most recent first, we need to reverse the array before rendering without modifying the underlying data structure.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Most recent notes appear at the top of the Notes section",
+      "Notes maintain their proper timestamps and categories",
+      "Notes are still properly formatted with markdown rendering",
+      "Change only affects display order, not data storage"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-03T16:39:21.675Z",
+    "contextVersion": 1
+  },
+  "id": 29
+}

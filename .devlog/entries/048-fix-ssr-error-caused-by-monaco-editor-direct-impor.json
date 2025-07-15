@@ -1,0 +1,58 @@
+{
+  "key": "fix-ssr-error-caused-by-monaco-editor-direct-impor",
+  "title": "Fix SSR error caused by Monaco Editor direct import",
+  "type": "bugfix",
+  "description": "Fix \"window is not defined\" SSR error in MarkdownEditor component caused by direct import of monaco-editor. The Monaco Editor API is being imported directly at the top level which executes during server-side rendering and tries to access the window object.",
+  "status": "done",
+  "priority": "critical",
+  "createdAt": "2025-07-10T14:03:27.126Z",
+  "updatedAt": "2025-07-10T14:05:22.947Z",
+  "notes": [
+    {
+      "id": "efe5b1f5-fc57-4fa5-b4ee-8b9b62e18440",
+      "timestamp": "2025-07-10T14:05:11.857Z",
+      "category": "solution",
+      "content": "Fixed SSR error by removing direct import of monaco-editor API and moving it to dynamic import inside the component. This prevents window object access during server-side rendering.",
+      "files": [
+        "/Users/marvzhang/projects/codervisor/devlog/packages/web/app/components/ui/MarkdownEditor.tsx"
+      ]
+    },
+    {
+      "id": "a99fc185-bf51-4877-9b06-5f1fdf094dab",
+      "timestamp": "2025-07-10T14:05:17.851Z",
+      "category": "solution",
+      "content": "Testing confirmed: Pages now load successfully without ReferenceError, compilation is clean, and MarkdownEditor functionality is preserved",
+      "codeChanges": "Removed `import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'` and wrapped monaco type access in dynamic import inside updateHeight function"
+    },
+    {
+      "id": "3ea0f4f9-3999-4a94-94f4-09d26366ce19",
+      "timestamp": "2025-07-10T14:05:22.947Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed SSR error by removing direct monaco-editor imports that were causing window object access during server-side rendering. All functionality preserved and compilation is clean."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Critical error blocking server-side rendering of any page containing the MarkdownEditor component, preventing proper Next.js functionality",
+    "technicalContext": "The issue is in MarkdownEditor.tsx where `import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'` executes during SSR. Need to move monaco types access inside the client-side only dynamic component or use lazy imports.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "No SSR errors related to window object",
+      "MarkdownEditor functionality works correctly",
+      "Pages with MarkdownEditor render properly on server-side"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-10T14:03:27.126Z",
+    "contextVersion": 1
+  },
+  "id": 48
+}
