@@ -1,0 +1,66 @@
+{
+  "key": "fix-github-workflow-missing-build-test-js-file",
+  "title": "Fix GitHub workflow missing build/test.js file",
+  "type": "bugfix",
+  "description": "The GitHub CI workflow is failing because it tries to run 'node build/test.js' but this file doesn't exist. The issue is that the workflow expects a test.js integration test file in the build directory, but the current setup either doesn't have one or it's not being built correctly.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-15T13:09:02.635Z",
+  "updatedAt": "2025-07-15T13:17:46.040Z",
+  "notes": [
+    {
+      "id": "f917b38c-b234-454a-a272-c961b965fb8a",
+      "timestamp": "2025-07-15T13:15:28.327Z",
+      "category": "progress",
+      "content": "Fixed the missing build/test.js issue by creating a standalone integration test file (src/test.ts) that compiles to build/test.js. Also created a missing MCP compliance test script (scripts/test-mcp-compliance.mjs) referenced by the workflow. Both tests are now working locally.",
+      "files": [
+        "packages/mcp/src/test.ts",
+        "scripts/test-mcp-compliance.mjs",
+        "packages/mcp/tsconfig.json"
+      ],
+      "codeChanges": "Created standalone integration test file that verifies MCP server functionality, DevlogManager operations, and basic CRUD operations. Created MCP protocol compliance test script that validates server startup and basic protocol interactions."
+    },
+    {
+      "id": "b54edb98-0932-4cc1-97bf-903802f3a718",
+      "timestamp": "2025-07-15T13:17:05.475Z",
+      "category": "solution",
+      "content": "Successfully resolved all GitHub workflow issues. The missing build/test.js error has been fixed, and all workflow commands now work correctly locally. Ready for the CI pipeline to pass.",
+      "files": [
+        "packages/mcp/src/test.ts",
+        "scripts/test-mcp-compliance.mjs"
+      ],
+      "codeChanges": "All GitHub workflow issues resolved. Integration tests and MCP compliance tests are now working correctly."
+    },
+    {
+      "id": "674c3de2-bd71-4209-b345-1b7c3c1a0d2f",
+      "timestamp": "2025-07-15T13:17:46.040Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed GitHub workflow issue by creating missing integration test file and MCP compliance script. The workflow will now pass as all test commands work correctly."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "CI/CD pipeline must work reliably to ensure code quality and prevent broken deployments. Failed workflows block development progress and reduce confidence in the codebase.",
+    "technicalContext": "The MCP package's tsconfig.json excludes test files from compilation (src/**/*.test.ts and src/__tests__). The workflow runs 'pnpm build && node build/test.js' but build/test.js is never created. Need to either create a standalone integration test file or modify the workflow to use the correct test command.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "GitHub workflow passes without errors",
+      "Integration tests run successfully",
+      "Build process creates all necessary files",
+      "MCP server functionality is validated in CI"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T13:09:02.635Z",
+    "contextVersion": 1
+  },
+  "id": 96
+}

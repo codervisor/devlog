@@ -593,8 +593,35 @@
       "priority": "high",
       "createdAt": "2025-07-15T03:50:43.870Z",
       "updatedAt": "2025-07-15T04:13:09.864Z"
+    },
+    "96": {
+      "filename": "096-fix-github-workflow-missing-build-test-js-file.json",
+      "title": "Fix GitHub workflow missing build/test.js file",
+      "status": "done",
+      "type": "bugfix",
+      "priority": "high",
+      "createdAt": "2025-07-15T13:09:02.635Z",
+      "updatedAt": "2025-07-15T13:17:46.040Z"
+    },
+    "97": {
+      "filename": "097-refactor-type-safety-and-code-duplication-issues.json",
+      "title": "Refactor: Type Safety and Code Duplication Issues",
+      "status": "in-progress",
+      "type": "refactor",
+      "priority": "medium",
+      "createdAt": "2025-07-15T13:14:26.074Z",
+      "updatedAt": "2025-07-15T13:32:38.657Z"
+    },
+    "98": {
+      "filename": "098-chat-history-analysis-for-ai-agent-performance-opt.json",
+      "title": "Chat History Analysis for AI Agent Performance Optimization",
+      "status": "new",
+      "type": "feature",
+      "priority": "high",
+      "createdAt": "2025-07-15T13:29:42.379Z",
+      "updatedAt": "2025-07-15T13:29:42.379Z"
     }
   },
-  "lastId": 95,
+  "lastId": 98,
   "version": "1.0.0"
 }

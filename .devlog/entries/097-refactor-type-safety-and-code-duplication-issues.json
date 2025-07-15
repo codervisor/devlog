@@ -1,0 +1,68 @@
+{
+  "key": "refactor-type-safety-and-code-duplication-issues",
+  "title": "Refactor: Type Safety and Code Duplication Issues",
+  "type": "refactor",
+  "description": "Comprehensive refactoring to address major code quality issues identified during codebase analysis: eliminate widespread use of 'any' types in MCP adapter, consolidate duplicated GitHub type mapping logic, standardize error handling patterns, and improve TypeScript type safety across packages.",
+  "status": "in-progress",
+  "priority": "medium",
+  "createdAt": "2025-07-15T13:14:26.074Z",
+  "updatedAt": "2025-07-15T13:32:38.657Z",
+  "notes": [
+    {
+      "id": "a2342895-05f0-466a-bc89-aaa3e5a868bc",
+      "timestamp": "2025-07-15T13:32:38.657Z",
+      "category": "progress",
+      "content": "Successfully completed major refactoring work addressing all identified issues:\n\n✅ **Type Safety Improvements**:\n- Eliminated 20+ instances of 'any' types in MCP adapter\n- Created comprehensive TypeScript interfaces for all MCP tool arguments\n- Replaced unsafe type casts with proper type definitions\n- Improved IDE autocomplete and error detection\n\n✅ **Code Deduplication**:\n- Consolidated duplicated GitHub type mapping logic into shared utilities\n- Removed identical switch statements from github-storage.ts and github-mapper.ts\n- Created reusable functions: mapDevlogTypeToGitHubType, mapGitHubTypeToDevlogType, etc.\n\n✅ **Error Handling Standardization**:\n- Created comprehensive error class hierarchy (DevlogError, DevlogNotFoundError, etc.)\n- Standardized error logging with consistent context information\n- Replaced inconsistent error patterns with structured error handling\n- Added proper error context and metadata\n\n✅ **Build Validation**:\n- All packages (@devlog/core, @devlog/mcp) build successfully without warnings\n- MCP integration tests pass\n- Maintained 100% backward compatibility\n\nThe codebase is now significantly more maintainable, type-safe, and follows consistent patterns throughout.",
+      "files": [
+        "packages/mcp/src/types/tool-args.ts",
+        "packages/mcp/src/mcp-adapter.ts",
+        "packages/mcp/src/index.ts",
+        "packages/core/src/utils/github-type-mapper.ts",
+        "packages/core/src/storage/github-storage.ts",
+        "packages/core/src/utils/github-mapper.ts",
+        "packages/core/src/utils/errors.ts",
+        "packages/core/src/devlog-manager.ts",
+        "packages/core/src/index.ts"
+      ],
+      "codeChanges": "Major refactoring improvements implemented:\n1. Type Safety: Eliminated all 'any' types from MCP adapter, created proper TypeScript interfaces\n2. Code Deduplication: Consolidated GitHub type mapping logic into shared utility functions\n3. Error Handling: Created standardized error classes and consistent error handling patterns\n4. Build Validation: All packages build successfully without TypeScript warnings"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "This refactoring directly impacts developer productivity and code maintainability. The current type safety issues make the codebase harder to work with, increase the likelihood of runtime errors, and reduce IDE support effectiveness. Eliminating code duplication reduces maintenance burden and ensures consistency across the application.",
+    "technicalContext": "Analysis revealed several critical areas: 1) MCP adapter extensively uses 'any' types (20+ instances), reducing type safety; 2) GitHub type mapping logic is duplicated between github-storage.ts and github-mapper.ts with identical switch statements; 3) Error handling patterns are inconsistent across packages; 4) Missing proper TypeScript interfaces for tool arguments and return types.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Eliminate all unnecessary 'any' types from MCP adapter and related files",
+      "Create proper TypeScript interfaces for all MCP tool arguments and return types",
+      "Consolidate duplicated GitHub type mapping logic into shared utility functions",
+      "Standardize error handling patterns across all packages",
+      "Ensure all packages build without TypeScript warnings",
+      "Maintain 100% backward compatibility with existing functionality",
+      "Add proper type definitions to improve IDE autocomplete and error detection"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "MCP adapter has 20+ 'any' type usages that can be properly typed",
+      "Identical GitHub type mapping switch statements exist in 2 different files",
+      "Error handling varies from console.error to throw new Error patterns",
+      "Some database storage files use (x as any) casting that can be improved"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "TypeScript strict mode patterns for eliminating any types",
+      "Utility function extraction for code deduplication",
+      "Error handling standardization using custom error classes",
+      "Interface segregation for tool argument typing"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T13:14:26.074Z",
+    "contextVersion": 1
+  },
+  "id": 97
+}

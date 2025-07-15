@@ -3,7 +3,7 @@
  */
 
 import * as crypto from 'crypto';
-import { AIContext, DevlogContext, DevlogManager } from '@devlog/core';
+import { DevlogManager } from '@devlog/core';
 import {
   CreateDevlogRequest,
   DevlogStatus,
@@ -11,8 +11,24 @@ import {
   UpdateDevlogRequest,
   DevlogConfig,
   NoteCategory,
+  AIContext, 
+  DevlogContext,
 } from '@devlog/core';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CreateDevlogArgs,
+  UpdateDevlogArgs,
+  ListDevlogsArgs,
+  SearchDevlogsArgs,
+  AddDevlogNoteArgs,
+  UpdateDevlogWithNoteArgs,
+  AddDecisionArgs,
+  CompleteDevlogArgs,
+  GetActiveContextArgs,
+  GetContextForAIArgs,
+  DiscoverRelatedDevlogsArgs,
+  UpdateAIContextArgs,
+} from './types/tool-args.js';
 
 export class MCPDevlogAdapter {
   private devlogManager: DevlogManager;
@@ -71,7 +87,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async getDevlog(args: { id: number }): Promise<CallToolResult> {
+  async getDevlog(args: GetContextForAIArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const entry = await this.devlogManager.getDevlog(args.id);
@@ -98,7 +114,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async listDevlogs(args: any = {}): Promise<CallToolResult> {
+  async listDevlogs(args: ListDevlogsArgs = {}): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const filter = {
@@ -137,7 +153,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async searchDevlogs(args: { query: string }): Promise<CallToolResult> {
+  async searchDevlogs(args: SearchDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const entries = await this.devlogManager.searchDevlogs(args.query);
@@ -170,16 +186,10 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async addDevlogNote(args: {
-    id: number;
-    note: string;
-    category?: string;
-    files?: string[];
-    codeChanges?: string;
-  }): Promise<CallToolResult> {
+  async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const category = (args.category as any) || 'progress';
+    const category = (args.category || 'progress') as NoteCategory;
     const entry = await this.devlogManager.addNote(args.id, args.note, category, {
       files: args.files,
       codeChanges: args.codeChanges,
@@ -195,13 +205,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async addDecision(args: {
-    id: number;
-    decision: string;
-    rationale: string;
-    decisionMaker: string;
-    alternatives?: string[];
-  }): Promise<CallToolResult> {
+  async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const entry = await this.devlogManager.getDevlog(args.id);
@@ -251,7 +255,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async completeDevlog(args: { id: number; summary?: string }): Promise<CallToolResult> {
+  async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const entry = await this.devlogManager.completeDevlog(args.id, args.summary);
@@ -266,7 +270,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async getActiveContext(args: { limit?: number } = {}): Promise<CallToolResult> {
+  async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const filter = {
@@ -309,7 +313,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async getContextForAI(args: { id: number }): Promise<CallToolResult> {
+  async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const entry = await this.devlogManager.getContextForAI(args.id);
@@ -351,17 +355,10 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async updateAIContext(args: {
-    id: number;
-    summary?: string;
-    insights?: string[];
-    questions?: string[];
-    patterns?: string[];
-    nextSteps?: string[];
-  }): Promise<CallToolResult> {
+  async updateAIContext(args: UpdateAIContextArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const contextUpdate: any = {};
+    const contextUpdate: Partial<AIContext> = {};
 
     if (args.summary) contextUpdate.currentSummary = args.summary;
     if (args.insights) contextUpdate.keyInsights = args.insights;
@@ -396,12 +393,7 @@ export class MCPDevlogAdapter {
     }
   }
 
-  async discoverRelatedDevlogs(args: {
-    workDescription: string;
-    workType: DevlogType;
-    keywords?: string[];
-    scope?: string;
-  }): Promise<CallToolResult> {
+  async discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     const discoveryResult = await this.devlogManager.discoverRelatedDevlogs(args);
@@ -464,22 +456,14 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async updateDevlogWithNote(args: {
-    id: number;
-    note: string;
-    status?: string;
-    priority?: string;
-    category?: NoteCategory;
-    codeChanges?: string;
-    files?: string[];
-  }): Promise<CallToolResult> {
+  async updateDevlogWithNote(args: UpdateDevlogWithNoteArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const updates: any = {};
+    const updates: Partial<UpdateDevlogRequest> = {};
     if (args.status) updates.status = args.status;
     if (args.priority) updates.priority = args.priority;
 
-    const entry = await this.devlogManager.updateWithProgress(args.id, updates, args.note, {
+    const entry = await this.devlogManager.updateWithProgress(args.id, { id: args.id, ...updates }, args.note, {
       category: args.category || 'progress',
       files: args.files,
       codeChanges: args.codeChanges,

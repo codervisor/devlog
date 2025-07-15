@@ -14,6 +14,20 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { MCPDevlogAdapter } from './mcp-adapter.js';
 import { allTools } from './tools/index.js';
+import {
+  CreateDevlogArgs,
+  UpdateDevlogArgs,
+  ListDevlogsArgs,
+  SearchDevlogsArgs,
+  AddDevlogNoteArgs,
+  UpdateDevlogWithNoteArgs,
+  AddDecisionArgs,
+  CompleteDevlogArgs,
+  GetActiveContextArgs,
+  GetContextForAIArgs,
+  DiscoverRelatedDevlogsArgs,
+  UpdateAIContextArgs,
+} from './types/tool-args.js';
 
 const server = new Server(
   {
@@ -40,43 +54,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case 'create_devlog':
-        return await adapter.createDevlog(args as any);
+        return await adapter.createDevlog(args as unknown as CreateDevlogArgs);
 
       case 'discover_related_devlogs':
-        return await adapter.discoverRelatedDevlogs(args as any);
+        return await adapter.discoverRelatedDevlogs(args as unknown as DiscoverRelatedDevlogsArgs);
 
       case 'update_devlog':
-        return await adapter.updateDevlog(args as any);
+        return await adapter.updateDevlog(args as unknown as UpdateDevlogArgs);
 
       case 'get_devlog':
-        return await adapter.getDevlog(args as any);
+        return await adapter.getDevlog(args as unknown as GetContextForAIArgs);
 
       case 'list_devlogs':
-        return await adapter.listDevlogs(args as any);
+        return await adapter.listDevlogs(args as unknown as ListDevlogsArgs);
 
       case 'search_devlogs':
-        return await adapter.searchDevlogs(args as any);
+        return await adapter.searchDevlogs(args as unknown as SearchDevlogsArgs);
 
       case 'add_devlog_note':
-        return await adapter.addDevlogNote(args as any);
+        return await adapter.addDevlogNote(args as unknown as AddDevlogNoteArgs);
 
       case 'update_devlog_with_note':
-        return await adapter.updateDevlogWithNote(args as any);
+        return await adapter.updateDevlogWithNote(args as unknown as UpdateDevlogWithNoteArgs);
 
       case 'add_decision':
-        return await adapter.addDecision(args as any);
+        return await adapter.addDecision(args as unknown as AddDecisionArgs);
 
       case 'complete_devlog':
-        return await adapter.completeDevlog(args as any);
+        return await adapter.completeDevlog(args as unknown as CompleteDevlogArgs);
 
       case 'get_active_context':
-        return await adapter.getActiveContext(args as any);
+        return await adapter.getActiveContext(args as unknown as GetActiveContextArgs);
 
       case 'get_context_for_ai':
-        return await adapter.getContextForAI(args as any);
+        return await adapter.getContextForAI(args as unknown as GetContextForAIArgs);
 
       case 'update_ai_context':
-        return await adapter.updateAIContext(args as any);
+        return await adapter.updateAIContext(args as unknown as UpdateAIContextArgs);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

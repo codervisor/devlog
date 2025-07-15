@@ -30,7 +30,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:integration": "pnpm build && node build/test.js",
+    "test:integration": "vitest run src/__tests__/integration.test.ts",
     "clean": "rm -rf build *.tsbuildinfo",
     "prepublishOnly": "pnpm build"
   },

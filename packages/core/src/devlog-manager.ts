@@ -24,6 +24,7 @@ import type {
 } from './types/index.js';
 import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
+import { DevlogNotFoundError, DevlogStorageError, logger, handleAsyncOperation } from './utils/errors.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
@@ -132,7 +133,7 @@ export class DevlogManager {
 
     const existing = await this.storageProvider.get(request.id);
     if (!existing) {
-      throw new Error(`Devlog entry with ID '${request.id}' not found`);
+      throw new DevlogNotFoundError(request.id, { operation: 'updateDevlog' });
     }
 
     const updated: DevlogEntry = {
@@ -206,7 +207,7 @@ export class DevlogManager {
 
     const existing = await this.storageProvider.get(id);
     if (!existing) {
-      throw new Error(`Devlog entry with ID '${id}' not found`);
+      throw new DevlogNotFoundError(id, { operation: 'addNote' });
     }
 
     const note: DevlogNote = {
@@ -360,7 +361,7 @@ export class DevlogManager {
 
     const existing = await this.storageProvider.get(id);
     if (!existing) {
-      throw new Error(`Devlog entry with ID '${id}' not found`);
+      throw new DevlogNotFoundError(id, { operation: 'deleteDevlog' });
     }
 
     await this.storageProvider.delete(id);

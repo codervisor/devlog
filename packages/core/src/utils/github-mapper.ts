@@ -4,6 +4,10 @@
 
 import { DevlogEntry, DevlogStatus, DevlogType, DevlogPriority, DevlogNote, Decision, GitHubStorageConfig, ExternalReference } from '../types/index.js';
 import { GitHubIssue, CreateIssueRequest, UpdateIssueRequest } from './github-api.js';
+import { 
+  mapGitHubTypeToDevlogType, 
+  mapNativeLabelsToDevlogType 
+} from './github-type-mapper.js';
 
 export interface DevlogMetadata {
   version: string;
@@ -379,54 +383,17 @@ export class DevlogGitHubMapper {
   }
 
   /**
-   * Map GitHub native type to devlog type
+   * Map GitHub native type to devlog type (uses shared utility)
    */
   private mapGitHubTypeToDevlogType(githubType: string): DevlogType {
-    const normalizedType = githubType.toLowerCase();
-    switch (normalizedType) {
-      case 'bug':
-        return 'bugfix';
-      case 'enhancement':
-      case 'feature':
-        return 'feature';
-      case 'documentation':
-      case 'docs':
-        return 'docs';
-      case 'refactor':
-      case 'refactoring':
-        return 'refactor';
-      case 'task':
-      case 'chore':
-        return 'task';
-      default:
-        return 'task';
-    }
+    return mapGitHubTypeToDevlogType(githubType);
   }
 
   /**
-   * Map native GitHub labels to devlog type
+   * Map native GitHub labels to devlog type (uses shared utility)
    */
   private mapNativeLabelsToDevlogType(labels: string[]): DevlogType {
-    for (const label of labels) {
-      const normalizedLabel = label.toLowerCase();
-      switch (normalizedLabel) {
-        case 'bug':
-          return 'bugfix';
-        case 'enhancement':
-        case 'feature':
-          return 'feature';
-        case 'documentation':
-        case 'docs':
-          return 'docs';
-        case 'refactor':
-        case 'refactoring':
-          return 'refactor';
-        case 'task':
-        case 'chore':
-          return 'task';
-      }
-    }
-    return 'task'; // Default fallback
+    return mapNativeLabelsToDevlogType(labels);
   }
 
   /**

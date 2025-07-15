@@ -19,3 +19,4 @@ export * from './types/index.js';
 // Utilities
 export * from './utils/common.js';
 export * from './utils/storage.js';
+export * from './utils/errors.js';

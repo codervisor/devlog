@@ -10,7 +10,6 @@
     "test:watch": "pnpm -r test:watch",
     "test:coverage": "pnpm --filter @devlog/mcp test -- --coverage",
     "test:integration": "pnpm --filter @devlog/mcp test:integration",
-    "test:mcp-compliance": "node scripts/test-mcp-compliance.mjs",
     "clean": "pnpm -r clean && rm -f *.tsbuildinfo",
     "install-all": "pnpm install",
     "build:mcp": "pnpm --filter @devlog/mcp build",

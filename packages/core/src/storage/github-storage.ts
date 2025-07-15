@@ -18,6 +18,10 @@ import { RateLimiter } from '../utils/rate-limiter.js';
 import { LRUCache } from '../utils/lru-cache.js';
 import { DevlogGitHubMapper } from '../utils/github-mapper.js';
 import { GitHubLabelManager } from '../utils/github-labels.js';
+import { 
+  mapDevlogTypeToGitHubType, 
+  mapDevlogTypeToGitHubLabel 
+} from '../utils/github-type-mapper.js';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;
@@ -329,26 +333,13 @@ export class GitHubStorageProvider implements StorageProvider {
     return query;
   }
 
+  // Type mapping methods now use shared utilities
   private mapDevlogTypeToGitHubType(devlogType: string): string {
-    switch (devlogType) {
-      case 'bugfix': return 'bug';
-      case 'feature': return 'enhancement';
-      case 'docs': return 'documentation';
-      case 'refactor': return 'refactor';
-      case 'task': return 'task';
-      default: return devlogType;
-    }
+    return mapDevlogTypeToGitHubType(devlogType);
   }
 
   private mapDevlogTypeToGitHubLabel(devlogType: string): string {
-    switch (devlogType) {
-      case 'bugfix': return 'bug';
-      case 'feature': return 'enhancement';
-      case 'docs': return 'documentation';
-      case 'refactor': return 'refactor';
-      case 'task': return 'task';
-      default: return devlogType;
-    }
+    return mapDevlogTypeToGitHubLabel(devlogType);
   }
 
   private isEmptyFilter(filter: DevlogFilter): boolean {
