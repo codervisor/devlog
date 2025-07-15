@@ -24,11 +24,6 @@ export class JsonStorageProvider implements StorageProvider {
   private readonly devlogDir: string;
   private readonly entriesDir: string;
   private initialized = false;
-  
-  // Simple in-memory cache to improve performance for repeated operations
-  private cache = new Map<string, DevlogEntry>();
-  private cacheTimestamp = 0;
-  private readonly CACHE_TTL = 10000; // 10 seconds
 
   constructor(config: JsonConfig = {}) {
     this.config = {
@@ -61,13 +56,6 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
-    const cacheKey = id.toString();
-    
-    // Check cache first
-    if (this.isCacheValid() && this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey) || null;
-    }
-
     const filename = await this.findFileById(id);
     if (!filename) return null;
 
@@ -75,9 +63,6 @@ export class JsonStorageProvider implements StorageProvider {
       const filePath = path.join(this.entriesDir, filename);
       const content = await fs.readFile(filePath, 'utf-8');
       const entry = JSON.parse(content) as DevlogEntry;
-      
-      // Cache the result
-      this.cache.set(cacheKey, entry);
       return entry;
     } catch {
       return null;
@@ -98,10 +83,6 @@ export class JsonStorageProvider implements StorageProvider {
 
     // Save entry file
     await fs.writeFile(filePath, JSON.stringify(entry, null, 2));
-
-    // Update cache
-    this.cache.set(entry.id.toString(), entry);
-    this.cacheTimestamp = Date.now();
   }
 
   async delete(id: DevlogId): Promise<void> {
@@ -110,8 +91,6 @@ export class JsonStorageProvider implements StorageProvider {
       const filePath = path.join(this.entriesDir, filename);
       try {
         await fs.unlink(filePath);
-        // Remove from cache
-        this.cache.delete(id.toString());
       } catch {
         // File might not exist, continue
       }
@@ -120,22 +99,8 @@ export class JsonStorageProvider implements StorageProvider {
 
   async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.initialize();
-    
-    // Use cached entries if available and fresh
-    if (this.isCacheValid() && this.cache.size > 0) {
-      const entries = Array.from(this.cache.values());
-      return this.applyFilterAndSort(entries, filter);
-    }
-
     // Load all entries from filesystem
     const entries = await this.loadAllEntries();
-    
-    // Cache all entries
-    this.cache.clear();
-    entries.forEach(entry => {
-      this.cache.set(entry.id!.toString(), entry);
-    });
-    this.cacheTimestamp = Date.now();
 
     return this.applyFilterAndSort(entries, filter);
   }
@@ -175,9 +140,7 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   async cleanup(): Promise<void> {
-    // Clear cache
-    this.cache.clear();
-    this.cacheTimestamp = 0;
+    // No cleanup needed without cache
   }
 
   /**
@@ -228,14 +191,13 @@ export class JsonStorageProvider implements StorageProvider {
   private async findFileById(id: DevlogId): Promise<string | null> {
     try {
       const files = await fs.readdir(this.entriesDir);
-      const idStr = id.toString();
       
       // Look for files that start with the ID (supports various padding formats)
       for (const file of files) {
         if (file.endsWith('.json')) {
           // Extract ID from filename (assumes format: {id}-{slug}.json)
           const match = file.match(/^(\d+)-/);
-          if (match && match[1] === idStr) {
+          if (match && parseInt(match[1]) === id) {
             return file;
           }
         }
@@ -266,10 +228,6 @@ export class JsonStorageProvider implements StorageProvider {
     return filtered.sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
-  }
-
-  private isCacheValid(): boolean {
-    return Date.now() - this.cacheTimestamp < this.CACHE_TTL;
   }
 
   private createSlug(title: string): string {
