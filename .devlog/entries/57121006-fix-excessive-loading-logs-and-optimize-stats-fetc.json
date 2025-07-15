@@ -1,0 +1,61 @@
+{
+  "key": "fix-excessive-loading-logs-and-optimize-stats-fetc",
+  "title": "Fix excessive loading logs and optimize stats fetching in web application",
+  "type": "bugfix",
+  "description": "The web application is showing excessive log messages \"[WEB] Loading devlog index from /Users/marvzhang/projects/codervisor/devlog/.devlog/index.json\" (appearing 20+ times). This is caused by:\n\n1. A console.debug statement in json-storage.ts loadIndex() method that logs every file system access\n2. Stats being refetched in AppLayout.tsx every time devlogs change via SSE, creating unnecessary API calls\n\nThis creates noise in logs and potential performance issues with excessive file system access and API calls.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-10T13:21:49.763Z",
+  "updatedAt": "2025-07-10T13:27:23.726Z",
+  "notes": [
+    {
+      "id": "6dabff16-e56f-4ab8-9a1d-eae3d67519cd",
+      "timestamp": "2025-07-10T13:22:34.124Z",
+      "category": "progress",
+      "content": "Fixed the excessive logging issue by removing console.debug statement from json-storage.ts loadIndex() method. Optimized stats fetching in AppLayout.tsx to only refetch when devlogs.length changes instead of on every devlog update. Currently building packages to test the changes.",
+      "files": [
+        "packages/core/src/storage/json-storage.ts",
+        "packages/web/app/AppLayout.tsx"
+      ],
+      "codeChanges": "Removed console.debug from JsonStorageProvider.loadIndex() and optimized AppLayout stats fetching dependency from [devlogs] to [devlogs.length]"
+    },
+    {
+      "id": "051fa02f-45a7-460b-938b-9dfdf7005264",
+      "timestamp": "2025-07-10T13:27:03.633Z",
+      "category": "progress",
+      "content": "Successfully fixed both issues:\n1. ✅ Removed console.debug statement from JsonStorageProvider.loadIndex() method - no more excessive \"[WEB] Loading devlog index\" logs\n2. ✅ Optimized AppLayout.tsx stats fetching to only trigger when devlogs.length changes instead of on every individual devlog update\n\nThe web application should now have clean logs and more efficient stats fetching behavior.",
+      "codeChanges": "Final fix: Removed console.debug logging from storage layer and optimized frontend stats fetching dependencies"
+    },
+    {
+      "id": "07b4bbf6-3523-45f7-a624-0ca57b82c919",
+      "timestamp": "2025-07-10T13:27:23.726Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed excessive logging and optimized stats fetching in the web application. Removed console.debug statement from storage layer and improved frontend efficiency by only refetching stats when devlog count changes. Changes committed as 81233db."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Clean logging output is essential for debugging and monitoring. Excessive logs make it difficult to identify real issues and can impact performance during development and production.",
+    "technicalContext": "The issue occurs in two layers:\n- Core storage layer: json-storage.ts logs every index file access\n- Web frontend: AppLayout.tsx refetches stats whenever devlogs array changes, which happens frequently with SSE real-time updates",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Remove or reduce excessive logging from storage layer",
+      "Optimize stats fetching to avoid unnecessary API calls",
+      "Maintain real-time updates for stats when devlogs change",
+      "Log output should be clean and only show meaningful information"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-10T13:21:49.763Z",
+    "contextVersion": 1
+  },
+  "id": 57121006
+}

@@ -1,0 +1,48 @@
+{
+  "key": "add-missing-context-fields-to-updatedevlogrequest-",
+  "title": "Add missing context fields to UpdateDevlogRequest interface and implementation",
+  "type": "bugfix",
+  "description": "The UpdateDevlogRequest interface is missing important context fields that are available in CreateDevlogRequest, preventing users from updating businessContext, technicalContext, acceptanceCriteria, initialInsights, and relatedPatterns after creating a devlog entry.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-01T13:54:03.560Z",
+  "updatedAt": "2025-07-01T14:01:06.847Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "7b894a2a-a222-4b10-a762-8e214887d4c0",
+      "timestamp": "2025-07-01T14:01:06.847Z",
+      "category": "progress",
+      "content": "Successfully implemented the fix! The issue was that the MCP tool schema and TypeScript UpdateDevlogRequest interface had inconsistent parameter names. Fixed by standardizing both to use camelCase naming (files instead of files_changed, codeChanges instead of code_changes) and added missing fields (blockers, nextSteps). All context fields now update properly."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users need to be able to update all devlog fields as projects evolve, requirements change, and more context is discovered. Currently they can only update basic fields and progress tracking, but not the rich context fields that are crucial for AI agent understanding.",
+    "technicalContext": "The UpdateDevlogRequest interface in packages/types/src/requests.ts needs to include the context fields from CreateDevlogRequest. The updateDevlog implementation in DevlogManager also needs to handle updating these fields.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "UpdateDevlogRequest interface includes businessContext, technicalContext, acceptanceCriteria, initialInsights, and relatedPatterns fields",
+      "DevlogManager.updateDevlog implementation properly updates these context fields",
+      "MCP update_devlog tool supports the new fields",
+      "All existing functionality continues to work"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "The issue is in the type definition, not the storage layer",
+      "Need to update both interface and implementation",
+      "MCP tool schema might also need updates"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-01T13:54:03.560Z",
+    "contextVersion": 1
+  },
+  "id": 57112002
+}

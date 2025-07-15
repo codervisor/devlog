@@ -1,0 +1,64 @@
+{
+  "key": "implement-real-backend-api-for-dashboard-time-seri",
+  "title": "Implement real backend API for dashboard time series data",
+  "type": "feature",
+  "description": "Implement real backend API support for dashboard time series charts. This involves creating new API endpoints to provide historical statistics data, extending the core devlog manager to aggregate data over time periods, and updating the frontend to consume real data instead of mock data.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-06-27T09:48:14.131Z",
+  "updatedAt": "2025-06-27T10:02:04.548Z",
+  "tags": [],
+  "notes": [
+    {
+      "id": "766f515c-7228-4823-b442-9de8a49761dc",
+      "timestamp": "2025-06-27T09:49:21.652Z",
+      "category": "progress",
+      "content": "Starting implementation. Analyzed current architecture: DevlogManager has getStats() method that delegates to storage provider. Need to extend this to support time series data. Plan: 1) Add time series interfaces to types, 2) Extend DevlogManager with time series methods, 3) Create new API endpoint, 4) Update Dashboard component."
+    },
+    {
+      "id": "2d00718c-c8b2-4b5c-87c7-453f0eb2a1b3",
+      "timestamp": "2025-06-27T09:59:16.183Z",
+      "category": "progress",
+      "content": "User requested to replace the status distribution trends line chart with a pie/donut chart showing current status distribution. This is more appropriate as it focuses on current state rather than historical trends for each status."
+    },
+    {
+      "id": "e05c9171-3718-4664-af11-5e71979f248f",
+      "timestamp": "2025-06-27T10:01:32.517Z",
+      "category": "progress",
+      "content": "Implementation completed successfully. Added time series support to types, extended DevlogManager with historical data aggregation, created API endpoint, updated Dashboard to use real data, and replaced status trends with pie chart. Build succeeds."
+    },
+    {
+      "id": "e50f2888-302e-4fbb-b775-aef64888ff9b",
+      "timestamp": "2025-06-27T10:02:04.548Z",
+      "category": "progress",
+      "content": "Completed: Successfully implemented complete backend API support for dashboard time series charts. Extended the type system with time series interfaces, added historical data aggregation to DevlogManager, created a new API endpoint, and updated the Dashboard component to consume real data instead of mock data. Also improved the user experience by replacing the status distribution trends line chart with a more appropriate pie chart showing current status distribution. The implementation provides real historical insights and establishes a solid foundation for future analytics features."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The dashboard charts currently use mock data which provides no real insights. Users need to see actual historical trends of their development activity, completion rates, and status distribution changes over time to understand their productivity patterns and make data-driven decisions about their development workflow.",
+    "technicalContext": "Need to extend DevlogManager in core package to support time-based queries and aggregation. Create new API endpoint in web package. Update DevlogStats interface to include time series data structure. Implement efficient data aggregation considering performance for large datasets.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Create new API endpoint for time series statistics data",
+      "Implement historical data aggregation in core package",
+      "Update DevlogStats interface to include time series data",
+      "Replace mock data in Dashboard component with real API calls",
+      "Add proper loading states for chart data",
+      "Ensure data is efficiently cached and performant"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-06-27T09:48:14.131Z",
+    "contextVersion": 1
+  },
+  "id": 5718007
+}

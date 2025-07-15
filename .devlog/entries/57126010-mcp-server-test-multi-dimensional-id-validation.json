@@ -1,0 +1,31 @@
+{
+  "key": "mcp-server-test-multi-dimensional-id-validation",
+  "title": "MCP Server Test - Multi-Dimensional ID Validation",
+  "type": "task",
+  "description": "This test entry should receive a readable 8-digit ID in the format {agent}{julianDay}{sequence} now that the MCP server has been restarted with the updated core package containing the multi-dimensional ID implementation.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-15T07:09:16.825Z",
+  "updatedAt": "2025-07-15T07:09:16.825Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T07:09:16.825Z",
+    "contextVersion": 1
+  },
+  "id": 57126010
+}

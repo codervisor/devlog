@@ -1,0 +1,31 @@
+{
+  "key": "final-id-system-validation-post-mcp-restart",
+  "title": "Final ID System Validation - Post MCP Restart",
+  "type": "task",
+  "description": "Final validation test for the multi-dimensional ID structure implementation. This should be the first devlog entry to receive a readable ID in the format {agent}{julianDay}{sequence} after the MCP server restart with the updated core package.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-15T07:06:27.964Z",
+  "updatedAt": "2025-07-15T07:06:27.964Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T07:06:27.964Z",
+    "contextVersion": 1
+  },
+  "id": 57126009
+}
