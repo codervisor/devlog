@@ -606,11 +606,11 @@
     "97": {
       "filename": "097-refactor-type-safety-and-code-duplication-issues.json",
       "title": "Refactor: Type Safety and Code Duplication Issues",
-      "status": "in-progress",
+      "status": "done",
       "type": "refactor",
       "priority": "medium",
       "createdAt": "2025-07-15T13:14:26.074Z",
-      "updatedAt": "2025-07-15T13:32:38.657Z"
+      "updatedAt": "2025-07-15T13:33:05.859Z"
     },
     "98": {
       "filename": "098-chat-history-analysis-for-ai-agent-performance-opt.json",
