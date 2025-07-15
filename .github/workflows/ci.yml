@@ -46,8 +46,48 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
+      - name: Debug workspace configuration
+        run: |
+          echo "🔧 Workspace configuration:"
+          cat pnpm-workspace.yaml
+          echo ""
+          echo "📦 Root package.json relevant scripts:"
+          cat package.json | grep -A 5 -B 5 '"build"'
+          echo ""
+          echo "🌳 Workspace packages:"
+          pnpm list --depth 0
+
+      - name: Verify workspace dependencies
+        run: |
+          # Ensure workspace dependencies are properly linked
+          echo "📦 Verifying workspace structure..."
+          pnpm list --depth 0 --filter @devlog/mcp
+          echo "🔗 Checking @devlog/core dependency in MCP package..."
+          cd packages/mcp && npm ls @devlog/core || echo "⚠️  @devlog/core not found in node_modules, but should be available via workspace"
+          echo "📂 MCP package.json dependencies:"
+          cat packages/mcp/package.json | grep -A 10 '"dependencies"' || echo "No dependencies section found"
+
+      - name: Build core package first
+        run: pnpm --filter @devlog/core build
+
+      - name: Verify core build and types
+        run: |
+          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
+          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
+          echo "✅ Core package built successfully"
+
+      - name: Type-check MCP package before building
+        run: |
+          cd packages/mcp
+          echo "🔍 Type-checking MCP package..."
+          npx tsc --noEmit --skipLibCheck
+          echo "✅ MCP package type-check passed"
+
+      - name: Build MCP package
+        run: pnpm --filter @devlog/mcp build
+
+      - name: Build remaining packages
+        run: pnpm --filter @devlog/web build
 
       - name: Run unit tests
         run: pnpm test
@@ -58,8 +98,10 @@ jobs:
       - name: Verify build artifacts
         run: |
           # Check that essential build artifacts exist
-          [ -f "packages/mcp/build/index.js" ] || { echo "MCP server build failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "Core build failed"; exit 1; }
+          [ -f "packages/core/build/index.d.ts" ] || { echo "Core type declarations failed"; exit 1; }
+          [ -f "packages/mcp/build/index.js" ] || { echo "MCP server build failed"; exit 1; }
+          [ -f "packages/mcp/build/index.d.ts" ] || { echo "MCP type declarations failed"; exit 1; }
           echo "✅ Build artifacts verified!"
 
   mcp-server-tests:
@@ -85,8 +127,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core package first  
+        run: pnpm --filter @devlog/core build
+
       - name: Build MCP server
-        run: pnpm build:mcp
+        run: pnpm --filter @devlog/mcp build
+
+      - name: Verify MCP build artifacts
+        run: |
+          [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
+          [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
+          echo "✅ MCP build artifacts verified!"
 
       - name: Test MCP server startup
         run: |
@@ -133,8 +184,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build core package first
+        run: pnpm --filter @devlog/core build
+
       - name: Build packages
-        run: pnpm build
+        run: pnpm --filter @devlog/mcp build
+
+      - name: Verify TypeScript compilation
+        run: |
+          echo "🔍 Verifying TypeScript compilation..."
+          cd packages/mcp && npx tsc --noEmit --skipLibCheck
+          echo "✅ TypeScript compilation verified"
 
       - name: Test MCP server startup (Unix)
         if: runner.os != 'Windows'
