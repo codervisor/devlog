@@ -60,7 +60,7 @@ Currently, the devlog system supports local storage (JSON, SQLite) and database 
 
 #### Storage Type Extension
 ```typescript
-// packages/types/src/storage.ts
+// packages/core/src/types/storage.ts
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
 ```
 
@@ -633,7 +633,7 @@ packages/core/src/__tests__/github-api.test.ts      # API client tests
 
 ### Files to Modify
 ```
-packages/types/src/storage.ts                       # Add GitHub types
+packages/core/src/types/storage.ts                   # Add GitHub types
 packages/core/src/storage/storage-provider.ts       # Add GitHub case
 packages/core/src/configuration-manager.ts          # GitHub config support
 docs/guides/GITHUB_STORAGE_SETUP.md                # Setup documentation

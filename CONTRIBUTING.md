@@ -8,9 +8,17 @@ This is a monorepo containing development logging tools and utilities. This docu
 /
 ├── package.json                 # Root workspace configuration
 ├── packages/
-│   ├── mcp/             # MCP server for development logging
+│   ├── core/                   # Core devlog management + TypeScript types
+│   │   ├── package.json        # Package-specific dependencies and scripts
+│   │   ├── src/               # Source code including types/
+│   │   └── build/             # Compiled output
+│   ├── mcp/                   # MCP server for development logging
 │   │   ├── package.json        # Package-specific dependencies and scripts
 │   │   ├── src/               # Source code
+│   │   └── build/             # Compiled output
+│   ├── web/                   # Next.js web interface
+│   │   ├── package.json        # Package-specific dependencies and scripts
+│   │   ├── app/               # Next.js App Router pages
 │   │   └── build/             # Compiled output
 │   └── [future packages]/     # Space for additional packages
 ├── .vscode/                   # VS Code workspace configuration
@@ -41,8 +49,8 @@ pnpm build:mcp
 # Build only the core package  
 pnpm build:core
 
-# Build only the types package
-pnpm build:types
+# Build only the web package
+pnpm build:web
 
 # Start the MCP server
 pnpm start
@@ -70,9 +78,9 @@ pnpm --filter @devlog/mcp dev
 pnpm --filter @devlog/core build
 pnpm --filter @devlog/core dev
 
-# Work on the types package
-pnpm --filter @devlog/types build
-pnpm --filter @devlog/types dev
+# Work on the web package
+pnpm --filter @devlog/web build
+pnpm --filter @devlog/web dev
 
 # Install dependencies for a specific package
 pnpm --filter @devlog/mcp add some-dependency
@@ -98,12 +106,11 @@ When adding a new package to the monorepo:
 
 ### Package Structure
 
-- `@devlog/types`: Shared TypeScript types and interfaces
-- `@devlog/core`: Core devlog management functionality (file system operations, CRUD, etc.)
+- `@devlog/core`: Core devlog management functionality, file system operations, CRUD, and all shared TypeScript types
 - `@devlog/mcp`: MCP server implementation that wraps the core functionality
+- `@devlog/web`: Next.js web interface for browsing and managing devlogs
 - Future packages might include:
   - `@devlog/cli`: Command-line interface for devlog management
-  - `@devlog/web`: Web interface for browsing devlogs
   - `@devlog/utils`: Shared utilities
 
 ## Build System

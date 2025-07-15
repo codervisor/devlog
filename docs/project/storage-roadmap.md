@@ -16,7 +16,7 @@ This roadmap tracks the implementation of a simplified local JSON storage approa
 ### Key Achievements
 
 - ✅ **LocalJsonStorageProvider**: Complete implementation with full CRUD operations
-- ✅ **Type System Updates**: Added 'local-json' strategy and LocalJsonConfig to @devlog/types
+- ✅ **Type System Updates**: Added 'local-json' strategy and LocalJsonConfig to @devlog/core
 - ✅ **Configuration Manager**: Updated to default to 'local-json' and support new config
 - ✅ **Storage Factory**: Integrated LocalJsonStorageProvider creation
 - ✅ **Automatic Directory Creation**: Creates `.devlog/entries/` structure on first use
@@ -28,7 +28,7 @@ This roadmap tracks the implementation of a simplified local JSON storage approa
 
 ```
 ✅ packages/core/src/storage/json-storage.ts (new)
-✅ packages/types/src/index.ts (updated)
+✅ packages/core/src/types/index.ts (updated)
 ✅ packages/core/src/configuration-manager.ts (updated)
 ✅ packages/core/src/storage/storage-provider.ts (updated)
 ✅ packages/core/src/index.ts (exports updated)

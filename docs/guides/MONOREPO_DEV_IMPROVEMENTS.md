@@ -2,7 +2,7 @@
 
 ## Problem Solved
 
-Previously, when developing application packages (`@devlog/web`, `@devlog/mcp`), changes to base packages (`@devlog/types`, `@devlog/core`) required manual rebuilding. This led to a poor developer experience where changes in dependencies weren't immediately available.
+Previously, when developing application packages (`@devlog/web`, `@devlog/mcp`), changes to the base package (`@devlog/core`) required manual rebuilding. This led to a poor developer experience where changes in dependencies weren't immediately available.
 
 ## Solution Implemented
 
@@ -18,9 +18,8 @@ Previously, when developing application packages (`@devlog/web`, `@devlog/mcp`),
 ### 2. Automatic Dependency Watching
 
 Each enhanced dev script uses `concurrently` to run:
-1. `@devlog/types` in TypeScript watch mode (`tsc --watch`)
-2. `@devlog/core` in TypeScript watch mode (`tsc --watch`)  
-3. The target application package in dev mode
+1. `@devlog/core` in TypeScript watch mode (`tsc --watch`)  
+2. The target application package in dev mode
 
 ### 3. VS Code Integration
 
@@ -32,7 +31,6 @@ Updated `.vscode/tasks.json` with new tasks:
 ### 4. Visual Output
 
 Color-coded console output using `concurrently`:
-- **TYPES** (cyan) - TypeScript compilation for types package
 - **CORE** (green) - TypeScript compilation for core package
 - **MCP** (yellow) - MCP server output
 - **WEB** (blue) - Next.js dev server output
@@ -66,7 +64,7 @@ Color-coded console output using `concurrently`:
 
 Before:
 ```bash
-# Edit @devlog/types or @devlog/core
+# Edit @devlog/core
 # Run: pnpm build:types && pnpm build:core
 # Run: pnpm dev
 ```

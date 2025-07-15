@@ -35,18 +35,6 @@
 			"group": "build"
 		},
 		{
-			"label": "Types: Build",
-			"type": "shell",
-			"command": "pnpm",
-			"args": [
-				"build:types"
-			],
-			"group": "build",
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
 			"label": "MCP: Build",
 			"type": "shell",
 			"command": "pnpm",

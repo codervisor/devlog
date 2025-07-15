@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-15T04:39:57.516Z",
-  "updatedAt": "2025-07-15T05:02:58.585Z",
+  "updatedAt": "2025-07-15T05:08:54.003Z",
   "notes": [
     {
       "id": "2367fc12-7a65-4729-86c3-cf1180b1cbcd",
@@ -39,6 +39,22 @@
         "pnpm-lock.yaml"
       ],
       "codeChanges": "Fixed TypeScript errors: optional chaining for entry.context, WorkspaceInfo→WorkspaceMetadata, storage config structure, DevlogNote import, removed @devlog/types package"
+    },
+    {
+      "id": "bf59f3ef-fc12-4727-9342-bf944603c645",
+      "timestamp": "2025-07-15T05:08:54.003Z",
+      "category": "solution",
+      "content": "📚 **Documentation Updates Complete**\n\nUpdated all project documentation to reflect the major architectural change:\n\n**🏗️ Architecture Documentation:**\n- **README.md**: Updated architecture section to show 3 packages instead of 4, consolidated types into @devlog/core description\n- **CONTRIBUTING.md**: Updated project structure diagram, package descriptions, and build script references\n\n**📖 Development Guides:**\n- **DEVELOPMENT.md**: Updated monorepo dev experience guide to reflect single base package\n- **MONOREPO_DEV_IMPROVEMENTS.md**: Updated development workflow documentation  \n- **Project design docs**: Fixed file path references from packages/types to packages/core/src/types\n\n**🔧 Tool Configuration:**\n- **.vscode/tasks.json**: Removed \"Types: Build\" task since @devlog/types no longer exists\n\n**✅ Key Changes:**\n- Architecture now correctly shows 3 packages: core (with types), mcp, web\n- All file path references updated to new type locations\n- Development workflow simplified to single base package\n- VS Code tasks cleaned up\n\nDocumentation is now consistent with the new consolidated architecture where types live alongside their implementations in @devlog/core.",
+      "files": [
+        "README.md",
+        "CONTRIBUTING.md",
+        "docs/guides/DEVELOPMENT.md",
+        "docs/guides/MONOREPO_DEV_IMPROVEMENTS.md",
+        "docs/project/storage-roadmap.md",
+        "docs/project/github-storage-design.md",
+        ".vscode/tasks.json"
+      ],
+      "codeChanges": "Updated all documentation to reflect @devlog/types removal: README.md architecture section, CONTRIBUTING.md package structure, development guides, VS Code tasks"
     }
   ],
   "files": [],

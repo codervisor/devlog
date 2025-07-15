@@ -2,7 +2,7 @@
 
 ## Improved Monorepo Dev Experience
 
-This monorepo now supports automatic dependency building during development. Base packages (`@devlog/types` and `@devlog/core`) will automatically rebuild when their source files change, ensuring application packages always have the latest changes.
+This monorepo now supports automatic dependency building during development. The base package (`@devlog/core`) will automatically rebuild when its source files change, ensuring application packages always have the latest changes.
 
 ### Available Development Scripts
 
@@ -18,9 +18,8 @@ This monorepo now supports automatic dependency building during development. Bas
 
 Each enhanced dev script uses `concurrently` to run multiple processes in parallel:
 
-1. **Types Package**: `tsc --watch` for real-time TypeScript compilation
-2. **Core Package**: `tsc --watch` for real-time TypeScript compilation  
-3. **Application Package**: The main dev server/process
+1. **Core Package**: `tsc --watch` for real-time TypeScript compilation  
+2. **Application Package**: The main dev server/process
 
 ### Benefits
 
@@ -40,7 +39,7 @@ The following VS Code tasks are available in the Command Palette (Ctrl/Cmd + Shi
 ### Development Workflow
 
 1. **Start Development**: Use `pnpm dev:mcp` or `pnpm dev:web` to start development with all dependencies
-2. **Edit Base Packages**: Make changes to `@devlog/types` or `@devlog/core`
+2. **Edit Base Package**: Make changes to `@devlog/core`
 3. **See Changes**: The TypeScript compiler will automatically rebuild, and your app will pick up the changes
 4. **Edit App Code**: Continue developing your application normally
 
@@ -48,8 +47,7 @@ The following VS Code tasks are available in the Command Palette (Ctrl/Cmd + Shi
 
 ```
 packages/
-├── types/          # Base package - shared TypeScript types
-├── core/           # Base package - core functionality  
+├── core/           # Base package - core functionality and TypeScript types
 ├── mcp/            # Application package - MCP server
 └── web/            # Application package - Web interface
 ```
@@ -75,5 +73,4 @@ The following scripts are still available for specific use cases:
 
 - `pnpm dev` - MCP server only (no dependency watching)
 - `pnpm --filter @devlog/web dev` - Web app only (no dependency watching)
-- `pnpm --filter @devlog/types dev` - Types package only  
 - `pnpm --filter @devlog/core dev` - Core package only

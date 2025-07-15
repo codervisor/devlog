@@ -16,13 +16,11 @@ AI assistants face significant **memory limitations** when working on large code
 
 ## 📦 Architecture
 
-This monorepo contains four core packages that work together to provide persistent memory for development:
-
-### `@devlog/types`
-Shared TypeScript types and interfaces used across all packages, ensuring type safety and consistency.
+This monorepo contains three core packages that work together to provide persistent memory for development:
 
 ### `@devlog/core` 
 Core devlog management functionality including:
+- **TypeScript types**: All shared types and interfaces for type safety and consistency
 - **Storage backends**: SQLite, PostgreSQL, MySQL support
 - **CRUD operations**: Create, read, update, delete devlog entries
 - **Search & filtering**: Find entries by keywords, status, type, or priority
