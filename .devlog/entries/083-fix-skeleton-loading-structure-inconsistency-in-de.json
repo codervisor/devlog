@@ -1,0 +1,42 @@
+{
+  "key": "fix-skeleton-loading-structure-inconsistency-in-de",
+  "title": "Fix skeleton loading structure inconsistency in DevlogDetailsPage title area",
+  "type": "bugfix",
+  "description": "Fix the skeleton loading state in DevlogDetails component where the skeleton structure doesn't match the actual rendered content structure in the title area. The skeleton is missing the proper `devlogInfo` wrapper div that contains both the info items and meta info sections.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-15T09:50:00.212Z",
+  "updatedAt": "2025-07-15T09:52:13.138Z",
+  "notes": [
+    {
+      "id": "afd838e3-a73e-4206-a5f3-8d0d91ead616",
+      "timestamp": "2025-07-15T09:52:13.138Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed the skeleton loading structure inconsistency in DevlogDetailsPage. The skeleton structure now properly matches the actual rendered DOM structure with the proper devlogInfo wrapper containing both infoItemWrapper and metaInfo sections. Testing with browser navigation confirms no layout shifts when transitioning from skeleton to content."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Proper skeleton loading states improve user experience by providing accurate visual placeholders that match the final content layout. Inconsistent skeletons can cause jarring layout shifts when content loads.",
+    "technicalContext": "The skeleton structure needs to match the actual DOM structure: title in EditableField wrapper, then devlogInfo div containing infoItemWrapper and metaInfo sections.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Skeleton structure matches actual rendered DOM structure",
+      "No layout shifts when transitioning from skeleton to content",
+      "Visual consistency between loading and loaded states"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-15T09:50:00.212Z",
+    "contextVersion": 1
+  },
+  "id": 83
+}

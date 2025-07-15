@@ -61,13 +61,13 @@ export function DevlogDetails({
               active
               size="large"
             />
-
+          </div>
+          <div className={styles.devlogInfo}>
             <Space wrap className={styles.infoItemWrapper}>
               <Skeleton.Button style={{ width: '80px' }} active size="small" />
               <Skeleton.Button style={{ width: '80px' }} active size="small" />
               <Skeleton.Button style={{ width: '80px' }} active size="small" />
             </Space>
-
             <div className={styles.metaInfo}>
               <Skeleton.Input style={{ width: '200px' }} active size="small" />
             </div>
