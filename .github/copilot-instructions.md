@@ -43,6 +43,12 @@
 - **Temporary scripts**: Allowed in `tmp/` directory (gitignored) for quick validation and debugging of non-UI features
 - **API/Logic testing**: Use appropriate testing methods for backend, API, or logic-focused development
 
+#### Build Dependencies
+- **Core package first**: When modifying @devlog/core, ALWAYS build it first with `pnpm --filter @devlog/core build`
+- **MCP package second**: After core changes, rebuild MCP with `pnpm --filter @devlog/mcp build` 
+- **Restart MCP server**: After rebuilding, restart the MCP server to pick up changes
+- **Build order matters**: Core → MCP → Web (follow dependency chain)
+
 #### General Rules
 - **Prohibited**: Never create test scripts in tracked directories (`.` root, `src/`, `scripts/`, etc.)
 - **Clean up**: Remove temporary files from `tmp/` when done
