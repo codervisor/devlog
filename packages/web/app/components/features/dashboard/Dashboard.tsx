@@ -18,10 +18,7 @@ import {
 } from 'recharts';
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
-import {
-  getStatusColor,
-  getStatusIcon,
-} from '@/lib/devlog-ui-utils';
+import { getStatusColor, getStatusIcon } from '@/lib/devlog-ui-utils';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import styles from './Dashboard.module.css';
@@ -249,20 +246,6 @@ export function Dashboard({
                         <Text strong className={styles.devlogId}>
                           {devlog.id}
                         </Text>
-                        // <Avatar
-                        //   size={40}
-                        //   icon={getStatusIcon(devlog.status)}
-                        //   style={{
-                        //     backgroundColor:
-                        //       getStatusColor(devlog.status) === 'success'
-                        //         ? '#52c41a'
-                        //         : getStatusColor(devlog.status) === 'processing'
-                        //           ? '#1890ff'
-                        //           : getStatusColor(devlog.status) === 'error'
-                        //             ? '#ff4d4f'
-                        //             : '#d9d9d9',
-                        //   }}
-                        // />
                       }
                       title={
                         <div className={styles.devlogTitleSection}>
@@ -270,18 +253,12 @@ export function Dashboard({
                             {devlog.title}
                           </Text>
                           <div className={styles.recentDevlogsMeta}>
-                            <DevlogStatusTag
-                              status={devlog.status}
-                              className={styles.devlogTag}
-                            />
+                            <DevlogStatusTag status={devlog.status} className={styles.devlogTag} />
                             <DevlogPriorityTag
                               priority={devlog.priority}
                               className={styles.devlogTag}
                             />
-                            <DevlogTypeTag
-                              type={devlog.type}
-                              className={styles.devlogTag}
-                            />
+                            <DevlogTypeTag type={devlog.type} className={styles.devlogTag} />
                           </div>
                         </div>
                       }

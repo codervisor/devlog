@@ -1,7 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Button, Empty, Popconfirm, Space, Spin, Table, Tag, Typography, Skeleton, Dropdown, Menu } from 'antd';
+import {
+  Button,
+  Empty,
+  Popconfirm,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+  Skeleton,
+  Dropdown,
+  Menu,
+} from 'antd';
 import { DeleteOutlined, EyeOutlined, FilterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -9,7 +21,6 @@ import {
   DevlogId,
   DevlogPriority,
   DevlogStatus,
-  DevlogStats,
   DevlogType,
   DevlogFilter,
 } from '@devlog/core';
@@ -18,6 +29,7 @@ import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { OverviewStats } from '@/components';
 import { statusOptions, priorityOptions, typeOptions } from '@/lib/devlog-options';
 import styles from './DevlogList.module.css';
+import Link from 'next/link';
 
 const { Title, Text } = Typography;
 
@@ -30,14 +42,20 @@ interface DevlogListProps {
   onFilterChange?: (filters: DevlogFilter) => void;
 }
 
-export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog, currentFilters, onFilterChange }: DevlogListProps) {
-  
+export function DevlogList({
+  devlogs,
+  loading,
+  onViewDevlog,
+  onDeleteDevlog,
+  currentFilters,
+  onFilterChange,
+}: DevlogListProps) {
   const createFilterDropdown = (
     filterType: 'status' | 'type' | 'priority',
-    options: Array<{ label: string; value: string }>
+    options: Array<{ label: string; value: string }>,
   ) => {
     const currentValues = currentFilters?.[filterType] || [];
-    
+
     const handleMenuClick = (values: string[]) => {
       if (onFilterChange) {
         onFilterChange({
@@ -55,21 +73,19 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog, cur
         onSelect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
         onDeselect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
       >
-        {options.map(option => (
-          <Menu.Item key={option.value}>
-            {option.label}
-          </Menu.Item>
+        {options.map((option) => (
+          <Menu.Item key={option.value}>{option.label}</Menu.Item>
         ))}
       </Menu>
     );
 
     return (
       <Dropdown overlay={menu} trigger={['click']} placement="bottomLeft">
-        <FilterOutlined 
-          style={{ 
+        <FilterOutlined
+          style={{
             cursor: 'pointer',
             color: currentValues.length > 0 ? '#1890ff' : '#8c8c8c',
-            fontSize: '14px'
+            fontSize: '14px',
           }}
         />
       </Dropdown>
@@ -82,11 +98,13 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog, cur
       dataIndex: 'id',
       key: 'id',
       fixed: 'left',
-      width: 60,
+      width: 80,
       render: (id: number) => (
-        <Text strong className={styles.devlogId}>
-          {id}
-        </Text>
+        <Link href={`/devlogs/${id}`}>
+          <Text strong className={styles.devlogId}>
+            {id}
+          </Text>
+        </Link>
       ),
       onHeaderCell: (column) => ({
         style: {
