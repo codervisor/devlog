@@ -1,15 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   InfoCircleOutlined, 
   NumberOutlined, 
   PlusCircleOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  BarChartOutlined 
+  BarChartOutlined,
+  DownOutlined,
+  UpOutlined
 } from '@ant-design/icons';
-import { Popover, Typography, Tooltip } from 'antd';
+import { Popover, Typography, Tooltip, Button } from 'antd';
 import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/core';
 import styles from './OverviewStats.module.css';
 
@@ -24,6 +26,8 @@ interface OverviewStatsProps {
   className?: string;
   currentFilters?: DevlogFilter;
   onFilterToggle?: (status: DevlogStatus | 'total') => void;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
 }
 
 export function OverviewStats({
@@ -33,7 +37,27 @@ export function OverviewStats({
   className,
   currentFilters,
   onFilterToggle,
+  collapsible = false,
+  defaultCollapsed = false,
 }: OverviewStatsProps) {
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    if (collapsible) {
+      const savedState = localStorage.getItem('overviewStats.collapsed');
+      if (savedState !== null) {
+        setIsCollapsed(JSON.parse(savedState));
+      }
+    }
+  }, [collapsible]);
+
+  // Save collapsed state to localStorage
+  useEffect(() => {
+    if (collapsible) {
+      localStorage.setItem('overviewStats.collapsed', JSON.stringify(isCollapsed));
+    }
+  }, [isCollapsed, collapsible]);
   if (!stats) {
     return null;
   }
@@ -59,8 +83,62 @@ export function OverviewStats({
     return `${baseClasses} ${isClickable ? styles.clickableStat : ''} ${isActive ? styles.activeStat : ''}`;
   };
 
+  const toggleCollapsed = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
+  // Helper to get active status counts for collapsed view
+  const getActiveStatusCount = () => {
+    if (!currentFilters?.status || currentFilters.status.length === 0) {
+      return stats!.totalEntries;
+    }
+    return currentFilters.status.reduce((total, status) => {
+      return total + (stats!.byStatus[status] || 0);
+    }, 0);
+  };
+
+  // Helper to get active status labels for collapsed view
+  const getActiveStatusLabels = () => {
+    if (!currentFilters?.status || currentFilters.status.length === 0) {
+      return 'All';
+    }
+    if (currentFilters.status.length === 1) {
+      return currentFilters.status[0].charAt(0).toUpperCase() + currentFilters.status[0].slice(1);
+    }
+    return `${currentFilters.status.length} filters`;
+  };
+
+  // Render collapsed view for detailed variant
+  const renderCollapsedView = () => {
+    const activeCount = getActiveStatusCount();
+    const activeLabel = getActiveStatusLabels();
+    
+    return (
+      <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
+        <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
+          <span className={styles.statValue}>{activeCount}</span>
+          <span className={styles.statLabel}>{activeLabel}</span>
+        </div>
+        <Button
+          type="text"
+          size="small"
+          icon={<DownOutlined />}
+          onClick={toggleCollapsed}
+          className={styles.collapseButton}
+          title="Expand stats"
+        />
+      </div>
+    );
+  };
+
   // Render detailed variant (for Dashboard and List page)
   if (variant === 'detailed') {
+    // Return collapsed view if collapsible and collapsed
+    if (collapsible && isCollapsed) {
+      return renderCollapsedView();
+    }
+
+    // Render full expanded view
     return (
       <div className={`${styles.dashboardStats} ${className || ''}`}>
         <div 
@@ -141,6 +219,16 @@ export function OverviewStats({
           </span>
           <span className={styles.statLabel}>Closed</span>
         </div>
+        {collapsible && (
+          <Button
+            type="text"
+            size="small"
+            icon={<UpOutlined />}
+            onClick={toggleCollapsed}
+            className={styles.collapseButton}
+            title="Collapse stats"
+          />
+        )}
       </div>
     );
   }

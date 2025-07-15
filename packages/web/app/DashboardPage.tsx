@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { Dashboard, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
+import { useDevlogFilters } from '@/hooks/useDevlogFilters';
 import { DevlogStats, DevlogEntry, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
   const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
+  const { filters, filteredDevlogs, handleStatusFilter } = useDevlogFilters(devlogs);
   const [stats, setStats] = useState<DevlogStats | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesStats | null>(null);
   const [isLoadingTimeSeries, setIsLoadingTimeSeries] = useState(true);
@@ -56,7 +58,16 @@ export function DashboardPage() {
     router.push(`/devlogs/${devlog.id}`);
   };
 
-  const actions = stats ? <OverviewStats stats={stats} variant="detailed" /> : null;
+  const actions = stats ? (
+    <OverviewStats 
+      stats={stats} 
+      variant="detailed" 
+      currentFilters={filters}
+      onFilterToggle={handleStatusFilter}
+      collapsible={true}
+      defaultCollapsed={false}
+    />
+  ) : null;
 
   return (
     <PageLayout actions={actions}>
@@ -64,7 +75,7 @@ export function DashboardPage() {
         stats={stats}
         timeSeriesData={timeSeriesData}
         isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={devlogs.slice(0, 10)}
+        recentDevlogs={filteredDevlogs.slice(0, 10)}
         isLoadingDevlogs={isLoadingDevlogs}
         onViewDevlog={handleViewDevlog}
       />

@@ -7,6 +7,7 @@
   align-items: center;
   text-align: center;
   min-width: 60px;
+  box-sizing: border-box;
 }
 
 .statValue {
@@ -49,12 +50,13 @@
   color: #8c8c8c;
   margin-top: 2px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* Detailed Variant (Dashboard and DevlogList) */
 .dashboardStats {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -135,22 +137,67 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 6px;
-  padding: 4px 8px;
-  margin: -4px -8px;
+  padding: 8px 12px;
+  margin: 0;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .clickableStat:hover {
   background-color: #f0f0f0;
+  border-color: #d9d9d9;
   transform: translateY(-1px);
 }
 
 .activeStat {
   background-color: #e6f7ff;
-  border: 1px solid #91d5ff;
+  border-color: #91d5ff;
 }
 
 .activeStat:hover {
-  background-color: #d4edda;
+  background-color: #bae7ff;
+  border-color: #69c0ff;
+}
+
+/* Collapsible Stats */
+.collapsedStats {
+  align-items: center;
+}
+
+.collapsedSummary {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #fafafa;
+  border: 1px solid #d9d9d9;
+  transition: all 0.2s ease;
+}
+
+.collapsedSummary:hover {
+  background-color: #f0f0f0;
+  border-color: #bfbfbf;
+}
+
+.collapseButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+  padding: 4px 8px;
+  margin-left: 4px;
+  color: #8c8c8c;
+  transition: all 0.2s ease;
+}
+
+.collapseButton:hover {
+  color: #1890ff;
+  background-color: #f0f0f0;
+}
+
+.collapseButton:focus {
+  color: #1890ff;
+  background-color: #f0f0f0;
 }
 
 /* Responsive Design */
