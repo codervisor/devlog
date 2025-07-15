@@ -17,6 +17,9 @@ import type {
 } from '../types/index.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as os from 'os';
+import * as crypto from 'crypto';
+import { execSync } from 'child_process';
 import { getDevlogDirFromJsonConfig } from '../utils/storage.js';
 
 export class JsonStorageProvider implements StorageProvider {
@@ -29,6 +32,9 @@ export class JsonStorageProvider implements StorageProvider {
   private cache = new Map<string, DevlogEntry>();
   private cacheTimestamp = 0;
   private readonly CACHE_TTL = 10000; // 10 seconds
+
+  // Project epoch for Julian day calculation (first commit date)
+  private readonly PROJECT_EPOCH = new Date('2025-06-20T00:00:00Z');
 
   constructor(config: JsonConfig = {}) {
     this.config = {
@@ -182,23 +188,107 @@ export class JsonStorageProvider implements StorageProvider {
 
   /**
    * Get the next available ID for a new entry
-   * Uses timestamp-based IDs to avoid conflicts between multiple agents
+   * Uses multi-dimensional ID structure: {agent}{julianDay}{sequence}
+   * This creates shorter, more readable IDs while maintaining multi-agent safety
    */
   async getNextId(): Promise<DevlogId> {
-    // Use timestamp-based ID to avoid conflicts
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    const timestampId = parseInt(`${timestamp}${random.toString().padStart(3, '0')}`);
-    
-    // Verify uniqueness by checking filesystem (rare collision case)
-    const filename = await this.findFileById(timestampId);
-    if (filename) {
-      // Very rare case - try again with new timestamp
-      await new Promise(resolve => setTimeout(resolve, 1));
-      return this.getNextId();
+    try {
+      const agentHash = this.getAgentHash();
+      const julianDay = this.getProjectJulianDay();
+      const sequence = await this.getNextSequence(agentHash, julianDay);
+      
+      const seqStr = sequence.toString().padStart(3, '0');
+      const id = parseInt(`${agentHash}${julianDay}${seqStr}`);
+      
+      return id;
+    } catch (error) {
+      // Fallback to timestamp-based ID for edge cases
+      console.warn('Failed to generate multi-dimensional ID, falling back to timestamp:', error);
+      return this.getTimestampBasedId();
+    }
+  }
+
+  /**
+   * Generate agent hash from git user.email or user@hostname fallback
+   * Creates a stable 3-digit identifier for each agent (0-999)
+   */
+  private getAgentHash(): number {
+    try {
+      // Primary: Git user.email (most stable across environments)
+      const gitEmail = execSync('git config user.email', { 
+        encoding: 'utf8', 
+        stdio: ['ignore', 'pipe', 'ignore'] 
+      }).trim();
+      
+      if (gitEmail) {
+        return this.hashToAgentId(gitEmail);
+      }
+    } catch {
+      // Git not available or not configured, use fallback
     }
     
-    return timestampId;
+    // Fallback: user@hostname
+    const fallback = `${os.userInfo().username}@${os.hostname()}`;
+    return this.hashToAgentId(fallback);
+  }
+
+  /**
+   * Convert string identifier to stable 3-digit agent ID (0-999)
+   */
+  private hashToAgentId(identifier: string): number {
+    const hash = crypto.createHash('sha256')
+      .update(identifier)
+      .digest('hex')
+      .slice(0, 8); // First 8 hex chars for good distribution
+    
+    return parseInt(hash, 16) % 1000; // 0-999 range
+  }
+
+  /**
+   * Calculate Julian day number relative to project start (2025-06-20)
+   * Returns days since project epoch, starting from 1
+   */
+  private getProjectJulianDay(date = new Date()): number {
+    const diffTime = date.getTime() - this.PROJECT_EPOCH.getTime();
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  /**
+   * Get next sequence number for this agent on this day
+   * Searches existing files to find the next available sequence
+   */
+  private async getNextSequence(agentHash: number, julianDay: number): Promise<number> {
+    let sequence = 1;
+    const maxSequence = 999; // Maximum sequences per agent per day
+    
+    while (sequence <= maxSequence) {
+      const seqStr = sequence.toString().padStart(3, '0');
+      const testId = parseInt(`${agentHash}${julianDay}${seqStr}`);
+      
+      const filename = await this.findFileById(testId);
+      if (!filename) {
+        // This sequence number is available
+        return sequence;
+      }
+      
+      sequence++;
+    }
+    
+    // All sequences exhausted for this agent/day (very unlikely)
+    throw new Error(`All sequences exhausted for agent ${agentHash} on day ${julianDay}`);
+  }
+
+  /**
+   * Fallback timestamp-based ID generation for edge cases
+   * Uses shorter timestamps with 2024 epoch for reduced length
+   */
+  private getTimestampBasedId(): DevlogId {
+    const epoch2024 = new Date('2024-01-01T00:00:00Z').getTime();
+    const relativeMs = Date.now() - epoch2024;
+    const random = Math.floor(Math.random() * 1000);
+    
+    // This creates IDs around 11-12 digits instead of 16
+    return parseInt(`${relativeMs}${random.toString().padStart(3, '0')}`);
   }
 
   private async loadAllEntries(): Promise<DevlogEntry[]> {
