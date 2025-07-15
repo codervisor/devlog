@@ -8,10 +8,10 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   BarChartOutlined,
-  DownOutlined,
-  UpOutlined
+  LeftOutlined,
+  RightOutlined
 } from '@ant-design/icons';
-import { Popover, Typography, Tooltip, Button } from 'antd';
+import { Popover, Typography, Tooltip, Button, Skeleton } from 'antd';
 import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/core';
 import styles from './OverviewStats.module.css';
 
@@ -28,6 +28,7 @@ interface OverviewStatsProps {
   onFilterToggle?: (status: DevlogStatus | 'total') => void;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
+  loading?: boolean;
 }
 
 export function OverviewStats({
@@ -39,6 +40,7 @@ export function OverviewStats({
   onFilterToggle,
   collapsible = false,
   defaultCollapsed = false,
+  loading = false,
 }: OverviewStatsProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
@@ -58,6 +60,61 @@ export function OverviewStats({
       localStorage.setItem('overviewStats.collapsed', JSON.stringify(isCollapsed));
     }
   }, [isCollapsed, collapsible]);
+
+  // Render skeleton loading state
+  const renderSkeleton = () => {
+    if (variant === 'icon') {
+      return (
+        <Skeleton.Button
+          style={{
+            width: '16px',
+            height: '16px',
+            minWidth: '16px',
+          }}
+          active
+          size="small"
+        />
+      );
+    }
+
+    // For detailed variant
+    if (collapsible && isCollapsed) {
+      // Skeleton for collapsed view
+      return (
+        <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
+          <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
+            <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
+          </div>
+          <Skeleton.Button style={{ width: '24px', height: '24px' }} active size="small" />
+        </div>
+      );
+    }
+
+    // Skeleton for expanded detailed view
+    return (
+      <div className={`${styles.dashboardStats} ${className || ''}`}>
+        {/* Total stat skeleton */}
+        <div className={styles.statCompact}>
+          <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
+        </div>
+        {/* Status stats skeleton */}
+        {Array.from({ length: 7 }).map((_, index) => (
+          <div key={index} className={styles.statCompact}>
+            <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
+          </div>
+        ))}
+        {collapsible && (
+          <Skeleton.Button style={{ width: '24px', height: '24px' }} active size="small" />
+        )}
+      </div>
+    );
+  };
+
+  // Show skeleton when loading
+  if (loading) {
+    return renderSkeleton();
+  }
+
   if (!stats) {
     return null;
   }
@@ -149,7 +206,7 @@ export function OverviewStats({
         <Button
           type="text"
           size="small"
-          icon={<DownOutlined />}
+          icon={<LeftOutlined />}
           onClick={toggleCollapsed}
           className={styles.collapseButton}
           title="Expand stats"
@@ -250,7 +307,7 @@ export function OverviewStats({
           <Button
             type="text"
             size="small"
-            icon={<UpOutlined />}
+            icon={<RightOutlined />}
             onClick={toggleCollapsed}
             className={styles.collapseButton}
             title="Collapse stats"

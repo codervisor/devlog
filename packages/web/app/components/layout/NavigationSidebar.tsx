@@ -21,6 +21,7 @@ const { Text } = Typography;
 
 interface NavigationSidebarProps {
   stats?: DevlogStats | null;
+  statsLoading?: boolean;
   collapsed?: boolean;
   connected: boolean;
   onToggle?: () => void;
@@ -28,6 +29,7 @@ interface NavigationSidebarProps {
 
 export function NavigationSidebar({
   stats,
+  statsLoading = false,
   collapsed = false,
   connected,
   onToggle,
@@ -189,7 +191,13 @@ export function NavigationSidebar({
               />
             </Tooltip>
 
-            {stats && <OverviewStats stats={stats} variant="icon" />}
+            {(stats || statsLoading) && (
+              <OverviewStats 
+                stats={stats || null} 
+                loading={statsLoading}
+                variant="icon" 
+              />
+            )}
           </div>
 
           <div className={styles.sidebarFooterContentRight}>

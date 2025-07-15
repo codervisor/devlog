@@ -6,7 +6,8 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  min-width: 60px;
+  width: 60px;
+  height: 56px;
   box-sizing: border-box;
 }
 
@@ -46,7 +47,7 @@
 }
 
 .statLabel {
-  font-size: 12px;
+  font-size: 11px;
   color: #8c8c8c;
   margin-top: 2px;
   line-height: 1.2;

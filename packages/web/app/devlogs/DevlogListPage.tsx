@@ -6,31 +6,15 @@ import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useDevlogFilters } from '@/hooks/useDevlogFilters';
-import { DevlogEntry, DevlogId, DevlogStats } from '@devlog/core';
+import { useStats } from '@/hooks/useStats';
+import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DevlogListPage() {
   const { devlogs, loading, deleteDevlog } = useDevlogs();
   const { filters, filteredDevlogs, handleStatusFilter, setFilters } = useDevlogFilters(devlogs);
-  const [stats, setStats] = useState<DevlogStats | null>(null);
+  const { stats, loading: isLoadingStats } = useStats([devlogs]);
   const router = useRouter();
-
-  // Fetch stats from API like Dashboard does for consistency
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/devlogs/stats/overview');
-        if (response.ok) {
-          const statsData = await response.json();
-          setStats(statsData);
-        }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
-      }
-    };
-
-    fetchStats();
-  }, [devlogs]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/devlogs/${devlog.id}`);
@@ -52,6 +36,7 @@ export function DevlogListPage() {
     <Space size="large" wrap>
       <OverviewStats 
         stats={stats} 
+        loading={isLoadingStats}
         variant="detailed" 
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
