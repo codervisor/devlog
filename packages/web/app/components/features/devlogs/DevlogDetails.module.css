@@ -5,6 +5,10 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+.devlogDetailsContainer {
+  display: flex;
+}
+
 .devlogDetailsHeader {
   padding: 6px 24px;
   height: 102px;
@@ -77,6 +81,7 @@
 
 .devlogDetailsContent {
   margin-bottom: 24px;
+  margin-right: 180px;
   padding: 12px 24px;
 }
 

@@ -26,6 +26,7 @@ import { getCategoryIcon } from '@/lib/note-utils';
 import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
+import { DevlogAnchorNav } from './DevlogAnchorNav';
 
 const { Title, Text } = Typography;
 
@@ -338,7 +339,7 @@ export function DevlogDetails({
       </div>
 
       <div className={styles.devlogDetailsContent}>
-        <div className={styles.descriptionSection}>
+        <div className={styles.descriptionSection} id="description">
           <div className={styles.sectionHeader}>
             <Title level={3}>
               <FileTextOutlined className={styles.sectionIcon} />
@@ -358,7 +359,7 @@ export function DevlogDetails({
           </EditableField>
         </div>
 
-        <div className={styles.contextSection}>
+        <div className={styles.contextSection} id="business-context">
           <div className={styles.sectionHeader}>
             <Title level={3}>
               <InfoCircleOutlined className={styles.sectionIcon} />
@@ -378,7 +379,7 @@ export function DevlogDetails({
           </EditableField>
         </div>
 
-        <div className={styles.contextSection}>
+        <div className={styles.contextSection} id="technical-context">
           <div className={styles.sectionHeader}>
             <Title level={3}>
               <ToolOutlined className={styles.sectionIcon} />
@@ -399,7 +400,7 @@ export function DevlogDetails({
         </div>
 
         {devlog.context?.acceptanceCriteria && devlog.context.acceptanceCriteria.length > 0 && (
-          <div className={styles.criteriaSection}>
+          <div className={styles.criteriaSection} id="acceptance-criteria">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <CheckCircleOutlined className={styles.sectionIcon} />
@@ -423,7 +424,7 @@ export function DevlogDetails({
         )}
 
         {devlog.context?.dependencies && devlog.context.dependencies.length > 0 && (
-          <div className={styles.dependencySection}>
+          <div className={styles.dependencySection} id="dependencies">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <NodeIndexOutlined className={styles.sectionIcon} />
@@ -461,7 +462,7 @@ export function DevlogDetails({
         )}
 
         {devlog.context?.decisions && devlog.context.decisions.length > 0 && (
-          <div className={styles.decisionSection}>
+          <div className={styles.decisionSection} id="decisions">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <SettingOutlined style={{ marginRight: 8, color: '#13c2c2' }} />
@@ -496,7 +497,7 @@ export function DevlogDetails({
         )}
 
         {devlog.context?.risks && devlog.context.risks.length > 0 && (
-          <div className={styles.riskSection}>
+          <div className={styles.riskSection} id="risks">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <WarningOutlined className={styles.sectionIcon} />
@@ -546,7 +547,7 @@ export function DevlogDetails({
         )}
 
         {devlog.files && devlog.files.length > 0 && (
-          <div className={styles.fileSection}>
+          <div className={styles.fileSection} id="files">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <FileTextOutlined className={styles.sectionIcon} />
@@ -564,7 +565,7 @@ export function DevlogDetails({
         )}
 
         {devlog.relatedDevlogs && devlog.relatedDevlogs.length > 0 && (
-          <div className={styles.relatedSection}>
+          <div className={styles.relatedSection} id="related-devlogs">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <LinkOutlined className={styles.sectionIcon} />
@@ -588,7 +589,7 @@ export function DevlogDetails({
             (devlog.aiContext.suggestedNextSteps &&
               devlog.aiContext.suggestedNextSteps.length > 0) ||
             (devlog.aiContext.relatedPatterns && devlog.aiContext.relatedPatterns.length > 0)) && (
-            <div className={styles.aiContextSection}>
+            <div className={styles.aiContextSection} id="ai-context">
               <div className={styles.sectionHeader}>
                 <Title level={3}>
                   <RobotOutlined className={styles.sectionIcon} />
@@ -686,7 +687,9 @@ export function DevlogDetails({
                 <div>
                   <Text type="secondary" className={styles.aiUpdateInfo}>
                     Last AI Update:{' '}
-                    <span title={formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.fullDate}>
+                    <span
+                      title={formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.fullDate}
+                    >
                       {formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.timeAgo}
                     </span>{' '}
                     • Version: {devlog.aiContext.contextVersion}
@@ -697,7 +700,7 @@ export function DevlogDetails({
           )}
 
         {devlog.externalReferences && devlog.externalReferences.length > 0 && (
-          <div className={styles.externalRefSection}>
+          <div className={styles.externalRefSection} id="external-references">
             <div className={styles.sectionHeader}>
               <Title level={3}>
                 <LinkOutlined className={styles.sectionIcon} />
@@ -742,9 +745,9 @@ export function DevlogDetails({
         )}
 
         {devlog.notes && devlog.notes.length > 0 && (
-          <div className={styles.notesSection}>
+          <div className={styles.notesSection} id="notes">
             <div className={styles.sectionHeader}>
-              <Title level={4}>
+              <Title level={3}>
                 <CommentOutlined className={styles.sectionIcon} />
                 Notes
               </Title>
@@ -766,6 +769,8 @@ export function DevlogDetails({
           </div>
         )}
       </div>
+
+      <DevlogAnchorNav devlog={devlog} />
     </div>
   );
 }
