@@ -130,6 +130,29 @@
   min-width: auto;
 }
 
+/* Interactive Stats */
+.clickableStat {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: -4px -8px;
+}
+
+.clickableStat:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.activeStat {
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+}
+
+.activeStat:hover {
+  background-color: #d4edda;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .sidebarStats {

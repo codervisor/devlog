@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Button, Empty, Popconfirm, Space, Spin, Table, Tag, Typography, Skeleton } from 'antd';
-import { DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { Button, Empty, Popconfirm, Space, Spin, Table, Tag, Typography, Skeleton, Dropdown, Menu } from 'antd';
+import { DeleteOutlined, EyeOutlined, FilterOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
   DevlogEntry,
@@ -11,10 +11,12 @@ import {
   DevlogStatus,
   DevlogStats,
   DevlogType,
+  DevlogFilter,
 } from '@devlog/types';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { OverviewStats } from '@/components';
+import { statusOptions, priorityOptions, typeOptions } from '@/lib/devlog-options';
 import styles from './DevlogList.module.css';
 
 const { Title, Text } = Typography;
@@ -24,9 +26,56 @@ interface DevlogListProps {
   loading: boolean;
   onViewDevlog: (devlog: DevlogEntry) => void;
   onDeleteDevlog: (id: DevlogId) => void;
+  currentFilters?: DevlogFilter;
+  onFilterChange?: (filters: DevlogFilter) => void;
 }
 
-export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: DevlogListProps) {
+export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog, currentFilters, onFilterChange }: DevlogListProps) {
+  
+  const createFilterDropdown = (
+    filterType: 'status' | 'type' | 'priority',
+    options: Array<{ label: string; value: string }>
+  ) => {
+    const currentValues = currentFilters?.[filterType] || [];
+    
+    const handleMenuClick = (values: string[]) => {
+      if (onFilterChange) {
+        onFilterChange({
+          ...currentFilters,
+          [filterType]: values.length > 0 ? values : undefined,
+        });
+      }
+    };
+
+    const menu = (
+      <Menu
+        multiple
+        selectable
+        selectedKeys={currentValues}
+        onSelect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
+        onDeselect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
+      >
+        {options.map(option => (
+          <Menu.Item key={option.value}>
+            {option.label}
+          </Menu.Item>
+        ))}
+      </Menu>
+    );
+
+    return (
+      <Dropdown overlay={menu} trigger={['click']} placement="bottomLeft">
+        <FilterOutlined 
+          style={{ 
+            cursor: 'pointer',
+            color: currentValues.length > 0 ? '#1890ff' : '#8c8c8c',
+            fontSize: '14px'
+          }}
+        />
+      </Dropdown>
+    );
+  };
+
   const columns: ColumnsType<DevlogEntry> = [
     {
       title: 'ID',
@@ -75,21 +124,36 @@ export function DevlogList({ devlogs, loading, onViewDevlog, onDeleteDevlog }: D
       ),
     },
     {
-      title: 'Status',
+      title: (
+        <Space>
+          Status
+          {onFilterChange && createFilterDropdown('status', statusOptions)}
+        </Space>
+      ),
       dataIndex: 'status',
       key: 'status',
       width: 120,
       render: (status: DevlogStatus) => <DevlogStatusTag status={status} />,
     },
     {
-      title: 'Priority',
+      title: (
+        <Space>
+          Priority
+          {onFilterChange && createFilterDropdown('priority', priorityOptions)}
+        </Space>
+      ),
       dataIndex: 'priority',
       key: 'priority',
       width: 120,
       render: (priority: DevlogPriority) => <DevlogPriorityTag priority={priority} />,
     },
     {
-      title: 'Type',
+      title: (
+        <Space>
+          Type
+          {onFilterChange && createFilterDropdown('type', typeOptions)}
+        </Space>
+      ),
       dataIndex: 'type',
       key: 'type',
       width: 120,
