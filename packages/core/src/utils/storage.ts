@@ -1,7 +1,7 @@
 import path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { JsonConfig } from '../types/index.js';
+import { JsonConfig, DevlogEntry, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from '../types/index.js';
 import { parseBoolean } from './common.js';
 
 export function getDevlogDirFromJsonConfig(config: JsonConfig): string {
@@ -142,4 +142,41 @@ export function findProjectRoot(startPath: string = process.cwd()): string {
   }
 
   throw new Error(`Unable to find project root for ${startPath}`);
+}
+
+/**
+ * Calculate devlog statistics from a list of entries
+ * This is shared logic used by all storage providers
+ * @param entries Array of devlog entries to calculate statistics from
+ * @returns DevlogStats object with counts and breakdowns
+ */
+export function calculateDevlogStats(entries: DevlogEntry[]): DevlogStats {
+  const byStatus = {} as Record<DevlogStatus, number>;
+  const byType = {} as Record<DevlogType, number>;
+  const byPriority = {} as Record<DevlogPriority, number>;
+
+  let openEntries = 0;
+  let closedEntries = 0;
+
+  entries.forEach((entry) => {
+    byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
+    byType[entry.type] = (byType[entry.type] || 0) + 1;
+    byPriority[entry.priority] = (byPriority[entry.priority] || 0) + 1;
+
+    // Categorize as open or closed based on GitHub model
+    if (['done', 'cancelled'].includes(entry.status)) {
+      closedEntries++;
+    } else {
+      openEntries++;
+    }
+  });
+
+  return {
+    totalEntries: entries.length,
+    openEntries,
+    closedEntries,
+    byStatus,
+    byType,
+    byPriority,
+  };
 }

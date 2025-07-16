@@ -46,12 +46,12 @@ export function OverviewStats({
       <div className={`${styles.dashboardStats} ${className || ''}`}>
         {/* Total stat skeleton */}
         <div className={styles.statCompact}>
-          <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
+          <Skeleton.Button style={{ width: '64px', height: '56px' }} active size="small" />
         </div>
         {/* Status stats skeleton */}
         {Array.from({ length: 2 }).map((_, index) => (
           <div key={index} className={styles.statCompact}>
-            <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
+            <Skeleton.Button style={{ width: '64px', height: '56px' }} active size="small" />
           </div>
         ))}
       </div>

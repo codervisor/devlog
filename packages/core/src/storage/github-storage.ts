@@ -31,6 +31,7 @@ import {
   mapDevlogTypeToGitHubType, 
   mapDevlogTypeToGitHubLabel 
 } from '../utils/github-type-mapper.js';
+import { calculateDevlogStats } from '../utils/storage.js';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;
@@ -185,64 +186,10 @@ export class GitHubStorageProvider implements StorageProvider {
     return issues.map((issue) => this.dataMapper.issueToDevlog(issue));
   }
 
-  async getStats(): Promise<DevlogStats> {
-    // Use GitHub's search API to get counts
-    const queries = {
-      total: `repo:${this.config.owner}/${this.config.repo} is:issue label:"${this.config.labelsPrefix}-type"`,
-      open: `repo:${this.config.owner}/${this.config.repo} is:issue is:open label:"${this.config.labelsPrefix}-type"`,
-      inProgress: `repo:${this.config.owner}/${this.config.repo} is:issue label:"${this.config.labelsPrefix}-status:in-progress"`,
-      blocked: `repo:${this.config.owner}/${this.config.repo} is:issue label:"${this.config.labelsPrefix}-status:blocked"`,
-      inReview: `repo:${this.config.owner}/${this.config.repo} is:issue label:"${this.config.labelsPrefix}-status:in-review"`,
-      testing: `repo:${this.config.owner}/${this.config.repo} is:issue label:"${this.config.labelsPrefix}-status:testing"`,
-    };
-
-    const [total, open, inProgress, blocked, inReview, testing] = await Promise.all([
-      this.rateLimiter.executeWithRateLimit(() => this.apiClient.searchIssuesCount(queries.total)),
-      this.rateLimiter.executeWithRateLimit(() => this.apiClient.searchIssuesCount(queries.open)),
-      this.rateLimiter.executeWithRateLimit(() =>
-        this.apiClient.searchIssuesCount(queries.inProgress),
-      ),
-      this.rateLimiter.executeWithRateLimit(() =>
-        this.apiClient.searchIssuesCount(queries.blocked),
-      ),
-      this.rateLimiter.executeWithRateLimit(() =>
-        this.apiClient.searchIssuesCount(queries.inReview),
-      ),
-      this.rateLimiter.executeWithRateLimit(() =>
-        this.apiClient.searchIssuesCount(queries.testing),
-      ),
-    ]);
-
-    const done = total - open;
-    const closedEntries = done; // In GitHub, closed = done + cancelled, but we simplify for now
-
-    return {
-      totalEntries: total,
-      openEntries: open,
-      closedEntries: closedEntries,
-      byStatus: {
-        new: Math.max(0, open - inProgress - blocked - inReview - testing),
-        'in-progress': inProgress,
-        blocked: blocked,
-        'in-review': inReview,
-        testing: testing,
-        done: done,
-        cancelled: 0, // We count not_planned GitHub issues as cancelled, but simplify for now
-      },
-      byType: {
-        feature: 0, // Could be enhanced to get actual counts
-        bugfix: 0,
-        task: 0,
-        refactor: 0,
-        docs: 0,
-      },
-      byPriority: {
-        low: 0, // Could be enhanced to get actual counts
-        medium: 0,
-        high: 0,
-        critical: 0,
-      },
-    };
+  async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
+    // Get filtered entries and calculate stats from them
+    const entries = await this.list(filter);
+    return calculateDevlogStats(entries);
   }
 
   async cleanup(): Promise<void> {

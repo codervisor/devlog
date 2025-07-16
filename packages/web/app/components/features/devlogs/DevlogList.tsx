@@ -535,14 +535,12 @@ export function DevlogList({
     ...(selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote
       ? [
           {
-            title: 'Select all',
+            title: '',
             dataIndex: 'checkbox',
             key: 'checkbox',
             fixed: 'left' as const,
-            width: 50,
-            render: () => (
-              <Skeleton.Button style={{ width: '16px', height: '16px' }} active size="small" />
-            ),
+            width: 32,
+            render: () => <Skeleton.Node style={{ width: '16px', height: '16px' }} active />,
           },
         ]
       : []),

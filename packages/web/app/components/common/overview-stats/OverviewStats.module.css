@@ -6,7 +6,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 60px;
+  width: 72px;
   height: 56px;
   box-sizing: border-box;
 }
@@ -125,9 +125,9 @@
 }
 
 .popoverStats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px; /* Reduced from 12px */
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .popoverStats .statCompact {
@@ -139,7 +139,6 @@
 /* Interactive Stats */
 .clickableStat {
   cursor: pointer;
-  transition: all 0.2s ease;
   border-radius: 6px;
   padding: 8px 12px;
   margin: 0;

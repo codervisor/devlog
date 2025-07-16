@@ -143,8 +143,9 @@ export interface StorageProvider {
 
   /**
    * Get statistics about devlog entries
+   * @param filter Optional filter to apply before calculating stats
    */
-  getStats(): Promise<DevlogStats>;
+  getStats(filter?: DevlogFilter): Promise<DevlogStats>;
 
   /**
    * Cleanup resources

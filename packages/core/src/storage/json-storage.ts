@@ -28,7 +28,7 @@ import type {
 } from '../types/index.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { getDevlogDirFromJsonConfig } from '../utils/storage.js';
+import { getDevlogDirFromJsonConfig, calculateDevlogStats } from '../utils/storage.js';
 
 export class JsonStorageProvider implements StorageProvider {
   private readonly config: Required<JsonConfig>;
@@ -137,39 +137,10 @@ export class JsonStorageProvider implements StorageProvider {
     });
   }
 
-  async getStats(): Promise<DevlogStats> {
-    const result = await this.list();
+  async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
+    const result = await this.list(filter);
     const entries = Array.isArray(result) ? result : result.items;
-
-    const byStatus = {} as Record<DevlogStatus, number>;
-    const byType = {} as Record<DevlogType, number>;
-    const byPriority = {} as Record<DevlogPriority, number>;
-
-    // Count open vs closed statuses
-    let openEntries = 0;
-    let closedEntries = 0;
-
-    entries.forEach((entry) => {
-      byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
-      byType[entry.type] = (byType[entry.type] || 0) + 1;
-      byPriority[entry.priority] = (byPriority[entry.priority] || 0) + 1;
-
-      // Categorize as open or closed based on GitHub model
-      if (['done', 'cancelled'].includes(entry.status)) {
-        closedEntries++;
-      } else {
-        openEntries++;
-      }
-    });
-
-    return {
-      totalEntries: entries.length,
-      openEntries,
-      closedEntries,
-      byStatus,
-      byType,
-      byPriority,
-    };
+    return calculateDevlogStats(entries);
   }
 
   async cleanup(): Promise<void> {

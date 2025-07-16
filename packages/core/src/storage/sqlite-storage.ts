@@ -22,6 +22,7 @@ import {
 } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import { initializeChatTables } from './chat-schema.js';
+import { calculateDevlogStats } from '../utils/storage.js';
 
 export class SQLiteStorageProvider implements StorageProvider {
   private db: any = null;
@@ -318,53 +319,12 @@ export class SQLiteStorageProvider implements StorageProvider {
     return rows.map((row) => this.rowToDevlogEntry(row));
   }
 
-  async getStats(): Promise<DevlogStats> {
+  async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const totalStmt = this.db.prepare('SELECT COUNT(*) as count FROM devlog_entries');
-    const total = (totalStmt.get() as any).count;
-
-    const statusStmt = this.db.prepare(
-      'SELECT status, COUNT(*) as count FROM devlog_entries GROUP BY status',
-    );
-    const statusRows = statusStmt.all() as any[];
-    const byStatus = {} as Record<DevlogStatus, number>;
-    statusRows.forEach((row) => {
-      byStatus[row.status as DevlogStatus] = row.count;
-    });
-
-    const typeStmt = this.db.prepare(
-      'SELECT type, COUNT(*) as count FROM devlog_entries GROUP BY type',
-    );
-    const typeRows = typeStmt.all() as any[];
-    const byType = {} as Record<DevlogType, number>;
-    typeRows.forEach((row) => {
-      byType[row.type as DevlogType] = row.count;
-    });
-
-    const priorityStmt = this.db.prepare(
-      'SELECT priority, COUNT(*) as count FROM devlog_entries GROUP BY priority',
-    );
-    const priorityRows = priorityStmt.all() as any[];
-    const byPriority = {} as Record<DevlogPriority, number>;
-    priorityRows.forEach((row) => {
-      byPriority[row.priority as DevlogPriority] = row.count;
-    });
-
-    // Calculate open and closed counts
-    const openEntries = (['new', 'in-progress', 'blocked', 'in-review', 'testing'] as DevlogStatus[])
-      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
-    const closedEntries = (['done', 'cancelled'] as DevlogStatus[])
-      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
-
-    return {
-      totalEntries: total,
-      openEntries,
-      closedEntries,
-      byStatus,
-      byType,
-      byPriority,
-    };
+    // Get filtered entries and calculate stats from them
+    const entries = await this.list(filter);
+    return calculateDevlogStats(entries);
   }
 
   async cleanup(): Promise<void> {

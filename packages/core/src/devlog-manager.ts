@@ -15,8 +15,10 @@ import type {
   DevlogFilter,
   DevlogId,
   DevlogNote,
+  DevlogPriority,
   DevlogStats,
   DevlogStatus,
+  DevlogType,
   DiscoverDevlogsRequest,
   DiscoveredDevlogEntry,
   DiscoveryResult,
@@ -30,7 +32,12 @@ import type {
 } from './types/index.js';
 import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
-import { DevlogNotFoundError, DevlogStorageError, logger, handleAsyncOperation } from './utils/errors.js';
+import {
+  DevlogNotFoundError,
+  DevlogStorageError,
+  logger,
+  handleAsyncOperation,
+} from './utils/errors.js';
 import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
 import { crossProcessEvents } from './events/cross-process-events.js';
 
@@ -57,7 +64,7 @@ export class DevlogManager {
     try {
       // Emit to local event system (in-process handlers)
       await devlogEvents.emit(event);
-      
+
       // Emit to cross-process event system (for other processes like web server)
       await crossProcessEvents.emit(event);
     } catch (error) {
@@ -290,7 +297,7 @@ export class DevlogManager {
     },
   ): Promise<DevlogEntry> {
     // First update the devlog
-    const updated = await this.updateDevlog({ ...updates, id });
+    await this.updateDevlog({ ...updates, id });
 
     // Then add the progress note
     return await this.addNote(id, progressNote, options?.category || 'progress', {
@@ -306,10 +313,10 @@ export class DevlogManager {
    */
   async listDevlogs(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
-    
+
     // Apply default exclusion of closed entries
     const enhancedFilter = this.applyDefaultFilters(filter);
-    
+
     return await this.storageProvider.list(enhancedFilter);
   }
 
@@ -319,13 +326,13 @@ export class DevlogManager {
    */
   private async getAllDevlogsAsArray(filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.ensureInitialized();
-    
+
     // Create filter without pagination to get all entries
     const filterWithoutPagination = filter ? { ...filter, pagination: undefined } : {};
     const enhancedFilter = this.applyDefaultFilters(filterWithoutPagination);
-    
+
     const result = await this.storageProvider.list(enhancedFilter);
-    
+
     // If the result is paginated, extract the items array
     if (Array.isArray(result)) {
       return result;
@@ -340,7 +347,7 @@ export class DevlogManager {
    */
   private applyDefaultFilters(filter?: DevlogFilter): DevlogFilter {
     const enhancedFilter = { ...filter };
-    
+
     // If no status filter is provided, exclude closed entries by default
     // If status filter is provided, respect it (user explicitly requested specific statuses)
     if (!enhancedFilter.status) {
@@ -350,7 +357,7 @@ export class DevlogManager {
     }
     // If status filter is provided and includes 'cancelled', keep it as-is
     // This allows users to explicitly request cancelled entries
-    
+
     return enhancedFilter;
   }
 
@@ -361,10 +368,10 @@ export class DevlogManager {
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.ensureInitialized();
     const results = await this.storageProvider.search(query);
-    
+
     // Apply default filters to search results (including closed exclusion)
     const enhancedFilter = this.applyDefaultFilters(filter);
-    
+
     // Filter results based on the enhanced filter
     return this.filterEntries(results, enhancedFilter);
   }
@@ -378,47 +385,35 @@ export class DevlogManager {
 
     // Status filter
     if (filter.status && filter.status.length > 0) {
-      filtered = filtered.filter(entry => 
-        filter.status!.includes(entry.status)
-      );
+      filtered = filtered.filter((entry) => filter.status!.includes(entry.status));
     }
 
     // Type filter
     if (filter.type && filter.type.length > 0) {
-      filtered = filtered.filter(entry => 
-        filter.type!.includes(entry.type)
-      );
+      filtered = filtered.filter((entry) => filter.type!.includes(entry.type));
     }
 
     // Priority filter
     if (filter.priority && filter.priority.length > 0) {
-      filtered = filtered.filter(entry => 
-        filter.priority!.includes(entry.priority)
-      );
+      filtered = filtered.filter((entry) => filter.priority!.includes(entry.priority));
     }
 
     // Assignee filter
     if (filter.assignee) {
       const assigneeQuery = filter.assignee.toLowerCase().trim();
-      filtered = filtered.filter(entry => 
-        entry.assignee?.toLowerCase().includes(assigneeQuery)
-      );
+      filtered = filtered.filter((entry) => entry.assignee?.toLowerCase().includes(assigneeQuery));
     }
 
     // Date range filter
     if (filter.fromDate) {
       const fromDate = new Date(filter.fromDate);
-      filtered = filtered.filter(entry => 
-        new Date(entry.createdAt) >= fromDate
-      );
+      filtered = filtered.filter((entry) => new Date(entry.createdAt) >= fromDate);
     }
 
     if (filter.toDate) {
       const toDate = new Date(filter.toDate);
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(entry => 
-        new Date(entry.createdAt) <= toDate
-      );
+      filtered = filtered.filter((entry) => new Date(entry.createdAt) <= toDate);
     }
 
     return filtered;
@@ -426,10 +421,15 @@ export class DevlogManager {
 
   /**
    * Get devlog statistics
+   * Uses the same default filtering as listDevlogs() to ensure consistency
    */
   async getStats(): Promise<DevlogStats> {
     await this.ensureInitialized();
-    return await this.storageProvider.getStats();
+    
+    // Apply the same default filters as listDevlogs() for consistency
+    const enhancedFilter = this.applyDefaultFilters({});
+    
+    return await this.storageProvider.getStats(enhancedFilter);
   }
 
   /**
@@ -855,15 +855,10 @@ export class DevlogManager {
 
     for (const id of request.ids) {
       try {
-        const updated = await this.addNote(
-          id,
-          request.content,
-          request.category || 'progress',
-          {
-            files: request.files,
-            codeChanges: request.codeChanges,
-          },
-        );
+        const updated = await this.addNote(id, request.content, request.category || 'progress', {
+          files: request.files,
+          codeChanges: request.codeChanges,
+        });
         result.successful.push({ id, result: updated });
         result.successCount++;
       } catch (error) {
@@ -949,7 +944,7 @@ export class DevlogManager {
    */
   async updateChatSession(sessionId: string, updates: any) {
     await this.ensureInitialized();
-    
+
     // Get existing session
     const existingSession = await this.storageProvider.getChatSession(sessionId);
     if (!existingSession) {
@@ -960,7 +955,7 @@ export class DevlogManager {
     const updatedSession = {
       ...existingSession,
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // Save updated session
