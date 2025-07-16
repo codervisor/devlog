@@ -1,8 +1,13 @@
 # Devlog Project - Copilot Instructions
 
-## 🚨 CRITICAL: Devlog Creation Workflow (READ FIRST!)
+## 🚨 CRITICAL RULES (READ FIRST!)
 
-**This project uses ITSELF for development tracking. ALWAYS follow this workflow:**
+### ⛔ NEVER WORK DIRECTLY ON MAIN BRANCH
+**MANDATORY**: All development MUST use feature branches + git worktrees
+- ✅ Create feature branch: `git checkout -b feature/name`
+- ✅ Create worktree: `git worktree add ../devlog-feature-name feature/name`
+- ✅ Work in worktree: `cd ../devlog-feature-name`
+- ❌ NEVER edit files while on main branch
 
 ### ⚠️ MANDATORY FIRST STEP: Always Discover Before Creating
 
@@ -13,6 +18,10 @@
 - Builds upon existing insights and progress
 - Maintains project continuity and context
 
+## 📋 Devlog Creation Workflow
+
+**This project uses ITSELF for development tracking. ALWAYS follow this workflow:**
+
 ### ✅ Required Devlog Creation Steps
 1. **🔍 DISCOVER FIRST**: Use `discover_related_devlogs` to find existing relevant work
 2. **📖 REVIEW**: Analyze discovered entries to understand context and avoid overlaps
@@ -20,21 +29,71 @@
 4. **📝 TRACK PROGRESS**: Update entries with notes and status changes via MCP functions
 5. **🔗 LINK WORK**: Reference devlog IDs in commits and documentation
 
-## Git Worktree Workflow
+## 🌿 Git Worktree Workflow (MANDATORY FOR ALL DEVELOPMENT)
 
-### 🌿 Branch Management
-- **Feature work**: Always create feature branches for new development
-- **Parallel work**: Use `git worktree add ../project-feature feature/branch-name` for concurrent development
-- **Isolation**: Each worktree provides isolated workspace for different tasks
-- **Cleanup**: Remove worktrees with `git worktree remove path` when done
+**⚠️ CRITICAL: NEVER work directly on the main branch! Always use feature branches and worktrees.**
 
-### 📁 Worktree Structure
+### 📋 Required Workflow for ALL Development Tasks
+
+#### Step 1: Create Feature Branch & Worktree
+```bash
+# 1. Create and checkout a new feature branch
+git checkout -b feature/your-feature-name
+
+# 2. Create a worktree for this feature (REQUIRED)
+git worktree add ../devlog-feature-name feature/your-feature-name
+
+# 3. Move to the new worktree
+cd ../devlog-feature-name
 ```
-main-repo/           # Main development workspace
-../feature-ui/       # UI feature worktree
-../bugfix-api/       # API bugfix worktree
-../experiment-arch/  # Architecture experiments
+
+#### Step 2: Work in Isolation
+- **All development** must happen in the feature worktree
+- **Test changes** in isolation before merging
+- **Commit frequently** with descriptive messages
+
+#### Step 3: Clean Integration
+```bash
+# 1. Ensure all changes are committed
+git add . && git commit -m "feat: implement feature"
+
+# 2. Return to main worktree
+cd ../devlog
+
+# 3. Merge feature branch
+git checkout main
+git merge feature/your-feature-name
+
+# 4. Clean up worktree and branch
+git worktree remove ../devlog-feature-name
+git branch -d feature/your-feature-name
 ```
+
+### 🚫 What NOT to Do
+- ❌ **Never make changes directly on main branch**
+- ❌ **Never skip creating a worktree for development**
+- ❌ **Never work on multiple features in the same worktree**
+- ❌ **Never leave abandoned worktrees**
+
+### ✅ Naming Conventions
+- **Feature branches**: `feature/descriptive-name`
+- **Bugfix branches**: `bugfix/issue-description`
+- **Worktree directories**: `../devlog-{feature-name}` (always outside main repo)
+
+### 📁 Example Worktree Structure
+```
+devlog/                    # Main repository (for merging only)
+../devlog-ui-dashboard/    # UI dashboard feature
+../devlog-api-endpoints/   # API endpoints feature
+../devlog-bugfix-auth/     # Authentication bugfix
+```
+
+### 🔄 Parallel Development Pattern
+When working on multiple features simultaneously:
+1. Each feature gets its own branch + worktree
+2. Switch between worktrees as needed
+3. Test each feature independently
+4. Merge features to main one at a time
 
 ## Development Philosophy (Brief)
 
