@@ -1,0 +1,48 @@
+{
+  "key": "fix-devlog-details-title-size-and-remove-horizonta",
+  "title": "Fix devlog details title size and remove horizontal scrollbar issues",
+  "type": "bugfix",
+  "description": "Fix the devlog details page title which is currently too large (using h2) and has potential horizontal scrollbar issues causing poor UX. The title should be more appropriately sized and the layout should be responsive without horizontal scrolling.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-16T02:02:52.665Z",
+  "updatedAt": "2025-07-16T02:07:17.267Z",
+  "notes": [
+    {
+      "id": "5e9560b1-1374-4d50-8b56-87d3fe352e9c",
+      "timestamp": "2025-07-16T02:07:17.267Z",
+      "category": "solution",
+      "content": "Successfully fixed the devlog details title issues. Changes made:\n\n1. **Title Level**: Changed from `level={2}` to `level={3}` to maintain proper hierarchy (section headings are level 3)\n2. **Font Size**: Set explicit font-size of 24px (down from ~32px) to be appropriately sized but still larger than section headings\n3. **Horizontal Scrollbar**: Removed `thin-scrollbar-horizontal` class and `overflow-x: auto` to eliminate poor scrolling UX\n4. **Text Wrapping**: Added `word-wrap: break-word`, `overflow-wrap: break-word`, and cross-browser `hyphens` support\n5. **Responsive Layout**: Changed from fixed height to `min-height` and proper flexbox alignment\n6. **Header Optimization**: Reduced header height from 102px to 96px and updated sticky offsets accordingly\n\nTesting shows the title now wraps properly at smaller screen sizes without horizontal scrolling, maintains visual hierarchy, and provides a much better user experience.",
+      "files": [
+        "/packages/web/app/components/features/devlogs/DevlogDetails.tsx",
+        "/packages/web/app/components/features/devlogs/DevlogDetails.module.css"
+      ],
+      "codeChanges": "Updated DevlogDetails.tsx to use Title level={3} instead of level={2}, removed horizontal scrollbar class. Updated CSS with proper text wrapping (word-wrap, overflow-wrap), vendor prefixes for hyphens, and responsive min-height. Updated header height from 102px to 96px and adjusted sticky header offsets accordingly."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users viewing devlog details experience poor UX due to oversized titles that dominate the interface and potential horizontal scrolling. This reduces readability and makes the interface feel less professional.",
+    "technicalContext": "The DevlogDetails component uses Typography.Title level={2} for the main title, which renders as an h2 HTML element with large font size. The wrapper has overflow-x auto with horizontal scrollbar styling, creating poor responsive behavior.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Title uses more appropriate heading level (h3 or h4)",
+      "Title wraps properly without horizontal scrollbar",
+      "Layout remains responsive on different screen sizes",
+      "Visual hierarchy is maintained with proper font sizing"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T02:02:52.665Z",
+    "contextVersion": 1
+  },
+  "id": 102
+}

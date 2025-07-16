@@ -3,11 +3,24 @@
   "title": "Test simple IDs with restarted MCP server",
   "type": "task",
   "description": "Testing the new simple incremental ID generation after properly restarting the MCP server. This should now get a simple ID like 1, 2, 3, etc.",
-  "status": "new",
+  "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-15T08:35:39.043Z",
-  "updatedAt": "2025-07-15T08:35:39.043Z",
-  "notes": [],
+  "updatedAt": "2025-07-16T02:17:14.154Z",
+  "notes": [
+    {
+      "id": "4fdc2a4b-93cf-4147-9793-20a73a01e27f",
+      "timestamp": "2025-07-16T01:50:06.479Z",
+      "category": "progress",
+      "content": "Completed: Test entry - no longer needed"
+    },
+    {
+      "id": "999abcf0-8720-489a-a06c-8f50ef688c6a",
+      "timestamp": "2025-07-16T02:17:14.154Z",
+      "category": "progress",
+      "content": "Completed: Test entry completed - simple IDs with restarted MCP server validated"
+    }
+  ],
   "files": [],
   "relatedDevlogs": [],
   "context": {

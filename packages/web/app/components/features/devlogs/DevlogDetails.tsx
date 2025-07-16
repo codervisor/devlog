@@ -55,9 +55,9 @@ export function DevlogDetails({
     return (
       <div>
         <div className={styles.devlogDetailsHeader}>
-          <div className={`${styles.devlogTitleWrapper} thin-scrollbar-horizontal`}>
+          <div className={styles.devlogTitleWrapper}>
             <Skeleton.Input
-              style={{ width: '60%', height: '32px', marginBottom: '16px' }}
+              style={{ width: '60%', height: '28px', marginBottom: '16px' }}
               active
               size="large"
             />
@@ -139,7 +139,7 @@ export function DevlogDetails({
   useStickyHeaders({
     selectorClass: styles.sectionHeader,
     stickyClass: styles.isSticky,
-    topOffset: 102, // Account for the main devlog header
+    topOffset: 96, // Account for the main devlog header
     dependencies: [devlog.id], // Re-run when devlog changes
   });
 
@@ -282,9 +282,9 @@ export function DevlogDetails({
           value={getCurrentValue('title')}
           onSave={(value) => handleFieldChange('title', value)}
           placeholder="Enter title"
-          className={`${isFieldChanged('title') ? styles.fieldChanged : ''} ${styles.devlogTitleWrapper} thin-scrollbar-horizontal`}
+          className={`${isFieldChanged('title') ? styles.fieldChanged : ''} ${styles.devlogTitleWrapper}`}
         >
-          <Title level={2} className={styles.devlogTitle}>
+          <Title level={3} className={styles.devlogTitle} title={getCurrentValue('title')}>
             {getCurrentValue('title')}
           </Title>
         </EditableField>
