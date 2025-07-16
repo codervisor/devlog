@@ -3,7 +3,7 @@
   "title": "Test migration success with new simple ID",
   "type": "task",
   "description": "Testing that the migration worked correctly and new entries get simple incremental IDs starting from 80.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-15T09:26:52.411Z",
   "updatedAt": "2025-07-16T03:25:59.328Z",

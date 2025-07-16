@@ -3,7 +3,7 @@
   "title": "Fix real-time SSE updates: process isolation prevents MCP events from reaching web UI",
   "type": "bugfix",
   "description": "The real-time refresh issue is confirmed: devlogs created through MCP do not appear in the web UI without manual refresh. After manual testing, devlog 122 created via MCP only appeared after manual page refresh, confirming the user's report. \n\nKey findings:\n- SSE bridge is initialized in web server\n- MCP server runs as separate process from web server\n- DevlogManager instances are isolated between processes\n- No SSE broadcast events appear in web server logs when MCP creates devlog\n- Manual refresh shows devlog successfully created and persisted\n\nRoot cause: The devlogEvents emitter from @devlog/core package creates separate instances in each process, so MCP server events don't reach the web server's SSE bridge.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "high",
   "createdAt": "2025-07-16T07:11:17.456Z",
   "updatedAt": "2025-07-16T07:19:27.418Z",

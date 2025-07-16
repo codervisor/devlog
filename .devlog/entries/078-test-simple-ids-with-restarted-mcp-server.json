@@ -3,7 +3,7 @@
   "title": "Test simple IDs with restarted MCP server",
   "type": "task",
   "description": "Testing the new simple incremental ID generation after properly restarting the MCP server. This should now get a simple ID like 1, 2, 3, etc.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-15T08:35:39.043Z",
   "updatedAt": "2025-07-16T03:27:47.362Z",

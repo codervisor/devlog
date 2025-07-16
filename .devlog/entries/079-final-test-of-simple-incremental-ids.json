@@ -3,7 +3,7 @@
   "title": "Final test of simple incremental IDs",
   "type": "task",
   "description": "Final test of the simplified incremental ID generation after proper build sequence (Core → MCP → Restart). This should now produce simple IDs like 1, 2, 3, etc.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-15T08:37:45.457Z",
   "updatedAt": "2025-07-16T03:25:54.087Z",

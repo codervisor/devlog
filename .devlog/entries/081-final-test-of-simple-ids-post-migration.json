@@ -3,7 +3,7 @@
   "title": "Final test of simple IDs post-migration",
   "type": "task",
   "description": "Final confirmation that simple incremental IDs are working correctly after the successful migration.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-15T09:27:49.486Z",
   "updatedAt": "2025-07-16T03:26:04.694Z",

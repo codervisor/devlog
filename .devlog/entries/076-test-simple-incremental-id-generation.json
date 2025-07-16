@@ -3,7 +3,7 @@
   "title": "Test simple incremental ID generation",
   "type": "task",
   "description": "Test that the new simple incremental ID generation works correctly with the MCP devlog tools.",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-15T08:32:49.379Z",
   "updatedAt": "2025-07-16T03:27:36.668Z",

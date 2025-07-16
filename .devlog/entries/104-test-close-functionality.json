@@ -3,7 +3,7 @@
   "title": "Test close functionality",
   "type": "task",
   "description": "Quick test entry to verify the new close_devlog functionality works correctly",
-  "status": "closed",
+  "status": "cancelled",
   "priority": "low",
   "createdAt": "2025-07-16T02:38:31.125Z",
   "updatedAt": "2025-07-16T03:26:11.201Z",
