@@ -5,8 +5,8 @@
 ### ⛔ NEVER WORK DIRECTLY ON MAIN BRANCH
 **MANDATORY**: All development MUST use feature branches + git worktrees
 - ✅ Create feature branch: `git checkout -b feature/name`
-- ✅ Create worktree: `git worktree add ../devlog-feature-name feature/name`
-- ✅ Work in worktree: `cd ../devlog-feature-name`
+- ✅ Create worktree: `git worktree add .wt/feature-name feature/name`
+- ✅ Work in worktree: `cd .wt/feature-name`
 - ❌ NEVER edit files while on main branch
 
 ### ⚠️ MANDATORY FIRST STEP: Always Discover Before Creating
@@ -41,10 +41,10 @@
 git checkout -b feature/your-feature-name
 
 # 2. Create a worktree for this feature (REQUIRED)
-git worktree add ../devlog-feature-name feature/your-feature-name
+git worktree add .wt/feature-name feature/your-feature-name
 
 # 3. Move to the new worktree
-cd ../devlog-feature-name
+cd .wt/feature-name
 ```
 
 #### Step 2: Work in Isolation
@@ -58,14 +58,14 @@ cd ../devlog-feature-name
 git add . && git commit -m "feat: implement feature"
 
 # 2. Return to main worktree
-cd ../devlog
+cd ../..
 
 # 3. Merge feature branch
 git checkout main
 git merge feature/your-feature-name
 
 # 4. Clean up worktree and branch
-git worktree remove ../devlog-feature-name
+git worktree remove .wt/feature-name
 git branch -d feature/your-feature-name
 ```
 
@@ -78,14 +78,14 @@ git branch -d feature/your-feature-name
 ### ✅ Naming Conventions
 - **Feature branches**: `feature/descriptive-name`
 - **Bugfix branches**: `bugfix/issue-description`
-- **Worktree directories**: `../devlog-{feature-name}` (always outside main repo)
+- **Worktree directories**: `.wt/{feature-name}` (organized within main repo)
 
 ### 📁 Example Worktree Structure
 ```
 devlog/                    # Main repository (for merging only)
-../devlog-ui-dashboard/    # UI dashboard feature
-../devlog-api-endpoints/   # API endpoints feature
-../devlog-bugfix-auth/     # Authentication bugfix
+.wt/ui-dashboard/          # UI dashboard feature
+.wt/api-endpoints/         # API endpoints feature  
+.wt/bugfix-auth/           # Authentication bugfix
 ```
 
 ### 🔄 Parallel Development Pattern

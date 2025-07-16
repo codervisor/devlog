@@ -152,3 +152,6 @@ devlog-integrations.config.json
 
 # Temporal folder for debugging or quick testing
 tmp/
+
+# Git worktree directories
+.wt/
