@@ -1,0 +1,71 @@
+{
+  "key": "package-rename-codehist-ai-chat",
+  "title": "Package Rename: codehist → ai-chat",
+  "type": "refactor",
+  "description": "Rename @devlog/codehist to @devlog/ai-chat to better reflect current functionality (GitHub Copilot chat extraction) and future expansion to other AI coding assistants (Cursor, Claude Code, etc.). This involves updating package.json, imports/exports, documentation, CLI commands, and preparing code structure for multi-AI support.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-16T16:52:24.722Z",
+  "updatedAt": "2025-07-16T17:02:05.918Z",
+  "notes": [
+    {
+      "id": "ea19694e-8c47-4d8a-9c1c-8081abebab30",
+      "timestamp": "2025-07-16T16:52:31.359Z",
+      "category": "progress",
+      "content": "Starting implementation of package rename from @devlog/codehist to @devlog/ai-chat. Beginning with physical directory rename and package.json updates, then working through all references systematically."
+    },
+    {
+      "id": "97ded0bf-c918-427e-9a85-9981b8e9c6b6",
+      "timestamp": "2025-07-16T17:02:05.918Z",
+      "category": "progress",
+      "content": "## ✅ Package Rename Complete: codehist → ai-chat\n\nSuccessfully completed the full package rename with comprehensive refactoring:\n\n### ✅ Completed Tasks:\n\n**1. Package Rename & Configuration**\n- ✅ Renamed directory: `packages/codehist` → `packages/ai-chat`\n- ✅ Updated `package.json`: Name, description, CLI binary, keywords\n- ✅ Updated workspace references in root `tsconfig.json`\n- ✅ Updated all monorepo dependencies in `packages/core`\n\n**2. Documentation Updates**\n- ✅ Updated README.md: Title, installation commands, CLI examples\n- ✅ Added multi-AI support messaging in description\n- ✅ Updated programmatic usage examples\n\n**3. Code Structure Refactoring for Multi-AI Support**\n- ✅ Created abstract `AIAssistantParser` base class in `src/parsers/base/`\n- ✅ Moved Copilot logic to `src/parsers/copilot/copilot-parser.ts`\n- ✅ Updated parsers index.ts with new modular exports\n- ✅ Added missing `SearchResult` and `ChatStatistics` interfaces to models\n\n**4. CLI Updates**\n- ✅ Updated CLI binary name: `codehist` → `ai-chat`\n- ✅ Updated help text and descriptions for AI assistant focus\n- ✅ Maintained backwards compatibility with existing functionality\n\n**5. Build & Integration**\n- ✅ Updated GitHub Actions CI workflow references\n- ✅ Updated all import statements in `@devlog/core`\n- ✅ Updated TypeScript path mappings\n- ✅ Verified full monorepo build works correctly\n\n### ✅ Verification Results:\n- ✅ Package builds successfully\n- ✅ Core package imports work correctly\n- ✅ CLI functionality tested and working (stats command with 276 sessions)\n- ✅ Full monorepo build passes\n- ✅ All references updated across codebase\n\n### 🚀 New Architecture Ready for Multi-AI:\nThe refactored structure now supports easy addition of new AI assistants:\n- `src/parsers/base/` - Abstract base classes\n- `src/parsers/copilot/` - GitHub Copilot implementation\n- Future: `src/parsers/cursor/`, `src/parsers/claude/`, etc.\n\nPackage rename is complete and ready for production use!",
+      "files": [
+        "packages/ai-chat/package.json",
+        "packages/ai-chat/README.md",
+        "packages/ai-chat/src/cli/index.ts",
+        "packages/ai-chat/src/parsers/",
+        "packages/core/package.json",
+        "packages/core/tsconfig.json",
+        "packages/core/src/services/chat-import-service.ts",
+        ".github/workflows/ci.yml",
+        "tsconfig.json"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The current package name \"codehist\" is too generic and doesn't clearly convey that it's focused on AI chat history. Renaming to \"ai-chat\" better represents the current functionality and positions the package for future expansion to support multiple AI coding assistants beyond GitHub Copilot. This improves discoverability and communicates the package's purpose more effectively.",
+    "technicalContext": "The rename affects multiple layers of the monorepo: package.json names, CLI commands, imports in @devlog/core, documentation, build scripts, and CI workflows. The current structure should be refactored to support multiple AI providers, with a base parser class and provider-specific implementations. Key dependencies include @devlog/core's chat-import-service.ts and GitHub Actions CI workflow that specifically builds the codehist package.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Package.json updated from @devlog/codehist to @devlog/ai-chat",
+      "All imports and references updated across monorepo",
+      "CLI command works with new package name",
+      "Documentation updated with correct installation and usage examples",
+      "GitHub Actions CI workflow updated for new package name",
+      "Core package's chat-import-service still works with renamed dependency",
+      "Build and test scripts work correctly",
+      "Code structure prepared for multi-AI provider support with base classes"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Current package has minimal external usage - only @devlog/core imports it",
+      "CLI binary name should change from 'codehist' to 'ai-chat' for consistency",
+      "TypeScript path mapping in core/tsconfig.json needs updating",
+      "CI workflow specifically references the package for build order",
+      "Future multi-AI support can be implemented with provider-specific subdirectories",
+      "Related devlog #106 is already working with codehist - need to coordinate the rename"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T16:52:24.722Z",
+    "contextVersion": 1
+  },
+  "id": 145
+}

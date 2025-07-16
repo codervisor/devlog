@@ -26,8 +26,10 @@ import type {
   PaginatedResult,
   PaginationOptions,
 } from '../types/index.js';
+import type { DevlogEvent } from '../events/devlog-events.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { FSWatcher, watch } from 'fs';
 import { getDevlogDirFromJsonConfig, calculateDevlogStats } from '../utils/storage.js';
 
 export class JsonStorageProvider implements StorageProvider {
@@ -35,6 +37,11 @@ export class JsonStorageProvider implements StorageProvider {
   private readonly devlogDir: string;
   private readonly entriesDir: string;
   private initialized = false;
+  
+  // Event subscription properties
+  private eventCallbacks = new Set<(event: DevlogEvent) => void>();
+  private fileWatcher?: FSWatcher;
+  private isWatching = false;
 
   constructor(config: JsonConfig = {}) {
     this.config = {
@@ -144,7 +151,9 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   async cleanup(): Promise<void> {
-    // No cleanup needed without cache
+    // Stop file watching and clear callbacks
+    await this.stopWatching();
+    this.eventCallbacks.clear();
   }
 
   /**
@@ -404,5 +413,141 @@ temp/
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
+  }
+
+  // ===== Event Subscription Operations =====
+
+  /**
+   * Subscribe to file system changes in the devlog directory
+   */
+  async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
+    this.eventCallbacks.add(callback);
+    
+    // Start watching if this is the first subscription
+    if (this.eventCallbacks.size === 1 && !this.isWatching) {
+      await this.startWatching();
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      this.eventCallbacks.delete(callback);
+      // Stop watching if no more callbacks
+      if (this.eventCallbacks.size === 0 && this.isWatching) {
+        this.stopWatching();
+      }
+    };
+  }
+
+  /**
+   * Start watching the devlog directory for file changes
+   */
+  async startWatching(): Promise<void> {
+    if (this.isWatching || !this.initialized) {
+      return;
+    }
+
+    try {
+      this.fileWatcher = watch(this.entriesDir, { recursive: false }, async (eventType, filename) => {
+        if (!filename || !filename.endsWith('.json')) {
+          return;
+        }
+
+        try {
+          const filePath = path.join(this.entriesDir, filename);
+          
+          if (eventType === 'rename') {
+            // Check if file exists to determine if it's create or delete
+            try {
+              await fs.access(filePath);
+              // File exists, it's a creation
+              const entry = await this.loadEntryFromFile(filePath);
+              if (entry) {
+                this.emitEvent({
+                  type: 'created',
+                  timestamp: new Date().toISOString(),
+                  data: entry,
+                });
+              }
+            } catch {
+              // File doesn't exist, it's a deletion
+              // Extract ID from filename to emit delete event
+              const id = this.extractIdFromFilename(filename);
+              if (id !== null) {
+                this.emitEvent({
+                  type: 'deleted',
+                  timestamp: new Date().toISOString(),
+                  data: { id },
+                });
+              }
+            }
+          } else if (eventType === 'change') {
+            // File was modified
+            const entry = await this.loadEntryFromFile(filePath);
+            if (entry) {
+              this.emitEvent({
+                type: 'updated',
+                timestamp: new Date().toISOString(),
+                data: entry,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error processing file watch event:', error);
+        }
+      });
+
+      this.isWatching = true;
+      console.log('Started watching devlog directory for changes:', this.entriesDir);
+    } catch (error) {
+      console.error('Failed to start file watching:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Stop watching for file changes
+   */
+  async stopWatching(): Promise<void> {
+    if (this.fileWatcher) {
+      this.fileWatcher.close();
+      this.fileWatcher = undefined;
+    }
+    this.isWatching = false;
+    console.log('Stopped watching devlog directory');
+  }
+
+  /**
+   * Emit event to all subscribers
+   */
+  private emitEvent(event: DevlogEvent): void {
+    for (const callback of this.eventCallbacks) {
+      try {
+        callback(event);
+      } catch (error) {
+        console.error('Error in event callback:', error);
+      }
+    }
+  }
+
+  /**
+   * Load a devlog entry from a file path
+   */
+  private async loadEntryFromFile(filePath: string): Promise<DevlogEntry | null> {
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(content) as DevlogEntry;
+    } catch (error) {
+      console.error('Error loading entry from file:', filePath, error);
+      return null;
+    }
+  }
+
+  /**
+   * Extract devlog ID from filename
+   */
+  private extractIdFromFilename(filename: string): number | null {
+    // Assuming filename format: "001-some-slug.json"
+    const match = filename.match(/^(\d+)-/);
+    return match ? parseInt(match[1], 10) : null;
   }
 }

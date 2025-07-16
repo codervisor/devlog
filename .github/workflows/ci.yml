@@ -64,8 +64,8 @@ jobs:
         run: |
           # Ensure workspace dependencies are properly linked
           echo "📦 Verifying workspace structure..."
-          echo "🔗 Checking codehist package..."
-          [ -d "packages/codehist" ] && echo "✅ codehist package found" || echo "❌ codehist package missing"
+          echo "🔗 Checking ai-chat package..."
+          [ -d "packages/ai-chat" ] && echo "✅ ai-chat package found" || echo "❌ ai-chat package missing"
           echo "🔗 Checking core package..."
           [ -d "packages/core" ] && echo "✅ core package found" || echo "❌ core package missing"
           echo "🔗 Checking mcp package..."
@@ -73,19 +73,19 @@ jobs:
           echo "🔗 Checking web package..."
           [ -d "packages/web" ] && echo "✅ web package found" || echo "❌ web package missing"
           echo "📂 Package dependencies:"
-          echo "Core depends on codehist:"
+          echo "Core depends on ai-chat:"
           cat packages/core/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
           echo "MCP depends on core:"
           cat packages/mcp/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
 
-      - name: Build codehist package first
-        run: pnpm --filter @devlog/codehist build
+      - name: Build ai-chat package first
+        run: pnpm --filter @devlog/ai-chat build
 
-      - name: Verify codehist build
+      - name: Verify ai-chat build
         run: |
-          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
-          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
-          echo "✅ Codehist package built successfully"
+          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
+          echo "✅ AI-Chat package built successfully"
 
       - name: Build core package
         run: pnpm --filter @devlog/core build

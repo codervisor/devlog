@@ -117,6 +117,35 @@ export interface WorkspaceData {
   metadata: WorkspaceMetadata;
 }
 
+export interface SearchResult {
+  session_id?: string;
+  message_id?: string;
+  role: string;
+  timestamp: string;
+  match_position: number;
+  context: string;
+  full_content: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface ChatStatistics {
+  total_sessions: number;
+  total_messages: number;
+  message_types: Record<string, number>;
+  session_types: Record<string, number>;
+  workspace_activity: Record<string, {
+    sessions: number;
+    messages: number;
+    first_seen: string;
+    last_seen: string;
+  }>;
+  date_range: {
+    earliest: string | null;
+    latest: string | null;
+  };
+  agent_activity: Record<string, number>;
+}
+
 // Utility classes for data manipulation
 export class MessageData implements Message {
   id?: string;

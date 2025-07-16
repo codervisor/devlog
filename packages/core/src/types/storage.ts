@@ -14,6 +14,7 @@ import {
   ChatDevlogLink,
   ChatWorkspace 
 } from './chat.js';
+import { DevlogEvent } from '../events/devlog-events.js';
 
 // Storage Configuration Types
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
@@ -223,6 +224,25 @@ export interface StorageProvider {
    * Save chat workspace information
    */
   saveChatWorkspace(workspace: ChatWorkspace): Promise<void>;
+
+  // ===== Event Subscription Operations =====
+
+  /**
+   * Subscribe to storage change events
+   * @param callback Function to call when events occur
+   * @returns Promise that resolves to an unsubscribe function
+   */
+  subscribe?(callback: (event: DevlogEvent) => void): Promise<() => void>;
+
+  /**
+   * Start watching for changes (optional, for storage backends that need explicit watching)
+   */
+  startWatching?(): Promise<void>;
+
+  /**
+   * Stop watching for changes (optional, for storage backends that need explicit watching)
+   */
+  stopWatching?(): Promise<void>;
 }
 
 // Configuration Types

@@ -28,7 +28,7 @@ importers:
         specifier: ^5.0.0
         version: 5.8.3
 
-  packages/codehist:
+  packages/ai-chat:
     dependencies:
       chalk:
         specifier: ^5.3.0
@@ -67,9 +67,9 @@ importers:
 
   packages/core:
     dependencies:
-      '@devlog/codehist':
+      '@devlog/ai-chat':
         specifier: workspace:*
-        version: link:../codehist
+        version: link:../ai-chat
       better-sqlite3:
         specifier: ^11.0.0
         version: 11.10.0

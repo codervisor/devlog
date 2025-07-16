@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Simplified CLI for CodeHist - Focus on GitHub Copilot Chat History
+ * Simplified CLI for AI Chat - Focus on AI Assistant Chat History
  * 
  * TypeScript implementation of the main entry point focusing on 
- * core chat history extraction functionality.
+ * core chat history extraction functionality from various AI assistants.
  */
 
 import { Command } from 'commander';
@@ -41,14 +41,14 @@ interface ExportData {
 const program = new Command();
 
 program
-  .name('codehist')
-  .description('Extract and analyze GitHub Copilot chat history')
+  .name('ai-chat')
+  .description('Extract and analyze AI assistant chat history')
   .version('0.1.0');
 
 // Chat command
 program
   .command('chat')
-  .description('Extract and analyze GitHub Copilot chat history')
+  .description('Extract and analyze AI assistant chat history')
   .option('-o, --output <path>', 'Output file path')
   .option('-f, --format <format>', 'Output format (json, md)', 'json')
   .option('-s, --search <query>', 'Search query for chat content')

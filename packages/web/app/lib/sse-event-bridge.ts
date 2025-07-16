@@ -3,30 +3,39 @@
  * This allows the web UI to receive realtime updates when devlogs are modified through any channel (MCP, API, etc.)
  */
 
-import { crossProcessEvents, type DevlogEvent } from '@devlog/core';
+import { DevlogManager, devlogEvents, type DevlogEvent } from '@devlog/core';
 import { broadcastUpdate } from './sse-manager';
 
 class SSEEventBridge {
   private initialized = false;
+  private devlogManager?: DevlogManager;
 
   /**
    * Initialize the bridge to start listening to devlog events
    */
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (this.initialized) {
       console.log('SSE Event Bridge already initialized');
       return;
     }
 
-    // Listen to cross-process devlog events and broadcast them via SSE
-    crossProcessEvents.on('created', this.handleDevlogCreated.bind(this));
-    crossProcessEvents.on('updated', this.handleDevlogUpdated.bind(this));
-    crossProcessEvents.on('deleted', this.handleDevlogDeleted.bind(this));
-    crossProcessEvents.on('note-added', this.handleNoteAdded.bind(this));
+    try {
+      // Create and initialize DevlogManager for the web process
+      this.devlogManager = new DevlogManager();
+      await this.devlogManager.initialize();
 
-    this.initialized = true;
-    console.log('SSE Event Bridge initialized - cross-process devlog events will now trigger SSE updates');
-    console.log('Current cross-process event handlers:', crossProcessEvents.getHandlerCount());
+      // Listen to local devlog events (which now include storage events via subscription)
+      devlogEvents.on('created', this.handleDevlogCreated.bind(this));
+      devlogEvents.on('updated', this.handleDevlogUpdated.bind(this));
+      devlogEvents.on('deleted', this.handleDevlogDeleted.bind(this));
+      devlogEvents.on('note-added', this.handleNoteAdded.bind(this));
+
+      this.initialized = true;
+      console.log('SSE Event Bridge initialized - devlog events will now trigger SSE updates');
+    } catch (error) {
+      console.error('Failed to initialize SSE Event Bridge:', error);
+      throw error;
+    }
   }
 
   private async handleDevlogCreated(event: DevlogEvent): Promise<void> {
@@ -74,9 +83,14 @@ class SSEEventBridge {
   /**
    * Cleanup method for graceful shutdown
    */
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     if (this.initialized) {
-      crossProcessEvents.cleanup();
+      // Cleanup DevlogManager (which will unsubscribe from storage events)
+      if (this.devlogManager) {
+        await this.devlogManager.dispose();
+        this.devlogManager = undefined;
+      }
+      
       this.initialized = false;
       console.log('SSE Event Bridge cleaned up');
     }

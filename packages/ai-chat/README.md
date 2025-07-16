@@ -1,10 +1,11 @@
-# @devlog/codehist
+# @devlog/ai-chat
 
-GitHub Copilot Chat History Extractor - TypeScript implementation for the devlog ecosystem.
+AI Chat History Extractor - TypeScript implementation for GitHub Copilot and other AI coding assistants in the devlog ecosystem.
 
 ## Features
 
-- **Extract Real Chat History**: Discovers and parses actual GitHub Copilot chat sessions from VS Code data directories
+- **Extract Real Chat History**: Discovers and parses actual AI chat sessions from VS Code data directories
+- **Multi-AI Support**: Currently supports GitHub Copilot, with planned support for Cursor, Claude Code, and other AI assistants
 - **Cross-Platform Support**: Works with VS Code, VS Code Insiders, and other variants across Windows, macOS, and Linux
 - **Multiple Export Formats**: Export to JSON and Markdown
 - **Search Functionality**: Search through chat content to find specific conversations
@@ -18,7 +19,7 @@ GitHub Copilot Chat History Extractor - TypeScript implementation for the devlog
 pnpm install
 
 # Build the package
-pnpm --filter @devlog/codehist build
+pnpm --filter @devlog/ai-chat build
 ```
 
 ## Usage
@@ -27,25 +28,25 @@ pnpm --filter @devlog/codehist build
 
 ```bash
 # Show chat statistics
-npx @devlog/codehist stats
+npx @devlog/ai-chat stats
 
 # List all chat sessions
-npx @devlog/codehist chat
+npx @devlog/ai-chat chat
 
 # Search chat content
-npx @devlog/codehist search "error handling"
+npx @devlog/ai-chat search "error handling"
 
 # Export to JSON
-npx @devlog/codehist export --format json --output chat_history.json
+npx @devlog/ai-chat export --format json --output chat_history.json
 
 # Export to Markdown
-npx @devlog/codehist export --format markdown --output chat_history.md
+npx @devlog/ai-chat export --format markdown --output chat_history.md
 ```
 
 ### Programmatic Usage
 
 ```typescript
-import { CopilotParser, JSONExporter } from '@devlog/codehist';
+import { CopilotParser, JSONExporter } from '@devlog/ai-chat';
 
 // Parse chat data
 const parser = new CopilotParser();
@@ -58,13 +59,13 @@ await exporter.exportChatData(data.toDict(), 'output.json');
 
 ## How It Works
 
-CodeHist discovers GitHub Copilot chat sessions stored in VS Code's application data:
+AI-Chat discovers AI assistant chat sessions stored in VS Code's application data:
 
 - **macOS**: `~/Library/Application Support/Code*/User/workspaceStorage/*/chatSessions/`
 - **Windows**: `%APPDATA%/Code*/User/workspaceStorage/*/chatSessions/`
 - **Linux**: `~/.config/Code*/User/workspaceStorage/*/chatSessions/`
 
-Each chat session is stored as a JSON file containing the conversation between you and GitHub Copilot.
+Each chat session is stored as a JSON file containing the conversation between you and your AI assistant.
 
 ## Architecture
 
@@ -72,6 +73,8 @@ Each chat session is stored as a JSON file containing the conversation between y
 src/
 ├── models/           # TypeScript interfaces and types
 ├── parsers/          # VS Code data discovery and parsing
+│   ├── base/         # Abstract base classes for AI providers
+│   └── copilot/      # GitHub Copilot implementation
 ├── exporters/        # Export functionality (JSON, Markdown)
 ├── utils/           # Cross-platform utilities
 ├── cli/             # Command-line interface

@@ -15,10 +15,8 @@ import type {
   DevlogFilter,
   DevlogId,
   DevlogNote,
-  DevlogPriority,
   DevlogStats,
   DevlogStatus,
-  DevlogType,
   DiscoverDevlogsRequest,
   DiscoveredDevlogEntry,
   DiscoveryResult,
@@ -34,39 +32,30 @@ import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
 import {
   DevlogNotFoundError,
-  DevlogStorageError,
-  logger,
-  handleAsyncOperation,
 } from './utils/errors.js';
 import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
-import { crossProcessEvents } from './events/cross-process-events.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
-  // TODO: Uncomment when integrations are implemented
-  // private integrationService!: IntegrationService;
-  // private readonly integrations?: EnterpriseIntegration;
-  // private readonly syncStrategy?: SyncStrategy;
   private readonly configManager: ConfigurationManager;
   private initialized = false;
+  private storageUnsubscribe?: () => void;
 
   constructor() {
-    // TODO: integrations and syncStrategy can be configured later
-    // this.integrations = options.integrations;
-    // this.syncStrategy = options.syncStrategy;
     this.configManager = new ConfigurationManager();
   }
 
   /**
-   * Helper method to emit events to both local and cross-process event systems
+   * Helper method to emit events to local event system
+   * Note: Cross-process events are now handled by storage provider subscriptions
    */
   private async emitEvent(event: DevlogEvent): Promise<void> {
     try {
       // Emit to local event system (in-process handlers)
       await devlogEvents.emit(event);
-
-      // Emit to cross-process event system (for other processes like web server)
-      await crossProcessEvents.emit(event);
+      
+      // Cross-process communication now happens through storage provider subscriptions
+      // Each storage provider handles its own change detection and event emission
     } catch (error) {
       console.error('Error emitting devlog event:', error);
     }
@@ -83,6 +72,15 @@ export class DevlogManager {
 
     this.storageProvider = await StorageProviderFactory.create(config.storage!);
     await this.storageProvider.initialize();
+
+    // Subscribe to storage events for cross-process communication
+    if (this.storageProvider.subscribe) {
+      this.storageUnsubscribe = await this.storageProvider.subscribe(async (event) => {
+        // Forward storage events to local event system
+        await devlogEvents.emit(event);
+      });
+      console.debug('Subscribed to storage provider events');
+    }
 
     // TODO: Initialize integration service if integrations are configured
     // const integrations =
@@ -630,9 +628,17 @@ export class DevlogManager {
    * Cleanup resources
    */
   async dispose(): Promise<void> {
+    // Unsubscribe from storage events
+    if (this.storageUnsubscribe) {
+      this.storageUnsubscribe();
+      this.storageUnsubscribe = undefined;
+    }
+    
     if (this.storageProvider) {
       await this.storageProvider.cleanup();
     }
+    
+    this.initialized = false;
   }
 
   /**

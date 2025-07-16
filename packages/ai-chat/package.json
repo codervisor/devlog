@@ -1,12 +1,12 @@
 {
-  "name": "@devlog/codehist",
+  "name": "@devlog/ai-chat",
   "version": "0.1.0",
-  "description": "GitHub Copilot Chat History Extractor - TypeScript implementation",
+  "description": "AI Chat History Extractor - TypeScript implementation for GitHub Copilot and other AI coding assistants",
   "type": "module",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "bin": {
-    "codehist": "./build/cli/index.js"
+    "ai-chat": "./build/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -17,7 +17,10 @@
     "test:watch": "vitest --watch"
   },
   "keywords": [
+    "ai-chat",
     "github-copilot",
+    "cursor",
+    "claude-code",
     "chat-history",
     "vscode",
     "ai-assistant",

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   // Initialize the SSE event bridge to connect devlog events to SSE broadcasts
-  sseEventBridge.initialize();
+  await sseEventBridge.initialize();
   // Create a readable stream for SSE
   const stream = new ReadableStream({
     start(controller) {

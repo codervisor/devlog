@@ -2,14 +2,21 @@ export { DevlogManager } from './devlog-manager.js';
 export { ConfigurationManager } from './configuration-manager.js';
 
 // Event System
-export { DevlogEventEmitter, devlogEvents, type DevlogEvent, type DevlogEventHandler } from './events/devlog-events.js';
-export { CrossProcessEventSystem, crossProcessEvents } from './events/cross-process-events.js';
+export {
+  DevlogEventEmitter,
+  devlogEvents,
+  type DevlogEvent,
+  type DevlogEventHandler,
+} from './events/devlog-events.js';
 
 // Integration Service
 export { IntegrationService } from './integration-service.js';
 
 // Chat Import Service
-export { DefaultChatImportService, type ChatImportService } from './services/chat-import-service.js';
+export {
+  DefaultChatImportService,
+  type ChatImportService,
+} from './services/chat-import-service.js';
 
 // Storage Providers
 export { StorageProviderFactory } from './storage/storage-provider.js';

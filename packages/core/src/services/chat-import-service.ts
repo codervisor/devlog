@@ -5,7 +5,7 @@
  * into the devlog storage system with proper workspace mapping and linking.
  */
 
-import { CopilotParser } from '@devlog/codehist';
+import { CopilotParser } from '@devlog/ai-chat';
 import type {
   ChatSession,
   ChatMessage,
