@@ -1,12 +1,7 @@
-/* Import Tailwind CSS */
+/* All @import statements must come first - CSS specification requirement */
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-
-/* Third-party styles */
-@import 'highlight.js/styles/github.css';
-
-/* Modular CSS imports - order matters for cascade */
 @import './styles/base.css';
 @import './styles/antd-overrides.css';
 @import './styles/layout.css';

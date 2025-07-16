@@ -9,6 +9,9 @@ import { Typography } from 'antd';
 import styles from './MarkdownRenderer.module.css';
 import { StickyHeadings } from './StickyHeadings';
 
+// Import highlight.js CSS theme
+import 'highlight.js/styles/github.css';
+
 const { Text } = Typography;
 
 // Custom sanitize schema that allows syntax highlighting attributes

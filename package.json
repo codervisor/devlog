@@ -17,7 +17,8 @@
     "build:web": "pnpm --filter @devlog/web build",
     "dev:mcp": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
     "dev:web": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
-    "start:web": "pnpm --filter @devlog/web start"
+    "start:web": "pnpm --filter @devlog/web start",
+    "preview:web": "pnpm --filter @devlog/web preview"
   },
   "keywords": [
     "monorepo",

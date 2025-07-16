@@ -3,6 +3,12 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import styles from './MarkdownEditor.module.css';
+import { configureMonaco } from '../../../lib/monaco-config';
+
+// Configure Monaco Editor environment
+if (typeof window !== 'undefined') {
+  configureMonaco();
+}
 
 // Dynamically import Monaco Editor to avoid SSR issues
 const Editor = dynamic(() => import('@monaco-editor/react').then((mod) => mod.default), {
