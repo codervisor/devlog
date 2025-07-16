@@ -3,10 +3,10 @@
   "title": "Test migration success with new simple ID",
   "type": "task",
   "description": "Testing that the migration worked correctly and new entries get simple incremental IDs starting from 80.",
-  "status": "done",
+  "status": "closed",
   "priority": "medium",
   "createdAt": "2025-07-15T09:26:52.411Z",
-  "updatedAt": "2025-07-16T03:05:38.928Z",
+  "updatedAt": "2025-07-16T03:25:59.328Z",
   "notes": [
     {
       "id": "921188b8-ac0b-4bd0-856a-953c8b2ebac2",
@@ -25,6 +25,12 @@
       "timestamp": "2025-07-16T02:54:13.374Z",
       "category": "progress",
       "content": "Completed: Test entry closed - migration success with new simple ID format was verified"
+    },
+    {
+      "id": "cdab0f9a-108f-46bc-8340-0425540bfb8d",
+      "timestamp": "2025-07-16T03:25:59.328Z",
+      "category": "progress",
+      "content": "Closed: Test entry completed - migration success with new simple ID validated"
     }
   ],
   "files": [],
