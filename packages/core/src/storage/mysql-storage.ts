@@ -4,12 +4,20 @@
 
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
+import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 
 export class MySQLStorageProvider implements StorageProvider {
   private connectionString: string;
   private options: Record<string, any>;
   private connection: any = null;
+  
+  // Event subscription properties
+  private eventCallbacks = new Set<(event: DevlogEvent) => void>();
+  private pollingInterval?: NodeJS.Timeout;
+  private isWatching = false;
+  private lastPollTimestamp = new Date().toISOString();
+  private lastKnownEntryIds = new Set<number>();
 
   constructor(connectionString: string, options: Record<string, any> = {}) {
     this.connectionString = connectionString;
@@ -191,6 +199,10 @@ export class MySQLStorageProvider implements StorageProvider {
   }
 
   async cleanup(): Promise<void> {
+    // Stop event polling
+    await this.stopWatching();
+    this.eventCallbacks.clear();
+    
     if (this.connection) {
       await this.connection.end();
       this.connection = null;
@@ -285,5 +297,144 @@ export class MySQLStorageProvider implements StorageProvider {
 
   async saveChatWorkspace(): Promise<void> {
     throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+  }
+
+  // ===== Event Subscription Operations =====
+
+  /**
+   * Subscribe to database changes by polling for updates
+   */
+  async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
+    this.eventCallbacks.add(callback);
+    
+    // Start polling if this is the first subscription
+    if (this.eventCallbacks.size === 1 && !this.isWatching) {
+      await this.startWatching();
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      this.eventCallbacks.delete(callback);
+      // Stop polling if no more callbacks
+      if (this.eventCallbacks.size === 0 && this.isWatching) {
+        this.stopWatching();
+      }
+    };
+  }
+
+  /**
+   * Start polling the database for changes
+   */
+  async startWatching(): Promise<void> {
+    if (this.isWatching || !this.connection) {
+      return;
+    }
+
+    try {
+      this.isWatching = true;
+      
+      // Initialize known IDs with current state
+      const [rows] = await this.connection.execute('SELECT id FROM devlog_entries');
+      this.lastKnownEntryIds = new Set<number>(rows.map((row: any) => Number(row.id)));
+      
+      console.log(`[MySQLStorage] Started watching for database changes (tracking ${this.lastKnownEntryIds.size} entries)`);
+      
+      // Poll every 3 seconds for changes (slightly slower than SQLite for network overhead)
+      this.pollingInterval = setInterval(() => {
+        this.pollForChanges().catch(error => {
+          console.error('[MySQLStorage] Error polling for changes:', error);
+        });
+      }, 3000);
+      
+    } catch (error) {
+      console.error('[MySQLStorage] Failed to start database watching:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Stop polling for database changes
+   */
+  async stopWatching(): Promise<void> {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = undefined;
+    }
+    this.isWatching = false;
+    console.log('[MySQLStorage] Stopped watching database changes');
+  }
+
+  /**
+   * Poll the database for recent changes
+   */
+  private async pollForChanges(): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
+    try {
+      const currentTimestamp = new Date().toISOString();
+      
+      // Query for entries updated since last poll
+      const [changedEntries] = await this.connection.execute(
+        'SELECT * FROM devlog_entries WHERE updated_at > ? ORDER BY updated_at ASC',
+        [this.lastPollTimestamp]
+      );
+      
+      for (const row of changedEntries as any[]) {
+        const entry = this.rowToDevlogEntry(row);
+        
+        // Skip if entry.id is undefined (shouldn't happen but be safe)
+        if (entry.id === undefined) {
+          console.warn('[MySQLStorage] Skipping entry with undefined ID');
+          continue;
+        }
+        
+        // Determine if this is a creation or update by checking if we've seen this ID before
+        const eventType = this.lastKnownEntryIds.has(entry.id) ? 'updated' : 'created';
+        this.lastKnownEntryIds.add(entry.id);
+        
+        this.emitEvent({
+          type: eventType,
+          timestamp: currentTimestamp,
+          data: entry,
+        });
+      }
+      
+      // Check for deletions by comparing current IDs with last known IDs
+      const [allIdsResult] = await this.connection.execute('SELECT id FROM devlog_entries');
+      const currentIds = new Set<number>((allIdsResult as any[]).map(row => Number(row.id)));
+      
+      for (const lastKnownId of this.lastKnownEntryIds) {
+        if (!currentIds.has(lastKnownId)) {
+          // Entry was deleted
+          this.emitEvent({
+            type: 'deleted',
+            timestamp: currentTimestamp,
+            data: { id: lastKnownId },
+          });
+        }
+      }
+      
+      // Update our tracking
+      this.lastKnownEntryIds = currentIds;
+      this.lastPollTimestamp = currentTimestamp;
+      
+    } catch (error) {
+      console.error('[MySQLStorage] Error polling for changes:', error);
+    }
+  }
+
+  /**
+   * Emit event to all subscribers
+   */
+  private emitEvent(event: DevlogEvent): void {
+    for (const callback of this.eventCallbacks) {
+      try {
+        callback(event);
+      } catch (error) {
+        console.error('[MySQLStorage] Error in event callback:', error);
+      }
+    }
   }
 }

@@ -4,12 +4,18 @@
 
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
+import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
   private connectionString: string;
   private options: Record<string, any>;
   private client: any = null;
+  
+  // Event subscription properties  
+  private eventCallbacks = new Set<(event: DevlogEvent) => void>();
+  private notifyClient: any = null;
+  private isWatching = false;
 
   constructor(connectionString: string, options: Record<string, any> = {}) {
     this.connectionString = connectionString;
@@ -63,6 +69,46 @@ export class PostgreSQLStorageProvider implements StorageProvider {
       CREATE INDEX IF NOT EXISTS idx_devlog_created_at ON devlog_entries(created_at);
       CREATE INDEX IF NOT EXISTS idx_devlog_updated_at ON devlog_entries(updated_at);
       CREATE INDEX IF NOT EXISTS idx_devlog_full_text ON devlog_entries USING GIN(to_tsvector('english', title || ' ' || description));
+    `);
+
+    // Create trigger function for real-time notifications
+    await this.client.query(`
+      CREATE OR REPLACE FUNCTION notify_devlog_changes()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        IF TG_OP = 'INSERT' THEN
+          PERFORM pg_notify('devlog_changes', json_build_object(
+            'operation', 'created',
+            'id', NEW.id,
+            'timestamp', NEW.updated_at
+          )::text);
+          RETURN NEW;
+        ELSIF TG_OP = 'UPDATE' THEN
+          PERFORM pg_notify('devlog_changes', json_build_object(
+            'operation', 'updated',
+            'id', NEW.id,
+            'timestamp', NEW.updated_at
+          )::text);
+          RETURN NEW;
+        ELSIF TG_OP = 'DELETE' THEN
+          PERFORM pg_notify('devlog_changes', json_build_object(
+            'operation', 'deleted',
+            'id', OLD.id,
+            'timestamp', NOW()
+          )::text);
+          RETURN OLD;
+        END IF;
+        RETURN NULL;
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+
+    // Create triggers for INSERT, UPDATE, DELETE
+    await this.client.query(`
+      DROP TRIGGER IF EXISTS devlog_changes_trigger ON devlog_entries;
+      CREATE TRIGGER devlog_changes_trigger
+        AFTER INSERT OR UPDATE OR DELETE ON devlog_entries
+        FOR EACH ROW EXECUTE FUNCTION notify_devlog_changes();
     `);
   }
 
@@ -202,6 +248,15 @@ export class PostgreSQLStorageProvider implements StorageProvider {
   }
 
   async cleanup(): Promise<void> {
+    // Stop event listening
+    await this.stopWatching();
+    this.eventCallbacks.clear();
+    
+    if (this.notifyClient) {
+      await this.notifyClient.end();
+      this.notifyClient = null;
+    }
+    
     if (this.client) {
       await this.client.end();
       this.client = null;
@@ -296,5 +351,126 @@ export class PostgreSQLStorageProvider implements StorageProvider {
 
   async saveChatWorkspace(): Promise<void> {
     throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  // ===== Event Subscription Operations =====
+
+  /**
+   * Subscribe to database changes using PostgreSQL LISTEN/NOTIFY
+   */
+  async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
+    this.eventCallbacks.add(callback);
+    
+    // Start listening if this is the first subscription
+    if (this.eventCallbacks.size === 1 && !this.isWatching) {
+      await this.startWatching();
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      this.eventCallbacks.delete(callback);
+      // Stop listening if no more callbacks
+      if (this.eventCallbacks.size === 0 && this.isWatching) {
+        this.stopWatching();
+      }
+    };
+  }
+
+  /**
+   * Start listening for PostgreSQL notifications
+   */
+  async startWatching(): Promise<void> {
+    if (this.isWatching || !this.client) {
+      return;
+    }
+
+    try {
+      // Create a separate client for notifications to avoid conflicts
+      const pgModule = await import('pg' as any);
+      const { Client } = pgModule;
+      
+      this.notifyClient = new Client({
+        connectionString: this.connectionString,
+        ...this.options,
+      });
+      
+      await this.notifyClient.connect();
+      
+      // Listen for devlog_changes notifications
+      await this.notifyClient.query('LISTEN devlog_changes');
+      
+      // Set up notification handler
+      this.notifyClient.on('notification', (msg: any) => {
+        this.handleNotification(msg).catch(error => {
+          console.error('[PostgreSQLStorage] Error handling notification:', error);
+        });
+      });
+      
+      this.isWatching = true;
+      console.log('[PostgreSQLStorage] Started listening for database changes via LISTEN/NOTIFY');
+      
+    } catch (error) {
+      console.error('[PostgreSQLStorage] Failed to start database watching:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Stop listening for database changes
+   */
+  async stopWatching(): Promise<void> {
+    if (this.notifyClient) {
+      try {
+        await this.notifyClient.query('UNLISTEN devlog_changes');
+        await this.notifyClient.end();
+        this.notifyClient = null;
+      } catch (error) {
+        console.error('[PostgreSQLStorage] Error stopping database watching:', error);
+      }
+    }
+    this.isWatching = false;
+    console.log('[PostgreSQLStorage] Stopped listening for database changes');
+  }
+
+  /**
+   * Handle PostgreSQL notification messages
+   */
+  private async handleNotification(msg: any): Promise<void> {
+    try {
+      const payload = JSON.parse(msg.payload);
+      const { operation, id, timestamp } = payload;
+      
+      let eventData: any = { id };
+      
+      // For created and updated events, fetch the full entry data
+      if (operation === 'created' || operation === 'updated') {
+        const entry = await this.get(id);
+        if (entry) {
+          eventData = entry;
+        }
+      }
+      
+      this.emitEvent({
+        type: operation,
+        timestamp: timestamp || new Date().toISOString(),
+        data: eventData,
+      });
+      
+    } catch (error) {
+      console.error('[PostgreSQLStorage] Error parsing notification:', error);
+    }
+  }
+
+  /**
+   * Emit event to all subscribers
+   */
+  private emitEvent(event: DevlogEvent): void {
+    for (const callback of this.eventCallbacks) {
+      try {
+        callback(event);
+      } catch (error) {
+        console.error('[PostgreSQLStorage] Error in event callback:', error);
+      }
+    }
   }
 }
