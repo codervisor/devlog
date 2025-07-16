@@ -1,5 +1,13 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { DevlogEntry, DevlogId, DevlogFilter, PaginatedResult, PaginationMeta, DevlogStatus, FilterType } from '@devlog/core';
+import {
+  DevlogEntry,
+  DevlogId,
+  DevlogFilter,
+  PaginatedResult,
+  PaginationMeta,
+  DevlogStatus,
+  FilterType,
+} from '@devlog/core';
 import { useServerSentEvents } from './useServerSentEvents';
 
 export function useDevlogs() {
@@ -13,18 +21,26 @@ export function useDevlogs() {
   // Build query string for API call
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
-    
+
     if (filters.search) {
       params.append('search', filters.search);
     }
-    if (filters.status && filters.status.length > 0) {
-      filters.status.forEach(status => params.append('status', status));
+
+    // Add filterType parameter for status grouping
+    if (filters.filterType) {
+      params.append('filterType', filters.filterType);
     }
+
+    // Add specific status filters (work with filterType)
+    if (filters.status && filters.status.length > 0) {
+      filters.status.forEach((status) => params.append('status', status));
+    }
+
     if (filters.type && filters.type.length > 0) {
-      filters.type.forEach(type => params.append('type', type));
+      filters.type.forEach((type) => params.append('type', type));
     }
     if (filters.priority && filters.priority.length > 0) {
-      filters.priority.forEach(priority => params.append('priority', priority));
+      filters.priority.forEach((priority) => params.append('priority', priority));
     }
     if (filters.assignee) {
       params.append('assignee', filters.assignee);
@@ -35,7 +51,7 @@ export function useDevlogs() {
     if (filters.toDate) {
       params.append('toDate', filters.toDate);
     }
-    
+
     // Add pagination parameters
     if (filters.pagination?.page) {
       params.append('page', filters.pagination.page.toString());
@@ -49,7 +65,7 @@ export function useDevlogs() {
     if (filters.pagination?.sortOrder) {
       params.append('sortOrder', filters.pagination.sortOrder);
     }
-    
+
     return params.toString();
   }, [filters]);
 
@@ -62,7 +78,7 @@ export function useDevlogs() {
         throw new Error('Failed to fetch devlogs');
       }
       const data = await response.json();
-      
+
       // Handle both paginated and non-paginated responses
       if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
         // Paginated response
@@ -73,7 +89,7 @@ export function useDevlogs() {
         setDevlogs(data);
         setPagination(null);
       }
-      
+
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -94,59 +110,48 @@ export function useDevlogs() {
 
     // Status filter
     if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter(devlog => 
-        filters.status!.includes(devlog.status)
-      );
+      filtered = filtered.filter((devlog) => filters.status!.includes(devlog.status));
     }
 
     // Type filter
     if (filters.type && filters.type.length > 0) {
-      filtered = filtered.filter(devlog => 
-        filters.type!.includes(devlog.type)
-      );
+      filtered = filtered.filter((devlog) => filters.type!.includes(devlog.type));
     }
 
     // Priority filter
     if (filters.priority && filters.priority.length > 0) {
-      filtered = filtered.filter(devlog => 
-        filters.priority!.includes(devlog.priority)
-      );
+      filtered = filtered.filter((devlog) => filters.priority!.includes(devlog.priority));
     }
 
     // Assignee filter
     if (filters.assignee) {
       const assigneeQuery = filters.assignee.toLowerCase().trim();
-      filtered = filtered.filter(devlog => 
-        devlog.assignee?.toLowerCase().includes(assigneeQuery)
+      filtered = filtered.filter((devlog) =>
+        devlog.assignee?.toLowerCase().includes(assigneeQuery),
       );
     }
 
     // Date range filter (based on createdAt)
     if (filters.fromDate) {
       const fromDate = new Date(filters.fromDate);
-      filtered = filtered.filter(devlog => 
-        new Date(devlog.createdAt) >= fromDate
-      );
+      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) >= fromDate);
     }
 
     if (filters.toDate) {
       const toDate = new Date(filters.toDate);
       // Include the entire end date by setting time to end of day
       toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(devlog => 
-        new Date(devlog.createdAt) <= toDate
-      );
+      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) <= toDate);
     }
 
     // Search filter (client-side fallback for when backend search isn't used)
     if (filters.search) {
       const searchQuery = filters.search.toLowerCase().trim();
-      filtered = filtered.filter(devlog => {
+      filtered = filtered.filter((devlog) => {
         const titleMatch = devlog.title.toLowerCase().includes(searchQuery);
         const descriptionMatch = devlog.description.toLowerCase().includes(searchQuery);
-        const notesMatch = devlog.notes?.some(note => 
-          note.content.toLowerCase().includes(searchQuery)
-        ) || false;
+        const notesMatch =
+          devlog.notes?.some((note) => note.content.toLowerCase().includes(searchQuery)) || false;
         return titleMatch || descriptionMatch || notesMatch;
       });
     }
@@ -169,8 +174,8 @@ export function useDevlogs() {
 
     const handleDevlogUpdated = (updatedDevlog: DevlogEntry) => {
       // Update if exists in current list, otherwise refetch
-      setDevlogs(current => {
-        const index = current.findIndex(devlog => devlog.id === updatedDevlog.id);
+      setDevlogs((current) => {
+        const index = current.findIndex((devlog) => devlog.id === updatedDevlog.id);
         if (index >= 0) {
           const updated = [...current];
           updated[index] = updatedDevlog;
@@ -183,9 +188,7 @@ export function useDevlogs() {
     };
 
     const handleDevlogDeleted = (deletedData: { id: DevlogId }) => {
-      setDevlogs(current => 
-        current.filter(devlog => devlog.id !== deletedData.id)
-      );
+      setDevlogs((current) => current.filter((devlog) => devlog.id !== deletedData.id));
     };
 
     // Subscribe to real-time events
@@ -295,47 +298,61 @@ export function useDevlogs() {
   };
 
   // Filter handling functions
-  const handleStatusFilter = useCallback((status: FilterType) => {
-    if (status === 'total') {
-      // Clear all filters except search
-      setFilters(prev => ({ search: prev.search }));
-    } else if (status === 'open') {
-      // Open includes: new, in-progress, blocked, in-review, testing
-      const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
-      setFilters(prev => ({
-        ...prev,
-        status: openStatuses,
-      }));
-    } else if (status === 'closed') {
-      // Closed includes: done, cancelled
-      const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
-      setFilters(prev => ({
-        ...prev,
-        status: closedStatuses,
-      }));
-    } else {
-      // Individual status - always filter to show only this status
-      const currentStatuses = filters.status || [];
-      
-      // Check if this is already the only selected status
-      if (currentStatuses.length === 1 && currentStatuses[0] === status) {
-        // If clicking the same single status, clear filter (show all)
-        setFilters(prev => ({
+  const handleStatusFilter = useCallback(
+    (filterValue: FilterType | DevlogStatus) => {
+      if (['total', 'open', 'closed'].includes(filterValue)) {
+        setFilters((prev) => ({
           ...prev,
+          filterType: filterValue,
           status: undefined,
         }));
       } else {
-        // Always set to show only this status
-        setFilters(prev => ({
-          ...prev,
-          status: [status],
-        }));
+        // Individual status - set filterType to corresponding group and specific status
+        const currentStatuses = filters.status || [];
+
+        // Check if this is already the only selected status
+        if (currentStatuses.length === 1 && currentStatuses[0] === filterValue) {
+          // If clicking the same single status, clear both filterType and status
+          setFilters((prev) => ({
+            ...prev,
+            filterType: undefined,
+            status: undefined,
+          }));
+        } else {
+          // Determine the correct filterType based on the status
+          const openStatuses: DevlogStatus[] = [
+            'new',
+            'in-progress',
+            'blocked',
+            'in-review',
+            'testing',
+          ];
+          const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
+
+          let correspondingFilterType: 'open' | 'closed';
+          if (openStatuses.includes(filterValue as DevlogStatus)) {
+            correspondingFilterType = 'open';
+          } else if (closedStatuses.includes(filterValue as DevlogStatus)) {
+            correspondingFilterType = 'closed';
+          } else {
+            // Fallback - shouldn't happen with current status types
+            correspondingFilterType = 'open';
+          }
+
+          // Set specific status and corresponding filterType
+          setFilters((prev) => ({
+            ...prev,
+            filterType: correspondingFilterType,
+            status: [filterValue as DevlogStatus],
+          }));
+        }
       }
-    }
-  }, [filters.status]);
+    },
+    [filters.status],
+  );
 
   const handleSearchFilter = useCallback((searchQuery: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       search: searchQuery.trim() || undefined,
     }));
@@ -347,7 +364,7 @@ export function useDevlogs() {
 
   // Pagination utility functions
   const goToPage = useCallback((page: number) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       pagination: {
         ...prev.pagination,
@@ -357,7 +374,7 @@ export function useDevlogs() {
   }, []);
 
   const changePageSize = useCallback((limit: number) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       pagination: {
         ...prev.pagination,
@@ -368,7 +385,7 @@ export function useDevlogs() {
   }, []);
 
   const changeSorting = useCallback((sortBy: string, sortOrder?: 'asc' | 'desc') => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       pagination: {
         ...prev.pagination,
@@ -385,16 +402,16 @@ export function useDevlogs() {
     loading,
     error,
     connected,
-    
+
     // Current filters
     filters,
     setFilters,
-    
+
     // Filter actions
     handleStatusFilter,
     handleSearchFilter,
     resetFilters,
-    
+
     // Data actions
     refetch: fetchDevlogs,
     createDevlog,
@@ -403,7 +420,7 @@ export function useDevlogs() {
     batchUpdate,
     batchDelete,
     batchAddNote,
-    
+
     // Pagination controls
     goToPage,
     changePageSize,

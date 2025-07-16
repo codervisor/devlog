@@ -152,7 +152,7 @@ export class EnterpriseSync {
         throw new Error(`Jira API error: ${response.statusText}`);
       }
 
-      const createdIssue = await response.json();
+      const createdIssue = await response.json() as { key: string, id: string };
 
       // Get full issue details
       const getResponse = await fetch(`${config.baseUrl}/rest/api/3/issue/${createdIssue.key}`, {

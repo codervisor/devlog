@@ -4,6 +4,7 @@
  */
 
 import * as crypto from 'crypto';
+import { getOpenStatuses } from './utils/filter-mapping.js';
 import type {
   BatchDeleteRequest,
   BatchNoteRequest,
@@ -343,8 +344,9 @@ export class DevlogManager {
     // If no status filter is provided, exclude closed entries by default
     // If status filter is provided, respect it (user explicitly requested specific statuses)
     if (!enhancedFilter.status) {
-      // Exclude closed entries by including all other statuses
-      enhancedFilter.status = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done'];
+      // Exclude closed entries by including all open statuses plus 'done'
+      // Note: 'done' is included to maintain backward compatibility with existing behavior
+      enhancedFilter.status = [...getOpenStatuses(), 'done'];
     }
     // If status filter is provided and includes 'cancelled', keep it as-is
     // This allows users to explicitly request cancelled entries

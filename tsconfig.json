@@ -25,7 +25,6 @@
     "skipLibCheck": true
   },
   "references": [
-    { "path": "./packages/types" },
     { "path": "./packages/core" },
     { "path": "./packages/mcp" },
     { "path": "./packages/codehist" },

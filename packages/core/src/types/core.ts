@@ -136,6 +136,7 @@ export interface ExternalReference {
 }
 
 export interface DevlogFilter {
+  filterType?: FilterType; // New filter dimension for status grouping
   status?: DevlogStatus[];
   type?: DevlogType[];
   priority?: DevlogPriority[];

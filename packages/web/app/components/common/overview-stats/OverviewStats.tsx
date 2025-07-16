@@ -68,34 +68,25 @@ export function OverviewStats({
   }
 
   const isStatusActive = (status: DevlogStatus) => {
-    // Individual statuses should be highlighted when they are selected,
-    // either individually or as part of an open/closed group
-    const currentStatuses = currentFilters?.status || [];
-    
-    // Highlight if the status is included in the current filter
-    return currentStatuses.includes(status);
+    return !!currentFilters?.status?.includes(status);
   };
 
   const isTotalActive = () => {
-    return !currentFilters?.status || currentFilters.status.length === 0;
+    // Total is active when no filterType and no specific status filters
+    return (
+      (!currentFilters?.filterType || currentFilters.filterType === 'total') &&
+      (!currentFilters?.status || currentFilters.status.length === 0)
+    );
   };
 
   const isOpenActive = () => {
-    const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
-    const currentStatuses = currentFilters?.status || [];
-    return (
-      openStatuses.length === currentStatuses.length &&
-      openStatuses.every((status) => currentStatuses.includes(status))
-    );
+    // Open is active when filterType is 'open'
+    return currentFilters?.filterType === 'open';
   };
 
   const isClosedActive = () => {
-    const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
-    const currentStatuses = currentFilters?.status || [];
-    return (
-      closedStatuses.length === currentStatuses.length &&
-      closedStatuses.every((status) => currentStatuses.includes(status))
-    );
+    // Closed is active when filterType is 'closed'
+    return currentFilters?.filterType === 'closed';
   };
 
   const handleStatClick = (status: FilterType) => {
@@ -117,7 +108,7 @@ export function OverviewStats({
       if (!isSubStatus) {
         throw new Error('isSubStatus must be true for individual statuses');
       }
-      isActive = isStatusActive(status as DevlogStatus);
+      isActive = isStatusActive(status);
     }
 
     const isClickable = onFilterToggle !== undefined;
@@ -197,7 +188,7 @@ export function OverviewStats({
             </div>
           }
           title="Open Status Breakdown"
-          trigger={onFilterToggle ? 'click' : 'hover'}
+          trigger="hover"
           placement="bottom"
         >
           <div
@@ -238,7 +229,7 @@ export function OverviewStats({
             </div>
           }
           title="Closed Status Breakdown"
-          trigger={onFilterToggle ? 'click' : 'hover'}
+          trigger="hover"
           placement="bottom"
         >
           <div
