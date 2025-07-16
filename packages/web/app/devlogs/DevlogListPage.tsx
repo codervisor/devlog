@@ -143,8 +143,6 @@ export function DevlogListPage() {
         variant="detailed" 
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
-        collapsible={true}
-        defaultCollapsed={false}
       />
       <Button 
         type="primary" 

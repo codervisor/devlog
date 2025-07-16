@@ -1,0 +1,44 @@
+{
+  "key": "fix-overview-stats-sub-status-highlighting-and-int",
+  "title": "Fix overview stats sub-status highlighting and interaction behavior",
+  "type": "bugfix",
+  "description": "Refine the overview stats component interaction and visual behavior based on user feedback:\n\n## Issues to Fix\n\n### 1. **Sub-status highlighting conflict**\nCurrently when \"Open\" is selected (showing all open statuses), the individual sub-statuses in the popover are also highlighted. This creates visual confusion - only the parent \"Open\" button should be highlighted when the aggregate filter is active.\n\n### 2. **Sub-status interaction behavior**  \nWhen clicking on a sub-status in the popover, it should work as a single-choice toggle:\n- If the clicked status is already selected, deselect it (clear filter)\n- If a different status is clicked, replace the current selection with the new one\n- This should not be additive like the current behavior\n\n### 3. **Horizontal spacing too large**\nThe gap between the Total, Open, and Closed buttons is too large, creating poor visual density and making the component feel spread out.\n\n## Current Problems\n- Sub-statuses show active highlighting when parent aggregate is selected\n- Clicking sub-statuses adds to selection instead of replacing\n- Visual hierarchy unclear between parent and child selections\n- Horizontal spacing creates poor visual grouping",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-16T07:15:25.877Z",
+  "updatedAt": "2025-07-16T07:20:29.230Z",
+  "notes": [
+    {
+      "id": "2149aff6-0d2a-4671-965a-b357aecdbb36",
+      "timestamp": "2025-07-16T07:20:29.230Z",
+      "category": "solution",
+      "content": "Successfully implemented sub-status highlighting refinements:\n\n✅ Added isSubStatusActive function to distinguish individual vs aggregate selections\n✅ Updated getStatClasses to accept isSubStatus parameter for conditional logic  \n✅ Applied sub-status logic to all popover and icon variant calls\n✅ Reduced horizontal gap from 8px to 4px in .dashboardStats CSS\n✅ Tested with Playwright - confirmed sub-statuses don't highlight when parent \"Open\" is selected\n✅ Verified individual status filtering still works correctly (In Progress filter working)\n\nThe visual hierarchy is now clean with no conflicting highlights between parent aggregates and child sub-statuses. The horizontal spacing is also tighter as requested."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Good UX requires clear visual hierarchy and predictable interaction patterns. Users expect parent-child relationships to be visually distinct and single-choice toggles to behave consistently.",
+    "technicalContext": "OverviewStats.tsx component has active state logic that doesn't distinguish between parent aggregate selections vs individual status selections. CSS horizontal gap between main buttons needs adjustment.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Sub-status items in popovers should not be highlighted when their parent (Open/Closed) is selected",
+      "Clicking a sub-status should work as single-choice toggle (deselect if already selected, replace if different status selected)",
+      "Horizontal gap between Total, Open, and Closed buttons should be reduced for better visual density",
+      "Parent filter buttons (Open/Closed) should be highlighted when their aggregate filters are active",
+      "Individual status selection should not interfere with parent aggregate highlighting"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T07:15:25.877Z",
+    "contextVersion": 1
+  },
+  "id": 124
+}

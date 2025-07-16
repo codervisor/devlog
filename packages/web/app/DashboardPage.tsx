@@ -49,8 +49,6 @@ export function DashboardPage() {
       variant="detailed" 
       currentFilters={filters}
       onFilterToggle={handleStatusFilter}
-      collapsible={true}
-      defaultCollapsed={false}
     />
   );
 

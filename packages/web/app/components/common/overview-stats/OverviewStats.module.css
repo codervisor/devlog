@@ -57,7 +57,7 @@
 /* Detailed Variant (Dashboard and DevlogList) */
 .dashboardStats {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
 }
 
@@ -126,11 +126,13 @@
 .popoverStats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px */
 }
 
 .popoverStats .statCompact {
   min-width: auto;
+  height: auto; /* Allow flexible height */
+  padding: 4px; /* Add some padding for better touch targets */
 }
 
 /* Interactive Stats */

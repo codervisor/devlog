@@ -1,0 +1,38 @@
+{
+  "key": "fix-real-time-sse-updates-process-isolation-preven",
+  "title": "Fix real-time SSE updates: process isolation prevents MCP events from reaching web UI",
+  "type": "bugfix",
+  "description": "The real-time refresh issue is confirmed: devlogs created through MCP do not appear in the web UI without manual refresh. After manual testing, devlog 122 created via MCP only appeared after manual page refresh, confirming the user's report. \n\nKey findings:\n- SSE bridge is initialized in web server\n- MCP server runs as separate process from web server\n- DevlogManager instances are isolated between processes\n- No SSE broadcast events appear in web server logs when MCP creates devlog\n- Manual refresh shows devlog successfully created and persisted\n\nRoot cause: The devlogEvents emitter from @devlog/core package creates separate instances in each process, so MCP server events don't reach the web server's SSE bridge.",
+  "status": "closed",
+  "priority": "high",
+  "createdAt": "2025-07-16T07:11:17.456Z",
+  "updatedAt": "2025-07-16T07:19:27.418Z",
+  "notes": [
+    {
+      "id": "0dc281fc-1855-4a00-a75c-8b24a47ca6f1",
+      "timestamp": "2025-07-16T07:19:27.418Z",
+      "category": "solution",
+      "content": "**Decision: Closing as \"won't fix\" for development environment**\n\nRoot cause identified: Multiple processes (MCP server + web server) running in development environment with separate DevlogManager instances and isolated event emitters.\n\n**Rationale for not implementing fix:**\n1. **Development environment complexity** - Multiple agents and web servers on single machine creates unusual scenarios\n2. **Production environment different** - In production, typically single process deployment or proper distributed event system (Redis, message queues)\n3. **Over-engineering concern** - File-based cross-process events add unnecessary complexity for dev-only issue\n4. **Manual refresh acceptable** - For development workflow, occasional manual refresh is not a significant UX issue\n\n**Production recommendations:**\n- Deploy MCP and web server in same process, OR\n- Use proper distributed event system (Redis pub/sub, message queue)\n- Container orchestration handles process isolation correctly\n\nThe SSE infrastructure is solid and will work correctly in proper deployment scenarios."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T07:11:17.456Z",
+    "contextVersion": 1
+  },
+  "id": 123
+}

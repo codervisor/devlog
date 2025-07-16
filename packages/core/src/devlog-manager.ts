@@ -31,6 +31,7 @@ import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
 import { DevlogNotFoundError, DevlogStorageError, logger, handleAsyncOperation } from './utils/errors.js';
 import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
+import { crossProcessEvents } from './events/cross-process-events.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
@@ -46,6 +47,21 @@ export class DevlogManager {
     // this.integrations = options.integrations;
     // this.syncStrategy = options.syncStrategy;
     this.configManager = new ConfigurationManager();
+  }
+
+  /**
+   * Helper method to emit events to both local and cross-process event systems
+   */
+  private async emitEvent(event: DevlogEvent): Promise<void> {
+    try {
+      // Emit to local event system (in-process handlers)
+      await devlogEvents.emit(event);
+      
+      // Emit to cross-process event system (for other processes like web server)
+      await crossProcessEvents.emit(event);
+    } catch (error) {
+      console.error('Error emitting devlog event:', error);
+    }
   }
 
   /**
@@ -121,7 +137,7 @@ export class DevlogManager {
     await this.storageProvider.save(entry);
 
     // Emit creation event
-    await devlogEvents.emit({
+    await this.emitEvent({
       type: 'created',
       timestamp: new Date().toISOString(),
       data: entry,
@@ -204,7 +220,7 @@ export class DevlogManager {
     await this.storageProvider.save(updated);
 
     // Emit update event
-    await devlogEvents.emit({
+    await this.emitEvent({
       type: 'updated',
       timestamp: new Date().toISOString(),
       data: updated,
@@ -250,7 +266,7 @@ export class DevlogManager {
     await this.storageProvider.save(updated);
 
     // Emit note-added event
-    await devlogEvents.emit({
+    await this.emitEvent({
       type: 'note-added',
       timestamp: new Date().toISOString(),
       data: { devlog: updated, note },
@@ -505,7 +521,7 @@ export class DevlogManager {
     await this.storageProvider.delete(id);
 
     // Emit deletion event
-    await devlogEvents.emit({
+    await this.emitEvent({
       type: 'deleted',
       timestamp: new Date().toISOString(),
       data: { id, deletedEntry: existing },

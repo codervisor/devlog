@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   InfoCircleOutlined,
   NumberOutlined,
@@ -8,10 +8,8 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   BarChartOutlined,
-  LeftOutlined,
-  RightOutlined,
 } from '@ant-design/icons';
-import { Popover, Typography, Tooltip, Button, Skeleton } from 'antd';
+import { Popover, Typography, Tooltip, Skeleton } from 'antd';
 import { DevlogStats, DevlogStatus, DevlogFilter, FilterType } from '@devlog/core';
 import styles from './OverviewStats.module.css';
 
@@ -26,8 +24,6 @@ interface OverviewStatsProps {
   className?: string;
   currentFilters?: DevlogFilter;
   onFilterToggle?: (status: FilterType) => void;
-  collapsible?: boolean;
-  defaultCollapsed?: boolean;
   loading?: boolean;
 }
 
@@ -38,29 +34,8 @@ export function OverviewStats({
   className,
   currentFilters,
   onFilterToggle,
-  collapsible = false,
-  defaultCollapsed = false,
   loading = false,
 }: OverviewStatsProps) {
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-
-  // Load collapsed state from localStorage on mount
-  useEffect(() => {
-    if (collapsible) {
-      const savedState = localStorage.getItem('overviewStats.collapsed');
-      if (savedState !== null) {
-        setIsCollapsed(JSON.parse(savedState));
-      }
-    }
-  }, [collapsible]);
-
-  // Save collapsed state to localStorage
-  useEffect(() => {
-    if (collapsible) {
-      localStorage.setItem('overviewStats.collapsed', JSON.stringify(isCollapsed));
-    }
-  }, [isCollapsed, collapsible]);
-
   // Render skeleton loading state
   const renderSkeleton = () => {
     if (variant === 'icon') {
@@ -77,20 +52,7 @@ export function OverviewStats({
       );
     }
 
-    // For detailed variant
-    if (collapsible && isCollapsed) {
-      // Skeleton for collapsed view
-      return (
-        <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
-          <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
-            <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
-          </div>
-          <Skeleton.Button style={{ width: '24px', height: '24px' }} active size="small" />
-        </div>
-      );
-    }
-
-    // Skeleton for expanded detailed view
+    // Skeleton for detailed view
     return (
       <div className={`${styles.dashboardStats} ${className || ''}`}>
         {/* Total stat skeleton */}
@@ -98,18 +60,11 @@ export function OverviewStats({
           <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
         </div>
         {/* Status stats skeleton */}
-        {Array.from({ length: 7 }).map((_, index) => (
+        {Array.from({ length: 2 }).map((_, index) => (
           <div key={index} className={styles.statCompact}>
             <Skeleton.Button style={{ width: '60px', height: '56px' }} active size="small" />
           </div>
         ))}
-        {collapsible && (
-          <Skeleton.Button
-            style={{ width: '32px', height: '32px', minWidth: '32px', padding: '4px 8px' }}
-            active
-            size="small"
-          />
-        )}
       </div>
     );
   };
@@ -127,8 +82,39 @@ export function OverviewStats({
     return currentFilters?.status?.includes(status) || false;
   };
 
+  const isSubStatusActive = (status: DevlogStatus) => {
+    // Sub-statuses should only be highlighted when they are individually selected,
+    // not when their parent aggregate (open/closed) is selected
+    const currentStatuses = currentFilters?.status || [];
+    const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+    const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
+    
+    // Check if current selection is the full open or closed aggregate
+    const isFullOpenSelection = openStatuses.length === currentStatuses.length && 
+                               openStatuses.every(s => currentStatuses.includes(s));
+    const isFullClosedSelection = closedStatuses.length === currentStatuses.length && 
+                                 closedStatuses.every(s => currentStatuses.includes(s));
+    
+    // Only highlight if individually selected (not part of aggregate selection)
+    return currentStatuses.includes(status) && !isFullOpenSelection && !isFullClosedSelection;
+  };
+
   const isTotalActive = () => {
     return !currentFilters?.status || currentFilters.status.length === 0;
+  };
+
+  const isOpenActive = () => {
+    const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+    const currentStatuses = currentFilters?.status || [];
+    return openStatuses.length === currentStatuses.length && 
+           openStatuses.every(status => currentStatuses.includes(status));
+  };
+
+  const isClosedActive = () => {
+    const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
+    const currentStatuses = currentFilters?.status || [];
+    return closedStatuses.length === currentStatuses.length && 
+           closedStatuses.every(status => currentStatuses.includes(status));
   };
 
   const handleStatClick = (status: FilterType) => {
@@ -137,105 +123,26 @@ export function OverviewStats({
     }
   };
 
-  const getStatClasses = (status: FilterType, baseClasses: string) => {
-    const isActive = status === 'total' ? isTotalActive() : isStatusActive(status as DevlogStatus);
+  const getStatClasses = (status: FilterType, baseClasses: string, isSubStatus = false) => {
+    let isActive = false;
+    if (status === 'total') {
+      isActive = isTotalActive();
+    } else if (status === 'open') {
+      isActive = isOpenActive();
+    } else if (status === 'closed') {
+      isActive = isClosedActive();
+    } else {
+      // Use sub-status logic for individual statuses to avoid highlighting when parent is active
+      isActive = isSubStatus ? isSubStatusActive(status as DevlogStatus) : isStatusActive(status as DevlogStatus);
+    }
+    
     const isClickable = onFilterToggle !== undefined;
 
     return `${baseClasses} ${isClickable ? styles.clickableStat : ''} ${isActive ? styles.activeStat : ''}`;
   };
 
-  const toggleCollapsed = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
-  // Helper to get active status counts for collapsed view
-  const getActiveStatusCount = () => {
-    if (!currentFilters?.status || currentFilters.status.length === 0) {
-      return stats!.totalEntries;
-    }
-    return currentFilters.status.reduce((total, status) => {
-      return total + (stats!.byStatus[status] || 0);
-    }, 0);
-  };
-
-  // Helper to get active status labels for collapsed view
-  const getActiveStatusLabels = () => {
-    if (!currentFilters?.status || currentFilters.status.length === 0) {
-      return 'Total';
-    }
-    if (currentFilters.status.length === 1) {
-      return currentFilters.status[0].charAt(0).toUpperCase() + currentFilters.status[0].slice(1);
-    }
-    return `${currentFilters.status.length} filters`;
-  };
-
-  // Helper to get primary active status for styling
-  const getPrimaryActiveStatus = (): FilterType => {
-    if (!currentFilters?.status || currentFilters.status.length === 0) {
-      return 'total';
-    }
-    // Return the first status if only one is active, or 'total' if multiple
-    if (currentFilters.status.length === 1) {
-      return currentFilters.status[0];
-    }
-    return 'total';
-  };
-
-  // Render collapsed view for detailed variant
-  const renderCollapsedView = () => {
-    const activeCount = getActiveStatusCount();
-    const activeLabel = getActiveStatusLabels();
-    const primaryStatus = getPrimaryActiveStatus();
-
-    // Get the appropriate CSS class for the primary status
-    const getStatusClass = (status: FilterType) => {
-      switch (status) {
-        case 'new':
-          return styles.new;
-        case 'in-progress':
-          return styles.inProgress;
-        case 'blocked':
-          return styles.blocked;
-        case 'in-review':
-          return styles.inReview;
-        case 'testing':
-          return styles.testing;
-        case 'done':
-          return styles.completed;
-        case 'cancelled':
-          return styles.closed;
-        default:
-          return ''; // 'total', 'open', 'closed' - no specific class
-      }
-    };
-
-    return (
-      <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
-        <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
-          <span className={`${styles.statValue} ${getStatusClass(primaryStatus)}`}>
-            {activeCount}
-          </span>
-          <span className={styles.statLabel}>{activeLabel}</span>
-        </div>
-        <Button
-          type="text"
-          size="small"
-          icon={<LeftOutlined />}
-          onClick={toggleCollapsed}
-          className={styles.collapseButton}
-          title="Expand stats"
-        />
-      </div>
-    );
-  };
-
   // Render detailed variant (for Dashboard and List page)
   if (variant === 'detailed') {
-    // Return collapsed view if collapsible and collapsed
-    if (collapsible && isCollapsed) {
-      return renderCollapsedView();
-    }
-
     // Render simplified view with only primary aggregates and dropdown for details
     return (
       <div className={`${styles.dashboardStats} ${className || ''}`}>
@@ -252,29 +159,49 @@ export function OverviewStats({
           content={
             <div className={styles.popoverContent}>
               <div className={styles.popoverStats}>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('new', styles.statCompact, true)}
+                  onClick={() => handleStatClick('new')}
+                  title={onFilterToggle ? 'Filter by New' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
                   <span className={styles.statLabel}>New</span>
                 </div>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('in-progress', styles.statCompact, true)}
+                  onClick={() => handleStatClick('in-progress')}
+                  title={onFilterToggle ? 'Filter by In Progress' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.inProgress}`}>
                     {stats.byStatus['in-progress'] || 0}
                   </span>
                   <span className={styles.statLabel}>In Progress</span>
                 </div>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('blocked', styles.statCompact, true)}
+                  onClick={() => handleStatClick('blocked')}
+                  title={onFilterToggle ? 'Filter by Blocked' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.blocked}`}>
                     {stats.byStatus['blocked'] || 0}
                   </span>
                   <span className={styles.statLabel}>Blocked</span>
                 </div>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('in-review', styles.statCompact, true)}
+                  onClick={() => handleStatClick('in-review')}
+                  title={onFilterToggle ? 'Filter by In Review' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.inReview}`}>
                     {stats.byStatus['in-review'] || 0}
                   </span>
                   <span className={styles.statLabel}>In Review</span>
                 </div>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('testing', styles.statCompact, true)}
+                  onClick={() => handleStatClick('testing')}
+                  title={onFilterToggle ? 'Filter by Testing' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.testing}`}>
                     {stats.byStatus['testing'] || 0}
                   </span>
@@ -301,13 +228,21 @@ export function OverviewStats({
           content={
             <div className={styles.popoverContent}>
               <div className={styles.popoverStats}>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('done', styles.statCompact, true)}
+                  onClick={() => handleStatClick('done')}
+                  title={onFilterToggle ? 'Filter by Done' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.completed}`}>
                     {stats.byStatus['done'] || 0}
                   </span>
                   <span className={styles.statLabel}>Done</span>
                 </div>
-                <div className={styles.statCompact}>
+                <div 
+                  className={getStatClasses('cancelled', styles.statCompact, true)}
+                  onClick={() => handleStatClick('cancelled')}
+                  title={onFilterToggle ? 'Filter by Cancelled' : undefined}
+                >
                   <span className={`${styles.statValue} ${styles.closed}`}>
                     {stats.byStatus['cancelled'] || 0}
                   </span>
@@ -329,17 +264,6 @@ export function OverviewStats({
             <span className={styles.statLabel}>Closed</span>
           </div>
         </Popover>
-        
-        {collapsible && (
-          <Button
-            type="text"
-            size="small"
-            icon={<RightOutlined />}
-            onClick={toggleCollapsed}
-            className={styles.collapseButton}
-            title="Collapse stats"
-          />
-        )}
       </div>
     );
   }
@@ -348,45 +272,77 @@ export function OverviewStats({
   const detailedContent = (
     <div className={styles.popoverContent}>
       <div className={styles.popoverStats}>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('total', styles.statCompact)}
+          onClick={() => handleStatClick('total')}
+          title={onFilterToggle ? 'Show all entries' : undefined}
+        >
           <span className={styles.statValue}>{stats.totalEntries}</span>
           <span className={styles.statLabel}>Total</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('new', styles.statCompact, true)}
+          onClick={() => handleStatClick('new')}
+          title={onFilterToggle ? 'Filter by New' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
           <span className={styles.statLabel}>New</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('in-progress', styles.statCompact, true)}
+          onClick={() => handleStatClick('in-progress')}
+          title={onFilterToggle ? 'Filter by In Progress' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.inProgress}`}>
             {stats.byStatus['in-progress'] || 0}
           </span>
           <span className={styles.statLabel}>In Progress</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('blocked', styles.statCompact, true)}
+          onClick={() => handleStatClick('blocked')}
+          title={onFilterToggle ? 'Filter by Blocked' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.blocked}`}>
             {stats.byStatus['blocked'] || 0}
           </span>
           <span className={styles.statLabel}>Blocked</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('in-review', styles.statCompact, true)}
+          onClick={() => handleStatClick('in-review')}
+          title={onFilterToggle ? 'Filter by In Review' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.inReview}`}>
             {stats.byStatus['in-review'] || 0}
           </span>
           <span className={styles.statLabel}>In Review</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('testing', styles.statCompact, true)}
+          onClick={() => handleStatClick('testing')}
+          title={onFilterToggle ? 'Filter by Testing' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.testing}`}>
             {stats.byStatus['testing'] || 0}
           </span>
           <span className={styles.statLabel}>Testing</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('done', styles.statCompact, true)}
+          onClick={() => handleStatClick('done')}
+          title={onFilterToggle ? 'Filter by Done' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.completed}`}>
             {stats.byStatus['done'] || 0}
           </span>
           <span className={styles.statLabel}>Done</span>
         </div>
-        <div className={styles.statCompact}>
+        <div 
+          className={getStatClasses('cancelled', styles.statCompact, true)}
+          onClick={() => handleStatClick('cancelled')}
+          title={onFilterToggle ? 'Filter by Cancelled' : undefined}
+        >
           <span className={`${styles.statValue} ${styles.closed}`}>
             {stats.byStatus['cancelled'] || 0}
           </span>

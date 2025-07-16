@@ -1,0 +1,31 @@
+{
+  "key": "manual-test-real-time-refresh-validation",
+  "title": "Manual test - Real-time refresh validation",
+  "type": "task",
+  "description": "This devlog is created to manually validate the real-time refresh issue reported by the user. The user states that when a new devlog is created through MCP, it does not appear in the \"All Devlogs\" page without manual refresh, despite our previous testing showing it working.",
+  "status": "new",
+  "priority": "high",
+  "createdAt": "2025-07-16T07:10:20.842Z",
+  "updatedAt": "2025-07-16T07:10:20.842Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T07:10:20.842Z",
+    "contextVersion": 1
+  },
+  "id": 122
+}

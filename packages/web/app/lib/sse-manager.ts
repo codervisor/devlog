@@ -9,11 +9,14 @@ export function broadcastUpdate(type: string, data: any) {
     timestamp: new Date().toISOString(),
   });
 
+  console.log(`Broadcasting SSE update: ${type} to ${activeConnections.size} connections`);
+
   // Send to all active connections
   for (const controller of activeConnections) {
     try {
       controller.enqueue(`data: ${message}\n\n`);
     } catch (error) {
+      console.error('Error sending SSE message, removing dead connection:', error);
       // Remove dead connections
       activeConnections.delete(controller);
     }
