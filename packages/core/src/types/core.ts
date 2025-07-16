@@ -11,7 +11,7 @@ export type DevlogStatus =
   | 'in-review'
   | 'testing'
   | 'done'
-  | 'closed';
+  | 'cancelled';
 
 export type DevlogPriority = 'low' | 'medium' | 'high' | 'critical';
 
@@ -70,6 +70,7 @@ export interface DevlogEntry {
   notes: DevlogNote[];
   files?: string[];
   relatedDevlogs?: string[];
+  archived?: boolean; // For long-term management and performance
 
   // Enhanced AI agent context
   context?: DevlogContext;
@@ -142,10 +143,13 @@ export interface DevlogFilter {
   fromDate?: string;
   toDate?: string;
   search?: string;
+  archived?: boolean; // Filter for archived status
 }
 
 export interface DevlogStats {
   totalEntries: number;
+  openEntries: number;    // Open = new, in-progress, blocked, in-review, testing
+  closedEntries: number;  // Closed = done, cancelled
   byStatus: Record<DevlogStatus, number>;
   byType: Record<DevlogType, number>;
   byPriority: Record<DevlogPriority, number>;
@@ -163,7 +167,7 @@ export interface TimeSeriesDataPoint {
   new: number;
   blocked: number;
   done: number;
-  closed: number;
+  cancelled: number;
 }
 
 export interface TimeSeriesStats {

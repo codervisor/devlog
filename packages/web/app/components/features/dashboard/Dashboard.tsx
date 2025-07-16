@@ -67,7 +67,7 @@ export function Dashboard({
       { name: 'In Review', value: stats.byStatus['in-review'] || 0, color: '#fa8c16' },
       { name: 'Testing', value: stats.byStatus['testing'] || 0, color: '#13c2c2' },
       { name: 'Done', value: stats.byStatus['done'] || 0, color: '#52c41a' },
-      { name: 'Closed', value: stats.byStatus['closed'] || 0, color: '#595959' },
+      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: '#595959' },
     ].filter((item) => item.value > 0);
   }, [stats]);
 

@@ -347,7 +347,7 @@ export class DevlogGitHubMapper {
   private mapGitHubStateToDevlogStatus(state: 'open' | 'closed', statusLabel?: string, stateReason?: 'completed' | 'not_planned' | 'reopened' | null): DevlogStatus {
     if (state === 'closed') {
       if (stateReason === 'not_planned') {
-        return 'closed';
+        return 'cancelled';
       }
       return 'done';
     }
@@ -370,7 +370,7 @@ export class DevlogGitHubMapper {
     switch (status) {
       case 'done':
         return { state: 'closed', state_reason: 'completed' };
-      case 'closed':
+      case 'cancelled':
         return { state: 'closed', state_reason: 'not_planned' };
       case 'new':
       case 'in-progress':

@@ -2,7 +2,7 @@
  * MySQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 
 export class MySQLStorageProvider implements StorageProvider {
@@ -213,8 +213,16 @@ export class MySQLStorageProvider implements StorageProvider {
       byPriority[row.priority] = row.count;
     });
 
+    // Calculate open and closed counts
+    const openEntries = (['new', 'in-progress', 'blocked', 'in-review', 'testing'] as DevlogStatus[])
+      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
+    const closedEntries = (['done', 'cancelled'] as DevlogStatus[])
+      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
+
     return {
       totalEntries: total,
+      openEntries,
+      closedEntries,
       byStatus,
       byType,
       byPriority,

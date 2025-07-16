@@ -161,6 +161,7 @@ export class DevlogManager {
     if (request.priority !== undefined) updated.priority = request.priority;
     if (request.assignee !== undefined) updated.assignee = request.assignee;
     if (request.files !== undefined) updated.files = request.files;
+    if (request.archived !== undefined) updated.archived = request.archived;
 
     // Update enhanced context fields
     if (request.businessContext !== undefined && updated.context)
@@ -306,8 +307,8 @@ export class DevlogManager {
       // Exclude closed entries by including all other statuses
       enhancedFilter.status = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done'];
     }
-    // If status filter is provided and includes 'closed', keep it as-is
-    // This allows users to explicitly request closed entries
+    // If status filter is provided and includes 'cancelled', keep it as-is
+    // This allows users to explicitly request cancelled entries
     
     return enhancedFilter;
   }
@@ -452,7 +453,7 @@ export class DevlogManager {
         new: statusCounts['new'] || 0,
         blocked: statusCounts['blocked'] || 0,
         done: statusCounts['done'] || 0,
-        closed: statusCounts['closed'] || 0,
+        cancelled: statusCounts['cancelled'] || 0,
       });
 
       currentDate.setDate(currentDate.getDate() + 1);
@@ -505,19 +506,39 @@ export class DevlogManager {
   }
 
   /**
-   * Close a devlog entry (mark as closed without completion)
+   * Close a devlog entry (mark as cancelled without completion)
    */
   async closeDevlog(id: DevlogId, reason?: string): Promise<DevlogEntry> {
     const updated = await this.updateDevlog({
       id,
-      status: 'closed',
+      status: 'cancelled',
     });
 
     if (reason) {
-      return await this.addNote(id, `Closed: ${reason}`, 'progress');
+      return await this.addNote(id, `Cancelled: ${reason}`, 'progress');
     }
 
     return updated;
+  }
+
+  /**
+   * Archive a devlog entry to reduce clutter in default views
+   */
+  async archiveDevlog(id: DevlogId): Promise<DevlogEntry> {
+    return await this.updateDevlog({
+      id,
+      archived: true,
+    });
+  }
+
+  /**
+   * Unarchive a devlog entry to restore it to default views
+   */
+  async unarchiveDevlog(id: DevlogId): Promise<DevlogEntry> {
+    return await this.updateDevlog({
+      id,
+      archived: false,
+    });
   }
 
   /**
@@ -663,7 +684,7 @@ export class DevlogManager {
         blocked: 3,
         testing: 4,
         done: 5,
-        closed: 6,
+        cancelled: 6,
       };
 
       const relevanceDiff =

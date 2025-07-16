@@ -299,6 +299,36 @@ export class MCPDevlogAdapter {
     };
   }
 
+  async archiveDevlog(args: { id: number }): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    const entry = await this.devlogManager.archiveDevlog(args.id);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Archived devlog '${entry.id}': ${entry.title}\nArchived: ${entry.archived}`,
+        },
+      ],
+    };
+  }
+
+  async unarchiveDevlog(args: { id: number }): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    const entry = await this.devlogManager.unarchiveDevlog(args.id);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Unarchived devlog '${entry.id}': ${entry.title}\nArchived: ${entry.archived}`,
+        },
+      ],
+    };
+  }
+
   async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
     await this.ensureInitialized();
 
@@ -455,7 +485,7 @@ export class MCPDevlogAdapter {
           'in-review': '👀',
           testing: '🧪',
           done: '✅',
-          closed: '📦',
+          cancelled: '📦',
         };
 
         return (

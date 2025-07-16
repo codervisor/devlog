@@ -12,7 +12,7 @@ export const statusOptions: SelectOption[] = [
   { label: 'In Review', value: 'in-review' },
   { label: 'Testing', value: 'testing' },
   { label: 'Done', value: 'done' },
-  { label: 'Closed', value: 'closed' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 
 export const priorityOptions: SelectOption[] = [

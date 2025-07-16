@@ -134,14 +134,27 @@ export class JsonStorageProvider implements StorageProvider {
     const byType = {} as Record<DevlogType, number>;
     const byPriority = {} as Record<DevlogPriority, number>;
 
+    // Count open vs closed statuses
+    let openEntries = 0;
+    let closedEntries = 0;
+
     entries.forEach((entry) => {
       byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
       byType[entry.type] = (byType[entry.type] || 0) + 1;
       byPriority[entry.priority] = (byPriority[entry.priority] || 0) + 1;
+
+      // Categorize as open or closed based on GitHub model
+      if (['done', 'cancelled'].includes(entry.status)) {
+        closedEntries++;
+      } else {
+        openEntries++;
+      }
     });
 
     return {
       totalEntries: entries.length,
+      openEntries,
+      closedEntries,
       byStatus,
       byType,
       byPriority,
@@ -229,8 +242,21 @@ export class JsonStorageProvider implements StorageProvider {
         if (filter.assignee && entry.assignee !== filter.assignee) return false;
         if (filter.fromDate && entry.createdAt < filter.fromDate) return false;
         if (filter.toDate && entry.createdAt > filter.toDate) return false;
+        
+        // Filter by archived status (default to non-archived if not specified)
+        if (filter.archived !== undefined) {
+          const isArchived = entry.archived === true;
+          if (filter.archived !== isArchived) return false;
+        } else {
+          // Default behavior: exclude archived entries unless explicitly requested
+          if (entry.archived === true) return false;
+        }
+        
         return true;
       });
+    } else {
+      // Even without filter, exclude archived entries by default
+      filtered = entries.filter((entry) => entry.archived !== true);
     }
 
     // Sort by updated time (most recent first)

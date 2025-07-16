@@ -99,6 +99,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'close_devlog':
         return await adapter.closeDevlog(args as unknown as CloseDevlogArgs);
 
+      case 'archive_devlog':
+        return await adapter.archiveDevlog(args as unknown as { id: number });
+
+      case 'unarchive_devlog':
+        return await adapter.unarchiveDevlog(args as unknown as { id: number });
+
       case 'get_active_context':
         return await adapter.getActiveContext(args as unknown as GetActiveContextArgs);
 

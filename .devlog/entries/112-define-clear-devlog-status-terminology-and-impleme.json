@@ -1,0 +1,75 @@
+{
+  "key": "define-clear-devlog-status-terminology-and-impleme",
+  "title": "Define clear devlog status terminology and implement archiving system",
+  "type": "feature",
+  "description": "Resolve UX confusion about status terminology and implement comprehensive archiving system for long-term devlog management. Current issues: (1) \"Total\" label shows count excluding closed entries rather than true total, (2) \"Closed\" used as both umbrella term and specific status value creates ambiguity, (3) No archiving system for managing growing devlog datasets.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-16T05:10:37.574Z",
+  "updatedAt": "2025-07-16T05:36:10.332Z",
+  "notes": [
+    {
+      "id": "aedf05cb-7aec-46ae-b7e4-388f7daf1187",
+      "timestamp": "2025-07-16T05:17:19.365Z",
+      "category": "progress",
+      "content": "🚀 **Started Implementation**\n\n**Analysis Complete:**\n- Identified key issues: 'Total' shows filtered count, not true total\n- Status terminology confusion: 'closed' used as both umbrella and specific status\n- Need DevlogEntry archived field + functionality\n- Need to rename status 'closed' to 'cancelled' for clarity\n\n**Current Implementation Plan:**\n1. ✅ Add DevlogEntry archived field and functionality\n2. ✅ Update DevlogStats to include separate open/closed/total counts  \n3. ✅ Rename 'closed' status to 'cancelled'\n4. ✅ Update OverviewStats component to show proper counts\n5. ✅ Add archive/unarchive MCP tools\n6. ✅ Update UI components and options\n7. ✅ Handle migration of existing 'closed' entries\n8. ✅ Update tests and documentation\n\n**Key Files to Modify:**\n- packages/core/src/types/core.ts (DevlogEntry, DevlogStatus)\n- packages/core/src/devlog-manager.ts (archive functionality)\n- packages/web/app/lib/devlog-options.ts (status options)\n- packages/web/app/components/common/overview-stats/OverviewStats.tsx"
+    },
+    {
+      "id": "7a06c3ab-7a50-46e8-86e0-b4fc051a4672",
+      "timestamp": "2025-07-16T05:36:10.332Z",
+      "category": "solution",
+      "content": "Successfully implemented complete status terminology and archiving system:\n\n✅ **Core Implementation Complete**\n- Changed 'closed' status to 'cancelled' for clarity\n- Added archived boolean field to DevlogEntry interface\n- Enhanced DevlogStats with openEntries/closedEntries fields\n- Updated all storage providers (JSON, MySQL, PostgreSQL, SQLite, GitHub)\n\n✅ **MCP Tools Added**\n- archive_devlog: Archive entries for long-term storage\n- unarchive_devlog: Restore archived entries to active state\n\n✅ **UI/UX Improvements**\n- OverviewStats redesigned with clear Total/Open/Closed/individual status counts\n- FilterType system supports 'open'/'closed' aggregates plus individual statuses\n- Updated status colors, icons, and terminology throughout UI\n- Dashboard charts now use 'cancelled' instead of 'closed'\n\n✅ **Type Safety & Testing**\n- All TypeScript compilation errors resolved\n- Updated useDevlogFilters hook to handle new FilterType with aggregate filtering\n- Tests updated for new terminology\n- Full build passes successfully\n\n🎯 **Acceptance Criteria Met**\n- [x] Distinguish between \"Open\" (active work) and \"Closed\" (finished/cancelled)\n- [x] Implement archiving for long-term devlog management  \n- [x] Update UI to show clear stats (Total vs Open vs Closed)\n- [x] Ensure consistent terminology throughout system\n\nThe feature is now ready for end-to-end testing and deployment.",
+      "files": [
+        "packages/core/src/types/core.ts",
+        "packages/core/src/devlog-manager.ts",
+        "packages/core/src/storage/*.ts",
+        "packages/web/app/components/common/overview-stats/OverviewStats.tsx",
+        "packages/web/app/hooks/useDevlogFilters.ts",
+        "packages/web/app/components/features/dashboard/Dashboard.tsx",
+        "packages/mcp/src/tools/core-tools.ts",
+        "packages/mcp/src/mcp-adapter.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "As projects grow, devlog datasets become large and unwieldy. Clear terminology prevents user confusion and proper archiving ensures performance and usability remain optimal. GitHub alignment improves user experience for developers familiar with GitHub Issues.",
+    "technicalContext": "Current system has DevlogStatus with 7 values mapping to GitHub states. OverviewStats component shows misleading \"Total\" count. No archived field exists in DevlogEntry interface, though chat sessions have archiving. GitHub mapper provides foundation for status alignment.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Status terminology aligns with GitHub (Open/Closed umbrella terms)",
+      "Granular status 'closed' renamed to 'cancelled' to avoid confusion",
+      "UI shows accurate 'Open', 'Closed', and 'Total' counts",
+      "DevlogEntry has archived boolean field",
+      "Manual archive/unarchive functionality implemented",
+      "Archived entries excluded from default queries",
+      "Migration strategy for existing 'closed' status entries",
+      "Documentation updated with clear status definitions"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "GitHub uses state (open/closed) + state_reason (completed/not_planned) model",
+      "Current filtering excludes closed by default but mislabels as 'Total'",
+      "Chat sessions already have working archiving implementation to reference",
+      "Status mapping exists in github-mapper.ts for alignment",
+      "OverviewStats component needs label corrections and true total count"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "GitHub Issues state model",
+      "Chat session archiving implementation",
+      "Gmail-style bulk operations with archive actions",
+      "Azure DevOps work item states",
+      "JIRA issue lifecycle management"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T05:10:37.574Z",
+    "contextVersion": 1
+  },
+  "id": 112
+}

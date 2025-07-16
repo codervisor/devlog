@@ -214,9 +214,12 @@ export class GitHubStorageProvider implements StorageProvider {
     ]);
 
     const done = total - open;
+    const closedEntries = done; // In GitHub, closed = done + cancelled, but we simplify for now
 
     return {
       totalEntries: total,
+      openEntries: open,
+      closedEntries: closedEntries,
       byStatus: {
         new: Math.max(0, open - inProgress - blocked - inReview - testing),
         'in-progress': inProgress,
@@ -224,7 +227,7 @@ export class GitHubStorageProvider implements StorageProvider {
         'in-review': inReview,
         testing: testing,
         done: done,
-        closed: 0, // We count closed issues as done
+        cancelled: 0, // We count not_planned GitHub issues as cancelled, but simplify for now
       },
       byType: {
         feature: 0, // Could be enhanced to get actual counts
@@ -276,7 +279,7 @@ export class GitHubStorageProvider implements StorageProvider {
       const statusQueries = filter.status.map((status) => {
         if (status === 'done') {
           return this.config.mapping.useStateReason ? 'is:closed state:completed' : 'is:closed';
-        } else if (status === 'closed') {
+        } else if (status === 'cancelled') {
           return this.config.mapping.useStateReason ? 'is:closed state:not_planned' : 'is:closed';
         } else if (status === 'new') {
           if (this.config.mapping.useStateReason) {

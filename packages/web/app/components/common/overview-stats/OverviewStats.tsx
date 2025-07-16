@@ -19,13 +19,16 @@ const { Title } = Typography;
 
 export type OverviewStatsVariant = 'detailed' | 'icon';
 
+// Add support for aggregate filter types
+export type FilterType = DevlogStatus | 'total' | 'open' | 'closed';
+
 interface OverviewStatsProps {
   stats: DevlogStats | null;
   variant?: OverviewStatsVariant;
   title?: string;
   className?: string;
   currentFilters?: DevlogFilter;
-  onFilterToggle?: (status: DevlogStatus | 'total') => void;
+  onFilterToggle?: (status: FilterType) => void;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   loading?: boolean;
@@ -131,13 +134,13 @@ export function OverviewStats({
     return !currentFilters?.status || currentFilters.status.length === 0;
   };
 
-  const handleStatClick = (status: DevlogStatus | 'total') => {
+  const handleStatClick = (status: FilterType) => {
     if (onFilterToggle) {
       onFilterToggle(status);
     }
   };
 
-  const getStatClasses = (status: DevlogStatus | 'total', baseClasses: string) => {
+  const getStatClasses = (status: FilterType, baseClasses: string) => {
     const isActive = status === 'total' ? isTotalActive() : isStatusActive(status as DevlogStatus);
     const isClickable = onFilterToggle !== undefined;
 
@@ -170,7 +173,7 @@ export function OverviewStats({
   };
 
   // Helper to get primary active status for styling
-  const getPrimaryActiveStatus = (): DevlogStatus | 'total' => {
+  const getPrimaryActiveStatus = (): FilterType => {
     if (!currentFilters?.status || currentFilters.status.length === 0) {
       return 'total';
     }
@@ -188,7 +191,7 @@ export function OverviewStats({
     const primaryStatus = getPrimaryActiveStatus();
 
     // Get the appropriate CSS class for the primary status
-    const getStatusClass = (status: DevlogStatus | 'total') => {
+    const getStatusClass = (status: FilterType) => {
       switch (status) {
         case 'new':
           return styles.new;
@@ -202,10 +205,10 @@ export function OverviewStats({
           return styles.testing;
         case 'done':
           return styles.completed;
-        case 'closed':
+        case 'cancelled':
           return styles.closed;
         default:
-          return ''; // 'total' - no specific class
+          return ''; // 'total', 'open', 'closed' - no specific class
       }
     };
 
@@ -236,7 +239,7 @@ export function OverviewStats({
       return renderCollapsedView();
     }
 
-    // Render full expanded view
+    // Render simplified view with only primary aggregates and dropdown for details
     return (
       <div className={`${styles.dashboardStats} ${className || ''}`}>
         <div
@@ -247,112 +250,89 @@ export function OverviewStats({
           <span className={styles.statValue}>{stats.totalEntries}</span>
           <span className={styles.statLabel}>Total</span>
         </div>
-        <div
-          className={getStatClasses('new', styles.statCompact)}
-          onClick={() => handleStatClick('new')}
-          title={
-            onFilterToggle ? (isStatusActive('new') ? 'Clear filter' : 'Filter by New') : undefined
+        
+        <Popover
+          content={
+            <div className={styles.popoverContent}>
+              <div className={styles.popoverStats}>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
+                  <span className={styles.statLabel}>New</span>
+                </div>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.inProgress}`}>
+                    {stats.byStatus['in-progress'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>In Progress</span>
+                </div>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.blocked}`}>
+                    {stats.byStatus['blocked'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>Blocked</span>
+                </div>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.inReview}`}>
+                    {stats.byStatus['in-review'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>In Review</span>
+                </div>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.testing}`}>
+                    {stats.byStatus['testing'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>Testing</span>
+                </div>
+              </div>
+            </div>
           }
+          title="Open Status Breakdown"
+          trigger={onFilterToggle ? "click" : "hover"}
+          placement="bottom"
         >
-          <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
-          <span className={styles.statLabel}>New</span>
-        </div>
-        <div
-          className={getStatClasses('in-progress', styles.statCompact)}
-          onClick={() => handleStatClick('in-progress')}
-          title={
-            onFilterToggle
-              ? isStatusActive('in-progress')
-                ? 'Clear filter'
-                : 'Filter by In Progress'
-              : undefined
+          <div
+            className={getStatClasses('open', styles.statCompact)}
+            onClick={() => handleStatClick('open')}
+            title={onFilterToggle ? 'Show open entries' : undefined}
+          >
+            <span className={`${styles.statValue} ${styles.inProgress}`}>{stats.openEntries}</span>
+            <span className={styles.statLabel}>Open</span>
+          </div>
+        </Popover>
+        
+        <Popover
+          content={
+            <div className={styles.popoverContent}>
+              <div className={styles.popoverStats}>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.completed}`}>
+                    {stats.byStatus['done'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>Done</span>
+                </div>
+                <div className={styles.statCompact}>
+                  <span className={`${styles.statValue} ${styles.closed}`}>
+                    {stats.byStatus['cancelled'] || 0}
+                  </span>
+                  <span className={styles.statLabel}>Cancelled</span>
+                </div>
+              </div>
+            </div>
           }
+          title="Closed Status Breakdown"
+          trigger={onFilterToggle ? "click" : "hover"}
+          placement="bottom"
         >
-          <span className={`${styles.statValue} ${styles.inProgress}`}>
-            {stats.byStatus['in-progress'] || 0}
-          </span>
-          <span className={styles.statLabel}>In Progress</span>
-        </div>
-        <div
-          className={getStatClasses('blocked', styles.statCompact)}
-          onClick={() => handleStatClick('blocked')}
-          title={
-            onFilterToggle
-              ? isStatusActive('blocked')
-                ? 'Clear filter'
-                : 'Filter by Blocked'
-              : undefined
-          }
-        >
-          <span className={`${styles.statValue} ${styles.blocked}`}>
-            {stats.byStatus['blocked'] || 0}
-          </span>
-          <span className={styles.statLabel}>Blocked</span>
-        </div>
-        <div
-          className={getStatClasses('in-review', styles.statCompact)}
-          onClick={() => handleStatClick('in-review')}
-          title={
-            onFilterToggle
-              ? isStatusActive('in-review')
-                ? 'Clear filter'
-                : 'Filter by In Review'
-              : undefined
-          }
-        >
-          <span className={`${styles.statValue} ${styles.inReview}`}>
-            {stats.byStatus['in-review'] || 0}
-          </span>
-          <span className={styles.statLabel}>In Review</span>
-        </div>
-        <div
-          className={getStatClasses('testing', styles.statCompact)}
-          onClick={() => handleStatClick('testing')}
-          title={
-            onFilterToggle
-              ? isStatusActive('testing')
-                ? 'Clear filter'
-                : 'Filter by Testing'
-              : undefined
-          }
-        >
-          <span className={`${styles.statValue} ${styles.testing}`}>
-            {stats.byStatus['testing'] || 0}
-          </span>
-          <span className={styles.statLabel}>Testing</span>
-        </div>
-        <div
-          className={getStatClasses('done', styles.statCompact)}
-          onClick={() => handleStatClick('done')}
-          title={
-            onFilterToggle
-              ? isStatusActive('done')
-                ? 'Clear filter'
-                : 'Filter by Done'
-              : undefined
-          }
-        >
-          <span className={`${styles.statValue} ${styles.completed}`}>
-            {stats.byStatus['done'] || 0}
-          </span>
-          <span className={styles.statLabel}>Done</span>
-        </div>
-        <div
-          className={getStatClasses('closed', styles.statCompact)}
-          onClick={() => handleStatClick('closed')}
-          title={
-            onFilterToggle
-              ? isStatusActive('closed')
-                ? 'Clear filter'
-                : 'Filter by Closed'
-              : undefined
-          }
-        >
-          <span className={`${styles.statValue} ${styles.closed}`}>
-            {stats.byStatus['closed'] || 0}
-          </span>
-          <span className={styles.statLabel}>Closed</span>
-        </div>
+          <div
+            className={getStatClasses('closed', styles.statCompact)}
+            onClick={() => handleStatClick('closed')}
+            title={onFilterToggle ? 'Show closed entries' : undefined}
+          >
+            <span className={`${styles.statValue} ${styles.closed}`}>{stats.closedEntries}</span>
+            <span className={styles.statLabel}>Closed</span>
+          </div>
+        </Popover>
+        
         {collapsible && (
           <Button
             type="text"
@@ -411,9 +391,9 @@ export function OverviewStats({
         </div>
         <div className={styles.statCompact}>
           <span className={`${styles.statValue} ${styles.closed}`}>
-            {stats.byStatus['closed'] || 0}
+            {stats.byStatus['cancelled'] || 0}
           </span>
-          <span className={styles.statLabel}>Closed</span>
+          <span className={styles.statLabel}>Cancelled</span>
         </div>
       </div>
     </div>

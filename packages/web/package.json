@@ -9,8 +9,8 @@
     "dev:server": "next dev --port 3000",
     "dev:client": "next dev --port 3001",
     "build": "next build",
-    "start": "next start",
-    "preview": "next start",
+    "start": "pnpm run build && next start --port 3010",
+    "preview": "next start --port 3010",
     "clean": "rimraf .next out *.tsbuildinfo"
   },
   "dependencies": {

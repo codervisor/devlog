@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { DevlogEntry, DevlogFilter, DevlogStatus } from '@devlog/core';
 
+export type FilterType = DevlogStatus | 'total' | 'open' | 'closed';
+
 export function useDevlogFilters(devlogs: DevlogEntry[]) {
   const [filters, setFilters] = useState<DevlogFilter>({});
 
@@ -71,12 +73,26 @@ export function useDevlogFilters(devlogs: DevlogEntry[]) {
     return filtered;
   }, [devlogs, filters]);
 
-  const handleStatusFilter = (status: DevlogStatus | 'total') => {
+  const handleStatusFilter = (status: FilterType) => {
     if (status === 'total') {
       // Clear all filters except search
       setFilters(prev => ({ search: prev.search }));
+    } else if (status === 'open') {
+      // Open includes: new, in-progress, blocked, in-review, testing
+      const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+      setFilters({
+        ...filters,
+        status: openStatuses,
+      });
+    } else if (status === 'closed') {
+      // Closed includes: done, cancelled
+      const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
+      setFilters({
+        ...filters,
+        status: closedStatuses,
+      });
     } else {
-      // Toggle status filter
+      // Individual status - toggle behavior for direct status selection
       const currentStatuses = filters.status || [];
       if (currentStatuses.includes(status)) {
         // Remove this status

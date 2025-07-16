@@ -82,7 +82,7 @@ export const coreTools: Tool[] = [
         },
         status: {
           type: 'string',
-          enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'closed'],
+          enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
           description: 'Current status of the task',
         },
         blockers: {
@@ -171,7 +171,7 @@ export const coreTools: Tool[] = [
   },
   {
     name: 'close_devlog',
-    description: 'Close a devlog entry by setting status to closed. Safer alternative to deletion that preserves the entry.',
+    description: 'Close a devlog entry by setting status to cancelled. Safer alternative to deletion that preserves the entry.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -182,6 +182,34 @@ export const coreTools: Tool[] = [
         reason: {
           type: 'string',
           description: 'Optional reason for closing the entry (e.g., "Test entry completed", "Duplicate work", "No longer needed")',
+        },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'archive_devlog',
+    description: 'Archive a devlog entry to reduce clutter in default views while preserving it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry to archive',
+        },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'unarchive_devlog',
+    description: 'Unarchive a devlog entry to restore it to default views.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry to unarchive',
         },
       },
       required: ['id'],

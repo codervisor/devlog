@@ -51,6 +51,7 @@ export interface UpdateDevlogRequest {
   blockers?: string;
   nextSteps?: string;
   files?: string[];
+  archived?: boolean;
 
   // Enhanced context fields - matching CreateDevlogRequest
   businessContext?: string;

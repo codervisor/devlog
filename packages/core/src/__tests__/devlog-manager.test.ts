@@ -225,7 +225,7 @@ describe('DevlogManager', () => {
       expect(bugfixes[0].title).toBe('Bug Task');
     });
 
-    it('should exclude closed entries by default', async () => {
+    it('should exclude cancelled entries by default', async () => {
       const activeEntry = await manager.createDevlog({
         title: 'Active Task',
         type: 'task',
@@ -235,25 +235,25 @@ describe('DevlogManager', () => {
       const closableEntry = await manager.createDevlog({
         title: 'Closable Task',
         type: 'task',
-        description: 'A task to be closed',
+        description: 'A task to be cancelled',
       });
 
       // Close one entry
       await manager.closeDevlog(closableEntry.id!, 'Test closure');
 
-      // Default list should exclude closed entries
+      // Default list should exclude cancelled entries
       const defaultResults = await manager.listDevlogs();
       expect(defaultResults).toHaveLength(1);
       expect(defaultResults[0].title).toBe('Active Task');
 
-      // Explicit filter for closed should show closed entries
-      const closedResults = await manager.listDevlogs({ status: ['closed'] });
-      expect(closedResults).toHaveLength(1);
-      expect(closedResults[0].title).toBe('Closable Task');
+      // Explicit filter for cancelled should show cancelled entries
+      const cancelledResults = await manager.listDevlogs({ status: ['cancelled'] });
+      expect(cancelledResults).toHaveLength(1);
+      expect(cancelledResults[0].title).toBe('Closable Task');
 
-      // All entries (including closed) should be accessible when explicitly requested
+      // All entries (including cancelled) should be accessible when explicitly requested
       const allResults = await manager.listDevlogs({ 
-        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'closed'] 
+        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'] 
       });
       expect(allResults).toHaveLength(2);
     });
@@ -282,7 +282,7 @@ describe('DevlogManager', () => {
       expect(dbResults[0].title).toBe('Database Bug');
     });
 
-    it('should exclude closed entries from search by default', async () => {
+    it('should exclude cancelled entries from search by default', async () => {
       const activeEntry = await manager.createDevlog({
         title: 'Active Search Test',
         type: 'feature',
@@ -290,7 +290,7 @@ describe('DevlogManager', () => {
       });
 
       const closableEntry = await manager.createDevlog({
-        title: 'Closed Search Test',
+        title: 'Cancelled Search Test',
         type: 'feature',
         description: 'Search functionality',
       });
@@ -298,15 +298,15 @@ describe('DevlogManager', () => {
       // Close one entry
       await manager.closeDevlog(closableEntry.id!, 'Test closure');
 
-      // Default search should exclude closed entries
+      // Default search should exclude cancelled entries
       const defaultResults = await manager.searchDevlogs('search');
       expect(defaultResults).toHaveLength(1);
       expect(defaultResults[0].title).toBe('Active Search Test');
 
-      // Search with explicit closed filter should show closed entries
-      const closedResults = await manager.searchDevlogs('search', { status: ['closed'] });
-      expect(closedResults).toHaveLength(1);
-      expect(closedResults[0].title).toBe('Closed Search Test');
+      // Search with explicit cancelled filter should show cancelled entries
+      const cancelledResults = await manager.searchDevlogs('search', { status: ['cancelled'] });
+      expect(cancelledResults).toHaveLength(1);
+      expect(cancelledResults[0].title).toBe('Cancelled Search Test');
     });
   });
 

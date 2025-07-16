@@ -35,7 +35,7 @@ export const getStatusColor = (status: DevlogStatus): string => {
       return 'cyan';
     case 'done':
       return 'success';
-    case 'closed':
+    case 'cancelled':
       return 'default';
     default:
       return 'default';
@@ -57,7 +57,7 @@ export const getStatusIcon = (status: DevlogStatus): React.ReactNode => {
       return <EyeOutlined />;
     case 'testing':
       return <FileProtectOutlined />;
-    case 'closed':
+    case 'cancelled':
       return <MinusCircleOutlined />;
     case 'new':
       return <ClockCircleOutlined />;

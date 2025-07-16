@@ -351,8 +351,16 @@ export class SQLiteStorageProvider implements StorageProvider {
       byPriority[row.priority as DevlogPriority] = row.count;
     });
 
+    // Calculate open and closed counts
+    const openEntries = (['new', 'in-progress', 'blocked', 'in-review', 'testing'] as DevlogStatus[])
+      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
+    const closedEntries = (['done', 'cancelled'] as DevlogStatus[])
+      .reduce((sum, status) => sum + (byStatus[status] || 0), 0);
+
     return {
       totalEntries: total,
+      openEntries,
+      closedEntries,
       byStatus,
       byType,
       byPriority,

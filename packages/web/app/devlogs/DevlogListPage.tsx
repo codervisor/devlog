@@ -71,8 +71,22 @@ export function DevlogListPage() {
     if (status === 'total') {
       // Clear status filter but keep other filters
       setFilters({ ...filters, status: undefined });
+    } else if (status === 'open') {
+      // Open includes: new, in-progress, blocked, in-review, testing
+      const openStatuses = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+      setFilters({
+        ...filters,
+        status: openStatuses,
+      });
+    } else if (status === 'closed') {
+      // Closed includes: done, cancelled
+      const closedStatuses = ['done', 'cancelled'];
+      setFilters({
+        ...filters,
+        status: closedStatuses,
+      });
     } else {
-      // Toggle status filter
+      // Individual status - toggle behavior for direct status selection
       const currentStatuses = filters.status || [];
       if (currentStatuses.includes(status)) {
         // Remove this status
