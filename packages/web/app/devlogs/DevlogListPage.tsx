@@ -10,25 +10,25 @@ import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DevlogListPage() {
-  const { 
-    devlogs, 
+  const {
+    devlogs,
     pagination,
-    loading, 
-    filters, 
-    setFilters, 
-    deleteDevlog, 
-    batchUpdate, 
-    batchDelete, 
+    loading,
+    filters,
+    setFilters,
+    deleteDevlog,
+    batchUpdate,
+    batchDelete,
     batchAddNote,
     goToPage,
     changePageSize,
     handleStatusFilter,
   } = useDevlogs();
-  
+
   // Use server-side stats that are independent of current filter state
   // Stats should represent the overall system state, not the filtered view
   const { stats, loading: isLoadingStats, refetch: refetchStats } = useStats();
-  
+
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
@@ -90,7 +90,7 @@ export function DevlogListPage() {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -98,18 +98,14 @@ export function DevlogListPage() {
 
   const actions = (
     <Space size="large" wrap>
-      <OverviewStats 
-        stats={stats} 
+      <OverviewStats
+        stats={stats}
         loading={isLoadingStats}
-        variant="detailed" 
+        variant="detailed"
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
       />
-      <Button 
-        type="primary" 
-        icon={<PlusOutlined />} 
-        onClick={handleCreateDevlog}
-      >
+      <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateDevlog}>
         Create Devlog
       </Button>
     </Space>
@@ -117,34 +113,32 @@ export function DevlogListPage() {
 
   return (
     <PageLayout actions={actions}>
-      <div className="space-y-4">
-        <DevlogList
-          devlogs={devlogs}
-          loading={loading}
-          onViewDevlog={handleViewDevlog}
-          onDeleteDevlog={handleDeleteDevlog}
-          onBatchUpdate={handleBatchUpdate}
-          onBatchDelete={handleBatchDelete}
-          onBatchAddNote={handleBatchAddNote}
-          currentFilters={filters}
-          onFilterChange={setFilters}
-          pagination={pagination}
-          onPageChange={goToPage}
-          onPageSizeChange={changePageSize}
-        />
-        
-        {/* TODO: Integrate proper pagination back into footer when backend pagination is implemented */}
-        {false && pagination && (
-          <div className="mt-4 pt-4 border-t">
-            <Pagination
-              pagination={pagination!}
-              onPageChange={goToPage}
-              onPageSizeChange={changePageSize}
-              className="justify-center"
-            />
-          </div>
-        )}
-      </div>
+      <DevlogList
+        devlogs={devlogs}
+        loading={loading}
+        onViewDevlog={handleViewDevlog}
+        onDeleteDevlog={handleDeleteDevlog}
+        onBatchUpdate={handleBatchUpdate}
+        onBatchDelete={handleBatchDelete}
+        onBatchAddNote={handleBatchAddNote}
+        currentFilters={filters}
+        onFilterChange={setFilters}
+        pagination={pagination}
+        onPageChange={goToPage}
+        onPageSizeChange={changePageSize}
+      />
+
+      {/* TODO: Integrate proper pagination back into footer when backend pagination is implemented */}
+      {false && pagination && (
+        <div className="mt-4 pt-4 border-t">
+          <Pagination
+            pagination={pagination!}
+            onPageChange={goToPage}
+            onPageSizeChange={changePageSize}
+            className="justify-center"
+          />
+        </div>
+      )}
     </PageLayout>
   );
 }

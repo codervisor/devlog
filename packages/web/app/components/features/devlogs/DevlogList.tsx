@@ -19,9 +19,9 @@ import {
   Input,
   Progress,
 } from 'antd';
-import { 
-  DeleteOutlined, 
-  EyeOutlined, 
+import {
+  DeleteOutlined,
+  EyeOutlined,
   FilterOutlined,
   EditOutlined,
   MessageOutlined,
@@ -109,7 +109,7 @@ export function DevlogList({
     },
     onSelectAll: (selected: boolean, selectedRows: DevlogEntry[], changeRows: DevlogEntry[]) => {
       if (selected) {
-        setSelectedRowKeys(devlogs.map(d => d.id!));
+        setSelectedRowKeys(devlogs.map((d) => d.id!));
       } else {
         setSelectedRowKeys([]);
       }
@@ -121,7 +121,7 @@ export function DevlogList({
     if (!onBatchUpdate || selectedRowKeys.length === 0) return;
 
     const updates = Object.fromEntries(
-      Object.entries(batchUpdateForm).filter(([_, value]) => value !== undefined)
+      Object.entries(batchUpdateForm).filter(([_, value]) => value !== undefined),
     );
 
     if (Object.keys(updates).length === 0) {
@@ -138,15 +138,22 @@ export function DevlogList({
       });
 
       await onBatchUpdate(selectedRowKeys, updates);
-      
+
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
       setBatchOperationModal({ visible: false, type: 'update', title: '' });
       setSelectedRowKeys([]);
-      setBatchUpdateForm({ status: undefined, priority: undefined, type: undefined, assignee: undefined });
+      setBatchUpdateForm({
+        status: undefined,
+        priority: undefined,
+        type: undefined,
+        assignee: undefined,
+      });
       message.success(`Successfully updated ${selectedRowKeys.length} devlog(s)`);
     } catch (error) {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
-      message.error('Failed to update devlogs: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      message.error(
+        'Failed to update devlogs: ' + (error instanceof Error ? error.message : 'Unknown error'),
+      );
     }
   };
 
@@ -162,14 +169,16 @@ export function DevlogList({
       });
 
       await onBatchDelete(selectedRowKeys);
-      
+
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
       setBatchOperationModal({ visible: false, type: 'delete', title: '' });
       setSelectedRowKeys([]);
       message.success(`Successfully deleted ${selectedRowKeys.length} devlog(s)`);
     } catch (error) {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
-      message.error('Failed to delete devlogs: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      message.error(
+        'Failed to delete devlogs: ' + (error instanceof Error ? error.message : 'Unknown error'),
+      );
     }
   };
 
@@ -190,7 +199,7 @@ export function DevlogList({
       });
 
       await onBatchAddNote(selectedRowKeys, batchNoteForm.content, batchNoteForm.category);
-      
+
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
       setBatchOperationModal({ visible: false, type: 'note', title: '' });
       setSelectedRowKeys([]);
@@ -198,7 +207,9 @@ export function DevlogList({
       message.success(`Successfully added notes to ${selectedRowKeys.length} devlog(s)`);
     } catch (error) {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
-      message.error('Failed to add notes: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      message.error(
+        'Failed to add notes: ' + (error instanceof Error ? error.message : 'Unknown error'),
+      );
     }
   };
   const createFilterDropdown = (
@@ -270,14 +281,17 @@ export function DevlogList({
       return undefined;
     }, [searchDropdownOpen]);
 
-    const handleSearchApply = useCallback((value: string) => {
-      if (onFilterChange) {
-        onFilterChange({
-          ...currentFilters,
-          search: value.trim() || undefined,
-        });
-      }
-    }, [onFilterChange, currentFilters]);
+    const handleSearchApply = useCallback(
+      (value: string) => {
+        if (onFilterChange) {
+          onFilterChange({
+            ...currentFilters,
+            search: value.trim() || undefined,
+          });
+        }
+      },
+      [onFilterChange, currentFilters],
+    );
 
     const handleSearch = () => {
       handleSearchApply(localSearchValue);
@@ -326,19 +340,10 @@ export function DevlogList({
           />
         </div>
         <div className={styles.searchDropdownActions}>
-          <Button 
-            size="small" 
-            onClick={handleCancel}
-            icon={<CloseOutlined />}
-          >
+          <Button size="small" onClick={handleCancel} icon={<CloseOutlined />}>
             Cancel
           </Button>
-          <Button 
-            size="small" 
-            type="primary" 
-            onClick={handleSearch}
-            icon={<SearchOutlined />}
-          >
+          <Button size="small" type="primary" onClick={handleSearch} icon={<SearchOutlined />}>
             Search
           </Button>
         </div>
@@ -346,9 +351,9 @@ export function DevlogList({
     );
 
     return (
-      <Dropdown 
-        overlay={menu} 
-        trigger={['click']} 
+      <Dropdown
+        overlay={menu}
+        trigger={['click']}
         placement="bottomLeft"
         open={searchDropdownOpen}
         onOpenChange={setSearchDropdownOpen}
@@ -527,16 +532,20 @@ export function DevlogList({
   // Create skeleton columns that match the actual table structure
   const skeletonColumns = [
     // Checkbox column (only show if batch operations are enabled)
-    ...(selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote ? [{
-      title: 'Select all',
-      dataIndex: 'checkbox',
-      key: 'checkbox',
-      fixed: 'left' as const,
-      width: 50,
-      render: () => (
-        <Skeleton.Button style={{ width: '16px', height: '16px' }} active size="small" />
-      ),
-    }] : []),
+    ...(selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote
+      ? [
+          {
+            title: 'Select all',
+            dataIndex: 'checkbox',
+            key: 'checkbox',
+            fixed: 'left' as const,
+            width: 50,
+            render: () => (
+              <Skeleton.Button style={{ width: '16px', height: '16px' }} active size="small" />
+            ),
+          },
+        ]
+      : []),
     {
       title: 'ID',
       dataIndex: 'id',
@@ -561,11 +570,7 @@ export function DevlogList({
             size="small"
           />
           <br />
-          <Skeleton.Button
-            style={{ width: '200px', height: '14px' }}
-            active
-            size="small"
-          />
+          <Skeleton.Button style={{ width: '200px', height: '14px' }} active size="small" />
         </div>
       ),
     },
@@ -630,16 +635,8 @@ export function DevlogList({
       width: 180,
       render: () => (
         <Space size="small">
-          <Skeleton.Button
-            style={{ width: '60px', height: '32px' }}
-            active
-            size="small"
-          />
-          <Skeleton.Button
-            style={{ width: '60px', height: '32px' }}
-            active
-            size="small"
-          />
+          <Skeleton.Button style={{ width: '60px', height: '32px' }} active size="small" />
+          <Skeleton.Button style={{ width: '60px', height: '32px' }} active size="small" />
         </Space>
       ),
     },
@@ -650,10 +647,23 @@ export function DevlogList({
       <div className={styles.devlogListTable}>
         <Table
           columns={loading ? skeletonColumns : columns}
-          dataSource={loading ? Array.from({ length: pagination?.limit || 20 }, (_, index) => ({ key: index } as any)) : devlogs}
-          rowKey={loading ? "key" : "id"}
-          rowSelection={loading ? undefined : (selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote ? rowSelection : undefined)}
-          scroll={{ x: 1200, y: 'calc(100vh - 64px - 56px - 48px)' }}
+          dataSource={
+            loading
+              ? Array.from(
+                  { length: pagination?.limit || 20 },
+                  (_, index) => ({ key: index }) as any,
+                )
+              : devlogs
+          }
+          rowKey={loading ? 'key' : 'id'}
+          rowSelection={
+            loading
+              ? undefined
+              : selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote
+                ? rowSelection
+                : undefined
+          }
+          scroll={{ x: 1200, y: 'calc(100vh - 64px - 48px - 56px)' }}
           pagination={false} // We'll handle pagination in footer
           size="middle"
           onHeaderRow={() => ({
@@ -667,7 +677,9 @@ export function DevlogList({
             },
           })}
           locale={{
-            emptyText: loading ? null : <Empty description="No devlogs found" style={{ padding: '40px' }} />,
+            emptyText: loading ? null : (
+              <Empty description="No devlogs found" style={{ padding: '40px' }} />
+            ),
           }}
         />
       </div>
@@ -677,17 +689,71 @@ export function DevlogList({
         <div className={styles.tableFooter}>
           <div className={styles.tableFooterLeft}>
             {selectedRowKeys.length > 0 && !loading ? (
-              <Space size="small">
-                <Text strong className={styles.selectionCount}>
-                  {selectedRowKeys.length} item(s) selected
-                </Text>
-                <Button 
-                  size="small" 
-                  onClick={() => setSelectedRowKeys([])}
-                  className={styles.clearSelectionBtn}
-                >
-                  Clear
-                </Button>
+              <Space wrap>
+                <Space size="small">
+                  <Text strong className={styles.selectionCount}>
+                    {selectedRowKeys.length} item(s) selected
+                  </Text>
+                  <Button
+                    size="small"
+                    onClick={() => setSelectedRowKeys([])}
+                    className={styles.clearSelectionBtn}
+                  >
+                    Clear
+                  </Button>
+                </Space>
+                <Space size="small">
+                  {onBatchUpdate && (
+                    <Button
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={() =>
+                        setBatchOperationModal({
+                          visible: true,
+                          type: 'update',
+                          title: 'Batch Update',
+                        })
+                      }
+                    >
+                      Update
+                    </Button>
+                  )}
+                  {onBatchAddNote && (
+                    <Button
+                      size="small"
+                      icon={<MessageOutlined />}
+                      onClick={() =>
+                        setBatchOperationModal({
+                          visible: true,
+                          type: 'note',
+                          title: 'Add Note to Selected',
+                        })
+                      }
+                    >
+                      Add Note
+                    </Button>
+                  )}
+                  {onBatchDelete && (
+                    <Popconfirm
+                      title={`Delete ${selectedRowKeys.length} devlog(s)?`}
+                      description="This action cannot be undone."
+                      onConfirm={() =>
+                        setBatchOperationModal({
+                          visible: true,
+                          type: 'delete',
+                          title: 'Confirm Batch Delete',
+                        })
+                      }
+                      okText="Yes, Delete"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true }}
+                    >
+                      <Button danger size="small" icon={<DeleteOutlined />}>
+                        Delete
+                      </Button>
+                    </Popconfirm>
+                  )}
+                </Space>
               </Space>
             ) : (
               <Text type="secondary" className={styles.totalCount}>
@@ -703,58 +769,7 @@ export function DevlogList({
           </div>
 
           <div className={styles.tableFooterCenter}>
-            {selectedRowKeys.length > 0 && !loading && (
-              <Space size="small">
-                {onBatchUpdate && (
-                  <Button 
-                    size="small"
-                    icon={<EditOutlined />}
-                    onClick={() => setBatchOperationModal({ 
-                      visible: true, 
-                      type: 'update', 
-                      title: 'Batch Update' 
-                    })}
-                  >
-                    Update
-                  </Button>
-                )}
-                {onBatchAddNote && (
-                  <Button 
-                    size="small"
-                    icon={<MessageOutlined />}
-                    onClick={() => setBatchOperationModal({ 
-                      visible: true, 
-                      type: 'note', 
-                      title: 'Add Note to Selected' 
-                    })}
-                  >
-                    Add Note
-                  </Button>
-                )}
-                {onBatchDelete && (
-                  <Popconfirm
-                    title={`Delete ${selectedRowKeys.length} devlog(s)?`}
-                    description="This action cannot be undone."
-                    onConfirm={() => setBatchOperationModal({ 
-                      visible: true, 
-                      type: 'delete', 
-                      title: 'Confirm Batch Delete' 
-                    })}
-                    okText="Yes, Delete"
-                    cancelText="Cancel"
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Button 
-                      danger 
-                      size="small"
-                      icon={<DeleteOutlined />}
-                    >
-                      Delete
-                    </Button>
-                  </Popconfirm>
-                )}
-              </Space>
-            )}
+            {/* Center area now empty since actions moved to left */}
           </div>
 
           <div className={styles.tableFooterRight}>
@@ -773,7 +788,9 @@ export function DevlogList({
                   { label: '100', value: 100 },
                 ]}
               />
-              <Text type="secondary" className={styles.paginationText}>per page</Text>
+              <Text type="secondary" className={styles.paginationText}>
+                per page
+              </Text>
               {/* Page navigation */}
               {pagination && pagination.totalPages > 1 && (
                 <>
@@ -786,7 +803,11 @@ export function DevlogList({
                   </Button>
                   <Text type="secondary" className={styles.paginationText}>
                     {loading ? (
-                      <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
+                      <Skeleton.Button
+                        style={{ width: '80px', height: '20px' }}
+                        active
+                        size="small"
+                      />
                     ) : (
                       `Page ${pagination.page} of ${pagination.totalPages}`
                     )}
@@ -823,7 +844,7 @@ export function DevlogList({
               placeholder="Select status"
               allowClear
               value={batchUpdateForm.status}
-              onChange={(value) => setBatchUpdateForm(prev => ({ ...prev, status: value }))}
+              onChange={(value) => setBatchUpdateForm((prev) => ({ ...prev, status: value }))}
               options={statusOptions}
             />
           </div>
@@ -834,7 +855,7 @@ export function DevlogList({
               placeholder="Select priority"
               allowClear
               value={batchUpdateForm.priority}
-              onChange={(value) => setBatchUpdateForm(prev => ({ ...prev, priority: value }))}
+              onChange={(value) => setBatchUpdateForm((prev) => ({ ...prev, priority: value }))}
               options={priorityOptions}
             />
           </div>
@@ -845,7 +866,7 @@ export function DevlogList({
               placeholder="Select type"
               allowClear
               value={batchUpdateForm.type}
-              onChange={(value) => setBatchUpdateForm(prev => ({ ...prev, type: value }))}
+              onChange={(value) => setBatchUpdateForm((prev) => ({ ...prev, type: value }))}
               options={typeOptions}
             />
           </div>
@@ -855,7 +876,9 @@ export function DevlogList({
               style={{ marginTop: 8 }}
               placeholder="Enter assignee"
               value={batchUpdateForm.assignee}
-              onChange={(e) => setBatchUpdateForm(prev => ({ ...prev, assignee: e.target.value }))}
+              onChange={(e) =>
+                setBatchUpdateForm((prev) => ({ ...prev, assignee: e.target.value }))
+              }
               prefix={<UserOutlined />}
             />
           </div>
@@ -878,7 +901,7 @@ export function DevlogList({
             <Select
               style={{ width: '100%', marginTop: 8 }}
               value={batchNoteForm.category}
-              onChange={(value) => setBatchNoteForm(prev => ({ ...prev, category: value }))}
+              onChange={(value) => setBatchNoteForm((prev) => ({ ...prev, category: value }))}
               options={[
                 { label: 'Progress', value: 'progress' },
                 { label: 'Issue', value: 'issue' },
@@ -895,7 +918,7 @@ export function DevlogList({
               style={{ marginTop: 8 }}
               placeholder="Enter note content..."
               value={batchNoteForm.content}
-              onChange={(e) => setBatchNoteForm(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e) => setBatchNoteForm((prev) => ({ ...prev, content: e.target.value }))}
               rows={4}
             />
           </div>
@@ -913,12 +936,14 @@ export function DevlogList({
         okButtonProps={{ danger: true }}
       >
         <Space direction="vertical">
-          <Text>Are you sure you want to delete the following {selectedRowKeys.length} devlog(s)?</Text>
+          <Text>
+            Are you sure you want to delete the following {selectedRowKeys.length} devlog(s)?
+          </Text>
           <Text type="secondary">This action cannot be undone.</Text>
           <div className={styles.batchDeleteList}>
             {devlogs
-              .filter(d => selectedRowKeys.includes(d.id!))
-              .map(d => (
+              .filter((d) => selectedRowKeys.includes(d.id!))
+              .map((d) => (
                 <div key={d.id} className={styles.batchDeleteItem}>
                   <Text code>#{d.id}</Text> - {d.title}
                 </div>
@@ -935,8 +960,10 @@ export function DevlogList({
         closable={false}
         width={400}
       >
-        <Progress 
-          percent={Math.round((batchOperationProgress.current / batchOperationProgress.total) * 100)}
+        <Progress
+          percent={Math.round(
+            (batchOperationProgress.current / batchOperationProgress.total) * 100,
+          )}
           status="active"
           format={() => `${batchOperationProgress.current}/${batchOperationProgress.total}`}
         />
