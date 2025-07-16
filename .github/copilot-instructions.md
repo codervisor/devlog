@@ -36,8 +36,12 @@
 
 #### UI-Related Development Tasks
 - **ALWAYS use Playwright**: Use Playwright MCP tools for UI validation
-- **Base URL**: Always use `http://localhost:3000` for Playwright testing
-- **No manual dev server**: Don't run `pnpm dev:web` manually (causes hot reload issues)
+- **Testing Steps**:
+  - **Start Web App**: Run `pnpm --filter @devlog/web dev` to start the web app
+  - **Verify**: Ensure the web app is running correctly before testing
+  - **Run Tests**: Use Playwright to run UI tests against the web app
+  - **Update Devlog**: Add test results and any fixes to the devlog entry
+  - **Stop Web App**: After testing, stop the web app with `Ctrl+C` in the terminal
 
 #### Build Dependencies
 - **Build order**: Core → MCP → Web (follow dependency chain)

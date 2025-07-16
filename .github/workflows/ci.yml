@@ -11,14 +11,18 @@ jobs:
     name: Test and Build
     runs-on: ubuntu-latest
     
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 22 
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -52,18 +56,38 @@ jobs:
           echo ""
           echo "🌳 Workspace packages:"
           pnpm list --depth 0
+          echo ""
+          echo "📂 Package structure:"
+          ls -la packages/
 
       - name: Verify workspace dependencies
         run: |
           # Ensure workspace dependencies are properly linked
           echo "📦 Verifying workspace structure..."
-          pnpm list --depth 0 --filter @devlog/mcp
-          echo "🔗 Checking @devlog/core dependency in MCP package..."
-          cd packages/mcp && npm ls @devlog/core || echo "⚠️  @devlog/core not found in node_modules, but should be available via workspace"
-          echo "📂 MCP package.json dependencies:"
-          cat packages/mcp/package.json | grep -A 10 '"dependencies"' || echo "No dependencies section found"
+          echo "🔗 Checking codehist package..."
+          [ -d "packages/codehist" ] && echo "✅ codehist package found" || echo "❌ codehist package missing"
+          echo "🔗 Checking core package..."
+          [ -d "packages/core" ] && echo "✅ core package found" || echo "❌ core package missing"
+          echo "🔗 Checking mcp package..."
+          [ -d "packages/mcp" ] && echo "✅ mcp package found" || echo "❌ mcp package missing"
+          echo "🔗 Checking web package..."
+          [ -d "packages/web" ] && echo "✅ web package found" || echo "❌ web package missing"
+          echo "📂 Package dependencies:"
+          echo "Core depends on codehist:"
+          cat packages/core/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
+          echo "MCP depends on core:"
+          cat packages/mcp/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
 
-      - name: Build core package first
+      - name: Build codehist package first
+        run: pnpm --filter @devlog/codehist build
+
+      - name: Verify codehist build
+        run: |
+          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
+          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          echo "✅ Codehist package built successfully"
+
+      - name: Build core package
         run: pnpm --filter @devlog/core build
 
       - name: Verify core build and types
@@ -82,23 +106,81 @@ jobs:
       - name: Build MCP package
         run: pnpm --filter @devlog/mcp build
 
-      - name: Build remaining packages
+      - name: Build web package
         run: pnpm --filter @devlog/web build
 
       - name: Run unit tests
-        run: pnpm test
+        run: |
+          echo "🧪 Running unit tests for packages with test scripts..."
+          # Run tests for packages that have test scripts
+          pnpm --filter @devlog/codehist test
+          pnpm --filter @devlog/core test
+          pnpm --filter @devlog/mcp test
 
       - name: Run integration tests
-        run: pnpm test:integration
+        run: |
+          echo "🔗 Running integration tests..."
+          # Only run integration tests for packages that have them
+          pnpm --filter @devlog/mcp test:integration
 
       - name: Verify build artifacts
         run: |
           # Check that essential build artifacts exist
-          [ -f "packages/core/build/index.js" ] || { echo "Core build failed"; exit 1; }
-          [ -f "packages/core/build/index.d.ts" ] || { echo "Core type declarations failed"; exit 1; }
-          [ -f "packages/mcp/build/index.js" ] || { echo "MCP server build failed"; exit 1; }
-          [ -f "packages/mcp/build/index.d.ts" ] || { echo "MCP type declarations failed"; exit 1; }
-          echo "✅ Build artifacts verified!"
+          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
+          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
+          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
+          [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
+          [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
+          # Web package builds to .next directory, not build/
+          [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
+          echo "✅ All build artifacts verified!"
+
+  codehist-cli-tests:
+    name: Codehist CLI Tests
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build codehist package
+        run: pnpm --filter @devlog/codehist build
+
+      - name: Verify codehist build artifacts
+        run: |
+          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist library build failed"; exit 1; }
+          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          [ -f "packages/codehist/build/cli/index.js" ] || { echo "❌ Codehist CLI build failed"; exit 1; }
+          echo "✅ Codehist build artifacts verified!"
+
+      - name: Test codehist CLI functionality
+        run: |
+          cd packages/codehist
+          # Test help command
+          node build/cli/index.js --help
+          # Test version command if available
+          node build/cli/index.js --version || echo "Version command not available, that's ok"
+
+      - name: Run codehist unit tests
+        run: |
+          cd packages/codehist
+          pnpm test
 
   mcp-server-tests:
     name: MCP Server Specific Tests
@@ -123,6 +205,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build codehist package first
+        run: pnpm --filter @devlog/codehist build
+
       - name: Build core package first  
         run: pnpm --filter @devlog/core build
 
@@ -131,6 +216,10 @@ jobs:
 
       - name: Verify MCP build artifacts
         run: |
+          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
+          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
+          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
           [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
           echo "✅ MCP build artifacts verified!"
@@ -180,11 +269,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build core package first
-        run: pnpm --filter @devlog/core build
-
-      - name: Build packages
-        run: pnpm --filter @devlog/mcp build
+      - name: Build packages in order
+        run: |
+          pnpm --filter @devlog/codehist build
+          pnpm --filter @devlog/core build
+          pnpm --filter @devlog/mcp build
 
       - name: Verify TypeScript compilation
         run: |
@@ -198,12 +287,25 @@ jobs:
           cd packages/mcp
           timeout 10s node build/index.js --help || echo "MCP server help test completed"
 
+      - name: Test codehist CLI (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd packages/codehist
+          timeout 10s node build/cli/index.js --help || echo "Codehist CLI help test completed"
+
       - name: Test MCP server startup (Windows)
         if: runner.os == 'Windows'
         run: |
           cd packages/mcp
           # Use PowerShell timeout for Windows
           powershell -Command "& { Start-Process -FilePath 'node' -ArgumentList 'build/index.js', '--help' -Wait -TimeoutSec 10 -ErrorAction SilentlyContinue; if ($LASTEXITCODE) { Write-Host 'MCP server help test completed' } }"
+
+      - name: Test codehist CLI (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd packages/codehist
+          # Use PowerShell timeout for Windows
+          powershell -Command "& { Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -ErrorAction SilentlyContinue; if ($LASTEXITCODE) { Write-Host 'Codehist CLI help test completed' } }"
 
       - name: Run integration tests
         run: |
