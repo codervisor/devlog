@@ -29,6 +29,7 @@ import type {
 import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
 import { DevlogNotFoundError, DevlogStorageError, logger, handleAsyncOperation } from './utils/errors.js';
+import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
@@ -118,6 +119,13 @@ export class DevlogManager {
     // Save with integration sync
     await this.storageProvider.save(entry);
 
+    // Emit creation event
+    await devlogEvents.emit({
+      type: 'created',
+      timestamp: new Date().toISOString(),
+      data: entry,
+    });
+
     return entry;
   }
 
@@ -192,6 +200,14 @@ export class DevlogManager {
     }
 
     await this.storageProvider.save(updated);
+
+    // Emit update event
+    await devlogEvents.emit({
+      type: 'updated',
+      timestamp: new Date().toISOString(),
+      data: updated,
+    });
+
     return updated;
   }
 
@@ -230,6 +246,14 @@ export class DevlogManager {
     };
 
     await this.storageProvider.save(updated);
+
+    // Emit note-added event
+    await devlogEvents.emit({
+      type: 'note-added',
+      timestamp: new Date().toISOString(),
+      data: { devlog: updated, note },
+    });
+
     return updated;
   }
 
@@ -369,6 +393,13 @@ export class DevlogManager {
     }
 
     await this.storageProvider.delete(id);
+
+    // Emit deletion event
+    await devlogEvents.emit({
+      type: 'deleted',
+      timestamp: new Date().toISOString(),
+      data: { id, deletedEntry: existing },
+    });
   }
 
   /**

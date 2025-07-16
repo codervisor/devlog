@@ -4,15 +4,23 @@ import React, { useEffect, useState } from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
-import { useDevlogFilters } from '@/hooks/useDevlogFilters';
+import { useDevlogsWithSearch } from '@/hooks/useDevlogsWithSearch';
 import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useRouter } from 'next/navigation';
+import styles from './DevlogListPage.module.css';
 
 export function DevlogListPage() {
-  const { devlogs, loading, deleteDevlog, batchUpdate, batchDelete, batchAddNote } = useDevlogs();
-  const { filters, filteredDevlogs, handleStatusFilter, setFilters } = useDevlogFilters(devlogs);
+  const { 
+    devlogs, 
+    loading, 
+    filters, 
+    setFilters, 
+    deleteDevlog, 
+    batchUpdate, 
+    batchDelete, 
+    batchAddNote 
+  } = useDevlogsWithSearch();
   const { stats, loading: isLoadingStats } = useStats([devlogs]);
   const router = useRouter();
 
@@ -59,6 +67,30 @@ export function DevlogListPage() {
     router.push('/devlogs/create');
   };
 
+  const handleStatusFilter = (status: any) => {
+    if (status === 'total') {
+      // Clear status filter but keep other filters
+      setFilters({ ...filters, status: undefined });
+    } else {
+      // Toggle status filter
+      const currentStatuses = filters.status || [];
+      if (currentStatuses.includes(status)) {
+        // Remove this status
+        const newStatuses = currentStatuses.filter(s => s !== status);
+        setFilters({
+          ...filters,
+          status: newStatuses.length > 0 ? newStatuses : undefined,
+        });
+      } else {
+        // Add this status (replace existing for single selection)
+        setFilters({
+          ...filters,
+          status: [status],
+        });
+      }
+    }
+  };
+
   const actions = (
     <Space size="large" wrap>
       <OverviewStats 
@@ -83,7 +115,7 @@ export function DevlogListPage() {
   return (
     <PageLayout actions={actions}>
       <DevlogList
-        devlogs={filteredDevlogs}
+        devlogs={devlogs}
         loading={loading}
         onViewDevlog={handleViewDevlog}
         onDeleteDevlog={handleDeleteDevlog}

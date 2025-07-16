@@ -1,6 +1,9 @@
 export { DevlogManager } from './devlog-manager.js';
 export { ConfigurationManager } from './configuration-manager.js';
 
+// Event System
+export { DevlogEventEmitter, devlogEvents, type DevlogEvent, type DevlogEventHandler } from './events/devlog-events.js';
+
 // Integration Service
 export { IntegrationService } from './integration-service.js';
 

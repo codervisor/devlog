@@ -55,13 +55,26 @@ export function useDevlogFilters(devlogs: DevlogEntry[]) {
       );
     }
 
+    // Search filter (client-side fallback for when backend search isn't used)
+    if (filters.search) {
+      const searchQuery = filters.search.toLowerCase().trim();
+      filtered = filtered.filter(devlog => {
+        const titleMatch = devlog.title.toLowerCase().includes(searchQuery);
+        const descriptionMatch = devlog.description.toLowerCase().includes(searchQuery);
+        const notesMatch = devlog.notes?.some(note => 
+          note.content.toLowerCase().includes(searchQuery)
+        ) || false;
+        return titleMatch || descriptionMatch || notesMatch;
+      });
+    }
+
     return filtered;
   }, [devlogs, filters]);
 
   const handleStatusFilter = (status: DevlogStatus | 'total') => {
     if (status === 'total') {
-      // Clear all filters
-      setFilters({});
+      // Clear all filters except search
+      setFilters(prev => ({ search: prev.search }));
     } else {
       // Toggle status filter
       const currentStatuses = filters.status || [];
@@ -82,6 +95,13 @@ export function useDevlogFilters(devlogs: DevlogEntry[]) {
     }
   };
 
+  const handleSearchFilter = (searchQuery: string) => {
+    setFilters({
+      ...filters,
+      search: searchQuery.trim() || undefined,
+    });
+  };
+
   const resetFilters = () => {
     setFilters({});
   };
@@ -90,6 +110,7 @@ export function useDevlogFilters(devlogs: DevlogEntry[]) {
     filters,
     filteredDevlogs,
     handleStatusFilter,
+    handleSearchFilter,
     setFilters,
     resetFilters,
   };

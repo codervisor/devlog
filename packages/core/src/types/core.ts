@@ -141,6 +141,7 @@ export interface DevlogFilter {
   assignee?: string;
   fromDate?: string;
   toDate?: string;
+  search?: string;
 }
 
 export interface DevlogStats {

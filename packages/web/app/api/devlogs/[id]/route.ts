@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDevlogManager } from '../../../lib/devlog-manager';
-import { broadcastUpdate } from '@/lib/sse-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -47,8 +46,7 @@ export async function PUT(
     const data = await request.json();
     const devlog = await devlogManager.updateDevlog({ ...data, id });
     
-    // Broadcast the updated devlog to all connected clients
-    broadcastUpdate('devlog-updated', devlog);
+    // Note: SSE broadcast happens automatically via DevlogManager event emission
     
     return NextResponse.json(devlog);
   } catch (error) {
@@ -68,8 +66,7 @@ export async function DELETE(
     const id = parseDevlogId(params.id);
     await devlogManager.deleteDevlog(id);
     
-    // Broadcast the deletion to all connected clients
-    broadcastUpdate('devlog-deleted', { id });
+    // Note: SSE broadcast happens automatically via DevlogManager event emission
     
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Button,
   Empty,
@@ -27,6 +27,8 @@ import {
   MessageOutlined,
   UserOutlined,
   CheckCircleOutlined,
+  SearchOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -234,6 +236,133 @@ export function DevlogList({
     );
   };
 
+  const createSearchFilterDropdown = () => {
+    const currentSearch = currentFilters?.search || '';
+    const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
+    const [localSearchValue, setLocalSearchValue] = useState(currentSearch);
+    const searchInputRef = useRef<any>(null);
+
+    // Update local value when external filters change
+    useEffect(() => {
+      setLocalSearchValue(currentSearch);
+    }, [currentSearch]);
+
+    // Auto focus the search input when dropdown opens
+    useEffect(() => {
+      if (searchDropdownOpen && searchInputRef.current) {
+        // Use setTimeout to ensure the input is rendered
+        const timer = setTimeout(() => {
+          const input = searchInputRef.current?.input || searchInputRef.current;
+          if (input && input.focus) {
+            input.focus();
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+      // Return undefined when condition is not met
+      return undefined;
+    }, [searchDropdownOpen]);
+
+    const handleSearchApply = useCallback((value: string) => {
+      if (onFilterChange) {
+        onFilterChange({
+          ...currentFilters,
+          search: value.trim() || undefined,
+        });
+      }
+    }, [onFilterChange, currentFilters]);
+
+    const handleSearch = () => {
+      handleSearchApply(localSearchValue);
+      setSearchDropdownOpen(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancel();
+      }
+    };
+
+    const handleClear = () => {
+      setLocalSearchValue('');
+      if (onFilterChange) {
+        onFilterChange({
+          ...currentFilters,
+          search: undefined,
+        });
+      }
+    };
+
+    const handleCancel = () => {
+      setLocalSearchValue(currentSearch); // Reset to current filter value
+      setSearchDropdownOpen(false);
+    };
+
+    const menu = (
+      <div style={{ 
+        padding: '12px', 
+        background: '#fff',
+        borderRadius: '6px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        border: '1px solid #d9d9d9'
+      }}>
+        <div style={{ marginBottom: '8px' }}>
+          <Input
+            ref={searchInputRef}
+            placeholder="Search devlogs..."
+            value={localSearchValue}
+            onChange={(e) => setLocalSearchValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            allowClear
+            onClear={handleClear}
+            style={{ width: 250 }}
+            autoFocus
+            prefix={<SearchOutlined />}
+          />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <Button 
+            size="small" 
+            onClick={handleCancel}
+            icon={<CloseOutlined />}
+          >
+            Cancel
+          </Button>
+          <Button 
+            size="small" 
+            type="primary" 
+            onClick={handleSearch}
+            icon={<SearchOutlined />}
+          >
+            Search
+          </Button>
+        </div>
+      </div>
+    );
+
+    return (
+      <Dropdown 
+        overlay={menu} 
+        trigger={['click']} 
+        placement="bottomLeft"
+        open={searchDropdownOpen}
+        onOpenChange={setSearchDropdownOpen}
+      >
+        <FilterOutlined
+          style={{
+            cursor: 'pointer',
+            color: currentSearch ? '#1890ff' : '#8c8c8c',
+            fontSize: '14px',
+          }}
+        />
+      </Dropdown>
+    );
+  };
+
   const columns: ColumnsType<DevlogEntry> = [
     {
       title: 'ID',
@@ -250,7 +379,12 @@ export function DevlogList({
       ),
     },
     {
-      title: 'Title',
+      title: (
+        <Space>
+          Title
+          {onFilterChange && createSearchFilterDropdown()}
+        </Space>
+      ),
       dataIndex: 'title',
       key: 'title',
       width: 400,
