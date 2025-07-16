@@ -15,7 +15,15 @@ export function useDevlogs() {
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<DevlogFilter>({});
+  const [filters, setFilters] = useState<DevlogFilter>({
+    // Set default pagination
+    pagination: {
+      page: 1,
+      limit: 20,
+      sortBy: 'updatedAt',
+      sortOrder: 'desc',
+    },
+  });
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
 
   // Build query string for API call

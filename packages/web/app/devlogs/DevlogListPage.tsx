@@ -128,13 +128,16 @@ export function DevlogListPage() {
           onBatchAddNote={handleBatchAddNote}
           currentFilters={filters}
           onFilterChange={setFilters}
+          pagination={pagination}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
         />
         
-        {/* Show pagination if we have paginated data */}
-        {pagination && (
+        {/* TODO: Integrate proper pagination back into footer when backend pagination is implemented */}
+        {false && pagination && (
           <div className="mt-4 pt-4 border-t">
             <Pagination
-              pagination={pagination}
+              pagination={pagination!}
               onPageChange={goToPage}
               onPageSizeChange={changePageSize}
               className="justify-center"

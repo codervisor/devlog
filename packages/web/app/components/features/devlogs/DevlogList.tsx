@@ -38,6 +38,7 @@ import {
   DevlogStatus,
   DevlogType,
   DevlogFilter,
+  PaginationMeta,
 } from '@devlog/core';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
@@ -58,6 +59,9 @@ interface DevlogListProps {
   onBatchAddNote?: (ids: DevlogId[], content: string, category?: string) => Promise<void>;
   currentFilters?: DevlogFilter;
   onFilterChange?: (filters: DevlogFilter) => void;
+  pagination?: PaginationMeta | null;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
 }
 
 export function DevlogList({
@@ -70,6 +74,9 @@ export function DevlogList({
   onBatchAddNote,
   currentFilters,
   onFilterChange,
+  pagination,
+  onPageChange,
+  onPageSizeChange,
 }: DevlogListProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<DevlogId[]>([]);
   const [batchOperationModal, setBatchOperationModal] = useState<{
@@ -517,225 +524,286 @@ export function DevlogList({
     },
   ];
 
-  if (loading) {
-    return (
-      <div className={styles.devlogListContainer}>
-        <div className={styles.devlogListTable}>
-          {/* Table skeleton */}
-          <Table
-            columns={[
-              {
-                title: 'ID',
-                dataIndex: 'id',
-                key: 'id',
-                fixed: 'left',
-                width: 60,
-                render: () => (
-                  <Skeleton.Button style={{ width: '40px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Title',
-                dataIndex: 'title',
-                key: 'title',
-                fixed: 'left',
-                width: 400,
-                render: () => (
-                  <Skeleton.Button
-                    style={{ width: '360px', height: '20px', marginBottom: '4px' }}
-                    active
-                    size="small"
-                  />
-                ),
-              },
-              {
-                title: 'Status',
-                dataIndex: 'status',
-                key: 'status',
-                width: 120,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Priority',
-                dataIndex: 'priority',
-                key: 'priority',
-                width: 120,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Type',
-                dataIndex: 'type',
-                key: 'type',
-                width: 120,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Assignee',
-                dataIndex: 'assignee',
-                key: 'assignee',
-                width: 120,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Created',
-                dataIndex: 'createdAt',
-                key: 'createdAt',
-                width: 100,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Updated',
-                dataIndex: 'updatedAt',
-                key: 'updatedAt',
-                width: 100,
-                render: () => (
-                  <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
-                ),
-              },
-              {
-                title: 'Actions',
-                key: 'actions',
-                fixed: 'right',
-                width: 180,
-                render: () => (
-                  <Space size="small">
-                    <Skeleton.Button
-                      style={{ width: '70px', height: '24px' }}
-                      active
-                      size="small"
-                    />
-                    <Skeleton.Button
-                      style={{ width: '70px', height: '24px' }}
-                      active
-                      size="small"
-                    />
-                  </Space>
-                ),
-              },
-            ]}
-            dataSource={Array.from({ length: 10 }, (_, index) => ({ key: index }))}
-            rowKey="key"
-            scroll={{ x: 1200, y: 'calc(100vh - 300px)' }}
-            pagination={false}
-            size="middle"
-            onHeaderRow={() => ({
-              style: {
-                backgroundColor: '#fff',
-              },
-            })}
-            onRow={() => ({
-              style: {
-                height: '72px',
-              },
-            })}
+  // Create skeleton columns that match the actual table structure
+  const skeletonColumns = [
+    // Checkbox column (only show if batch operations are enabled)
+    ...(selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote ? [{
+      title: 'Select all',
+      dataIndex: 'checkbox',
+      key: 'checkbox',
+      fixed: 'left' as const,
+      width: 50,
+      render: () => (
+        <Skeleton.Button style={{ width: '16px', height: '16px' }} active size="small" />
+      ),
+    }] : []),
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      fixed: 'left' as const,
+      width: 60,
+      render: () => (
+        <Skeleton.Button style={{ width: '40px', height: '20px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      fixed: 'left' as const,
+      width: 400,
+      render: () => (
+        <div>
+          <Skeleton.Button
+            style={{ width: '300px', height: '16px', marginBottom: '4px' }}
+            active
+            size="small"
+          />
+          <br />
+          <Skeleton.Button
+            style={{ width: '200px', height: '14px' }}
+            active
+            size="small"
           />
         </div>
-      </div>
-    );
-  }
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Priority',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 120,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      width: 120,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Assignee',
+      dataIndex: 'assignee',
+      key: 'assignee',
+      width: 120,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Created',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 100,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Updated',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      width: 100,
+      render: () => (
+        <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      fixed: 'right' as const,
+      width: 180,
+      render: () => (
+        <Space size="small">
+          <Skeleton.Button
+            style={{ width: '60px', height: '32px' }}
+            active
+            size="small"
+          />
+          <Skeleton.Button
+            style={{ width: '60px', height: '32px' }}
+            active
+            size="small"
+          />
+        </Space>
+      ),
+    },
+  ];
 
   return (
     <div className={styles.devlogListContainer}>
-      {/* Batch Actions Toolbar */}
-      {selectedRowKeys.length > 0 && (
-        <div className={styles.batchActionsToolbar}>
-          <Space>
-            <Text strong>{selectedRowKeys.length} item(s) selected</Text>
-            <Button 
-              size="small" 
-              onClick={() => setSelectedRowKeys([])}
-            >
-              Clear Selection
-            </Button>
-          </Space>
-          <Space>
-            {onBatchUpdate && (
-              <Button 
-                icon={<EditOutlined />}
-                onClick={() => setBatchOperationModal({ 
-                  visible: true, 
-                  type: 'update', 
-                  title: 'Batch Update' 
-                })}
-              >
-                Update
-              </Button>
-            )}
-            {onBatchAddNote && (
-              <Button 
-                icon={<MessageOutlined />}
-                onClick={() => setBatchOperationModal({ 
-                  visible: true, 
-                  type: 'note', 
-                  title: 'Add Note to Selected' 
-                })}
-              >
-                Add Note
-              </Button>
-            )}
-            {onBatchDelete && (
-              <Popconfirm
-                title={`Delete ${selectedRowKeys.length} devlog(s)?`}
-                description="This action cannot be undone."
-                onConfirm={() => setBatchOperationModal({ 
-                  visible: true, 
-                  type: 'delete', 
-                  title: 'Confirm Batch Delete' 
-                })}
-                okText="Yes, Delete"
-                cancelText="Cancel"
-                okButtonProps={{ danger: true }}
-              >
-                <Button 
-                  danger 
-                  icon={<DeleteOutlined />}
-                >
-                  Delete
-                </Button>
-              </Popconfirm>
-            )}
-          </Space>
-        </div>
-      )}
-
       <div className={styles.devlogListTable}>
         <Table
-          columns={columns}
-          dataSource={devlogs}
-          rowKey="id"
-          rowSelection={selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote ? rowSelection : undefined}
+          columns={loading ? skeletonColumns : columns}
+          dataSource={loading ? Array.from({ length: pagination?.limit || 20 }, (_, index) => ({ key: index } as any)) : devlogs}
+          rowKey={loading ? "key" : "id"}
+          rowSelection={loading ? undefined : (selectedRowKeys.length > 0 || onBatchUpdate || onBatchDelete || onBatchAddNote ? rowSelection : undefined)}
           scroll={{ x: 1200, y: 'calc(100vh - 64px - 56px - 48px)' }}
-          pagination={
-            devlogs.length > 0
-              ? {
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} devlogs`,
-                  responsive: true,
-                }
-              : false
-          }
+          pagination={false} // We'll handle pagination in footer
           size="middle"
           onHeaderRow={() => ({
             style: {
               backgroundColor: '#fff',
             },
           })}
+          onRow={() => ({
+            style: {
+              height: '72px',
+            },
+          })}
           locale={{
-            emptyText: <Empty description="No devlogs found" style={{ padding: '40px' }} />,
+            emptyText: loading ? null : <Empty description="No devlogs found" style={{ padding: '40px' }} />,
           }}
         />
       </div>
+
+      {/* Table Footer with Pagination and Batch Controls - Always show, even during loading */}
+      {(devlogs.length > 0 || loading) && (
+        <div className={styles.tableFooter}>
+          <div className={styles.tableFooterLeft}>
+            {selectedRowKeys.length > 0 && !loading ? (
+              <Space size="small">
+                <Text strong className={styles.selectionCount}>
+                  {selectedRowKeys.length} item(s) selected
+                </Text>
+                <Button 
+                  size="small" 
+                  onClick={() => setSelectedRowKeys([])}
+                  className={styles.clearSelectionBtn}
+                >
+                  Clear
+                </Button>
+              </Space>
+            ) : (
+              <Text type="secondary" className={styles.totalCount}>
+                {loading ? (
+                  <Skeleton.Button style={{ width: '150px', height: '20px' }} active size="small" />
+                ) : pagination ? (
+                  `Showing ${Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}-${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} devlogs`
+                ) : (
+                  `Total: ${devlogs.length} devlogs`
+                )}
+              </Text>
+            )}
+          </div>
+
+          <div className={styles.tableFooterCenter}>
+            {selectedRowKeys.length > 0 && !loading && (
+              <Space size="small">
+                {onBatchUpdate && (
+                  <Button 
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => setBatchOperationModal({ 
+                      visible: true, 
+                      type: 'update', 
+                      title: 'Batch Update' 
+                    })}
+                  >
+                    Update
+                  </Button>
+                )}
+                {onBatchAddNote && (
+                  <Button 
+                    size="small"
+                    icon={<MessageOutlined />}
+                    onClick={() => setBatchOperationModal({ 
+                      visible: true, 
+                      type: 'note', 
+                      title: 'Add Note to Selected' 
+                    })}
+                  >
+                    Add Note
+                  </Button>
+                )}
+                {onBatchDelete && (
+                  <Popconfirm
+                    title={`Delete ${selectedRowKeys.length} devlog(s)?`}
+                    description="This action cannot be undone."
+                    onConfirm={() => setBatchOperationModal({ 
+                      visible: true, 
+                      type: 'delete', 
+                      title: 'Confirm Batch Delete' 
+                    })}
+                    okText="Yes, Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true }}
+                  >
+                    <Button 
+                      danger 
+                      size="small"
+                      icon={<DeleteOutlined />}
+                    >
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                )}
+              </Space>
+            )}
+          </div>
+
+          <div className={styles.tableFooterRight}>
+            {/* Page size selector and pagination info */}
+            <Space size="small">
+              <Select
+                size="small"
+                value={pagination?.limit || 20}
+                style={{ width: 70 }}
+                onChange={onPageSizeChange}
+                disabled={loading}
+                options={[
+                  { label: '10', value: 10 },
+                  { label: '20', value: 20 },
+                  { label: '50', value: 50 },
+                  { label: '100', value: 100 },
+                ]}
+              />
+              <Text type="secondary" className={styles.paginationText}>per page</Text>
+              {/* Page navigation */}
+              {pagination && pagination.totalPages > 1 && (
+                <>
+                  <Button
+                    size="small"
+                    disabled={!pagination.hasPreviousPage || loading}
+                    onClick={() => onPageChange?.(pagination.page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Text type="secondary" className={styles.paginationText}>
+                    {loading ? (
+                      <Skeleton.Button style={{ width: '80px', height: '20px' }} active size="small" />
+                    ) : (
+                      `Page ${pagination.page} of ${pagination.totalPages}`
+                    )}
+                  </Text>
+                  <Button
+                    size="small"
+                    disabled={!pagination.hasNextPage || loading}
+                    onClick={() => onPageChange?.(pagination.page + 1)}
+                  >
+                    Next
+                  </Button>
+                </>
+              )}
+            </Space>
+          </div>
+        </div>
+      )}
 
       {/* Batch Update Modal */}
       <Modal

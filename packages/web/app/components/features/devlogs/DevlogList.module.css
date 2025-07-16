@@ -53,6 +53,7 @@
 .devlogListTable {
   margin: 0;
   flex: 1;
+  position: relative;
 }
 
 .devlogTitleCellContainer {
@@ -248,14 +249,104 @@
   gap: 8px;
 }
 
-/* Batch actions toolbar */
-.batchActionsToolbar {
+/* Table footer styles */
+.tableFooter {
   padding: 12px 16px;
-  background-color: #f0f9ff;
-  border-bottom: 1px solid #e6f7ff;
-  display: flex;
+  background: #fafafa;
+  border-top: 1px solid #e8e8e8;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+}
+
+.tableFooterLeft {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.tableFooterCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tableFooterRight {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.selectionCount {
+  color: #1890ff;
+  font-size: 13px;
+}
+
+.totalCount {
+  font-size: 13px;
+}
+
+.clearSelectionBtn {
+  border: none;
+  color: #8c8c8c;
+  padding: 2px 8px;
+  height: 24px;
+  font-size: 12px;
+}
+
+.clearSelectionBtn:hover {
+  color: #1890ff;
+  background: #f0f9ff;
+}
+
+.paginationText {
+  font-size: 12px;
+}
+
+/* Responsive table footer */
+@media (max-width: 768px) {
+  .tableFooter {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .tableFooterLeft,
+  .tableFooterCenter,
+  .tableFooterRight {
+    justify-content: center;
+  }
+
+  .tableFooterLeft {
+    order: 1;
+  }
+
+  .tableFooterCenter {
+    order: 2;
+  }
+
+  .tableFooterRight {
+    order: 3;
+  }
+}
+
+@media (max-width: 576px) {
+  .tableFooter {
+    padding: 8px 12px;
+  }
+  
+  .tableFooterCenter {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+/* Batch actions toolbar - Keep for compatibility but hide */
+.batchActionsToolbar {
+  display: none; /* Hide the old toolbar */
 }
 
 /* Batch delete modal list */
