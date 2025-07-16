@@ -52,6 +52,24 @@ cd .wt/feature-name
 - **Test changes** in isolation before merging
 - **Commit frequently** with descriptive messages
 
+#### ⚠️ Step 2.5: Testing & Development Servers
+**CRITICAL**: Always run dev servers from worktree directory, not main repo
+```bash
+# ❌ WRONG - runs from main repo, ignores worktree changes
+cd /path/to/main/repo
+pnpm --filter @devlog/web dev
+
+# ✅ CORRECT - runs from worktree, uses feature branch code  
+cd .wt/feature-name/packages/web
+pnpm dev
+```
+
+**Testing Checklist**:
+- [ ] Dev server shows worktree path in terminal output
+- [ ] API changes reflect immediately (add debug logs to verify)
+- [ ] Core package rebuilt after interface changes: `pnpm build:core`
+- [ ] Browser testing uses `http://localhost:3000` from worktree server
+
 #### Step 3: Clean Integration
 ```bash
 # 1. Ensure all changes are committed
@@ -115,6 +133,28 @@ When working on multiple features simultaneously:
 #### Build Dependencies
 - **Build order**: Core → MCP → Web (follow dependency chain)
 - **After core changes**: `pnpm --filter @devlog/core build` then restart MCP server
+
+#### 🚨 Critical Debugging SOPs
+
+##### Dev Server Location Verification
+**CRITICAL**: Always verify dev servers run from correct worktree location
+- ❌ **Wrong**: `pnpm --filter @devlog/web dev` (runs from main repo)
+- ✅ **Correct**: `cd .wt/feature-name/packages/web && pnpm dev`
+- **Verification**: Check terminal output shows worktree path, not main repo path
+- **Symptoms**: Code changes not reflected, debug logs missing, tests using old code
+
+##### Debugging Workflow
+1. **Verify Location**: Ensure all processes run from worktree directory
+2. **Build Dependencies**: Rebuild core package after changes: `pnpm build:core`
+3. **Restart Services**: Kill and restart dev servers from worktree location
+4. **Add Debug Logs**: Use obvious console.log statements to verify code execution
+5. **Test Incrementally**: Verify each layer (API → data → UI) independently
+
+##### Common Pitfalls
+- ❌ Running `pnpm --filter` commands from main repo (ignores worktree changes)
+- ❌ Assuming hot reload works across worktrees (often doesn't)
+- ❌ Testing without rebuilding core package after interface changes
+- ❌ Missing path verification when debugging "working" code that isn't
 
 ### Commit Early and Often
 - After completing features/fixes in any worktree
