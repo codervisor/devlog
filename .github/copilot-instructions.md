@@ -2,13 +2,6 @@
 
 ## 🚨 CRITICAL RULES (READ FIRST!)
 
-### ⛔ NEVER WORK DIRECTLY ON MAIN BRANCH
-**MANDATORY**: All development MUST use feature branches + git worktrees
-- ✅ Create feature branch: `git checkout -b feature/name`
-- ✅ Create worktree: `git worktree add .wt/feature-name feature/name`
-- ✅ Work in worktree: `cd .wt/feature-name`
-- ❌ NEVER edit files while on main branch
-
 ### ⚠️ MANDATORY FIRST STEP: Always Discover Before Creating
 
 🔍 BEFORE creating ANY devlog entry, ALWAYS run: `discover_related_devlogs`
@@ -28,90 +21,6 @@
 3. **✅ CREATE ONLY IF NEEDED**: Create new devlog entry using MCP tools only if no overlapping work exists
 4. **📝 TRACK PROGRESS**: Update entries with notes and status changes via MCP functions
 5. **🔗 LINK WORK**: Reference devlog IDs in commits and documentation
-
-## 🌿 Git Worktree Workflow (MANDATORY FOR ALL DEVELOPMENT)
-
-**⚠️ CRITICAL: NEVER work directly on the main branch! Always use feature branches and worktrees.**
-
-### 📋 Required Workflow for ALL Development Tasks
-
-#### Step 1: Create Feature Branch & Worktree
-```bash
-# 1. Create and checkout a new feature branch
-git checkout -b feature/your-feature-name
-
-# 2. Create a worktree for this feature (REQUIRED)
-git worktree add .wt/feature-name feature/your-feature-name
-
-# 3. Move to the new worktree
-cd .wt/feature-name
-```
-
-#### Step 2: Work in Isolation
-- **All development** must happen in the feature worktree
-- **Test changes** in isolation before merging
-- **Commit frequently** with descriptive messages
-
-#### ⚠️ Step 2.5: Testing & Development Servers
-**CRITICAL**: Always run dev servers from worktree directory, not main repo
-```bash
-# ❌ WRONG - runs from main repo, ignores worktree changes
-cd /path/to/main/repo
-pnpm --filter @devlog/web dev
-
-# ✅ CORRECT - runs from worktree, uses feature branch code  
-cd .wt/feature-name/packages/web
-pnpm dev
-```
-
-**Testing Checklist**:
-- [ ] Dev server shows worktree path in terminal output
-- [ ] API changes reflect immediately (add debug logs to verify)
-- [ ] Core package rebuilt after interface changes: `pnpm build:core`
-- [ ] Browser testing uses `http://localhost:3000` from worktree server
-
-#### Step 3: Clean Integration
-```bash
-# 1. Ensure all changes are committed
-git add . && git commit -m "feat: implement feature"
-
-# 2. Return to main worktree
-cd ../..
-
-# 3. Merge feature branch
-git checkout main
-git merge feature/your-feature-name
-
-# 4. Clean up worktree and branch
-git worktree remove .wt/feature-name
-git branch -d feature/your-feature-name
-```
-
-### 🚫 What NOT to Do
-- ❌ **Never make changes directly on main branch**
-- ❌ **Never skip creating a worktree for development**
-- ❌ **Never work on multiple features in the same worktree**
-- ❌ **Never leave abandoned worktrees**
-
-### ✅ Naming Conventions
-- **Feature branches**: `feature/descriptive-name`
-- **Bugfix branches**: `bugfix/issue-description`
-- **Worktree directories**: `.wt/{feature-name}` (organized within main repo)
-
-### 📁 Example Worktree Structure
-```
-devlog/                    # Main repository (for merging only)
-.wt/ui-dashboard/          # UI dashboard feature
-.wt/api-endpoints/         # API endpoints feature  
-.wt/bugfix-auth/           # Authentication bugfix
-```
-
-### 🔄 Parallel Development Pattern
-When working on multiple features simultaneously:
-1. Each feature gets its own branch + worktree
-2. Switch between worktrees as needed
-3. Test each feature independently
-4. Merge features to main one at a time
 
 ## Development Philosophy (Brief)
 
