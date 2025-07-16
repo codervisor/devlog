@@ -1,6 +1,6 @@
 .markdownRenderer p {
   margin-bottom: 8px;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -22,19 +22,19 @@
 }
 
 .markdownRenderer h1 {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .markdownRenderer h2 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 .markdownRenderer h3 {
   margin-top: 16px;
   margin-bottom: 10px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -45,12 +45,12 @@
 }
 
 .markdownRenderer h4 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
 }
 
 .markdownRenderer h5 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 

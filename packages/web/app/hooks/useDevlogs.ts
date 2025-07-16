@@ -314,17 +314,18 @@ export function useDevlogs() {
         status: closedStatuses,
       }));
     } else {
-      // Individual status - toggle behavior for direct status selection
+      // Individual status - always filter to show only this status
       const currentStatuses = filters.status || [];
-      if (currentStatuses.includes(status)) {
-        // Remove this status
-        const newStatuses = currentStatuses.filter(s => s !== status);
+      
+      // Check if this is already the only selected status
+      if (currentStatuses.length === 1 && currentStatuses[0] === status) {
+        // If clicking the same single status, clear filter (show all)
         setFilters(prev => ({
           ...prev,
-          status: newStatuses.length > 0 ? newStatuses : undefined,
+          status: undefined,
         }));
       } else {
-        // Add this status (replace existing for single selection)
+        // Always set to show only this status
         setFilters(prev => ({
           ...prev,
           status: [status],

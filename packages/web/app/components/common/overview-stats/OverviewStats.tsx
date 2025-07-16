@@ -68,22 +68,12 @@ export function OverviewStats({
   }
 
   const isStatusActive = (status: DevlogStatus) => {
-    // Sub-statuses should only be highlighted when they are individually selected,
-    // not when their parent aggregate (open/closed) is selected
+    // Individual statuses should be highlighted when they are selected,
+    // either individually or as part of an open/closed group
     const currentStatuses = currentFilters?.status || [];
-    const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
-    const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
-
-    // Check if current selection is the full open or closed aggregate
-    const isFullOpenSelection =
-      openStatuses.length === currentStatuses.length &&
-      openStatuses.every((s) => currentStatuses.includes(s));
-    const isFullClosedSelection =
-      closedStatuses.length === currentStatuses.length &&
-      closedStatuses.every((s) => currentStatuses.includes(s));
-
-    // Only highlight if individually selected (not part of aggregate selection)
-    return currentStatuses.includes(status) && !isFullOpenSelection && !isFullClosedSelection;
+    
+    // Highlight if the status is included in the current filter
+    return currentStatuses.includes(status);
   };
 
   const isTotalActive = () => {

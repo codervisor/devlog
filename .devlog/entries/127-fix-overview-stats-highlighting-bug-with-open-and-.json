@@ -1,0 +1,55 @@
+{
+  "key": "fix-overview-stats-highlighting-bug-with-open-and-",
+  "title": "Fix overview stats highlighting bug with \"Open\" and \"New\" status",
+  "type": "bugfix",
+  "description": "Debug and fix the highlighting issues in the overview stats component where: 1) highlighted statuses are wrong (completely opposite), 2) \"Open\" is not highlighted when active, 3) highlight is incorrect but the list filtering is working correctly. This appears to be related to React state updates and the active state detection logic in the OverviewStats component.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-16T07:52:29.241Z",
+  "updatedAt": "2025-07-16T08:01:05.532Z",
+  "notes": [
+    {
+      "id": "96f29e05-f4d9-43b7-98ff-79cb2d12bc5c",
+      "timestamp": "2025-07-16T07:54:21.824Z",
+      "category": "progress",
+      "content": "**Successfully reproduced the issue** with Playwright testing on http://localhost:3002:\n\n1. ✅ **Issue confirmed - Filtering is completely reversed**: When clicking \"New\" in the Open popover, it shows \"In Progress\" entries instead of \"New\" entries\n2. ✅ **Issue confirmed - No highlighting on filter buttons**: Open button doesn't get highlighted when active, none of the filter buttons show active state\n3. ✅ **Popover data is correct**: Shows correct counts (7 New, 5 In Progress, etc.)\n\n**Root Cause Analysis:**\nThe issue appears to be in the filter state management between `useDevlogs` hook and `OverviewStats` component. The active state detection logic is incorrect and there might be an issue with how individual status filters are being handled vs. aggregate filters.\n\n**Next Steps:**\n1. Examine the `handleStatusFilter` function in `useDevlogs`\n2. Debug the active state detection logic in `OverviewStats`\n3. Fix the filter logic and highlighting"
+    },
+    {
+      "id": "a59ce753-2917-49f4-ad5f-d8b52bfec458",
+      "timestamp": "2025-07-16T08:01:05.532Z",
+      "category": "solution",
+      "content": "✅ **Bug Fixed Successfully!** \n\n## Issues Resolved:\n\n### 1. ✅ Filter Toggle Logic Fixed\n**Problem**: When clicking \"New\" from an \"Open\" state, it was REMOVING \"New\" from the filter instead of showing only \"New\" entries.\n**Solution**: Fixed `handleStatusFilter` in `useDevlogs.ts` to always set individual status as the only filter, not toggle/remove from existing selection.\n\n### 2. ✅ Highlighting Logic Fixed  \n**Problem**: Individual status buttons (New, In Progress, etc.) weren't highlighted when they were part of the active filter.\n**Solution**: Simplified `isStatusActive` in `OverviewStats.tsx` to highlight any status that's included in the current filter.\n\n## Code Changes:\n\n**`useDevlogs.ts`**: Changed individual status filter logic from toggle behavior to \"always set as only filter\" behavior.\n**`OverviewStats.tsx`**: Simplified highlighting logic to show active state for any included status.\n\n## Testing Results:\n- ✅ \"Open\" button highlights correctly when active\n- ✅ Individual status buttons highlight when part of active filter\n- ✅ Clicking \"New\" from \"Open\" state correctly shows only \"New\" entries\n- ✅ Clicking \"New\" again correctly clears the filter (shows all)\n- ✅ No more \"opposite\" highlighting behavior\n\nThe user's reported issues are completely resolved!"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "This bug affects user experience by providing incorrect visual feedback when filtering devlogs. Users rely on highlighting to understand which filters are currently active, and incorrect highlighting causes confusion and makes the interface less intuitive.",
+    "technicalContext": "The issue is in the OverviewStats component's active state detection logic (isOpenActive, isClosedActive, isStatusActive functions) and how they interact with the filter state from useDevlogs hook. The filtering itself works correctly, but the visual feedback (CSS classes) is not being applied properly.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "When clicking 'Open', the Open button should be highlighted and show proper active state",
+      "When clicking 'New' from the Open popover, the New status should be highlighted while Open is not",
+      "Individual status highlighting should work correctly in popovers",
+      "Active state detection should match the actual filter state",
+      "All highlighting should be consistent with the actual filtered results"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "The filtering logic in useDevlogs is working correctly as the list shows the right results",
+      "The issue is specifically in the OverviewStats component's isOpenActive/isClosedActive/isStatusActive functions",
+      "There may be a timing issue with React state updates between filter changes and component re-renders",
+      "The logic for determining when aggregate vs individual statuses should be highlighted needs review"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T07:52:29.241Z",
+    "contextVersion": 1
+  },
+  "id": 127
+}
