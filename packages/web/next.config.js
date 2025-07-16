@@ -14,18 +14,6 @@ const nextConfig = {
 
     // Fix Monaco Editor issues for client-side
     if (!isServer) {
-      // Configure Monaco Editor workers with proper paths
-      config.module.rules.push({
-        test: /\.worker\.js$/,
-        use: { 
-          loader: 'worker-loader',
-          options: {
-            name: 'static/[hash].worker.js',
-            publicPath: '/_next/',
-          }
-        },
-      });
-
       // Additional fallbacks for browser compatibility
       config.resolve.fallback = {
         ...config.resolve.fallback,

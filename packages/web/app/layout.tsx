@@ -4,7 +4,7 @@ import { ConfigProvider } from 'antd';
 import { AppLayout } from './AppLayout';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap', fallback: ['system-ui', 'arial'] });
 
 export const metadata: Metadata = {
   title: 'Devlog Management',
