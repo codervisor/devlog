@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { DevlogList, PageLayout, OverviewStats } from '@/components';
+import { DevlogList, PageLayout, OverviewStats, Pagination } from '@/components';
 import { useDevlogsWithSearch } from '@/hooks/useDevlogsWithSearch';
 import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, DevlogId, DevlogStatus, FilterType } from '@devlog/core';
@@ -13,13 +13,17 @@ import styles from './DevlogListPage.module.css';
 export function DevlogListPage() {
   const { 
     devlogs, 
+    pagination,
     loading, 
     filters, 
     setFilters, 
     deleteDevlog, 
     batchUpdate, 
     batchDelete, 
-    batchAddNote 
+    batchAddNote,
+    goToPage,
+    changePageSize,
+    changeSorting,
   } = useDevlogsWithSearch();
   
   // Use server-side stats that are independent of current filter state
@@ -154,17 +158,31 @@ export function DevlogListPage() {
 
   return (
     <PageLayout actions={actions}>
-      <DevlogList
-        devlogs={devlogs}
-        loading={loading}
-        onViewDevlog={handleViewDevlog}
-        onDeleteDevlog={handleDeleteDevlog}
-        onBatchUpdate={handleBatchUpdate}
-        onBatchDelete={handleBatchDelete}
-        onBatchAddNote={handleBatchAddNote}
-        currentFilters={filters}
-        onFilterChange={setFilters}
-      />
+      <div className="space-y-4">
+        <DevlogList
+          devlogs={devlogs}
+          loading={loading}
+          onViewDevlog={handleViewDevlog}
+          onDeleteDevlog={handleDeleteDevlog}
+          onBatchUpdate={handleBatchUpdate}
+          onBatchDelete={handleBatchDelete}
+          onBatchAddNote={handleBatchAddNote}
+          currentFilters={filters}
+          onFilterChange={setFilters}
+        />
+        
+        {/* Show pagination if we have paginated data */}
+        {pagination && (
+          <div className="mt-4 pt-4 border-t">
+            <Pagination
+              pagination={pagination}
+              onPageChange={goToPage}
+              onPageSizeChange={changePageSize}
+              className="justify-center"
+            />
+          </div>
+        )}
+      </div>
     </PageLayout>
   );
 }

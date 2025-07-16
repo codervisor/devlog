@@ -23,6 +23,8 @@ import type {
   ChatSearchResult,
   ChatDevlogLink,
   ChatWorkspace,
+  PaginatedResult,
+  PaginationOptions,
 } from '../types/index.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -106,16 +108,24 @@ export class JsonStorageProvider implements StorageProvider {
     }
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async list(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>> {
     await this.initialize();
     // Load all entries from filesystem
     const entries = await this.loadAllEntries();
 
-    return this.applyFilterAndSort(entries, filter);
+    const filteredEntries = this.applyFilterAndSort(entries, filter);
+    
+    // If pagination is requested, return paginated result
+    if (filter?.pagination) {
+      return this.paginateResults(filteredEntries, filter.pagination);
+    }
+    
+    return filteredEntries;
   }
 
   async search(query: string): Promise<DevlogEntry[]> {
-    const entries = await this.list();
+    const result = await this.list();
+    const entries = Array.isArray(result) ? result : result.items;
     const lowerQuery = query.toLowerCase();
 
     return entries.filter((entry) => {
@@ -128,7 +138,8 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   async getStats(): Promise<DevlogStats> {
-    const entries = await this.list();
+    const result = await this.list();
+    const entries = Array.isArray(result) ? result : result.items;
 
     const byStatus = {} as Record<DevlogStatus, number>;
     const byType = {} as Record<DevlogType, number>;
@@ -352,5 +363,75 @@ temp/
 
   async saveChatWorkspace(): Promise<void> {
     throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  /**
+   * Apply pagination to a list of entries
+   * @private
+   */
+  private paginateResults(entries: DevlogEntry[], pagination: PaginationOptions): PaginatedResult<DevlogEntry> {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const offset = pagination.offset || (page - 1) * limit;
+    
+    // Apply sorting if specified
+    if (pagination.sortBy) {
+      entries = this.sortEntries(entries, pagination.sortBy, pagination.sortOrder || 'desc');
+    }
+    
+    const total = entries.length;
+    const totalPages = Math.ceil(total / limit);
+    const paginatedItems = entries.slice(offset, offset + limit);
+    
+    return {
+      items: paginatedItems,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
+  }
+
+  /**
+   * Sort entries by specified field
+   * @private
+   */
+  private sortEntries(entries: DevlogEntry[], sortBy: string, sortOrder: 'asc' | 'desc'): DevlogEntry[] {
+    return [...entries].sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      switch (sortBy) {
+        case 'createdAt':
+        case 'updatedAt':
+          aVal = new Date(a[sortBy]).getTime();
+          bVal = new Date(b[sortBy]).getTime();
+          break;
+        case 'priority':
+          const priorityOrder = { low: 1, medium: 2, high: 3, critical: 4 };
+          aVal = priorityOrder[a.priority];
+          bVal = priorityOrder[b.priority];
+          break;
+        case 'status':
+          const statusOrder = { new: 1, 'in-progress': 2, blocked: 3, 'in-review': 4, testing: 5, done: 6, cancelled: 7 };
+          aVal = statusOrder[a.status];
+          bVal = statusOrder[b.status];
+          break;
+        case 'title':
+          aVal = a.title.toLowerCase();
+          bVal = b.title.toLowerCase();
+          break;
+        default:
+          aVal = a[sortBy as keyof DevlogEntry];
+          bVal = b[sortBy as keyof DevlogEntry];
+      }
+      
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
   }
 }

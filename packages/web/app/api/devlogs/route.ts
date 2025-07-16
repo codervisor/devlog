@@ -4,8 +4,9 @@ import { getDevlogManager } from '@/lib/devlog-manager';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/devlogs - List all devlogs
+// GET /api/devlogs - List all devlogs with optional pagination
 export async function GET(request: NextRequest) {
+  console.log('🔍 PAGINATION API CALLED:', request.url);
   try {
     const devlogManager = await getDevlogManager();
 
@@ -23,10 +24,31 @@ export async function GET(request: NextRequest) {
     if (searchParams.get('type')) filter.type = searchParams.get('type') as any;
     if (searchParams.get('priority')) filter.priority = searchParams.get('priority') as any;
 
+    // Parse pagination parameters
+    const page = searchParams.get('page');
+    const limit = searchParams.get('limit');
+    const sortBy = searchParams.get('sortBy');
+    const sortOrder = searchParams.get('sortOrder');
+    
+    console.log('[API Debug] Pagination params:', { page, limit, sortBy, sortOrder });
+    
+    if (page || limit || sortBy) {
+      filter.pagination = {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        sortBy: sortBy as any,
+        sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
+      };
+      console.log('[API Debug] Added pagination to filter:', filter.pagination);
+    }
+
     // Use search or list based on whether search query is provided
     const devlogs = searchQuery 
       ? await devlogManager.searchDevlogs(searchQuery, filter)
       : await devlogManager.listDevlogs(filter);
+    
+    console.log('[API Debug] Result type:', Array.isArray(devlogs) ? 'array' : 'object');
+    console.log('[API Debug] Result length/items count:', Array.isArray(devlogs) ? devlogs.length : devlogs.items?.length);
     
     return NextResponse.json(devlogs);
   } catch (error) {

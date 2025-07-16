@@ -144,6 +144,8 @@ export interface DevlogFilter {
   toDate?: string;
   search?: string;
   archived?: boolean; // Filter for archived status
+  // Pagination options
+  pagination?: PaginationOptions;
 }
 
 /**
@@ -211,4 +213,40 @@ export interface AIContext {
   // Context freshness indicator
   lastAIUpdate?: string;
   contextVersion?: number;
+}
+
+// Pagination Support
+export interface PaginationOptions {
+  /** Current page number (1-based) */
+  page?: number;
+  /** Number of items per page */
+  limit?: number;
+  /** Offset for items to skip (alternative to page) */
+  offset?: number;
+  /** Sort field */
+  sortBy?: 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'title';
+  /** Sort direction */
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResult<T> {
+  /** Array of items for current page */
+  items: T[];
+  /** Pagination metadata */
+  pagination: PaginationMeta;
+}
+
+export interface PaginationMeta {
+  /** Current page number (1-based) */
+  page: number;
+  /** Number of items per page */
+  limit: number;
+  /** Total number of items across all pages */
+  total: number;
+  /** Total number of pages */
+  totalPages: number;
+  /** Whether there is a previous page */
+  hasPreviousPage: boolean;
+  /** Whether there is a next page */
+  hasNextPage: boolean;
 }

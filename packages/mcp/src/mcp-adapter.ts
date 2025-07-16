@@ -129,9 +129,19 @@ export class MCPDevlogAdapter {
       status: args.status ? [args.status] : undefined,
       type: args.type ? [args.type] : undefined,
       priority: args.priority ? [args.priority] : undefined,
+      pagination: (args.page || args.limit || args.sortBy) ? {
+        page: args.page,
+        limit: args.limit,
+        sortBy: args.sortBy,
+        sortOrder: args.sortOrder,
+      } : undefined,
     };
 
-    const entries = await this.devlogManager.listDevlogs(filter);
+    const result = await this.devlogManager.listDevlogs(filter);
+    
+    // Handle both paginated and non-paginated results
+    const entries = Array.isArray(result) ? result : result.items;
+    const pagination = Array.isArray(result) ? null : result.pagination;
 
     if (entries.length === 0) {
       return {
@@ -144,18 +154,25 @@ export class MCPDevlogAdapter {
       };
     }
 
-    const summary = entries
+    let summary = entries
       .map(
         (entry) =>
           `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority}) - ${entry.id}`,
       )
       .join('\n');
 
+    // Add pagination info if available
+    let resultText = `Found ${entries.length} devlog entries`;
+    if (pagination) {
+      resultText += ` (page ${pagination.page} of ${pagination.totalPages}, ${pagination.total} total)`;
+    }
+    resultText += `:\n\n${summary}`;
+
     return {
       content: [
         {
           type: 'text',
-          text: `Found ${entries.length} devlog entries:\n\n${summary}`,
+          text: resultText,
         },
       ],
     };
@@ -336,7 +353,8 @@ export class MCPDevlogAdapter {
       status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'] as any[],
     };
 
-    const entries = await this.devlogManager.listDevlogs(filter);
+    const result = await this.devlogManager.listDevlogs(filter);
+    const entries = Array.isArray(result) ? result : result.items;
     const limited = entries.slice(0, args.limit || 10);
 
     if (limited.length === 0) {
