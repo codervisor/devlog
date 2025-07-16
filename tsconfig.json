@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@devlog/*": ["packages/*/src"]
+    },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": false,
@@ -14,8 +19,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleDetection": "force",
-    "composite": false,
-    "incremental": false,
+    "composite": true,
+    "incremental": true,
     "declarationMap": true,
     "skipLibCheck": true
   },
@@ -23,7 +28,8 @@
     { "path": "./packages/types" },
     { "path": "./packages/core" },
     { "path": "./packages/mcp" },
-    { "path": "./packages/codehist" }
+    { "path": "./packages/codehist" },
+    { "path": "./packages/web" }
   ],
   "files": [],
   "exclude": ["node_modules", "**/build", "**/dist"]
