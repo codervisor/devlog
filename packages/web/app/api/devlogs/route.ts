@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDevlogManager } from '@/lib/devlog-manager';
+import { filterTypeToStatusFilter, type FilterType } from '@devlog/core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -13,10 +14,31 @@ export async function GET(request: NextRequest) {
     const filter: any = {};
     const searchQuery = searchParams.get('q') || searchParams.get('search');
 
-    // Parse query parameters - handle arrays for status
+    // Parse query parameters - handle filterType and status (both can be used together)
+    const filterTypeParam = searchParams.get('filterType');
     const statusParam = searchParams.get('status');
-    if (statusParam) {
-      // Support comma-separated status values
+    
+    if (filterTypeParam && statusParam) {
+      // Both filterType and status provided - intersect them
+      const filterTypeStatuses = filterTypeToStatusFilter(filterTypeParam as FilterType);
+      const requestedStatuses = statusParam.split(',').map((s) => s.trim());
+      
+      if (filterTypeStatuses) {
+        // Find intersection of filterType statuses and requested statuses
+        filter.status = requestedStatuses.filter(status => filterTypeStatuses.includes(status as any));
+      } else {
+        // filterType is 'total', so use requested statuses as-is
+        filter.status = requestedStatuses;
+      }
+    } else if (filterTypeParam) {
+      // Only filterType provided
+      const statusArray = filterTypeToStatusFilter(filterTypeParam as FilterType);
+      if (statusArray) {
+        filter.status = statusArray;
+      }
+      // If filterType is 'total', statusArray will be undefined, which means no status filtering
+    } else if (statusParam) {
+      // Only status provided - backward compatibility
       filter.status = statusParam.split(',').map((s) => s.trim());
     }
 

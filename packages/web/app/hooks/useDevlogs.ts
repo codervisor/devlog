@@ -312,10 +312,9 @@ export function useDevlogs() {
 
         // Check if this is already the only selected status
         if (currentStatuses.length === 1 && currentStatuses[0] === filterValue) {
-          // If clicking the same single status, clear both filterType and status
+          // If clicking the same single status, clear status only
           setFilters((prev) => ({
             ...prev,
-            filterType: undefined,
             status: undefined,
           }));
         } else {
