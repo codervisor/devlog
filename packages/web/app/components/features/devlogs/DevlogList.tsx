@@ -217,23 +217,24 @@ export function DevlogList({
     options: Array<{ label: string; value: string }>,
   ) => {
     const currentValues = currentFilters?.[filterType] || [];
+    const currentValue = currentValues.length > 0 ? currentValues[0] : undefined;
 
-    const handleMenuClick = (values: string[]) => {
+    const handleMenuClick = (value: string) => {
       if (onFilterChange) {
+        // If clicking the same value, clear the filter; otherwise set new value
+        const newValue = currentValue === value ? undefined : [value];
         onFilterChange({
           ...currentFilters,
-          [filterType]: values.length > 0 ? values : undefined,
+          [filterType]: newValue,
         });
       }
     };
 
     const menu = (
       <Menu
-        multiple
         selectable
-        selectedKeys={currentValues}
-        onSelect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
-        onDeselect={({ selectedKeys }) => handleMenuClick(selectedKeys as string[])}
+        selectedKeys={currentValue ? [currentValue] : []}
+        onClick={({ key }) => handleMenuClick(key as string)}
       >
         {options.map((option) => (
           <Menu.Item key={option.value}>{option.label}</Menu.Item>

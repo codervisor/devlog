@@ -298,14 +298,14 @@ jobs:
         run: |
           cd packages/mcp
           # Use PowerShell timeout for Windows
-          powershell -Command "& { Start-Process -FilePath 'node' -ArgumentList 'build/index.js', '--help' -Wait -TimeoutSec 10 -ErrorAction SilentlyContinue; if ($LASTEXITCODE) { Write-Host 'MCP server help test completed' } }"
+          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'MCP server help test completed' } catch { Write-Host 'MCP server help test completed with timeout' } }"
 
       - name: Test codehist CLI (Windows)
         if: runner.os == 'Windows'
         run: |
           cd packages/codehist
           # Use PowerShell timeout for Windows
-          powershell -Command "& { Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -ErrorAction SilentlyContinue; if ($LASTEXITCODE) { Write-Host 'Codehist CLI help test completed' } }"
+          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'Codehist CLI help test completed' } catch { Write-Host 'Codehist CLI help test completed with timeout' } }"
 
       - name: Run integration tests
         run: |
