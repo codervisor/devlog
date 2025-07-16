@@ -6,16 +6,16 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "composite": true,
-    "incremental": true,
-    "forceConsistentCasingInFileNames": true
+    "composite": false,
+    "incremental": false
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "build",
     "node_modules",
-    "**/*.test.ts"
+    "build",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

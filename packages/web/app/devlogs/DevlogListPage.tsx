@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats, Pagination } from '@/components';
-import { useDevlogsWithSearch } from '@/hooks/useDevlogsWithSearch';
+import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
-import { DevlogEntry, DevlogId, DevlogStatus, FilterType } from '@devlog/core';
+import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useRouter } from 'next/navigation';
-import styles from './DevlogListPage.module.css';
 
 export function DevlogListPage() {
   const { 
@@ -23,8 +22,8 @@ export function DevlogListPage() {
     batchAddNote,
     goToPage,
     changePageSize,
-    changeSorting,
-  } = useDevlogsWithSearch();
+    handleStatusFilter,
+  } = useDevlogs();
   
   // Use server-side stats that are independent of current filter state
   // Stats should represent the overall system state, not the filtered view
@@ -96,44 +95,6 @@ export function DevlogListPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refetchStats]);
-
-  const handleStatusFilter = (status: FilterType) => {
-    if (status === 'total') {
-      // Clear status filter but keep other filters
-      setFilters({ ...filters, status: undefined });
-    } else if (status === 'open') {
-      // Open includes: new, in-progress, blocked, in-review, testing
-      const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
-      setFilters({
-        ...filters,
-        status: openStatuses,
-      });
-    } else if (status === 'closed') {
-      // Closed includes: done, cancelled
-      const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
-      setFilters({
-        ...filters,
-        status: closedStatuses,
-      });
-    } else {
-      // Individual status - toggle behavior for direct status selection
-      const currentStatuses = filters.status || [];
-      if (currentStatuses.includes(status)) {
-        // Remove this status
-        const newStatuses = currentStatuses.filter(s => s !== status);
-        setFilters({
-          ...filters,
-          status: newStatuses.length > 0 ? newStatuses : undefined,
-        });
-      } else {
-        // Add this status (replace existing for single selection)
-        setFilters({
-          ...filters,
-          status: [status],
-        });
-      }
-    }
-  };
 
   const actions = (
     <Space size="large" wrap>

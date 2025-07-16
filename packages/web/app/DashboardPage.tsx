@@ -3,14 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { Dashboard, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
-import { useDevlogFilters } from '@/hooks/useDevlogFilters';
 import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
-  const { filters, filteredDevlogs, handleStatusFilter } = useDevlogFilters(devlogs);
+  const { devlogs, filters, handleStatusFilter, loading: isLoadingDevlogs } = useDevlogs();
   const { stats, loading: isLoadingStats } = useStats();
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesStats | null>(null);
   const [isLoadingTimeSeries, setIsLoadingTimeSeries] = useState(true);
@@ -58,7 +56,7 @@ export function DashboardPage() {
         stats={stats}
         timeSeriesData={timeSeriesData}
         isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={filteredDevlogs.slice(0, 10)}
+        recentDevlogs={devlogs.slice(0, 10)}
         isLoadingDevlogs={isLoadingDevlogs}
         onViewDevlog={handleViewDevlog}
       />
