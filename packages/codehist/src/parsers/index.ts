@@ -19,6 +19,36 @@ import {
   WorkspaceDataContainer 
 } from '../models/index.js';
 
+// Simple logger interface for the parser
+interface Logger {
+  error?(message: string, ...args: unknown[]): void;
+  warn?(message: string, ...args: unknown[]): void;
+  info?(message: string, ...args: unknown[]): void;
+  debug?(message: string, ...args: unknown[]): void;
+}
+
+// Simple console logger implementation
+class SimpleConsoleLogger implements Logger {
+  error(message: string, ...args: unknown[]): void {
+    console.error(`[ERROR] ${message}`, ...args);
+  }
+
+  warn(message: string, ...args: unknown[]): void {
+    console.warn(`[WARN] ${message}`, ...args);
+  }
+
+  info(message: string, ...args: unknown[]): void {
+    console.log(`[INFO] ${message}`, ...args);
+  }
+
+  debug(message: string, ...args: unknown[]): void {
+    // Only log debug in development or when DEBUG env var is set
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+      console.debug(`[DEBUG] ${message}`, ...args);
+    }
+  }
+}
+
 export interface SearchResult {
   session_id?: string;
   message_id?: string;
@@ -27,7 +57,7 @@ export interface SearchResult {
   match_position: number;
   context: string;
   full_content: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface ChatStatistics {
@@ -49,10 +79,10 @@ export interface ChatStatistics {
 }
 
 export class CopilotParser {
-  private logger = console; // TODO: Use proper logger
+  private logger: Logger;
 
-  constructor() {
-    // Initialize parser
+  constructor(logger?: Logger) {
+    this.logger = logger || new SimpleConsoleLogger();
   }
 
   /**
@@ -92,11 +122,11 @@ export class CopilotParser {
             this.logger.debug?.(`Mapped workspace ${workspaceDir} -> multi-root: ${workspaceRef}`);
           }
         } catch (error) {
-          this.logger.debug?.(`Failed to read workspace.json from ${workspaceJsonPath}: ${error}`);
+          this.logger.debug?.(`Failed to read workspace.json from ${workspaceJsonPath}:`, error instanceof Error ? error.message : String(error));
         }
       }
     } catch (error) {
-      this.logger.error?.(`Error building workspace mapping: ${error}`);
+      this.logger.error?.('Error building workspace mapping:', error instanceof Error ? error.message : String(error));
     }
 
     return workspaceMapping;
@@ -214,7 +244,7 @@ export class CopilotParser {
       return session;
 
     } catch (error) {
-      this.logger.error?.(`Error parsing chat session ${filePath}: ${error}`);
+      this.logger.error?.(`Error parsing chat session ${filePath}:`, error instanceof Error ? error.message : String(error));
       return null;
     }
   }
@@ -297,7 +327,7 @@ export class CopilotParser {
       return session;
 
     } catch (error) {
-      this.logger.error?.(`Error parsing chat editing session ${filePath}: ${error}`);
+      this.logger.error?.(`Error parsing chat editing session ${filePath}:`, error instanceof Error ? error.message : String(error));
       return null;
     }
   }

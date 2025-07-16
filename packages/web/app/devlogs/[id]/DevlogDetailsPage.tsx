@@ -37,7 +37,14 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
   useEffect(() => {
     const foundDevlog = devlogs.find((d: DevlogEntry) => d.id === parseInt(id));
     if (foundDevlog) {
-      setDevlog(foundDevlog);
+      // Only update the devlog state if it's actually different
+      // This prevents unnecessary re-renders that could interfere with unsaved changes
+      setDevlog((currentDevlog) => {
+        if (!currentDevlog || currentDevlog.updatedAt !== foundDevlog.updatedAt) {
+          return foundDevlog;
+        }
+        return currentDevlog;
+      });
       setLoading(false);
     } else if (devlogs.length > 0) {
       // If devlogs are loaded but no match found

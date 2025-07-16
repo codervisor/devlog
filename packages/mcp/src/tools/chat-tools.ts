@@ -16,6 +16,97 @@ import {
   SuggestChatDevlogLinksRequest
 } from '@devlog/core';
 
+// Export MCP Tool argument interfaces for better type safety
+export interface ImportChatHistoryArgs {
+  source?: 'codehist' | 'vs-code';
+  autoLink?: boolean;
+  autoLinkThreshold?: number;
+  includeArchived?: boolean;
+  overwriteExisting?: boolean;
+  background?: boolean;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  workspaceFilter?: string[];
+}
+
+export interface GetChatSessionArgs {
+  sessionId: string;
+  includeMessages?: boolean;
+  messageLimit?: number;
+}
+
+export interface ListChatSessionsArgs {
+  limit?: number;
+  offset?: number;
+  includeArchived?: boolean;
+  workspace?: string[];
+  agent?: string[];
+  fromDate?: string;
+  toDate?: string;
+  linkedDevlog?: number;
+  status?: string[];
+  minMessages?: number;
+  maxMessages?: number;
+  sort?: {
+    field?: 'timestamp' | 'messageCount' | 'duration' | 'updatedAt';
+    direction?: 'asc' | 'desc';
+  };
+}
+
+export interface SearchChatContentArgs {
+  query: string;
+  searchType?: 'exact' | 'fuzzy' | 'semantic';
+  caseSensitive?: boolean;
+  workspace?: string[];
+  agent?: string[];
+  includeArchived?: boolean;
+  limit?: number;
+}
+
+export interface LinkChatToDevlogArgs {
+  sessionId: string;
+  devlogId: number;
+  manual?: boolean;
+  notes?: string;
+}
+
+export interface UnlinkChatFromDevlogArgs {
+  sessionId: string;
+  devlogId: number;
+}
+
+export interface GetChatStatsArgs {
+  workspace?: string[];
+  agent?: string[];
+  fromDate?: string;
+  toDate?: string;
+  includeTemporalAnalysis?: boolean;
+  includeWorkspaceDetails?: boolean;
+}
+
+export interface UpdateChatSessionArgs {
+  sessionId: string;
+  title?: string;
+  status?: 'imported' | 'linked' | 'archived' | 'processed';
+  tags?: string[];
+  archived?: boolean;
+  workspace?: string;
+}
+
+export interface SuggestChatDevlogLinksArgs {
+  sessionId?: string;
+  devlogId?: number;
+  limit?: number;
+  minConfidence?: number;
+}
+
+export interface GetChatWorkspacesArgs {
+  includeInactive?: boolean;
+  minSessions?: number;
+}
+
 export const importChatHistoryTool: Tool = {
   name: 'import_chat_history',
   description: 'Import chat history from GitHub Copilot (via codehist) into devlog storage',
@@ -436,7 +527,7 @@ export const getChatWorkspacesTool: Tool = {
 };
 
 // Tool implementations
-export async function handleImportChatHistory(manager: DevlogManager, args: any) {
+export async function handleImportChatHistory(manager: DevlogManager, args: ImportChatHistoryArgs) {
   try {
     const config: ImportChatHistoryRequest['config'] = {
       source: args.source || 'codehist',
@@ -446,7 +537,9 @@ export async function handleImportChatHistory(manager: DevlogManager, args: any)
       autoLink: args.autoLink !== false,
       autoLinkThreshold: args.autoLinkThreshold || 0.8,
       includeArchived: args.includeArchived || false,
-      dateRange: args.dateRange,
+      dateRange: args.dateRange && args.dateRange.from && args.dateRange.to 
+        ? { from: args.dateRange.from, to: args.dateRange.to }
+        : undefined,
       workspaceFilter: args.workspaceFilter,
       overwriteExisting: args.overwriteExisting || false
     };
@@ -471,12 +564,13 @@ The import is running in the background. Use the import ID to check progress.`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error importing chat history: ${error.message}`
+          text: `Error importing chat history: ${errorMessage}`
         }
       ],
       isError: true
@@ -484,7 +578,7 @@ The import is running in the background. Use the import ID to check progress.`
   }
 }
 
-export async function handleGetChatSession(manager: DevlogManager, args: any) {
+export async function handleGetChatSession(manager: DevlogManager, args: GetChatSessionArgs) {
   try {
     const sessionId = args.sessionId;
     const session = await manager.getChatSession(sessionId);
@@ -501,7 +595,7 @@ export async function handleGetChatSession(manager: DevlogManager, args: any) {
       };
     }
 
-    let messages: any[] = [];
+    let messages: unknown[] = [];
     if (args.includeMessages !== false) {
       messages = await manager.getChatMessages(sessionId, 0, args.messageLimit || 100);
     }
@@ -520,18 +614,19 @@ export async function handleGetChatSession(manager: DevlogManager, args: any) {
 **Linked Devlogs:** ${session.linkedDevlogs.length}
 **Tags:** ${session.tags.join(', ') || 'None'}
 
-${messages.length > 0 ? `\n### Messages (${messages.length}):\n\n${messages.map((msg, i) => 
+${messages.length > 0 ? `\n### Messages (${messages.length}):\n\n${messages.map((msg: any, i: number) => 
   `**${i + 1}. ${msg.role.toUpperCase()}** (${msg.timestamp}):\n${msg.content}\n`
 ).join('\n')}` : ''}`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error getting chat session: ${error.message}`
+          text: `Error getting chat session: ${errorMessage}`
         }
       ],
       isError: true
@@ -539,7 +634,7 @@ ${messages.length > 0 ? `\n### Messages (${messages.length}):\n\n${messages.map(
   }
 }
 
-export async function handleListChatSessions(manager: DevlogManager, args: any) {
+export async function handleListChatSessions(manager: DevlogManager, args: ListChatSessionsArgs) {
   try {
     const filter = {
       agent: args.agent,
@@ -594,12 +689,13 @@ ${sessionsText}
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error listing chat sessions: ${error.message}`
+          text: `Error listing chat sessions: ${errorMessage}`
         }
       ],
       isError: true
@@ -607,7 +703,7 @@ ${sessionsText}
   }
 }
 
-export async function handleSearchChatContent(manager: DevlogManager, args: any) {
+export async function handleSearchChatContent(manager: DevlogManager, args: SearchChatContentArgs) {
   try {
     const query = args.query;
     const filter = {
@@ -656,12 +752,13 @@ ${resultsText}`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error searching chat content: ${error.message}`
+          text: `Error searching chat content: ${errorMessage}`
         }
       ],
       isError: true
@@ -669,7 +766,7 @@ ${resultsText}`
   }
 }
 
-export async function handleLinkChatToDevlog(manager: DevlogManager, args: any) {
+export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkChatToDevlogArgs) {
   try {
     const sessionId = args.sessionId;
     const devlogId = args.devlogId;
@@ -734,12 +831,13 @@ The link has been confirmed and saved.`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error linking chat to devlog: ${error.message}`
+          text: `Error linking chat to devlog: ${errorMessage}`
         }
       ],
       isError: true
@@ -747,7 +845,7 @@ The link has been confirmed and saved.`
   }
 }
 
-export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: any) {
+export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: UnlinkChatFromDevlogArgs) {
   try {
     await manager.removeChatDevlogLink(args.sessionId, args.devlogId);
 
@@ -759,12 +857,13 @@ export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: a
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error unlinking chat from devlog: ${error.message}`
+          text: `Error unlinking chat from devlog: ${errorMessage}`
         }
       ],
       isError: true
@@ -772,7 +871,7 @@ export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: a
   }
 }
 
-export async function handleSuggestChatDevlogLinks(manager: DevlogManager, args: any) {
+export async function handleSuggestChatDevlogLinks(manager: DevlogManager, args: SuggestChatDevlogLinksArgs) {
   try {
     const chatService = manager.getChatImportService();
     const suggestions = await chatService.suggestChatDevlogLinks(
@@ -816,12 +915,13 @@ Use \`link_chat_to_devlog\` to confirm any of these suggestions.`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error getting link suggestions: ${error.message}`
+          text: `Error getting link suggestions: ${errorMessage}`
         }
       ],
       isError: true
@@ -829,7 +929,7 @@ Use \`link_chat_to_devlog\` to confirm any of these suggestions.`
   }
 }
 
-export async function handleGetChatStats(manager: DevlogManager, args: any) {
+export async function handleGetChatStats(manager: DevlogManager, args: GetChatStatsArgs) {
   try {
     const filter = {
       agent: args.agent,
@@ -882,12 +982,13 @@ ${workspaceStats || '  No workspace data available'}`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error getting chat statistics: ${error.message}`
+          text: `Error getting chat statistics: ${errorMessage}`
         }
       ],
       isError: true
@@ -895,7 +996,7 @@ ${workspaceStats || '  No workspace data available'}`
   }
 }
 
-export async function handleUpdateChatSession(manager: DevlogManager, args: any) {
+export async function handleUpdateChatSession(manager: DevlogManager, args: UpdateChatSessionArgs) {
   try {
     const updates = {
       title: args.title,
@@ -922,12 +1023,13 @@ ${updatesList}`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error updating chat session: ${error.message}`
+          text: `Error updating chat session: ${errorMessage}`
         }
       ],
       isError: true
@@ -935,13 +1037,13 @@ ${updatesList}`
   }
 }
 
-export async function handleGetChatWorkspaces(manager: DevlogManager, args: any) {
+export async function handleGetChatWorkspaces(manager: DevlogManager, args: GetChatWorkspacesArgs) {
   try {
     const workspaces = await manager.getChatWorkspaces();
 
     let filtered = workspaces;
     if (args.minSessions && args.minSessions > 0) {
-      filtered = workspaces.filter(w => w.sessionCount >= args.minSessions);
+      filtered = workspaces.filter(w => w.sessionCount >= (args.minSessions || 0));
     }
 
     if (filtered.length === 0) {
@@ -976,12 +1078,13 @@ ${workspacesText}`
         }
       ]
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       content: [
         {
           type: 'text',
-          text: `Error getting chat workspaces: ${error.message}`
+          text: `Error getting chat workspaces: ${errorMessage}`
         }
       ],
       isError: true

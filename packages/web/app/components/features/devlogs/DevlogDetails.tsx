@@ -143,11 +143,16 @@ export function DevlogDetails({
 
   // Reset local changes when devlog prop changes (e.g., after save)
   useEffect(() => {
-    setLocalChanges({});
-    setOriginalDevlog(devlog);
-    setHasUnsavedChanges(false);
-    setSaveError(null);
-  }, [devlog.id, devlog.updatedAt]);
+    // Only reset if this is a completely different devlog (ID changed)
+    // OR if the devlog was updated but we don't have any unsaved changes
+    // This allows real-time updates to flow through while preserving unsaved edits
+    if (devlog.id !== originalDevlog.id || (!hasUnsavedChanges && devlog.updatedAt !== originalDevlog.updatedAt)) {
+      setLocalChanges({});
+      setOriginalDevlog(devlog);
+      setHasUnsavedChanges(false);
+      setSaveError(null);
+    }
+  }, [devlog.id, devlog.updatedAt, originalDevlog.id, originalDevlog.updatedAt, hasUnsavedChanges]);
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
@@ -164,10 +169,12 @@ export function DevlogDetails({
   // Get the current value for a field (local change if exists, otherwise current devlog value)
   const getCurrentValue = useCallback(
     (field: string) => {
+      // If there's a local change for this field, use it
       if (localChanges[field] !== undefined) {
         return localChanges[field];
       }
 
+      // Otherwise, use the current devlog value (which includes real-time updates)
       if (field.startsWith('context.')) {
         const contextField = field.substring(8) as keyof typeof devlog.context;
         return (devlog.context?.[contextField] as any) || '';

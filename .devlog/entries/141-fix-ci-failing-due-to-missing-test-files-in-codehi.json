@@ -1,0 +1,46 @@
+{
+  "key": "fix-ci-failing-due-to-missing-test-files-in-codehi",
+  "title": "Fix CI failing due to missing test files in codehist package",
+  "type": "bugfix",
+  "description": "The CI workflow is failing because @devlog/codehist package has a test script that runs vitest, but no test files exist. Vitest exits with code 1 when no test files are found, causing the CI to fail.\n\nThe error occurs in the \"Run unit tests\" step:\n```\n ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @devlog/codehist@0.1.0 test: `vitest`\nExit status 1\nError: Process completed with exit code 1.\n```\n\nNeed to either:\n1. Add basic test files to codehist package\n2. Configure vitest to not fail when no tests found\n3. Modify CI to conditionally run tests only if test files exist\n4. Remove test script from codehist until tests are implemented",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-16T16:24:47.447Z",
+  "updatedAt": "2025-07-16T16:25:37.639Z",
+  "notes": [
+    {
+      "id": "4b192432-e597-4061-8371-32a7cdef0005",
+      "timestamp": "2025-07-16T16:25:37.639Z",
+      "category": "solution",
+      "content": "Fixed CI failing due to missing test files in codehist package by adding `passWithNoTests: true` to vitest configuration. This allows vitest to exit with code 0 instead of code 1 when no test files are found, preventing CI failures while keeping the package ready for future test additions.\n\n**Solution Applied:**\n- Modified `/packages/codehist/vitest.config.ts` to include `passWithNoTests: true` option\n- This is the cleanest approach as it:\n  - Doesn't require dummy test files\n  - Allows CI to pass without modifying workflow\n  - Maintains vitest configuration for future test additions\n  - Follows vitest best practices for packages without tests yet\n\n**Testing Results:**\n- ✅ @devlog/codehist: Now exits with code 0 when no tests found\n- ✅ @devlog/core: All 66 tests continue to pass\n- ✅ @devlog/mcp: All 7 integration tests continue to pass\n- ✅ Simulated CI workflow commands work correctly",
+      "files": [
+        "packages/codehist/vitest.config.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "CI failures block development workflow and prevent merging of PRs. This needs immediate fix to restore CI functionality.",
+    "technicalContext": "The codehist package has vitest configured and test scripts in package.json, but the src/ directory contains no *.test.ts or *.spec.ts files. Other packages (core, mcp) have test files and work correctly.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "CI workflow passes without errors",
+      "All packages with test files continue to run tests",
+      "Codehist package doesn't cause CI failures",
+      "Solution is maintainable and doesn't break future test additions"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T16:24:47.447Z",
+    "contextVersion": 1
+  },
+  "id": 141
+}
