@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  InfoCircleOutlined, 
-  NumberOutlined, 
+import {
+  InfoCircleOutlined,
+  NumberOutlined,
   PlusCircleOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   BarChartOutlined,
   LeftOutlined,
-  RightOutlined
+  RightOutlined,
 } from '@ant-design/icons';
 import { Popover, Typography, Tooltip, Button, Skeleton } from 'antd';
 import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/core';
@@ -104,7 +104,11 @@ export function OverviewStats({
           </div>
         ))}
         {collapsible && (
-          <Skeleton.Button style={{ width: '24px', height: '24px' }} active size="small" />
+          <Skeleton.Button
+            style={{ width: '32px', height: '32px', minWidth: '32px', padding: '4px 8px' }}
+            active
+            size="small"
+          />
         )}
       </div>
     );
@@ -136,7 +140,7 @@ export function OverviewStats({
   const getStatClasses = (status: DevlogStatus | 'total', baseClasses: string) => {
     const isActive = status === 'total' ? isTotalActive() : isStatusActive(status as DevlogStatus);
     const isClickable = onFilterToggle !== undefined;
-    
+
     return `${baseClasses} ${isClickable ? styles.clickableStat : ''} ${isActive ? styles.activeStat : ''}`;
   };
 
@@ -182,25 +186,35 @@ export function OverviewStats({
     const activeCount = getActiveStatusCount();
     const activeLabel = getActiveStatusLabels();
     const primaryStatus = getPrimaryActiveStatus();
-    
+
     // Get the appropriate CSS class for the primary status
     const getStatusClass = (status: DevlogStatus | 'total') => {
       switch (status) {
-        case 'new': return styles.new;
-        case 'in-progress': return styles.inProgress;
-        case 'blocked': return styles.blocked;
-        case 'in-review': return styles.inReview;
-        case 'testing': return styles.testing;
-        case 'done': return styles.completed;
-        case 'closed': return styles.closed;
-        default: return ''; // 'total' - no specific class
+        case 'new':
+          return styles.new;
+        case 'in-progress':
+          return styles.inProgress;
+        case 'blocked':
+          return styles.blocked;
+        case 'in-review':
+          return styles.inReview;
+        case 'testing':
+          return styles.testing;
+        case 'done':
+          return styles.completed;
+        case 'closed':
+          return styles.closed;
+        default:
+          return ''; // 'total' - no specific class
       }
     };
-    
+
     return (
       <div className={`${styles.dashboardStats} ${styles.collapsedStats} ${className || ''}`}>
         <div className={`${styles.statCompact} ${styles.collapsedSummary}`}>
-          <span className={`${styles.statValue} ${getStatusClass(primaryStatus)}`}>{activeCount}</span>
+          <span className={`${styles.statValue} ${getStatusClass(primaryStatus)}`}>
+            {activeCount}
+          </span>
           <span className={styles.statLabel}>{activeLabel}</span>
         </div>
         <Button
@@ -225,78 +239,114 @@ export function OverviewStats({
     // Render full expanded view
     return (
       <div className={`${styles.dashboardStats} ${className || ''}`}>
-        <div 
+        <div
           className={getStatClasses('total', styles.statCompact)}
           onClick={() => handleStatClick('total')}
-          title={onFilterToggle ? (isTotalActive() ? "Clear filters" : "Show all") : undefined}
+          title={onFilterToggle ? (isTotalActive() ? 'Clear filters' : 'Show all') : undefined}
         >
           <span className={styles.statValue}>{stats.totalEntries}</span>
           <span className={styles.statLabel}>Total</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('new', styles.statCompact)}
           onClick={() => handleStatClick('new')}
-          title={onFilterToggle ? (isStatusActive('new') ? "Clear filter" : "Filter by New") : undefined}
+          title={
+            onFilterToggle ? (isStatusActive('new') ? 'Clear filter' : 'Filter by New') : undefined
+          }
         >
-          <span className={`${styles.statValue} ${styles.new}`}>
-            {stats.byStatus['new'] || 0}
-          </span>
+          <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
           <span className={styles.statLabel}>New</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('in-progress', styles.statCompact)}
           onClick={() => handleStatClick('in-progress')}
-          title={onFilterToggle ? (isStatusActive('in-progress') ? "Clear filter" : "Filter by In Progress") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('in-progress')
+                ? 'Clear filter'
+                : 'Filter by In Progress'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.inProgress}`}>
             {stats.byStatus['in-progress'] || 0}
           </span>
           <span className={styles.statLabel}>In Progress</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('blocked', styles.statCompact)}
           onClick={() => handleStatClick('blocked')}
-          title={onFilterToggle ? (isStatusActive('blocked') ? "Clear filter" : "Filter by Blocked") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('blocked')
+                ? 'Clear filter'
+                : 'Filter by Blocked'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.blocked}`}>
             {stats.byStatus['blocked'] || 0}
           </span>
           <span className={styles.statLabel}>Blocked</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('in-review', styles.statCompact)}
           onClick={() => handleStatClick('in-review')}
-          title={onFilterToggle ? (isStatusActive('in-review') ? "Clear filter" : "Filter by In Review") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('in-review')
+                ? 'Clear filter'
+                : 'Filter by In Review'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.inReview}`}>
             {stats.byStatus['in-review'] || 0}
           </span>
           <span className={styles.statLabel}>In Review</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('testing', styles.statCompact)}
           onClick={() => handleStatClick('testing')}
-          title={onFilterToggle ? (isStatusActive('testing') ? "Clear filter" : "Filter by Testing") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('testing')
+                ? 'Clear filter'
+                : 'Filter by Testing'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.testing}`}>
             {stats.byStatus['testing'] || 0}
           </span>
           <span className={styles.statLabel}>Testing</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('done', styles.statCompact)}
           onClick={() => handleStatClick('done')}
-          title={onFilterToggle ? (isStatusActive('done') ? "Clear filter" : "Filter by Done") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('done')
+                ? 'Clear filter'
+                : 'Filter by Done'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.completed}`}>
             {stats.byStatus['done'] || 0}
           </span>
           <span className={styles.statLabel}>Done</span>
         </div>
-        <div 
+        <div
           className={getStatClasses('closed', styles.statCompact)}
           onClick={() => handleStatClick('closed')}
-          title={onFilterToggle ? (isStatusActive('closed') ? "Clear filter" : "Filter by Closed") : undefined}
+          title={
+            onFilterToggle
+              ? isStatusActive('closed')
+                ? 'Clear filter'
+                : 'Filter by Closed'
+              : undefined
+          }
         >
           <span className={`${styles.statValue} ${styles.closed}`}>
             {stats.byStatus['closed'] || 0}
@@ -326,9 +376,7 @@ export function OverviewStats({
           <span className={styles.statLabel}>Total</span>
         </div>
         <div className={styles.statCompact}>
-          <span className={`${styles.statValue} ${styles.new}`}>
-            {stats.byStatus['new'] || 0}
-          </span>
+          <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
           <span className={styles.statLabel}>New</span>
         </div>
         <div className={styles.statCompact}>
@@ -374,12 +422,7 @@ export function OverviewStats({
   // Render icon variant (for footer)
   if (variant === 'icon') {
     return (
-      <Popover
-        content={detailedContent}
-        title="Quick Stats"
-        trigger="hover"
-        placement="top"
-      >
+      <Popover content={detailedContent} title="Quick Stats" trigger="hover" placement="top">
         <BarChartOutlined
           style={{
             color: '#8c8c8c',
