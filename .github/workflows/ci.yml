@@ -113,7 +113,7 @@ jobs:
         run: |
           echo "🧪 Running unit tests for packages with test scripts..."
           # Run tests for packages that have test scripts
-          pnpm --filter @devlog/codehist test
+          pnpm --filter @devlog/ai-chat test
           pnpm --filter @devlog/core test
           pnpm --filter @devlog/mcp test
 
@@ -126,8 +126,8 @@ jobs:
       - name: Verify build artifacts
         run: |
           # Check that essential build artifacts exist
-          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
-          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
@@ -136,8 +136,8 @@ jobs:
           [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
           echo "✅ All build artifacts verified!"
 
-  codehist-cli-tests:
-    name: Codehist CLI Tests
+  ai-chat-cli-tests:
+    name: AI-Chat CLI Tests
     runs-on: ubuntu-latest
     needs: test
     
@@ -159,27 +159,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build codehist package
-        run: pnpm --filter @devlog/codehist build
+      - name: Build ai-chat package
+        run: pnpm --filter @devlog/ai-chat build
 
-      - name: Verify codehist build artifacts
+      - name: Verify ai-chat build artifacts
         run: |
-          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist library build failed"; exit 1; }
-          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
-          [ -f "packages/codehist/build/cli/index.js" ] || { echo "❌ Codehist CLI build failed"; exit 1; }
-          echo "✅ Codehist build artifacts verified!"
+          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat library build failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
+          [ -f "packages/ai-chat/build/cli/index.js" ] || { echo "❌ AI-Chat CLI build failed"; exit 1; }
+          echo "✅ AI-Chat build artifacts verified!"
 
-      - name: Test codehist CLI functionality
+      - name: Test ai-chat CLI functionality
         run: |
-          cd packages/codehist
+          cd packages/ai-chat
           # Test help command
           node build/cli/index.js --help
           # Test version command if available
           node build/cli/index.js --version || echo "Version command not available, that's ok"
 
-      - name: Run codehist unit tests
+      - name: Run ai-chat unit tests
         run: |
-          cd packages/codehist
+          cd packages/ai-chat
           pnpm test
 
   mcp-server-tests:
@@ -205,8 +205,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build codehist package first
-        run: pnpm --filter @devlog/codehist build
+      - name: Build ai-chat package first
+        run: pnpm --filter @devlog/ai-chat build
 
       - name: Build core package first  
         run: pnpm --filter @devlog/core build
@@ -216,8 +216,8 @@ jobs:
 
       - name: Verify MCP build artifacts
         run: |
-          [ -f "packages/codehist/build/index.js" ] || { echo "❌ Codehist build failed"; exit 1; }
-          [ -f "packages/codehist/build/index.d.ts" ] || { echo "❌ Codehist type declarations failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
+          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
@@ -271,7 +271,7 @@ jobs:
 
       - name: Build packages in order
         run: |
-          pnpm --filter @devlog/codehist build
+          pnpm --filter @devlog/ai-chat build
           pnpm --filter @devlog/core build
           pnpm --filter @devlog/mcp build
 
@@ -287,11 +287,11 @@ jobs:
           cd packages/mcp
           timeout 10s node build/index.js --help || echo "MCP server help test completed"
 
-      - name: Test codehist CLI (Unix)
+      - name: Test ai-chat CLI (Unix)
         if: runner.os != 'Windows'
         run: |
-          cd packages/codehist
-          timeout 10s node build/cli/index.js --help || echo "Codehist CLI help test completed"
+          cd packages/ai-chat
+          timeout 10s node build/cli/index.js --help || echo "AI-Chat CLI help test completed"
 
       - name: Test MCP server startup (Windows)
         if: runner.os == 'Windows'
@@ -300,12 +300,12 @@ jobs:
           # Use PowerShell timeout for Windows
           powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'MCP server help test completed' } catch { Write-Host 'MCP server help test completed with timeout' } }"
 
-      - name: Test codehist CLI (Windows)
+      - name: Test ai-chat CLI (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd packages/codehist
+          cd packages/ai-chat
           # Use PowerShell timeout for Windows
-          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'Codehist CLI help test completed' } catch { Write-Host 'Codehist CLI help test completed with timeout' } }"
+          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'AI-Chat CLI help test completed' } catch { Write-Host 'AI-Chat CLI help test completed with timeout' } }"
 
       - name: Run integration tests
         run: |

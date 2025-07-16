@@ -3,10 +3,10 @@
   "title": "Test: File watching real-time events",
   "type": "task",
   "description": "This is a test entry to verify that the new file watching implementation works correctly for real-time updates between MCP and web processes.",
-  "status": "done",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-16T17:08:33.063Z",
-  "updatedAt": "2025-07-16T17:09:16.022Z",
+  "updatedAt": "2025-07-16T17:22:31.232Z",
   "notes": [
     {
       "id": "ae03d31b-f599-4e62-b9b6-78d34328af13",

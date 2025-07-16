@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-16T16:52:24.722Z",
-  "updatedAt": "2025-07-16T17:02:05.918Z",
+  "updatedAt": "2025-07-16T17:23:16.563Z",
   "notes": [
     {
       "id": "ea19694e-8c47-4d8a-9c1c-8081abebab30",
@@ -29,6 +29,15 @@
         "packages/core/src/services/chat-import-service.ts",
         ".github/workflows/ci.yml",
         "tsconfig.json"
+      ]
+    },
+    {
+      "id": "a87c3341-61e4-42c9-9df0-ebd6228d1f86",
+      "timestamp": "2025-07-16T17:23:16.563Z",
+      "category": "progress",
+      "content": "Updated CI workflow configuration (.github/workflows/ci.yml) to use renamed @devlog/ai-chat package instead of @devlog/codehist. All package references, job names, step names, and build artifact paths have been updated to reflect the new package name.",
+      "files": [
+        ".github/workflows/ci.yml"
       ]
     }
   ],
