@@ -164,7 +164,13 @@ export class MCPDevlogAdapter {
   async searchDevlogs(args: SearchDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entries = await this.devlogManager.searchDevlogs(args.query);
+    const filter = {
+      status: args.status ? [args.status] : undefined,
+      type: args.type ? [args.type] : undefined,
+      priority: args.priority ? [args.priority] : undefined,
+    };
+
+    const entries = await this.devlogManager.searchDevlogs(args.query, filter);
 
     if (entries.length === 0) {
       return {

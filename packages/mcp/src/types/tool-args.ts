@@ -55,7 +55,7 @@ export interface ListDevlogsArgs extends DevlogFilterArgs {
   // Inherits status, type, priority from DevlogFilterArgs
 }
 
-export interface SearchDevlogsArgs {
+export interface SearchDevlogsArgs extends DevlogFilterArgs {
   query: string;
 }
 

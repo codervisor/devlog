@@ -43,6 +43,21 @@ export const searchTools: Tool[] = [
           type: 'string',
           description: 'Search query',
         },
+        status: {
+          type: 'string',
+          enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'closed'],
+          description: 'Filter by status',
+        },
+        type: {
+          type: 'string',
+          enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'],
+          description: 'Filter by type',
+        },
+        priority: {
+          type: 'string',
+          enum: ['low', 'medium', 'high', 'critical'],
+          description: 'Filter by priority',
+        },
       },
       required: ['query'],
     },

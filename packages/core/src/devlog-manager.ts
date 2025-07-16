@@ -282,18 +282,104 @@ export class DevlogManager {
 
   /**
    * List devlog entries with optional filtering
+   * By default, excludes closed entries unless explicitly requested
    */
   async listDevlogs(filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.ensureInitialized();
-    return await this.storageProvider.list(filter);
+    
+    // Apply default exclusion of closed entries
+    const enhancedFilter = this.applyDefaultFilters(filter);
+    
+    return await this.storageProvider.list(enhancedFilter);
+  }
+
+  /**
+   * Apply default filters including exclusion of closed entries
+   * @private
+   */
+  private applyDefaultFilters(filter?: DevlogFilter): DevlogFilter {
+    const enhancedFilter = { ...filter };
+    
+    // If no status filter is provided, exclude closed entries by default
+    // If status filter is provided, respect it (user explicitly requested specific statuses)
+    if (!enhancedFilter.status) {
+      // Exclude closed entries by including all other statuses
+      enhancedFilter.status = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done'];
+    }
+    // If status filter is provided and includes 'closed', keep it as-is
+    // This allows users to explicitly request closed entries
+    
+    return enhancedFilter;
   }
 
   /**
    * Search devlog entries
+   * By default, excludes closed entries unless explicitly requested
    */
-  async searchDevlogs(query: string): Promise<DevlogEntry[]> {
+  async searchDevlogs(query: string, filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.ensureInitialized();
-    return await this.storageProvider.search(query);
+    const results = await this.storageProvider.search(query);
+    
+    // Apply default filters to search results (including closed exclusion)
+    const enhancedFilter = this.applyDefaultFilters(filter);
+    
+    // Filter results based on the enhanced filter
+    return this.filterEntries(results, enhancedFilter);
+  }
+
+  /**
+   * Apply client-side filtering to a list of entries
+   * @private
+   */
+  private filterEntries(entries: DevlogEntry[], filter: DevlogFilter): DevlogEntry[] {
+    let filtered = [...entries];
+
+    // Status filter
+    if (filter.status && filter.status.length > 0) {
+      filtered = filtered.filter(entry => 
+        filter.status!.includes(entry.status)
+      );
+    }
+
+    // Type filter
+    if (filter.type && filter.type.length > 0) {
+      filtered = filtered.filter(entry => 
+        filter.type!.includes(entry.type)
+      );
+    }
+
+    // Priority filter
+    if (filter.priority && filter.priority.length > 0) {
+      filtered = filtered.filter(entry => 
+        filter.priority!.includes(entry.priority)
+      );
+    }
+
+    // Assignee filter
+    if (filter.assignee) {
+      const assigneeQuery = filter.assignee.toLowerCase().trim();
+      filtered = filtered.filter(entry => 
+        entry.assignee?.toLowerCase().includes(assigneeQuery)
+      );
+    }
+
+    // Date range filter
+    if (filter.fromDate) {
+      const fromDate = new Date(filter.fromDate);
+      filtered = filtered.filter(entry => 
+        new Date(entry.createdAt) >= fromDate
+      );
+    }
+
+    if (filter.toDate) {
+      const toDate = new Date(filter.toDate);
+      toDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(entry => 
+        new Date(entry.createdAt) <= toDate
+      );
+    }
+
+    return filtered;
   }
 
   /**

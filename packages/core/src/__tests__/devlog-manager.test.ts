@@ -80,8 +80,8 @@ describe('DevlogManager', () => {
       expect(result.description).toBe('A test feature');
       expect(result.priority).toBe('high');
       expect(result.status).toBe('new');
-      expect(result.context.businessContext).toBe('Important business requirement');
-      expect(result.context.technicalContext).toBe('Uses TypeScript');
+      expect(result.context?.businessContext).toBe('Important business requirement');
+      expect(result.context?.technicalContext).toBe('Uses TypeScript');
     });
 
     it('should create a devlog with default priority', async () => {
@@ -224,6 +224,39 @@ describe('DevlogManager', () => {
       expect(bugfixes).toHaveLength(1);
       expect(bugfixes[0].title).toBe('Bug Task');
     });
+
+    it('should exclude closed entries by default', async () => {
+      const activeEntry = await manager.createDevlog({
+        title: 'Active Task',
+        type: 'task',
+        description: 'An active task',
+      });
+
+      const closableEntry = await manager.createDevlog({
+        title: 'Closable Task',
+        type: 'task',
+        description: 'A task to be closed',
+      });
+
+      // Close one entry
+      await manager.closeDevlog(closableEntry.id!, 'Test closure');
+
+      // Default list should exclude closed entries
+      const defaultResults = await manager.listDevlogs();
+      expect(defaultResults).toHaveLength(1);
+      expect(defaultResults[0].title).toBe('Active Task');
+
+      // Explicit filter for closed should show closed entries
+      const closedResults = await manager.listDevlogs({ status: ['closed'] });
+      expect(closedResults).toHaveLength(1);
+      expect(closedResults[0].title).toBe('Closable Task');
+
+      // All entries (including closed) should be accessible when explicitly requested
+      const allResults = await manager.listDevlogs({ 
+        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'closed'] 
+      });
+      expect(allResults).toHaveLength(2);
+    });
   });
 
   describe('searchDevlogs', () => {
@@ -247,6 +280,33 @@ describe('DevlogManager', () => {
       expect(authResults[0].title).toBe('Authentication Feature');
       expect(dbResults).toHaveLength(1);
       expect(dbResults[0].title).toBe('Database Bug');
+    });
+
+    it('should exclude closed entries from search by default', async () => {
+      const activeEntry = await manager.createDevlog({
+        title: 'Active Search Test',
+        type: 'feature',
+        description: 'Search functionality',
+      });
+
+      const closableEntry = await manager.createDevlog({
+        title: 'Closed Search Test',
+        type: 'feature',
+        description: 'Search functionality',
+      });
+
+      // Close one entry
+      await manager.closeDevlog(closableEntry.id!, 'Test closure');
+
+      // Default search should exclude closed entries
+      const defaultResults = await manager.searchDevlogs('search');
+      expect(defaultResults).toHaveLength(1);
+      expect(defaultResults[0].title).toBe('Active Search Test');
+
+      // Search with explicit closed filter should show closed entries
+      const closedResults = await manager.searchDevlogs('search', { status: ['closed'] });
+      expect(closedResults).toHaveLength(1);
+      expect(closedResults[0].title).toBe('Closed Search Test');
     });
   });
 

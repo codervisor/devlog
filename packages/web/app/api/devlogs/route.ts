@@ -13,22 +13,20 @@ export async function GET(request: NextRequest) {
     const filter: any = {};
     const searchQuery = searchParams.get('q') || searchParams.get('search');
 
-    // Parse query parameters
-    if (searchParams.get('status')) filter.status = searchParams.get('status') as any;
+    // Parse query parameters - handle arrays for status
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      // Support comma-separated status values
+      filter.status = statusParam.split(',').map(s => s.trim());
+    }
+    
     if (searchParams.get('type')) filter.type = searchParams.get('type') as any;
     if (searchParams.get('priority')) filter.priority = searchParams.get('priority') as any;
 
     // Use search or list based on whether search query is provided
     const devlogs = searchQuery 
-      ? await devlogManager.searchDevlogs(searchQuery)
+      ? await devlogManager.searchDevlogs(searchQuery, filter)
       : await devlogManager.listDevlogs(filter);
-    
-    // If we have both search and filters, apply filters to search results
-    if (searchQuery && Object.keys(filter).length > 0) {
-      // TODO: Implement combined search and filter in backend
-      // For now, we'll filter the search results client-side
-      return NextResponse.json(devlogs);
-    }
     
     return NextResponse.json(devlogs);
   } catch (error) {

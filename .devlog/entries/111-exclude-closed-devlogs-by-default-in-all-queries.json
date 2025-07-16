@@ -1,0 +1,46 @@
+{
+  "key": "exclude-closed-devlogs-by-default-in-all-queries",
+  "title": "Exclude closed devlogs by default in all queries",
+  "type": "feature",
+  "description": "Modify the devlog querying behavior to exclude closed entries by default. This includes updating the core DevlogManager.listDevlogs() method, MCP list_devlogs tool, web API routes, and any other places where devlogs are queried. Closed entries should only be shown when explicitly requested.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-16T04:23:35.396Z",
+  "updatedAt": "2025-07-16T04:29:48.092Z",
+  "notes": [
+    {
+      "id": "4241c952-fe78-460d-9ea6-b64039b8d7bb",
+      "timestamp": "2025-07-16T04:29:48.092Z",
+      "category": "solution",
+      "content": "✅ **Implementation Complete**\n\nSuccessfully implemented default exclusion of closed devlog entries across all layers:\n\n**Core Changes:**\n- Modified `DevlogManager.listDevlogs()` to exclude closed entries by default via `applyDefaultFilters()`\n- Updated `DevlogManager.searchDevlogs()` to also exclude closed entries and accept filter parameters\n- Added client-side filtering helper `filterEntries()` for post-search filtering\n\n**MCP Changes:**\n- Extended `SearchDevlogsArgs` to include filter options (status, type, priority)\n- Updated MCP adapter to pass filters to search method\n- Updated search_devlogs tool schema to accept filter parameters\n\n**Web API Changes:**\n- Modified `/api/devlogs` route to handle comma-separated status values\n- Updated to pass filters to both list and search methods\n\n**Testing:**\n- Added comprehensive tests for default closed exclusion behavior\n- Added tests for explicit closed entry access\n- All 46 tests pass including new functionality\n\n**Behavior Verified:**\n- Default `list_devlogs` excludes 9 closed entries (90 shown vs 99 total)\n- Explicit `status=closed` shows only closed entries\n- Search excludes closed by default and respects explicit filters\n- Web UI integration works seamlessly"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "As devlog entries are closed over time (test entries, completed work, etc.), they clutter the default views and make it harder to focus on active work. By excluding closed entries by default, users can focus on relevant, active devlogs while still being able to access closed entries when needed.",
+    "technicalContext": "The change needs to be implemented across multiple layers: 1) Core DevlogManager.listDevlogs() method should exclude closed by default unless explicitly included, 2) MCP list_devlogs tool should respect this behavior, 3) Web API /api/devlogs route should follow the same pattern, 4) Any UI components that rely on these should work seamlessly. The filter should be additive - if closed status is explicitly requested, it should be included.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Core DevlogManager.listDevlogs() excludes closed entries by default",
+      "MCP list_devlogs tool respects the new default behavior",
+      "Web API /api/devlogs excludes closed entries by default",
+      "Web UI continues to work without changes (since it uses the API)",
+      "Closed entries can still be accessed by explicitly including 'closed' status in filters",
+      "Existing tests are updated to account for the new behavior",
+      "New tests added to verify the default exclusion works correctly"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-16T04:23:35.396Z",
+    "contextVersion": 1
+  },
+  "id": 111
+}
