@@ -17,7 +17,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mounted, setMounted] = useState(false);
   
   const { devlogs, error, connected } = useDevlogs();
-  const { stats, loading: isLoadingStats } = useStats([devlogs.length]);
+  const { stats, loading: isLoadingStats } = useStats();
 
   // Handle client-side hydration
   useEffect(() => {

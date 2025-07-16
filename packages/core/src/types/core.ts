@@ -146,6 +146,13 @@ export interface DevlogFilter {
   archived?: boolean; // Filter for archived status
 }
 
+/**
+ * Filter type for status-based filtering including aggregate categories
+ * - Individual statuses: 'new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'
+ * - Aggregate categories: 'total' (all), 'open' (new, in-progress, blocked, in-review, testing), 'closed' (done, cancelled)
+ */
+export type FilterType = DevlogStatus | 'total' | 'open' | 'closed';
+
 export interface DevlogStats {
   totalEntries: number;
   openEntries: number;    // Open = new, in-progress, blocked, in-review, testing

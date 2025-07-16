@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DevlogStats } from '@devlog/core';
 
 interface UseStatsResult {
@@ -10,11 +10,13 @@ interface UseStatsResult {
 
 /**
  * Hook for fetching and managing devlog stats
+ * Stats represent the overall system state and should not refresh on every filter change
  */
-export function useStats(dependencies: any[] = []): UseStatsResult {
+export function useStats(): UseStatsResult {
   const [stats, setStats] = useState<DevlogStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   const fetchStats = async () => {
     try {
@@ -36,9 +38,13 @@ export function useStats(dependencies: any[] = []): UseStatsResult {
     }
   };
 
+  // Only fetch stats once on mount, not on every dependency change
   useEffect(() => {
-    fetchStats();
-  }, dependencies); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!hasFetched.current) {
+      fetchStats();
+      hasFetched.current = true;
+    }
+  }, []);
 
   return {
     stats,

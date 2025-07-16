@@ -12,15 +12,12 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { Popover, Typography, Tooltip, Button, Skeleton } from 'antd';
-import { DevlogStats, DevlogStatus, DevlogFilter } from '@devlog/core';
+import { DevlogStats, DevlogStatus, DevlogFilter, FilterType } from '@devlog/core';
 import styles from './OverviewStats.module.css';
 
 const { Title } = Typography;
 
 export type OverviewStatsVariant = 'detailed' | 'icon';
-
-// Add support for aggregate filter types
-export type FilterType = DevlogStatus | 'total' | 'open' | 'closed';
 
 interface OverviewStatsProps {
   stats: DevlogStats | null;

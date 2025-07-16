@@ -303,14 +303,8 @@ export function DevlogList({
     };
 
     const menu = (
-      <div style={{ 
-        padding: '12px', 
-        background: '#fff',
-        borderRadius: '6px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        border: '1px solid #d9d9d9'
-      }}>
-        <div style={{ marginBottom: '8px' }}>
+      <div className={styles.searchDropdownMenu}>
+        <div className={styles.searchDropdownInputContainer}>
           <Input
             ref={searchInputRef}
             placeholder="Search devlogs..."
@@ -324,7 +318,7 @@ export function DevlogList({
             prefix={<SearchOutlined />}
           />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+        <div className={styles.searchDropdownActions}>
           <Button 
             size="small" 
             onClick={handleCancel}
@@ -654,14 +648,7 @@ export function DevlogList({
     <div className={styles.devlogListContainer}>
       {/* Batch Actions Toolbar */}
       {selectedRowKeys.length > 0 && (
-        <div style={{ 
-          padding: '12px 16px', 
-          backgroundColor: '#f0f9ff', 
-          borderBottom: '1px solid #e6f7ff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
+        <div className={styles.batchActionsToolbar}>
           <Space>
             <Text strong>{selectedRowKeys.length} item(s) selected</Text>
             <Button 
@@ -860,11 +847,11 @@ export function DevlogList({
         <Space direction="vertical">
           <Text>Are you sure you want to delete the following {selectedRowKeys.length} devlog(s)?</Text>
           <Text type="secondary">This action cannot be undone.</Text>
-          <div style={{ maxHeight: 200, overflow: 'auto' }}>
+          <div className={styles.batchDeleteList}>
             {devlogs
               .filter(d => selectedRowKeys.includes(d.id!))
               .map(d => (
-                <div key={d.id} style={{ padding: '4px 0' }}>
+                <div key={d.id} className={styles.batchDeleteItem}>
                   <Text code>#{d.id}</Text> - {d.title}
                 </div>
               ))}

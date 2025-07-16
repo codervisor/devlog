@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { DevlogEntry, DevlogFilter, DevlogStatus } from '@devlog/core';
-
-export type FilterType = DevlogStatus | 'total' | 'open' | 'closed';
+import { DevlogEntry, DevlogFilter, DevlogStatus, FilterType } from '@devlog/core';
 
 export function useDevlogFilters(devlogs: DevlogEntry[]) {
   const [filters, setFilters] = useState<DevlogFilter>({});

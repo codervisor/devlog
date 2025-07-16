@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 export function DashboardPage() {
   const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
   const { filters, filteredDevlogs, handleStatusFilter } = useDevlogFilters(devlogs);
-  const { stats, loading: isLoadingStats } = useStats([devlogs]);
+  const { stats, loading: isLoadingStats } = useStats();
   const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesStats | null>(null);
   const [isLoadingTimeSeries, setIsLoadingTimeSeries] = useState(true);
   const router = useRouter();

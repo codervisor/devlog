@@ -6,7 +6,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats } from '@/components';
 import { useDevlogsWithSearch } from '@/hooks/useDevlogsWithSearch';
 import { useStats } from '@/hooks/useStats';
-import { DevlogEntry, DevlogId } from '@devlog/core';
+import { DevlogEntry, DevlogId, DevlogStatus, FilterType } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 import styles from './DevlogListPage.module.css';
 
@@ -21,7 +21,11 @@ export function DevlogListPage() {
     batchDelete, 
     batchAddNote 
   } = useDevlogsWithSearch();
-  const { stats, loading: isLoadingStats } = useStats([devlogs]);
+  
+  // Use server-side stats that are independent of current filter state
+  // Stats should represent the overall system state, not the filtered view
+  const { stats, loading: isLoadingStats, refetch: refetchStats } = useStats();
+  
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
@@ -31,6 +35,8 @@ export function DevlogListPage() {
   const handleDeleteDevlog = async (id: DevlogId) => {
     try {
       await deleteDevlog(id);
+      // Refresh stats after delete operation
+      await refetchStats();
     } catch (error) {
       console.error('Failed to delete devlog:', error);
     }
@@ -39,6 +45,8 @@ export function DevlogListPage() {
   const handleBatchUpdate = async (ids: DevlogId[], updates: any) => {
     try {
       await batchUpdate(ids, updates);
+      // Refresh stats after batch update operation
+      await refetchStats();
     } catch (error) {
       console.error('Failed to batch update devlogs:', error);
       throw error;
@@ -48,6 +56,8 @@ export function DevlogListPage() {
   const handleBatchDelete = async (ids: DevlogId[]) => {
     try {
       await batchDelete(ids);
+      // Refresh stats after batch delete operation
+      await refetchStats();
     } catch (error) {
       console.error('Failed to batch delete devlogs:', error);
       throw error;
@@ -57,6 +67,7 @@ export function DevlogListPage() {
   const handleBatchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
     try {
       await batchAddNote(ids, content, category);
+      // Note: Adding notes doesn't change stats, so no need to refetch
     } catch (error) {
       console.error('Failed to batch add notes:', error);
       throw error;
@@ -67,20 +78,35 @@ export function DevlogListPage() {
     router.push('/devlogs/create');
   };
 
-  const handleStatusFilter = (status: any) => {
+  // Refresh stats when returning to this page (e.g., after creating/editing devlogs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetchStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetchStats]);
+
+  const handleStatusFilter = (status: FilterType) => {
     if (status === 'total') {
       // Clear status filter but keep other filters
       setFilters({ ...filters, status: undefined });
     } else if (status === 'open') {
       // Open includes: new, in-progress, blocked, in-review, testing
-      const openStatuses = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+      const openStatuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
       setFilters({
         ...filters,
         status: openStatuses,
       });
     } else if (status === 'closed') {
       // Closed includes: done, cancelled
-      const closedStatuses = ['done', 'cancelled'];
+      const closedStatuses: DevlogStatus[] = ['done', 'cancelled'];
       setFilters({
         ...filters,
         status: closedStatuses,
