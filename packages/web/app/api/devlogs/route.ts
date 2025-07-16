@@ -4,7 +4,7 @@ import { getDevlogManager } from '@/lib/devlog-manager';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/devlogs - List all devlogs
+// GET /api/devlogs - List all devlogs with optional pagination
 export async function GET(request: NextRequest) {
   try {
     const devlogManager = await getDevlogManager();
@@ -22,6 +22,21 @@ export async function GET(request: NextRequest) {
     
     if (searchParams.get('type')) filter.type = searchParams.get('type') as any;
     if (searchParams.get('priority')) filter.priority = searchParams.get('priority') as any;
+
+    // Parse pagination parameters
+    const page = searchParams.get('page');
+    const limit = searchParams.get('limit');
+    const sortBy = searchParams.get('sortBy');
+    const sortOrder = searchParams.get('sortOrder');
+    
+    if (page || limit || sortBy) {
+      filter.pagination = {
+        page: page ? parseInt(page, 10) : undefined,
+        limit: limit ? parseInt(limit, 10) : undefined,
+        sortBy: sortBy as any,
+        sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
+      };
+    }
 
     // Use search or list based on whether search query is provided
     const devlogs = searchQuery 

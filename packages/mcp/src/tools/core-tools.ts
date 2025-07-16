@@ -147,7 +147,7 @@ export const coreTools: Tool[] = [
   },
   {
     name: 'list_devlogs',
-    description: 'List all devlog entries with optional filtering',
+    description: 'List all devlog entries with optional filtering and pagination',
     inputSchema: {
       type: 'object',
       properties: {
@@ -165,6 +165,27 @@ export const coreTools: Tool[] = [
           type: 'string',
           enum: ['low', 'medium', 'high', 'critical'],
           description: 'Filter by priority',
+        },
+        page: {
+          type: 'number',
+          description: 'Page number for pagination (1-based)',
+          minimum: 1,
+        },
+        limit: {
+          type: 'number',
+          description: 'Number of items per page (default: 20)',
+          minimum: 1,
+          maximum: 100,
+        },
+        sortBy: {
+          type: 'string',
+          enum: ['createdAt', 'updatedAt', 'priority', 'status', 'title'],
+          description: 'Field to sort by',
+        },
+        sortOrder: {
+          type: 'string',
+          enum: ['asc', 'desc'],
+          description: 'Sort order (default: desc)',
         },
       },
     },

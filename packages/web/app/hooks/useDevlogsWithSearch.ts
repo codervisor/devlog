@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { DevlogEntry, DevlogId, DevlogFilter } from '@devlog/core';
+import { DevlogEntry, DevlogId, DevlogFilter, PaginatedResult, PaginationMeta } from '@devlog/core';
 import { useServerSentEvents } from './useServerSentEvents';
 
 export function useDevlogsWithSearch() {
   const [devlogs, setDevlogs] = useState<DevlogEntry[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<DevlogFilter>({});
@@ -35,6 +36,20 @@ export function useDevlogsWithSearch() {
       params.append('toDate', filters.toDate);
     }
     
+    // Add pagination parameters
+    if (filters.pagination?.page) {
+      params.append('page', filters.pagination.page.toString());
+    }
+    if (filters.pagination?.limit) {
+      params.append('limit', filters.pagination.limit.toString());
+    }
+    if (filters.pagination?.sortBy) {
+      params.append('sortBy', filters.pagination.sortBy);
+    }
+    if (filters.pagination?.sortOrder) {
+      params.append('sortOrder', filters.pagination.sortOrder);
+    }
+    
     return params.toString();
   }, [filters]);
 
@@ -47,7 +62,18 @@ export function useDevlogsWithSearch() {
         throw new Error('Failed to fetch devlogs');
       }
       const data = await response.json();
-      setDevlogs(data);
+      
+      // Handle both paginated and non-paginated responses
+      if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
+        // Paginated response
+        setDevlogs(data.items);
+        setPagination(data.pagination);
+      } else {
+        // Non-paginated response (array of entries)
+        setDevlogs(data);
+        setPagination(null);
+      }
+      
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -194,8 +220,42 @@ export function useDevlogsWithSearch() {
     return await response.json();
   };
 
+  // Pagination utility functions
+  const goToPage = useCallback((page: number) => {
+    setFilters(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        page,
+      },
+    }));
+  }, []);
+
+  const changePageSize = useCallback((limit: number) => {
+    setFilters(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        limit,
+        page: 1, // Reset to first page when changing page size
+      },
+    }));
+  }, []);
+
+  const changeSorting = useCallback((sortBy: string, sortOrder?: 'asc' | 'desc') => {
+    setFilters(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        sortBy: sortBy as any,
+        sortOrder: sortOrder || 'desc',
+      },
+    }));
+  }, []);
+
   return {
     devlogs,
+    pagination,
     loading,
     error,
     connected,
@@ -208,5 +268,9 @@ export function useDevlogsWithSearch() {
     batchUpdate,
     batchDelete,
     batchAddNote,
+    // Pagination controls
+    goToPage,
+    changePageSize,
+    changeSorting,
   };
 }

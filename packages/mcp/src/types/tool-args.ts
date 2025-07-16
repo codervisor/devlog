@@ -14,6 +14,11 @@ export interface DevlogFilterArgs {
   status?: DevlogStatus;
   type?: DevlogType;
   priority?: DevlogPriority;
+  // Pagination support (optional)
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'title';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Core tool argument interfaces

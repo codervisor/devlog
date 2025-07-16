@@ -100,8 +100,9 @@ export class DefaultChatImportService implements ChatImportService {
         }, 0, 50);
       }
 
-      // Get all devlog entries for linking analysis
-      const devlogEntries = await this.storageProvider.list();
+      // Get all devlog entries for linking analysis (without pagination)
+      const devlogResult = await this.storageProvider.list();
+      const devlogEntries = Array.isArray(devlogResult) ? devlogResult : devlogResult.items;
 
       // Analyze each session for potential links
       for (const session of sessions) {

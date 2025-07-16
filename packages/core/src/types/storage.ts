@@ -2,7 +2,7 @@
  * Storage configuration and provider types
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from './core.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, PaginatedResult } from './core.js';
 import { 
   ChatSession, 
   ChatMessage, 
@@ -132,8 +132,9 @@ export interface StorageProvider {
 
   /**
    * List all devlog entries with optional filtering
+   * Returns paginated results if pagination options are provided in filter
    */
-  list(filter?: DevlogFilter): Promise<DevlogEntry[]>;
+  list(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>>;
 
   /**
    * Search devlog entries by text query

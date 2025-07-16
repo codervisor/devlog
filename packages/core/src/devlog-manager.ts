@@ -19,6 +19,7 @@ import type {
   DiscoverDevlogsRequest,
   DiscoveredDevlogEntry,
   DiscoveryResult,
+  PaginatedResult,
   NoteCategory,
   StorageProvider,
   TimeSeriesDataPoint,
@@ -284,14 +285,36 @@ export class DevlogManager {
   /**
    * List devlog entries with optional filtering
    * By default, excludes closed entries unless explicitly requested
+   * Returns paginated results if pagination options are provided
    */
-  async listDevlogs(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async listDevlogs(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
     
     // Apply default exclusion of closed entries
     const enhancedFilter = this.applyDefaultFilters(filter);
     
     return await this.storageProvider.list(enhancedFilter);
+  }
+
+  /**
+   * Get all devlog entries as an array (internal method for stats and other operations)
+   * @private
+   */
+  private async getAllDevlogsAsArray(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+    await this.ensureInitialized();
+    
+    // Create filter without pagination to get all entries
+    const filterWithoutPagination = filter ? { ...filter, pagination: undefined } : {};
+    const enhancedFilter = this.applyDefaultFilters(filterWithoutPagination);
+    
+    const result = await this.storageProvider.list(enhancedFilter);
+    
+    // If the result is paginated, extract the items array
+    if (Array.isArray(result)) {
+      return result;
+    } else {
+      return result.items;
+    }
   }
 
   /**
@@ -405,7 +428,7 @@ export class DevlogManager {
       : new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
     // Get all devlogs to analyze
-    const allDevlogs = await this.storageProvider.list();
+    const allDevlogs = await this.getAllDevlogsAsArray();
 
     // Create time series data points
     const dataPoints: TimeSeriesDataPoint[] = [];
@@ -559,7 +582,7 @@ export class DevlogManager {
       status: ['new', 'in-progress', 'in-review', 'blocked', 'testing'] as any[],
     };
 
-    const entries = await this.storageProvider.list(filter);
+    const entries = await this.getAllDevlogsAsArray(filter);
     return entries.slice(0, limit || 10);
   }
 
@@ -607,7 +630,7 @@ export class DevlogManager {
     const searchTerms = [workDescription, workType, scope, ...keywords].filter(Boolean);
 
     // Get all entries for analysis
-    const allEntries = await this.listDevlogs();
+    const allEntries = await this.getAllDevlogsAsArray();
     const relatedEntries: DiscoveredDevlogEntry[] = [];
 
     // 1. Direct text matching in title/description/context
