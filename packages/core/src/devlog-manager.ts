@@ -384,6 +384,22 @@ export class DevlogManager {
   }
 
   /**
+   * Close a devlog entry (mark as closed without completion)
+   */
+  async closeDevlog(id: DevlogId, reason?: string): Promise<DevlogEntry> {
+    const updated = await this.updateDevlog({
+      id,
+      status: 'closed',
+    });
+
+    if (reason) {
+      return await this.addNote(id, `Closed: ${reason}`, 'progress');
+    }
+
+    return updated;
+  }
+
+  /**
    * Get AI context for a devlog entry
    */
   async getContextForAI(id: DevlogId): Promise<DevlogEntry | null> {

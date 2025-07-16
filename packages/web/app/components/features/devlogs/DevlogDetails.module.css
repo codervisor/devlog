@@ -11,7 +11,7 @@
 
 .devlogDetailsHeader {
   padding: 6px 24px;
-  min-height: 96px;
+  min-height: 80px;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -60,6 +60,10 @@
       text-align: center;
       padding: 4px 8px;
     }
+  }
+
+  .metaInfo {
+    margin-top: 4px;
   }
 }
 
@@ -112,11 +116,15 @@
 
 .sectionHeader {
   position: sticky;
-  top: 96px; /* Account for the sticky devlog header */
+  top: calc(80px + 1px);
   background: #fff;
-  padding: 0;
+  padding: 6px 0;
   z-index: 10;
   transition: all 0.2s ease-in-out;
+}
+
+.sectionHeader > * {
+  margin-bottom: 0 !important;
 }
 
 .editIcon {
@@ -135,49 +143,9 @@
   color: #1890ff;
 }
 
-/* Section spacing */
-.descriptionSection {
-  margin-bottom: 24px;
-}
-
-.contextSection {
-  margin-bottom: 24px;
-}
-
-.criteriaSection {
-  margin-bottom: 24px;
-}
-
-.dependencySection {
-  margin-bottom: 24px;
-}
-
-.decisionSection {
-  margin-bottom: 24px;
-}
-
-.riskSection {
-  margin-bottom: 24px;
-}
-
-.fileSection {
-  margin-bottom: 24px;
-}
-
-.relatedSection {
-  margin-bottom: 24px;
-}
-
-.aiContextSection {
-  margin-bottom: 24px;
-}
-
-.externalRefSection {
-  margin-bottom: 24px;
-}
-
-.notesSection {
-  margin-bottom: 24px;
+/* Section spacing - unified approach */
+.devlogDetailsContent > div:not(:first-child) {
+  margin-top: 20px; /* Increased spacing between sections to account for sticky headers */
 }
 
 /* Hours display */
@@ -296,8 +264,12 @@
 }
 
 /* Notes */
+.notesTimeline {
+  margin-top: 8px;
+}
+
 .noteItem {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .noteTimestamp {

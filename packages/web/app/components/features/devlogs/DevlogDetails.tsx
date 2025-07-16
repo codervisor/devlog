@@ -56,21 +56,19 @@ export function DevlogDetails({
       <div>
         <div className={styles.devlogDetailsHeader}>
           <div className={styles.devlogTitleWrapper}>
-            <Skeleton.Input
-              style={{ width: '60%', height: '28px', marginBottom: '16px' }}
-              active
-              size="large"
-            />
+            <Skeleton.Input style={{ width: '60%', height: '32px' }} active size="large" />
           </div>
           <div className={styles.devlogInfo}>
             <Space wrap className={styles.infoItemWrapper}>
-              <Skeleton.Button style={{ width: '80px' }} active size="small" />
-              <Skeleton.Button style={{ width: '80px' }} active size="small" />
-              <Skeleton.Button style={{ width: '80px' }} active size="small" />
+              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
+              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
+              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
             </Space>
-            <div className={styles.metaInfo}>
-              <Skeleton.Input style={{ width: '200px' }} active size="small" />
-            </div>
+            <Space className={styles.metaInfo}>
+              <Skeleton.Input style={{ width: '60px', height: '14px' }} active size="small" />
+              <Skeleton.Input style={{ width: '120px', height: '14px' }} active size="small" />
+              <Skeleton.Input style={{ width: '120px', height: '14px' }} active size="small" />
+            </Space>
           </div>
         </div>
 
@@ -752,7 +750,7 @@ export function DevlogDetails({
                 Notes
               </Title>
             </div>
-            <Timeline>
+            <Timeline className={styles.notesTimeline}>
               {[...devlog.notes].reverse().map((note) => (
                 <Timeline.Item key={note.id} dot={getCategoryIcon(note.category)}>
                   <div className={styles.noteItem}>

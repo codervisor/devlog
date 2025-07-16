@@ -24,6 +24,7 @@ import {
   UpdateDevlogWithNoteArgs,
   AddDecisionArgs,
   CompleteDevlogArgs,
+  CloseDevlogArgs,
   GetActiveContextArgs,
   GetContextForAIArgs,
   DiscoverRelatedDevlogsArgs,
@@ -265,6 +266,21 @@ export class MCPDevlogAdapter {
         {
           type: 'text',
           text: `Completed devlog '${entry.id}': ${entry.title}\nStatus: ${entry.status}\nCompletion summary: ${args.summary || 'None provided'}`,
+        },
+      ],
+    };
+  }
+
+  async closeDevlog(args: CloseDevlogArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    const entry = await this.devlogManager.closeDevlog(args.id, args.reason);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Closed devlog '${entry.id}': ${entry.title}\nStatus: ${entry.status}\nReason: ${args.reason || 'None provided'}`,
         },
       ],
     };

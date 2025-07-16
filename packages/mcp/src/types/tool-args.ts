@@ -86,6 +86,10 @@ export interface CompleteDevlogArgs extends BaseDevlogArgs {
   summary?: string;
 }
 
+export interface CloseDevlogArgs extends BaseDevlogArgs {
+  reason?: string;
+}
+
 export interface GetActiveContextArgs {
   limit?: number;
 }

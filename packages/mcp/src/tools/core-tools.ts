@@ -169,4 +169,22 @@ export const coreTools: Tool[] = [
       },
     },
   },
+  {
+    name: 'close_devlog',
+    description: 'Close a devlog entry by setting status to closed. Safer alternative to deletion that preserves the entry.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry to close',
+        },
+        reason: {
+          type: 'string',
+          description: 'Optional reason for closing the entry (e.g., "Test entry completed", "Duplicate work", "No longer needed")',
+        },
+      },
+      required: ['id'],
+    },
+  },
 ];

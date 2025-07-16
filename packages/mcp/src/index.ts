@@ -23,6 +23,7 @@ import {
   UpdateDevlogWithNoteArgs,
   AddDecisionArgs,
   CompleteDevlogArgs,
+  CloseDevlogArgs,
   GetActiveContextArgs,
   GetContextForAIArgs,
   DiscoverRelatedDevlogsArgs,
@@ -82,6 +83,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'complete_devlog':
         return await adapter.completeDevlog(args as unknown as CompleteDevlogArgs);
+
+      case 'close_devlog':
+        return await adapter.closeDevlog(args as unknown as CloseDevlogArgs);
 
       case 'get_active_context':
         return await adapter.getActiveContext(args as unknown as GetActiveContextArgs);
