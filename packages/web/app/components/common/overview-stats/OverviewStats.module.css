@@ -18,32 +18,33 @@
   color: #1890ff;
 }
 
+/* Status-specific colors updated to match new design system */
 .statValue.new {
-  color: #722ed1;
+  color: #1890ff; /* blue - fresh, ready to start */
 }
 
 .statValue.inProgress {
-  color: #faad14;
+  color: #fa8c16; /* orange - active work, attention needed */
 }
 
 .statValue.blocked {
-  color: #ff4d4f;
+  color: #ff4d4f; /* red - critical attention required */
 }
 
 .statValue.inReview {
-  color: #fa8c16;
+  color: #722ed1; /* purple - under evaluation */
 }
 
 .statValue.testing {
-  color: #13c2c2;
+  color: #13c2c2; /* cyan - verification phase */
 }
 
 .statValue.completed {
-  color: #52c41a;
+  color: #52c41a; /* green - completed successfully */
 }
 
 .statValue.closed {
-  color: #595959;
+  color: #8c8c8c; /* default/gray - neutral/inactive */
 }
 
 .statLabel {

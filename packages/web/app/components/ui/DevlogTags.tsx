@@ -6,6 +6,7 @@ import {
   getStatusIcon,
   getPriorityColor,
   getPriorityIcon,
+  getTypeColor,
   getTypeIcon,
 } from '@/lib/devlog-ui-utils';
 import {
@@ -57,7 +58,7 @@ export function DevlogTypeTag({ type, className }: DevlogTypeTagProps) {
   return (
     <Tag
       className={className}
-      color="blue"
+      color={getTypeColor(type)}
       icon={getTypeIcon(type)}
     >
       {getTypeLabel(type)}
