@@ -29,6 +29,18 @@ import {
   DiscoverRelatedDevlogsArgs,
   UpdateAIContextArgs,
 } from './types/tool-args.js';
+import {
+  handleImportChatHistory,
+  handleGetChatSession,
+  handleListChatSessions,
+  handleSearchChatContent,
+  handleLinkChatToDevlog,
+  handleUnlinkChatFromDevlog,
+  handleSuggestChatDevlogLinks,
+  handleGetChatStats,
+  handleUpdateChatSession,
+  handleGetChatWorkspaces,
+} from './tools/chat-tools.js';
 
 const server = new Server(
   {
@@ -95,6 +107,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'update_ai_context':
         return await adapter.updateAIContext(args as unknown as UpdateAIContextArgs);
+
+      // Chat tools
+      case 'import_chat_history':
+        return await handleImportChatHistory(adapter.manager, args);
+
+      case 'get_chat_session':
+        return await handleGetChatSession(adapter.manager, args);
+
+      case 'list_chat_sessions':
+        return await handleListChatSessions(adapter.manager, args);
+
+      case 'search_chat_content':
+        return await handleSearchChatContent(adapter.manager, args);
+
+      case 'link_chat_to_devlog':
+        return await handleLinkChatToDevlog(adapter.manager, args);
+
+      case 'unlink_chat_from_devlog':
+        return await handleUnlinkChatFromDevlog(adapter.manager, args);
+
+      case 'suggest_chat_devlog_links':
+        return await handleSuggestChatDevlogLinks(adapter.manager, args);
+
+      case 'get_chat_stats':
+        return await handleGetChatStats(adapter.manager, args);
+
+      case 'update_chat_session':
+        return await handleUpdateChatSession(adapter.manager, args);
+
+      case 'get_chat_workspaces':
+        return await handleGetChatWorkspaces(adapter.manager, args);
 
       default:
         throw new Error(`Unknown tool: ${name}`);

@@ -103,6 +103,59 @@ export function useDevlogs() {
     // No need to refetch - the SSE will handle the update
   };
 
+  const batchUpdate = async (ids: DevlogId[], updates: any) => {
+    const response = await fetch('/api/devlogs/batch/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids, updates }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to batch update devlogs');
+    }
+
+    // Refetch to ensure consistency
+    await fetchDevlogs();
+    return await response.json();
+  };
+
+  const batchDelete = async (ids: DevlogId[]) => {
+    const response = await fetch('/api/devlogs/batch/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to batch delete devlogs');
+    }
+
+    // Refetch to ensure consistency
+    await fetchDevlogs();
+  };
+
+  const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
+    const response = await fetch('/api/devlogs/batch/note', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids, content, category }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to batch add notes');
+    }
+
+    // Refetch to ensure consistency
+    await fetchDevlogs();
+    return await response.json();
+  };
+
   useEffect(() => {
     fetchDevlogs();
   }, []);
@@ -116,5 +169,8 @@ export function useDevlogs() {
     createDevlog,
     updateDevlog,
     deleteDevlog,
+    batchUpdate,
+    batchDelete,
+    batchAddNote,
   };
 }

@@ -12,6 +12,15 @@ import {
   DevlogStatus,
   DevlogType,
   DevlogPriority,
+  ChatSession,
+  ChatMessage,
+  ChatFilter,
+  ChatStats,
+  ChatSessionId,
+  ChatMessageId,
+  ChatSearchResult,
+  ChatDevlogLink,
+  ChatWorkspace,
 } from '../types/index.js';
 import { GitHubAPIClient, GitHubAPIError, GitHubIssue } from '../utils/github-api.js';
 import { RateLimiter } from '../utils/rate-limiter.js';
@@ -404,5 +413,60 @@ export class GitHubStorageProvider implements StorageProvider {
           `Please check your token permissions and repository access.`,
       );
     }
+  }
+
+  // ===== Chat Storage Operations (Not implemented for GitHub provider) =====
+  // Note: GitHub provider focuses on devlog entries via Issues. Chat data should use database providers.
+
+  async saveChatSession(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async getChatSession(): Promise<null> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async listChatSessions(): Promise<[]> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async deleteChatSession(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async saveChatMessages(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async getChatMessages(): Promise<[]> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async searchChatContent(): Promise<[]> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async getChatStats(): Promise<any> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async saveChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async getChatDevlogLinks(): Promise<[]> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async removeChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async getChatWorkspaces(): Promise<[]> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+  }
+
+  async saveChatWorkspace(): Promise<void> {
+    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
   }
 }

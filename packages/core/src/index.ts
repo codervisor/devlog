@@ -4,6 +4,9 @@ export { ConfigurationManager } from './configuration-manager.js';
 // Integration Service
 export { IntegrationService } from './integration-service.js';
 
+// Chat Import Service
+export { DefaultChatImportService, type ChatImportService } from './services/chat-import-service.js';
+
 // Storage Providers
 export { StorageProviderFactory } from './storage/storage-provider.js';
 export { SQLiteStorageProvider } from './storage/sqlite-storage.js';

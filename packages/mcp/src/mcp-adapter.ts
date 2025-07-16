@@ -40,6 +40,13 @@ export class MCPDevlogAdapter {
   }
 
   /**
+   * Get the underlying DevlogManager for chat tools
+   */
+  get manager(): DevlogManager {
+    return this.devlogManager;
+  }
+
+  /**
    * Initialize the adapter with appropriate storage configuration
    */
   async initialize(): Promise<void> {

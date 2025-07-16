@@ -11,7 +11,7 @@ import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 
 export function DevlogListPage() {
-  const { devlogs, loading, deleteDevlog } = useDevlogs();
+  const { devlogs, loading, deleteDevlog, batchUpdate, batchDelete, batchAddNote } = useDevlogs();
   const { filters, filteredDevlogs, handleStatusFilter, setFilters } = useDevlogFilters(devlogs);
   const { stats, loading: isLoadingStats } = useStats([devlogs]);
   const router = useRouter();
@@ -25,6 +25,33 @@ export function DevlogListPage() {
       await deleteDevlog(id);
     } catch (error) {
       console.error('Failed to delete devlog:', error);
+    }
+  };
+
+  const handleBatchUpdate = async (ids: DevlogId[], updates: any) => {
+    try {
+      await batchUpdate(ids, updates);
+    } catch (error) {
+      console.error('Failed to batch update devlogs:', error);
+      throw error;
+    }
+  };
+
+  const handleBatchDelete = async (ids: DevlogId[]) => {
+    try {
+      await batchDelete(ids);
+    } catch (error) {
+      console.error('Failed to batch delete devlogs:', error);
+      throw error;
+    }
+  };
+
+  const handleBatchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
+    try {
+      await batchAddNote(ids, content, category);
+    } catch (error) {
+      console.error('Failed to batch add notes:', error);
+      throw error;
     }
   };
 
@@ -60,6 +87,9 @@ export function DevlogListPage() {
         loading={loading}
         onViewDevlog={handleViewDevlog}
         onDeleteDevlog={handleDeleteDevlog}
+        onBatchUpdate={handleBatchUpdate}
+        onBatchDelete={handleBatchDelete}
+        onBatchAddNote={handleBatchAddNote}
         currentFilters={filters}
         onFilterChange={setFilters}
       />

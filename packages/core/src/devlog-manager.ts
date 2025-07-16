@@ -5,6 +5,10 @@
 
 import * as crypto from 'crypto';
 import type {
+  BatchDeleteRequest,
+  BatchNoteRequest,
+  BatchOperationResult,
+  BatchUpdateRequest,
   CreateDevlogRequest,
   DevlogEntry,
   DevlogFilter,
@@ -589,5 +593,207 @@ export class DevlogManager {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .substring(0, 50);
+  }
+
+  /**
+   * Batch update multiple devlog entries
+   */
+  async batchUpdate(request: BatchUpdateRequest): Promise<BatchOperationResult<DevlogEntry>> {
+    await this.ensureInitialized();
+
+    const result: BatchOperationResult<DevlogEntry> = {
+      successful: [],
+      failed: [],
+      totalProcessed: request.ids.length,
+      successCount: 0,
+      failureCount: 0,
+    };
+
+    for (const id of request.ids) {
+      try {
+        const updated = await this.updateDevlog({
+          id,
+          ...request.updates,
+        });
+        result.successful.push({ id, result: updated });
+        result.successCount++;
+      } catch (error) {
+        result.failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        result.failureCount++;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Batch delete multiple devlog entries
+   */
+  async batchDelete(request: BatchDeleteRequest): Promise<BatchOperationResult<void>> {
+    await this.ensureInitialized();
+
+    const result: BatchOperationResult<void> = {
+      successful: [],
+      failed: [],
+      totalProcessed: request.ids.length,
+      successCount: 0,
+      failureCount: 0,
+    };
+
+    for (const id of request.ids) {
+      try {
+        await this.deleteDevlog(id);
+        result.successful.push({ id, result: undefined });
+        result.successCount++;
+      } catch (error) {
+        result.failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        result.failureCount++;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Add notes to multiple devlog entries
+   */
+  async batchAddNote(request: BatchNoteRequest): Promise<BatchOperationResult<DevlogEntry>> {
+    await this.ensureInitialized();
+
+    const result: BatchOperationResult<DevlogEntry> = {
+      successful: [],
+      failed: [],
+      totalProcessed: request.ids.length,
+      successCount: 0,
+      failureCount: 0,
+    };
+
+    for (const id of request.ids) {
+      try {
+        const updated = await this.addNote(
+          id,
+          request.content,
+          request.category || 'progress',
+          {
+            files: request.files,
+            codeChanges: request.codeChanges,
+          },
+        );
+        result.successful.push({ id, result: updated });
+        result.successCount++;
+      } catch (error) {
+        result.failed.push({
+          id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        result.failureCount++;
+      }
+    }
+
+    return result;
+  }
+
+  // Chat Management Methods
+
+  /**
+   * Get chat import service
+   */
+  getChatImportService() {
+    const { DefaultChatImportService } = require('./services/chat-import-service.js');
+    return new DefaultChatImportService(this.storageProvider);
+  }
+
+  /**
+   * Get a chat session by ID
+   */
+  async getChatSession(sessionId: string) {
+    await this.ensureInitialized();
+    return this.storageProvider.getChatSession(sessionId);
+  }
+
+  /**
+   * Get messages for a chat session
+   */
+  async getChatMessages(sessionId: string, offset = 0, limit = 100) {
+    await this.ensureInitialized();
+    return this.storageProvider.getChatMessages(sessionId, offset, limit);
+  }
+
+  /**
+   * List chat sessions with filtering
+   */
+  async listChatSessions(filter: any = {}, offset = 0, limit = 20) {
+    await this.ensureInitialized();
+    return this.storageProvider.listChatSessions(filter, offset, limit);
+  }
+
+  /**
+   * Search chat content
+   */
+  async searchChatContent(query: string, filter: any = {}, limit = 50) {
+    await this.ensureInitialized();
+    return this.storageProvider.searchChatContent(query, filter, limit);
+  }
+
+  /**
+   * Save a chat-devlog link
+   */
+  async saveChatDevlogLink(link: any) {
+    await this.ensureInitialized();
+    return this.storageProvider.saveChatDevlogLink(link);
+  }
+
+  /**
+   * Remove a chat-devlog link
+   */
+  async removeChatDevlogLink(sessionId: string, devlogId: number) {
+    await this.ensureInitialized();
+    return this.storageProvider.removeChatDevlogLink(sessionId, devlogId);
+  }
+
+  /**
+   * Get chat statistics
+   */
+  async getChatStats(filter: any = {}) {
+    await this.ensureInitialized();
+    return this.storageProvider.getChatStats(filter);
+  }
+
+  /**
+   * Update a chat session
+   */
+  async updateChatSession(sessionId: string, updates: any) {
+    await this.ensureInitialized();
+    
+    // Get existing session
+    const existingSession = await this.storageProvider.getChatSession(sessionId);
+    if (!existingSession) {
+      throw new DevlogNotFoundError(`Chat session not found: ${sessionId}`);
+    }
+
+    // Apply updates
+    const updatedSession = {
+      ...existingSession,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Save updated session
+    await this.storageProvider.saveChatSession(updatedSession);
+    return updatedSession;
+  }
+
+  /**
+   * Get chat workspaces
+   */
+  async getChatWorkspaces() {
+    await this.ensureInitialized();
+    return this.storageProvider.getChatWorkspaces();
   }
 }

@@ -14,6 +14,15 @@ import type {
   DevlogType,
   JsonConfig,
   StorageProvider,
+  ChatSession,
+  ChatMessage,
+  ChatFilter,
+  ChatStats,
+  ChatSessionId,
+  ChatMessageId,
+  ChatSearchResult,
+  ChatDevlogLink,
+  ChatWorkspace,
 } from '../types/index.js';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -262,5 +271,60 @@ temp/
     // Use a simple format with consistent padding
     const paddedId = id.toString().padStart(this.config.minPadding, '0');
     return this.config.filePattern.replace('{id:auto}', paddedId).replace('{slug}', slug);
+  }
+
+  // ===== Chat Storage Operations (Stub implementations for JSON storage) =====
+  // Note: JSON storage is not recommended for chat data due to size concerns
+
+  async saveChatSession(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async getChatSession(): Promise<null> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async listChatSessions(): Promise<[]> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async deleteChatSession(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async saveChatMessages(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async getChatMessages(): Promise<[]> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async searchChatContent(): Promise<[]> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async getChatStats(): Promise<any> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async saveChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async getChatDevlogLinks(): Promise<[]> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async removeChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async getChatWorkspaces(): Promise<[]> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+  }
+
+  async saveChatWorkspace(): Promise<void> {
+    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
   }
 }

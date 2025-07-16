@@ -2,7 +2,7 @@
  * PostgreSQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
@@ -271,5 +271,59 @@ export class PostgreSQLStorageProvider implements StorageProvider {
       notes: row.notes || [],
       externalReferences: row.external_references || [],
     };
+  }
+
+  // ===== Chat Storage Operations (TODO: Implement with proper PostgreSQL schema) =====
+
+  async saveChatSession(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async getChatSession(): Promise<null> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async listChatSessions(): Promise<[]> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async deleteChatSession(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async saveChatMessages(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async getChatMessages(): Promise<[]> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async searchChatContent(): Promise<[]> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async getChatStats(): Promise<any> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async saveChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async getChatDevlogLinks(): Promise<[]> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async removeChatDevlogLink(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async getChatWorkspaces(): Promise<[]> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+  }
+
+  async saveChatWorkspace(): Promise<void> {
+    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
   }
 }

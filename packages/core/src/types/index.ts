@@ -19,3 +19,6 @@ export * from './workspace.js';
 
 // Integration service and enterprise types
 export * from './integration.js';
+
+// Chat history types and interfaces
+export * from './chat.js';

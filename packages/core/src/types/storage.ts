@@ -3,6 +3,17 @@
  */
 
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from './core.js';
+import { 
+  ChatSession, 
+  ChatMessage, 
+  ChatFilter, 
+  ChatStats, 
+  ChatSessionId, 
+  ChatMessageId,
+  ChatSearchResult,
+  ChatDevlogLink,
+  ChatWorkspace 
+} from './chat.js';
 
 // Storage Configuration Types
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
@@ -143,6 +154,73 @@ export interface StorageProvider {
    * Get the next available ID for a new entry
    */
   getNextId(): Promise<DevlogId>;
+
+  // ===== Chat Storage Operations =====
+
+  /**
+   * Save a chat session
+   */
+  saveChatSession(session: ChatSession): Promise<void>;
+
+  /**
+   * Get a chat session by ID
+   */
+  getChatSession(id: ChatSessionId): Promise<ChatSession | null>;
+
+  /**
+   * List chat sessions with optional filtering
+   */
+  listChatSessions(filter?: ChatFilter, offset?: number, limit?: number): Promise<ChatSession[]>;
+
+  /**
+   * Delete a chat session
+   */
+  deleteChatSession(id: ChatSessionId): Promise<void>;
+
+  /**
+   * Save chat messages for a session
+   */
+  saveChatMessages(messages: ChatMessage[]): Promise<void>;
+
+  /**
+   * Get messages for a chat session
+   */
+  getChatMessages(sessionId: ChatSessionId, offset?: number, limit?: number): Promise<ChatMessage[]>;
+
+  /**
+   * Search chat content
+   */
+  searchChatContent(query: string, filter?: ChatFilter, limit?: number): Promise<ChatSearchResult[]>;
+
+  /**
+   * Get chat statistics
+   */
+  getChatStats(filter?: ChatFilter): Promise<ChatStats>;
+
+  /**
+   * Save a chat-devlog link
+   */
+  saveChatDevlogLink(link: ChatDevlogLink): Promise<void>;
+
+  /**
+   * Get chat-devlog links
+   */
+  getChatDevlogLinks(sessionId?: ChatSessionId, devlogId?: DevlogId): Promise<ChatDevlogLink[]>;
+
+  /**
+   * Remove a chat-devlog link
+   */
+  removeChatDevlogLink(sessionId: ChatSessionId, devlogId: DevlogId): Promise<void>;
+
+  /**
+   * Get or create chat workspaces
+   */
+  getChatWorkspaces(): Promise<ChatWorkspace[]>;
+
+  /**
+   * Save chat workspace information
+   */
+  saveChatWorkspace(workspace: ChatWorkspace): Promise<void>;
 }
 
 // Configuration Types
