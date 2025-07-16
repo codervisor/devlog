@@ -39,7 +39,7 @@ export class CrossProcessEventSystem {
     this.startPolling();
     this.initialized = true;
 
-    console.log('Cross-process event system initialized');
+    console.error('Cross-process event system initialized');
   }
 
   async cleanup(): Promise<void> {
@@ -97,7 +97,7 @@ export class CrossProcessEventSystem {
       };
 
       await fs.writeFile(filePath, JSON.stringify(eventData, null, 2));
-      console.log(`Cross-process event written: ${filename}`);
+      console.error(`Cross-process event written: ${filename}`);
 
       // Also emit locally for same-process handlers
       await this.processEvent(event);
@@ -147,7 +147,7 @@ export class CrossProcessEventSystem {
           };
 
           await this.processEvent(event);
-          console.log(`Processed cross-process event: ${file}`);
+          console.error(`Processed cross-process event: ${file}`);
 
           // Update last processed time
           this.lastProcessedTime = Math.max(this.lastProcessedTime, timestamp);
