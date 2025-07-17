@@ -1,0 +1,41 @@
+{
+  "key": "test-mcp-complete-devlog-closedat-fix",
+  "title": "Test MCP complete_devlog closedAt fix",
+  "type": "task",
+  "description": "Test entry to verify that the MCP complete_devlog function now properly sets closedAt timestamps when completing entries.",
+  "status": "done",
+  "priority": "low",
+  "createdAt": "2025-07-17T09:27:33.982Z",
+  "updatedAt": "2025-07-17T09:27:48.806Z",
+  "notes": [
+    {
+      "id": "5a160eaa-5f21-48c2-9a0e-105db8e76a50",
+      "timestamp": "2025-07-17T09:27:48.806Z",
+      "category": "progress",
+      "content": "Completed: Testing that the MCP complete function now properly sets closedAt timestamp after the fix"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Test that MCP complete_devlog now properly sets closedAt timestamp"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T09:27:33.982Z",
+    "contextVersion": 1
+  },
+  "id": 169,
+  "closedAt": "2025-07-17T09:27:48.805Z"
+}

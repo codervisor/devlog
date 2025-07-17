@@ -1,0 +1,38 @@
+{
+  "key": "test-migration-scenario-fix",
+  "title": "Test migration scenario fix",
+  "type": "task",
+  "description": "Another test entry to simulate the migration scenario where an entry is already done but missing closedAt",
+  "status": "done",
+  "priority": "low",
+  "createdAt": "2025-07-17T09:28:14.644Z",
+  "updatedAt": "2025-07-17T09:29:03.366Z",
+  "notes": [
+    {
+      "id": "60402c2a-3e1f-4945-bc43-1c1bcb1b22ad",
+      "timestamp": "2025-07-17T09:29:03.366Z",
+      "category": "progress",
+      "content": "Completed: Testing the fix for entries already marked done but missing closedAt"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T09:28:14.644Z",
+    "contextVersion": 1
+  },
+  "id": 170
+}

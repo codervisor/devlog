@@ -190,6 +190,11 @@ export class DevlogManager {
         updated.closedAt = new Date().toISOString();
       }
       
+      // Also set closedAt if the entry is already closed but missing the timestamp (migration case)
+      if ((request.status === 'done' || request.status === 'cancelled') && !existing.closedAt) {
+        updated.closedAt = new Date().toISOString();
+      }
+      
       // Clear closedAt if status changes from closed back to open
       if ((oldStatus === 'done' || oldStatus === 'cancelled') &&
           request.status !== 'done' && request.status !== 'cancelled') {
