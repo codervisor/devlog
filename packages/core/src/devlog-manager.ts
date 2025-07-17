@@ -326,12 +326,13 @@ export class DevlogManager {
 
   /**
    * List devlog entries with optional filtering
+   * By default, excludes archived entries only (includes done/cancelled entries)
    * Returns paginated results for consistency with storage layer
    */
   async listDevlogs(filter?: DevlogFilter, options?: { includeAllStatuses?: boolean }): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
-    // Apply default exclusion of closed entries
+    // Apply default exclusion of archived entries only
     const enhancedFilter = this.applyDefaultFilters(filter, options);
 
     return await this.storageProvider.list(enhancedFilter);
@@ -355,7 +356,7 @@ export class DevlogManager {
   }
 
   /**
-   * Apply default filters including exclusion of archived entries and optionally closed entries
+   * Apply default filters including exclusion of archived entries only
    * @private
    */
   private applyDefaultFilters(filter?: DevlogFilter, options: { includeAllStatuses?: boolean } = {}): DevlogFilter {
@@ -366,30 +367,22 @@ export class DevlogManager {
       enhancedFilter.archived = false;
     }
 
-    // Apply status filtering only if not requesting all statuses (e.g., for lists but not stats)
-    if (!options.includeAllStatuses) {
-      // If no status filter is provided, exclude closed entries by default (for cleaner list UX)
-      // If status filter is provided, respect it (user explicitly requested specific statuses)
-      if (!enhancedFilter.status) {
-        // For list views: exclude closed entries by showing only open statuses
-        enhancedFilter.status = getOpenStatuses();
-      }
-      // If status filter is provided and includes closed statuses, keep it as-is
-      // This allows users to explicitly request closed entries
-    }
+    // No longer exclude done/cancelled statuses by default - only exclude archived entries
+    // This means all statuses (new, in-progress, blocked, in-review, testing, done, cancelled) 
+    // are included by default, only archived entries are filtered out
 
     return enhancedFilter;
   }
 
   /**
    * Search devlog entries
-   * By default, excludes closed entries unless explicitly requested
+   * By default, excludes archived entries only (includes done/cancelled entries)
    */
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<DevlogEntry[]> {
     await this.ensureInitialized();
     const results = await this.storageProvider.search(query);
 
-    // Apply default filters to search results (including closed exclusion)
+    // Apply default filters to search results (excluding archived entries only)
     const enhancedFilter = this.applyDefaultFilters(filter);
 
     // Filter results based on the enhanced filter - extract items from paginated result
