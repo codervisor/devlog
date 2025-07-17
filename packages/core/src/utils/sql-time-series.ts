@@ -100,8 +100,8 @@ export function mapSQLRowsToDataPoints(rows: Array<{
   total_closed: number;
 }>): TimeSeriesDataPoint[] {
   return rows.map((row) => {
-    // Calculate current open as simple delta
-    const currentOpen = row.total_created - row.total_closed;
+    // Calculate open as simple delta
+    const open = row.total_created - row.total_closed;
 
     return {
       date: row.date,
@@ -111,7 +111,7 @@ export function mapSQLRowsToDataPoints(rows: Array<{
       totalClosed: row.total_closed,
 
       // Snapshot data (secondary Y-axis)
-      currentOpen,
+      open,
 
       // Daily activity
       dailyCreated: row.daily_created,

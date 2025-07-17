@@ -61,8 +61,8 @@ export function calculateTimeSeriesStats(
       devlog.closedAt && new Date(devlog.closedAt) <= endOfDay
     ).length;
 
-    // Calculate current open as simple delta (this is the accurate historical view)
-    const currentOpen = totalCreated - totalClosed;
+    // Calculate open entries as simple delta (this is the accurate historical view)
+    const open = totalCreated - totalClosed;
 
       dataPoints.push({
         date: dateStr,
@@ -72,7 +72,7 @@ export function calculateTimeSeriesStats(
         totalClosed,
         
         // Snapshot data (secondary Y-axis)
-        currentOpen,
+        open,
         
         // Daily activity
         dailyCreated,

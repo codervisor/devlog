@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "high",
   "createdAt": "2025-07-17T08:59:29.685Z",
-  "updatedAt": "2025-07-17T09:09:21.460Z",
+  "updatedAt": "2025-07-17T09:14:35.573Z",
   "notes": [
     {
       "id": "4c0273e1-d43b-4622-8c47-d67baa91fdce",
@@ -19,6 +19,18 @@
       "timestamp": "2025-07-17T09:09:21.460Z",
       "category": "progress",
       "content": "Completed: Successfully refactored timeseries calculation system: 1) Removed unnecessary currentNew/currentInProgress/etc fields from TimeSeriesDataPoint interface, 2) Fixed currentOpen calculation to use simple delta (totalCreated - totalClosed), 3) Created shared SQL utilities in sql-time-series.ts to eliminate code duplication across SQLite/MySQL/PostgreSQL storage providers, 4) Refactored all storage providers to use the shared utilities. The currentOpen calculation is now mathematically accurate and historically reliable."
+    },
+    {
+      "id": "97acb9e9-3ab4-401a-b331-bb710fb69078",
+      "timestamp": "2025-07-17T09:11:39.288Z",
+      "category": "idea",
+      "content": "User feedback: \"Currently Open\" is misleading terminology for historical data points. For past dates, it's not \"current\" but rather \"open as of that date\". Need to rename to something like \"openAsOfDate\", \"openAtTime\", or simply \"open\"."
+    },
+    {
+      "id": "a93dfecb-c10b-44c7-adde-01db4bb88ea8",
+      "timestamp": "2025-07-17T09:14:35.573Z",
+      "category": "progress",
+      "content": "Completed: Successfully completed refactoring and naming improvements: 1) Removed unnecessary currentNew/currentInProgress/etc fields from TimeSeriesDataPoint interface, 2) Created reusable SQL utility functions to eliminate code duplication across storage providers, 3) Fixed currentOpen calculation to use simple delta (totalCreated - totalClosed), 4) Renamed 'currentOpen' to 'open' for clearer historical context. All storage providers now use consistent, accurate calculations with better naming."
     }
   ],
   "files": [],

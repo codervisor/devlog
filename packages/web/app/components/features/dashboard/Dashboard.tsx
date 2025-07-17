@@ -168,10 +168,10 @@ export function Dashboard({
                       {/* Current workload on secondary axis using bar chart */}
                       <Bar
                         yAxisId="current"
-                        dataKey="currentOpen"
+                        dataKey="open"
                         fill={CHART_COLORS.warning}
                         fillOpacity={CHART_OPACITY.bar}
-                        name="Currently Open"
+                        name="Open"
                       />
                     </ComposedChart>
                   </ResponsiveContainer>

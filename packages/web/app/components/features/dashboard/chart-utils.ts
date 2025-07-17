@@ -9,7 +9,7 @@ export interface FormattedChartData {
   fullDate: string;
   totalCreated: number;
   totalClosed: number;
-  currentOpen: number;
+  open: number;
   // Add other fields that might be used
   [key: string]: any;
 }
@@ -57,7 +57,7 @@ export function formatTooltipValue(value: number, name: string): [number, string
   const nameMap: Record<string, string> = {
     totalCreated: 'Total Created',
     totalClosed: 'Total Closed', 
-    currentOpen: 'Currently Open',
+    open: 'Open',
   };
   
   return [value, nameMap[name] || name];
