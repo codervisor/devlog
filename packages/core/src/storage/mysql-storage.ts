@@ -2,7 +2,7 @@
  * MySQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult, MySQLStorageOptions } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
@@ -10,7 +10,7 @@ import { createPaginatedResult } from '../utils/common.js';
 
 export class MySQLStorageProvider implements StorageProvider {
   private connectionString: string;
-  private options: Record<string, any>;
+  private options: MySQLStorageOptions;
   private connection: any = null;
   
   // Event subscription properties
@@ -20,7 +20,7 @@ export class MySQLStorageProvider implements StorageProvider {
   private lastPollTimestamp = new Date().toISOString();
   private lastKnownEntryIds = new Set<number>();
 
-  constructor(connectionString: string, options: Record<string, any> = {}) {
+  constructor(connectionString: string, options: MySQLStorageOptions = {}) {
     this.connectionString = connectionString;
     this.options = options;
   }

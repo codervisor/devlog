@@ -14,6 +14,9 @@ export * from './requests.js';
 // Storage configuration and provider types
 export * from './storage.js';
 
+// Storage provider-specific option types
+export * from './storage-options.js';
+
 // Workspace isolation and management types
 export * from './workspace.js';
 

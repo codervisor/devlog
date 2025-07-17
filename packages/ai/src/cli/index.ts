@@ -14,6 +14,7 @@ import ora from 'ora';
 import { resolve } from 'path';
 import { CopilotParser, ChatStatistics, SearchResult } from '../parsers/index.js';
 import { JSONExporter, MarkdownExporter } from '../exporters/index.js';
+import { displayError, displaySuccess, displayWarning, displayInfo, displayHeader, formatCount } from '../utils/cli.js';
 
 // CLI option interfaces for better type safety
 interface ChatCommandOptions {
@@ -60,20 +61,20 @@ program
       const parser = new CopilotParser();
       
       if (options.verbose) {
-        console.log(chalk.yellow('Discovering GitHub Copilot chat data...'));
+        displayInfo('Discovering GitHub Copilot chat data...');
       }
       
       const workspaceData = await parser.discoverVSCodeCopilotData();
       
       if (workspaceData.chat_sessions.length === 0) {
         spinner?.stop();
-        console.log(chalk.red('No GitHub Copilot chat data found'));
-        console.log(chalk.yellow('Make sure VS Code or VS Code Insiders is installed and you have used GitHub Copilot chat'));
+        displayError('discovery', 'No GitHub Copilot chat data found');
+        displayWarning('Make sure VS Code or VS Code Insiders is installed and you have used GitHub Copilot chat');
         process.exit(1);
       }
       
       spinner?.stop();
-      console.log(chalk.green(`Found ${workspaceData.chat_sessions.length} chat sessions`));
+      displaySuccess(`Found ${formatCount(workspaceData.chat_sessions.length)} chat sessions`);
       
       // Get statistics
       const stats = parser.getChatStatistics(workspaceData);
@@ -88,7 +89,7 @@ program
       if (options.search) {
         searchResults = parser.searchChatContent(workspaceData, options.search);
         result.search_results = searchResults;
-        console.log(chalk.green(`Found ${searchResults.length} matches for '${options.search}'`));
+        displaySuccess(`Found ${formatCount(searchResults.length)} matches for '${options.search}'`);
       }
       
       // Output results
@@ -108,12 +109,12 @@ program
           };
           await exporter.exportChatData(markdownData, outputPath);
         } else {
-          console.log(chalk.red(`Unsupported format: ${options.format}`));
-          console.log(chalk.yellow('Supported formats: json, md'));
+          displayError('format validation', `Unsupported format: ${options.format}`);
+          displayWarning('Supported formats: json, md');
           process.exit(1);
         }
         
-        console.log(chalk.green(`Chat data saved to ${outputPath}`));
+        displaySuccess(`Chat data saved to ${outputPath}`);
       } else {
         // Print summary to console
         displayChatSummary(stats, searchResults, options.verbose);
@@ -124,7 +125,7 @@ program
       if (options.verbose) {
         console.error(error);
       } else {
-        console.log(chalk.red(`Error extracting chat data: ${error instanceof Error ? error.message : String(error)}`));
+        displayError('extracting chat data', error);
       }
       process.exit(1);
     }
@@ -140,7 +141,7 @@ program
       const workspaceData = await parser.discoverVSCodeCopilotData();
       
       if (workspaceData.chat_sessions.length === 0) {
-        console.log(chalk.red('No chat sessions found'));
+        displayError('discovery', 'No chat sessions found');
         return;
       }
       
@@ -161,7 +162,7 @@ program
         table.push(['Date Range', `${stats.date_range.earliest} to ${stats.date_range.latest}`]);
       }
       
-      console.log(chalk.bold('GitHub Copilot Chat Statistics'));
+      displayHeader('GitHub Copilot Chat Statistics');
       console.log(table.toString());
       
       // Session types
@@ -193,7 +194,7 @@ program
       }
       
     } catch (error) {
-      console.log(chalk.red(`Error getting statistics: ${error instanceof Error ? error.message : String(error)}`));
+      displayError('getting statistics', error);
       process.exit(1);
     }
   });
@@ -238,7 +239,7 @@ program
       }
       
     } catch (error) {
-      console.log(chalk.red(`Error searching: ${error instanceof Error ? error.message : String(error)}`));
+      displayError('searching', error);
       process.exit(1);
     }
   });

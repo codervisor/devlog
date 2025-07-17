@@ -15,6 +15,7 @@ import {
   UpdateChatSessionRequest,
   SuggestChatDevlogLinksRequest
 } from '@devlog/core';
+import { createErrorResponse, createSuccessResponse, wrapToolExecution, extractErrorMessage } from '../utils/common.js';
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {
@@ -565,16 +566,7 @@ The import is running in the background. Use the import ID to check progress.`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error importing chat history: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('importing chat history', error);
   }
 }
 
@@ -621,16 +613,7 @@ ${messages.length > 0 ? `\n### Messages (${messages.length}):\n\n${messages.map(
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error getting chat session: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('getting chat session', error);
   }
 }
 
@@ -690,16 +673,7 @@ ${sessionsText}
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error listing chat sessions: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('listing chat sessions', error);
   }
 }
 
@@ -753,16 +727,7 @@ ${resultsText}`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error searching chat content: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('searching chat content', error);
   }
 }
 
@@ -832,16 +797,7 @@ The link has been confirmed and saved.`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error linking chat to devlog: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('linking chat to devlog', error);
   }
 }
 
@@ -858,16 +814,7 @@ export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: U
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error unlinking chat from devlog: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('unlinking chat from devlog', error);
   }
 }
 
@@ -916,16 +863,7 @@ Use \`link_chat_to_devlog\` to confirm any of these suggestions.`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error getting link suggestions: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('getting link suggestions', error);
   }
 }
 
@@ -983,16 +921,7 @@ ${workspaceStats || '  No workspace data available'}`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error getting chat statistics: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('getting chat statistics', error);
   }
 }
 
@@ -1024,16 +953,7 @@ ${updatesList}`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error updating chat session: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('updating chat session', error);
   }
 }
 
@@ -1079,16 +999,7 @@ ${workspacesText}`
       ]
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Error getting chat workspaces: ${errorMessage}`
-        }
-      ],
-      isError: true
-    };
+    return createErrorResponse('getting chat workspaces', error);
   }
 }
 

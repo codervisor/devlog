@@ -2,7 +2,7 @@
  * PostgreSQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult, PostgreSQLStorageOptions } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
@@ -10,7 +10,7 @@ import { createPaginatedResult } from '../utils/common.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
   private connectionString: string;
-  private options: Record<string, any>;
+  private options: PostgreSQLStorageOptions;
   private client: any = null;
   
   // Event subscription properties  
@@ -18,7 +18,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
   private notifyClient: any = null;
   private isWatching = false;
 
-  constructor(connectionString: string, options: Record<string, any> = {}) {
+  constructor(connectionString: string, options: PostgreSQLStorageOptions = {}) {
     this.connectionString = connectionString;
     this.options = options;
   }

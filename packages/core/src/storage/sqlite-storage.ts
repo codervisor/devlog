@@ -20,6 +20,7 @@ import {
   ChatDevlogLink,
   ChatWorkspace,
   PaginatedResult,
+  SQLiteStorageOptions,
 } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
@@ -30,7 +31,7 @@ import { calculateDevlogStats } from '../utils/storage.js';
 export class SQLiteStorageProvider implements StorageProvider {
   private db: any = null;
   private filePath: string;
-  private options: Record<string, any>;
+  private options: SQLiteStorageOptions;
   
   // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
@@ -39,7 +40,7 @@ export class SQLiteStorageProvider implements StorageProvider {
   private lastPollTimestamp = new Date().toISOString();
   private lastKnownEntryIds = new Set<number>();
 
-  constructor(filePath: string, options: Record<string, any> = {}) {
+  constructor(filePath: string, options: SQLiteStorageOptions = {}) {
     console.log(`[SQLiteStorage] Creating SQLiteStorageProvider with path: ${filePath}`);
     console.log(`[SQLiteStorage] Constructor options:`, options);
     this.filePath = filePath;
