@@ -149,9 +149,9 @@ build/
 .devlog-counter
 .devlog.backup*
 
-# Devlog configuration with credentials
-devlog.config.json
-devlog-integrations.config.json
+# Legacy devlog configuration files (no longer used - now uses .env)
+# devlog.config.json
+# devlog-integrations.config.json
 
 # Local environment variables for development
 .nx

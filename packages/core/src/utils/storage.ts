@@ -52,11 +52,6 @@ export function findProjectRoot(startPath: string = process.cwd()): string {
       }
     }
 
-    // Check for devlog-specific config
-    if (fs.existsSync(path.join(currentDir, 'devlog.config.json'))) {
-      return currentDir;
-    }
-
     // Check for basic project indicators (package.json, etc.)
     const basicIndicators = [
       path.join(currentDir, 'package.json'),

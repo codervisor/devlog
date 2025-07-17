@@ -6,7 +6,7 @@
   "status": "in-progress",
   "priority": "high",
   "createdAt": "2025-07-17T02:27:56.439Z",
-  "updatedAt": "2025-07-17T02:31:42.245Z",
+  "updatedAt": "2025-07-17T02:36:11.542Z",
   "notes": [
     {
       "id": "5c00d637-f780-4686-a627-95524d9be5ce",
@@ -19,6 +19,12 @@
       "timestamp": "2025-07-17T02:31:42.244Z",
       "category": "issue",
       "content": "🚨 CRITICAL ISSUE: Monorepo dependency problem for Vercel deployment. @devlog/web depends on @devlog/core (workspace:*) which Vercel can't resolve by default. Need to either:\n1. Deploy entire monorepo to Vercel \n2. Use Vercel's turborepo/monorepo support\n3. Bundle dependencies before deployment\n4. Use a different platform that handles monorepos better"
+    },
+    {
+      "id": "d8293c97-6336-41bd-b41c-57407fbcf453",
+      "timestamp": "2025-07-17T02:36:11.542Z",
+      "category": "idea",
+      "content": "💡 Better approach: Use .env instead of devlog.config.json for flexibility. Environment variables are more standard for deployment and allow easy switching between local/production configs without file changes."
     }
   ],
   "files": [],

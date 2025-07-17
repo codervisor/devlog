@@ -10,8 +10,19 @@ import * as os from 'os';
 describe('MCP Server Integration', () => {
   let testWorkspace: string;
   let originalCwd: string;
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeAll(async () => {
+    // Store original environment and working directory
+    originalCwd = process.cwd();
+    originalEnv = { ...process.env };
+    
+    // Create test workspace
+    testWorkspace = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-test-'));
+    
+    // Set up environment variables for testing instead of config file
+    process.env.DEVLOG_JSON_DIRECTORY = '.devlog';
+    process.env.DEVLOG_JSON_GLOBAL = 'false';
     originalCwd = process.cwd();
     testWorkspace = path.join(os.tmpdir(), 'mcp-integration-test-workspace');
     
@@ -38,7 +49,8 @@ describe('MCP Server Integration', () => {
   });
 
   afterAll(async () => {
-    // Restore original working directory
+    // Restore original environment and working directory
+    process.env = originalEnv;
     process.chdir(originalCwd);
     
     // Clean up test workspace
