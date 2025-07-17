@@ -187,26 +187,6 @@ export interface TimeSeriesDataPoint {
   // Daily activity (for velocity insights) - events that occurred on this specific day
   dailyCreated: number;        // Devlogs created on this specific day
   dailyCompleted: number;      // Devlogs completed on this specific day
-  
-  // Legacy fields (maintained for backward compatibility)
-  /** @deprecated Use totalCreated instead */
-  created: number;
-  /** @deprecated Use totalCompleted instead */
-  completed: number;
-  /** @deprecated Use currentInProgress instead */
-  inProgress: number;
-  /** @deprecated Use currentInReview instead */
-  inReview: number;
-  /** @deprecated Use currentTesting instead */
-  testing: number;
-  /** @deprecated Use currentNew instead */
-  new: number;
-  /** @deprecated Use currentBlocked instead */
-  blocked: number;
-  /** @deprecated Use totalCompleted instead */
-  done: number;
-  /** @deprecated Use currentOpen calculation instead */
-  cancelled: number;
 }
 
 export interface TimeSeriesStats {

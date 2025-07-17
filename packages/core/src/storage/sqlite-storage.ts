@@ -3,41 +3,35 @@
  */
 
 import {
+  ChatDevlogLink,
+  ChatFilter,
+  ChatMessage,
+  ChatSearchResult,
+  ChatSession,
+  ChatSessionId,
+  ChatStats,
+  ChatWorkspace,
   DevlogEntry,
   DevlogFilter,
   DevlogId,
-  DevlogNote,
-  DevlogPriority,
   DevlogStats,
-  DevlogStatus,
-  DevlogType,
-  TimeSeriesRequest,
-  TimeSeriesStats,
-  TimeSeriesDataPoint,
-  ChatSession,
-  ChatMessage,
-  ChatFilter,
-  ChatStats,
-  ChatSessionId,
-  ChatMessageId,
-  ChatSearchResult,
-  ChatDevlogLink,
-  ChatWorkspace,
   PaginatedResult,
   SQLiteStorageOptions,
+  StorageProvider,
+  TimeSeriesDataPoint,
+  TimeSeriesRequest,
+  TimeSeriesStats,
 } from '../types/index.js';
-import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { initializeChatTables } from './chat-schema.js';
 import { createPaginatedResult } from '../utils/common.js';
 import { calculateDevlogStats } from '../utils/storage.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
 
 export class SQLiteStorageProvider implements StorageProvider {
   private db: any = null;
   private filePath: string;
   private options: SQLiteStorageOptions;
-  
+
   // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
   private pollingInterval?: NodeJS.Timeout;
@@ -336,7 +330,7 @@ export class SQLiteStorageProvider implements StorageProvider {
 
     const rows = stmt.all(query) as any[];
     const entries = rows.map((row) => this.rowToDevlogEntry(row));
-    
+
     // Return paginated result for consistency
     return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
@@ -386,24 +380,134 @@ export class SQLiteStorageProvider implements StorageProvider {
     return calculateDevlogStats(entries);
   }
 
-    async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
-    
-    // Load all entries from storage for analysis
-    const result = await this.list();
-    const allDevlogs = result.items;
 
-    // Delegate to shared utility function
-    return calculateTimeSeriesStats(allDevlogs, request);
+    // Set defaults
+    const days = request.days || 30;
+    const endDate = request.to ? new Date(request.to) : new Date();
+    const startDate = request.from ? new Date(request.from) : new Date(endDate);
+    if (!request.from) {
+      startDate.setDate(endDate.getDate() - days + 1);
+    }
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Single efficient SQL query using CTEs and window functions
+    const query = `
+      WITH RECURSIVE date_series AS (
+        SELECT DATE(?) AS date
+        UNION ALL
+        SELECT DATE(date, '+1 day')
+        FROM date_series
+        WHERE date < DATE(?)
+      ),
+      daily_stats AS (
+        SELECT 
+          DATE(created_at) as created_date,
+          COUNT(*) as daily_created
+        FROM devlog_entries
+        WHERE DATE(created_at) BETWEEN ? AND ?
+        GROUP BY DATE(created_at)
+      ),
+      daily_completed AS (
+        SELECT 
+          DATE(closed_at) as completed_date,
+          COUNT(*) as daily_completed
+        FROM devlog_entries
+        WHERE DATE(closed_at) BETWEEN ? AND ? AND status = 'done'
+        GROUP BY DATE(closed_at)
+      ),
+      cumulative_stats AS (
+        SELECT 
+          ds.date,
+          COALESCE(dc.daily_created, 0) as daily_created,
+          COALESCE(comp.daily_completed, 0) as daily_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date) as total_created,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'done') as total_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'cancelled') as total_cancelled,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'new') as current_new,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-progress') as current_in_progress,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'blocked') as current_blocked,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-review') as current_in_review,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'testing') as current_testing
+        FROM date_series ds
+        LEFT JOIN daily_stats dc ON ds.date = dc.created_date
+        LEFT JOIN daily_completed comp ON ds.date = comp.completed_date
+        ORDER BY ds.date
+      )
+      SELECT * FROM cumulative_stats;
+    `;
+
+    const rows = this.db.prepare(query).all(
+      startDateStr,
+      endDateStr, // date_series parameters
+      startDateStr,
+      endDateStr, // daily_stats parameters
+      startDateStr,
+      endDateStr, // daily_completed parameters
+    ) as Array<{
+      date: string;
+      daily_created: number;
+      daily_completed: number;
+      total_created: number;
+      total_completed: number;
+      total_cancelled: number;
+      current_new: number;
+      current_in_progress: number;
+      current_blocked: number;
+      current_in_review: number;
+      current_testing: number;
+    }>;
+
+    const dataPoints: TimeSeriesDataPoint[] = rows.map((row) => {
+      const totalClosed = row.total_completed + row.total_cancelled;
+      const currentOpen =
+        row.current_new +
+        row.current_in_progress +
+        row.current_blocked +
+        row.current_in_review +
+        row.current_testing;
+
+      return {
+        date: row.date,
+
+        // Cumulative data (primary Y-axis)
+        totalCreated: row.total_created,
+        totalCompleted: row.total_completed,
+        totalClosed,
+
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: row.current_new,
+        currentInProgress: row.current_in_progress,
+        currentBlocked: row.current_blocked,
+        currentInReview: row.current_in_review,
+        currentTesting: row.current_testing,
+
+        // Daily activity
+        dailyCreated: row.daily_created,
+        dailyCompleted: row.daily_completed,
+      };
+    });
+
+    return {
+      dataPoints,
+      dateRange: {
+        from: startDateStr,
+        to: endDateStr,
+      },
+    };
   }
 
   async cleanup(): Promise<void> {
     console.log(`[SQLiteStorage] Disposing database connection`);
-    
+
     // Stop event polling
     await this.stopWatching();
     this.eventCallbacks.clear();
-    
+
     if (this.db) {
       try {
         this.db.close();
@@ -482,7 +586,7 @@ export class SQLiteStorageProvider implements StorageProvider {
         JSON.stringify(session.tags),
         session.importedAt,
         session.updatedAt,
-        session.archived ? 1 : 0
+        session.archived ? 1 : 0,
       );
 
       console.log(`[SQLiteStorage] Chat session saved successfully: ${session.id}`);
@@ -541,7 +645,9 @@ export class SQLiteStorageProvider implements StorageProvider {
         }
 
         if (filter.linkedDevlog) {
-          conditions.push(`id IN (SELECT session_id FROM chat_devlog_links WHERE devlog_id = ? AND confirmed = 1)`);
+          conditions.push(
+            `id IN (SELECT session_id FROM chat_devlog_links WHERE devlog_id = ? AND confirmed = 1)`,
+          );
           params.push(filter.linkedDevlog);
         }
 
@@ -628,7 +734,7 @@ export class SQLiteStorageProvider implements StorageProvider {
           message.timestamp,
           message.sequence,
           JSON.stringify(message.metadata),
-          message.searchContent || message.content
+          message.searchContent || message.content,
         );
       }
 
@@ -663,7 +769,11 @@ export class SQLiteStorageProvider implements StorageProvider {
     }
   }
 
-  async searchChatContent(query: string, filter?: ChatFilter, limit = 50): Promise<ChatSearchResult[]> {
+  async searchChatContent(
+    query: string,
+    filter?: ChatFilter,
+    limit = 50,
+  ): Promise<ChatSearchResult[]> {
     console.log(`[SQLiteStorage] Searching chat content for: ${query}`);
     if (!this.db) {
       throw new Error('Database not initialized');
@@ -718,7 +828,7 @@ export class SQLiteStorageProvider implements StorageProvider {
         if (!sessionMap.has(row.session_id)) {
           sessionMap.set(row.session_id, {
             session: this.rowToChatSession(row),
-            messages: []
+            messages: [],
           });
         }
 
@@ -727,19 +837,19 @@ export class SQLiteStorageProvider implements StorageProvider {
           message,
           matchPositions: [], // TODO: Extract from FTS
           context: row.highlighted_content || message.content,
-          score: row.rank || 1.0
+          score: row.rank || 1.0,
         });
       }
 
-      const results: ChatSearchResult[] = Array.from(sessionMap.values()).map(item => ({
+      const results: ChatSearchResult[] = Array.from(sessionMap.values()).map((item) => ({
         session: item.session,
         messages: item.messages,
         relevance: Math.max(...item.messages.map((m: any) => m.score)),
         searchContext: {
           query,
           matchType: 'exact' as const,
-          totalMatches: item.messages.length
-        }
+          totalMatches: item.messages.length,
+        },
       }));
 
       console.log(`[SQLiteStorage] Found ${results.length} chat search results`);
@@ -760,7 +870,7 @@ export class SQLiteStorageProvider implements StorageProvider {
       // TODO: Implement comprehensive stats with proper filtering
       const totalSessionsStmt = this.db.prepare('SELECT COUNT(*) as count FROM chat_sessions');
       const totalMessagesStmt = this.db.prepare('SELECT COUNT(*) as count FROM chat_messages');
-      
+
       const totalSessions = totalSessionsStmt.get().count;
       const totalMessages = totalMessagesStmt.get().count;
 
@@ -769,28 +879,28 @@ export class SQLiteStorageProvider implements StorageProvider {
         totalMessages,
         byAgent: {
           'GitHub Copilot': 0,
-          'Cursor': 0,
-          'Windsurf': 0,
-          'Claude': 0,
-          'ChatGPT': 0,
-          'Other': 0
+          Cursor: 0,
+          Windsurf: 0,
+          Claude: 0,
+          ChatGPT: 0,
+          Other: 0,
         },
         byStatus: {
-          'imported': 0,
-          'linked': 0,
-          'archived': 0,
-          'processed': 0
+          imported: 0,
+          linked: 0,
+          archived: 0,
+          processed: 0,
         },
         byWorkspace: {},
         dateRange: {
           earliest: null,
-          latest: null
+          latest: null,
         },
         linkageStats: {
           linked: 0,
           unlinked: 0,
-          multiLinked: 0
-        }
+          multiLinked: 0,
+        },
       };
     } catch (error: any) {
       console.error(`[SQLiteStorage] Error getting chat stats:`, error);
@@ -819,7 +929,7 @@ export class SQLiteStorageProvider implements StorageProvider {
         JSON.stringify(link.evidence),
         link.confirmed ? 1 : 0,
         link.createdAt,
-        link.createdBy
+        link.createdBy,
       );
 
       console.log(`[SQLiteStorage] Chat-devlog link saved successfully`);
@@ -829,8 +939,13 @@ export class SQLiteStorageProvider implements StorageProvider {
     }
   }
 
-  async getChatDevlogLinks(sessionId?: ChatSessionId, devlogId?: DevlogId): Promise<ChatDevlogLink[]> {
-    console.log(`[SQLiteStorage] Getting chat-devlog links for session: ${sessionId}, devlog: ${devlogId}`);
+  async getChatDevlogLinks(
+    sessionId?: ChatSessionId,
+    devlogId?: DevlogId,
+  ): Promise<ChatDevlogLink[]> {
+    console.log(
+      `[SQLiteStorage] Getting chat-devlog links for session: ${sessionId}, devlog: ${devlogId}`,
+    );
     if (!this.db) {
       throw new Error('Database not initialized');
     }
@@ -875,7 +990,9 @@ export class SQLiteStorageProvider implements StorageProvider {
     }
 
     try {
-      const stmt = this.db.prepare('DELETE FROM chat_devlog_links WHERE session_id = ? AND devlog_id = ?');
+      const stmt = this.db.prepare(
+        'DELETE FROM chat_devlog_links WHERE session_id = ? AND devlog_id = ?',
+      );
       stmt.run(sessionId, devlogId);
       console.log(`[SQLiteStorage] Chat-devlog link removed successfully`);
     } catch (error: any) {
@@ -925,7 +1042,7 @@ export class SQLiteStorageProvider implements StorageProvider {
         workspace.lastSeen,
         workspace.sessionCount,
         workspace.devlogWorkspace || null,
-        JSON.stringify(workspace.metadata)
+        JSON.stringify(workspace.metadata),
       );
 
       console.log(`[SQLiteStorage] Chat workspace saved successfully: ${workspace.id}`);
@@ -953,7 +1070,7 @@ export class SQLiteStorageProvider implements StorageProvider {
       importedAt: row.imported_at,
       updatedAt: row.updated_at,
       linkedDevlogs: [], // TODO: Load from links table
-      archived: row.archived === 1
+      archived: row.archived === 1,
     };
   }
 
@@ -966,7 +1083,7 @@ export class SQLiteStorageProvider implements StorageProvider {
       timestamp: row.timestamp,
       sequence: row.sequence,
       metadata: JSON.parse(row.metadata || '{}'),
-      searchContent: row.search_content
+      searchContent: row.search_content,
     };
   }
 
@@ -980,7 +1097,7 @@ export class SQLiteStorageProvider implements StorageProvider {
       lastSeen: row.last_seen,
       sessionCount: row.session_count,
       devlogWorkspace: row.devlog_workspace,
-      metadata: JSON.parse(row.metadata || '{}')
+      metadata: JSON.parse(row.metadata || '{}'),
     };
   }
 
@@ -993,7 +1110,7 @@ export class SQLiteStorageProvider implements StorageProvider {
       evidence: JSON.parse(row.evidence || '{}'),
       confirmed: row.confirmed === 1,
       createdAt: row.created_at,
-      createdBy: row.created_by
+      createdBy: row.created_by,
     };
   }
 
@@ -1004,12 +1121,12 @@ export class SQLiteStorageProvider implements StorageProvider {
    */
   async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
     this.eventCallbacks.add(callback);
-    
+
     // Start polling if this is the first subscription
     if (this.eventCallbacks.size === 1 && !this.isWatching) {
       await this.startWatching();
     }
-    
+
     // Return unsubscribe function
     return () => {
       this.eventCallbacks.delete(callback);
@@ -1030,20 +1147,21 @@ export class SQLiteStorageProvider implements StorageProvider {
 
     try {
       this.isWatching = true;
-      
+
       // Initialize known IDs with current state
       const allIdsStmt = this.db.prepare('SELECT id FROM devlog_entries');
       this.lastKnownEntryIds = new Set<number>(allIdsStmt.all().map((row: any) => Number(row.id)));
-      
-      console.log(`[SQLiteStorage] Started watching for database changes (tracking ${this.lastKnownEntryIds.size} entries)`);
-      
+
+      console.log(
+        `[SQLiteStorage] Started watching for database changes (tracking ${this.lastKnownEntryIds.size} entries)`,
+      );
+
       // Poll every 2 seconds for changes
       this.pollingInterval = setInterval(() => {
-        this.pollForChanges().catch(error => {
+        this.pollForChanges().catch((error) => {
           console.error('[SQLiteStorage] Error polling for changes:', error);
         });
       }, 2000);
-      
     } catch (error) {
       console.error('[SQLiteStorage] Failed to start database watching:', error);
       throw error;
@@ -1072,40 +1190,40 @@ export class SQLiteStorageProvider implements StorageProvider {
 
     try {
       const currentTimestamp = new Date().toISOString();
-      
+
       // Query for entries updated since last poll
       const updateStmt = this.db.prepare(`
         SELECT * FROM devlog_entries 
         WHERE updated_at > ? 
         ORDER BY updated_at ASC
       `);
-      
+
       const changedEntries = updateStmt.all(this.lastPollTimestamp);
-      
+
       for (const row of changedEntries) {
         const entry = this.rowToDevlogEntry(row);
-        
+
         // Skip if entry.id is undefined (shouldn't happen but be safe)
         if (entry.id === undefined) {
           console.warn('[SQLiteStorage] Skipping entry with undefined ID');
           continue;
         }
-        
+
         // Determine if this is a creation or update by checking if we've seen this ID before
         const eventType = this.lastKnownEntryIds.has(entry.id) ? 'updated' : 'created';
         this.lastKnownEntryIds.add(entry.id);
-        
+
         this.emitEvent({
           type: eventType,
           timestamp: currentTimestamp,
           data: entry,
         });
       }
-      
+
       // Check for deletions by comparing current IDs with last known IDs
       const allIdsStmt = this.db.prepare('SELECT id FROM devlog_entries');
       const currentIds = new Set<number>(allIdsStmt.all().map((row: any) => Number(row.id)));
-      
+
       for (const lastKnownId of this.lastKnownEntryIds) {
         if (!currentIds.has(lastKnownId)) {
           // Entry was deleted
@@ -1116,11 +1234,10 @@ export class SQLiteStorageProvider implements StorageProvider {
           });
         }
       }
-      
+
       // Update our tracking
       this.lastKnownEntryIds = currentIds;
       this.lastPollTimestamp = currentTimestamp;
-      
     } catch (error) {
       console.error('[SQLiteStorage] Error polling for changes:', error);
     }

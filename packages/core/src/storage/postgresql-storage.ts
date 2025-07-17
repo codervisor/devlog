@@ -2,19 +2,28 @@
  * PostgreSQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, DevlogNote, TimeSeriesRequest, TimeSeriesStats, TimeSeriesDataPoint, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult, PostgreSQLStorageOptions } from '../types/index.js';
-import { StorageProvider } from '../types/index.js';
+import {
+  DevlogEntry,
+  DevlogFilter,
+  DevlogId,
+  DevlogStats,
+  PaginatedResult,
+  PostgreSQLStorageOptions,
+  StorageProvider,
+  TimeSeriesDataPoint,
+  TimeSeriesRequest,
+  TimeSeriesStats,
+} from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 import { createPaginatedResult } from '../utils/common.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
   private connectionString: string;
   private options: PostgreSQLStorageOptions;
   private client: any = null;
-  
-  // Event subscription properties  
+
+  // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
   private notifyClient: any = null;
   private isWatching = false;
@@ -228,7 +237,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
 
     const result = await this.client.query(query, params);
     const entries = result.rows.map((row: any) => this.rowToDevlogEntry(row));
-    
+
     // Return paginated result for consistency
     const pagination = filter?.pagination || { page: 1, limit: 100 };
     return createPaginatedResult(entries, pagination);
@@ -245,7 +254,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     );
 
     const entries = result.rows.map((row: any) => this.rowToDevlogEntry(row));
-    
+
     // Return paginated result for consistency
     return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
@@ -298,27 +307,135 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     return calculateDevlogStats(entries);
   }
 
-    async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
-    
-    // Load all entries from storage for analysis
-    const result = await this.list();
-    const allDevlogs = result.items;
 
-    // Delegate to shared utility function
-    return calculateTimeSeriesStats(allDevlogs, request);
+    // Set defaults
+    const days = request.days || 30;
+    const endDate = request.to ? new Date(request.to) : new Date();
+    const startDate = request.from ? new Date(request.from) : new Date(endDate);
+    if (!request.from) {
+      startDate.setDate(endDate.getDate() - days + 1);
+    }
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Single efficient PostgreSQL query using CTEs and window functions
+    const query = `
+      WITH date_series AS (
+        SELECT generate_series($1::date, $2::date, '1 day'::interval)::date AS date
+      ),
+      daily_stats AS (
+        SELECT 
+          DATE(created_at) as created_date,
+          COUNT(*) as daily_created
+        FROM devlog_entries
+        WHERE DATE(created_at) BETWEEN $3 AND $4
+        GROUP BY DATE(created_at)
+      ),
+      daily_completed AS (
+        SELECT 
+          DATE(closed_at) as completed_date,
+          COUNT(*) as daily_completed
+        FROM devlog_entries
+        WHERE DATE(closed_at) BETWEEN $5 AND $6 AND status = 'done'
+        GROUP BY DATE(closed_at)
+      ),
+      cumulative_stats AS (
+        SELECT 
+          ds.date,
+          COALESCE(dc.daily_created, 0) as daily_created,
+          COALESCE(comp.daily_completed, 0) as daily_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date) as total_created,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'done') as total_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'cancelled') as total_cancelled,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'new') as current_new,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-progress') as current_in_progress,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'blocked') as current_blocked,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-review') as current_in_review,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'testing') as current_testing
+        FROM date_series ds
+        LEFT JOIN daily_stats dc ON ds.date = dc.created_date
+        LEFT JOIN daily_completed comp ON ds.date = comp.completed_date
+        ORDER BY ds.date
+      )
+      SELECT * FROM cumulative_stats;
+    `;
+
+    const result = await this.client.query(query, [
+      startDateStr,
+      endDateStr, // date_series parameters
+      startDateStr,
+      endDateStr, // daily_stats parameters
+      startDateStr,
+      endDateStr, // daily_completed parameters
+    ]);
+
+    const rows = result.rows as Array<{
+      date: string;
+      daily_created: number;
+      daily_completed: number;
+      total_created: number;
+      total_completed: number;
+      total_cancelled: number;
+      current_new: number;
+      current_in_progress: number;
+      current_blocked: number;
+      current_in_review: number;
+      current_testing: number;
+    }>;
+
+    const dataPoints: TimeSeriesDataPoint[] = rows.map((row) => {
+      const totalClosed = row.total_completed + row.total_cancelled;
+      const currentOpen =
+        row.current_new +
+        row.current_in_progress +
+        row.current_blocked +
+        row.current_in_review +
+        row.current_testing;
+
+      return {
+        date: row.date,
+
+        // Cumulative data (primary Y-axis)
+        totalCreated: row.total_created,
+        totalCompleted: row.total_completed,
+        totalClosed,
+
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: row.current_new,
+        currentInProgress: row.current_in_progress,
+        currentBlocked: row.current_blocked,
+        currentInReview: row.current_in_review,
+        currentTesting: row.current_testing,
+
+        // Daily activity
+        dailyCreated: row.daily_created,
+        dailyCompleted: row.daily_completed,
+      };
+    });
+
+    return {
+      dataPoints,
+      dateRange: {
+        from: startDateStr,
+        to: endDateStr,
+      },
+    };
   }
 
   async cleanup(): Promise<void> {
     // Stop event listening
     await this.stopWatching();
     this.eventCallbacks.clear();
-    
+
     if (this.notifyClient) {
       await this.notifyClient.end();
       this.notifyClient = null;
     }
-    
+
     if (this.client) {
       await this.client.end();
       this.client = null;
@@ -364,55 +481,81 @@ export class PostgreSQLStorageProvider implements StorageProvider {
   // ===== Chat Storage Operations (TODO: Implement with proper PostgreSQL schema) =====
 
   async saveChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatSession(): Promise<null> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async listChatSessions(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async deleteChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatMessages(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatMessages(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async searchChatContent(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatStats(): Promise<any> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatDevlogLinks(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async removeChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatWorkspaces(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatWorkspace(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for PostgreSQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   // ===== Event Subscription Operations =====
@@ -422,12 +565,12 @@ export class PostgreSQLStorageProvider implements StorageProvider {
    */
   async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
     this.eventCallbacks.add(callback);
-    
+
     // Start listening if this is the first subscription
     if (this.eventCallbacks.size === 1 && !this.isWatching) {
       await this.startWatching();
     }
-    
+
     // Return unsubscribe function
     return () => {
       this.eventCallbacks.delete(callback);
@@ -450,27 +593,26 @@ export class PostgreSQLStorageProvider implements StorageProvider {
       // Create a separate client for notifications to avoid conflicts
       const pgModule = await import('pg' as any);
       const { Client } = pgModule;
-      
+
       this.notifyClient = new Client({
         connectionString: this.connectionString,
         ...this.options,
       });
-      
+
       await this.notifyClient.connect();
-      
+
       // Listen for devlog_changes notifications
       await this.notifyClient.query('LISTEN devlog_changes');
-      
+
       // Set up notification handler
       this.notifyClient.on('notification', (msg: any) => {
-        this.handleNotification(msg).catch(error => {
+        this.handleNotification(msg).catch((error) => {
           console.error('[PostgreSQLStorage] Error handling notification:', error);
         });
       });
-      
+
       this.isWatching = true;
       console.log('[PostgreSQLStorage] Started listening for database changes via LISTEN/NOTIFY');
-      
     } catch (error) {
       console.error('[PostgreSQLStorage] Failed to start database watching:', error);
       throw error;
@@ -501,9 +643,9 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     try {
       const payload = JSON.parse(msg.payload);
       const { operation, id, timestamp } = payload;
-      
+
       let eventData: any = { id };
-      
+
       // For created and updated events, fetch the full entry data
       if (operation === 'created' || operation === 'updated') {
         const entry = await this.get(id);
@@ -511,13 +653,12 @@ export class PostgreSQLStorageProvider implements StorageProvider {
           eventData = entry;
         }
       }
-      
+
       this.emitEvent({
         type: operation,
         timestamp: timestamp || new Date().toISOString(),
         data: eventData,
       });
-      
     } catch (error) {
       console.error('[PostgreSQLStorage] Error parsing notification:', error);
     }

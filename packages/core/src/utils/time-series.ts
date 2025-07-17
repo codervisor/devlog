@@ -85,39 +85,26 @@ export function calculateTimeSeriesStats(
                        (statusCounts['in-review'] || 0) +
                        (statusCounts['testing'] || 0);
 
-    dataPoints.push({
-      date: dateStr,
-      
-      // Cumulative data (primary Y-axis)
-      totalCreated,
-      totalCompleted,
-      totalClosed,
-      
-      // Snapshot data (secondary Y-axis)
-      currentOpen,
-      currentNew: statusCounts['new'] || 0,
-      currentInProgress: statusCounts['in-progress'] || 0,
-      currentBlocked: statusCounts['blocked'] || 0,
-      currentInReview: statusCounts['in-review'] || 0,
-      currentTesting: statusCounts['testing'] || 0,
-      
-      // Daily activity
-      dailyCreated,
-      dailyCompleted,
-      
-      // Legacy fields for backward compatibility
-      created: dailyCreated,
-      completed: dailyCompleted,
-      inProgress: statusCounts['in-progress'] || 0,
-      inReview: statusCounts['in-review'] || 0,
-      testing: statusCounts['testing'] || 0,
-      new: statusCounts['new'] || 0,
-      blocked: statusCounts['blocked'] || 0,
-      done: statusCounts['done'] || 0,
-      cancelled: statusCounts['cancelled'] || 0,
-    });
-
-    currentDate.setDate(currentDate.getDate() + 1);
+      dataPoints.push({
+        date: dateStr,
+        
+        // Cumulative data (primary Y-axis)
+        totalCreated,
+        totalCompleted,
+        totalClosed,
+        
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: statusCounts['new'] || 0,
+        currentInProgress: statusCounts['in-progress'] || 0,
+        currentBlocked: statusCounts['blocked'] || 0,
+        currentInReview: statusCounts['in-review'] || 0,
+        currentTesting: statusCounts['testing'] || 0,
+        
+        // Daily activity
+        dailyCreated,
+        dailyCompleted,
+      });    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return {

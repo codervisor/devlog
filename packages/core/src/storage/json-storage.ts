@@ -41,7 +41,7 @@ export class JsonStorageProvider implements StorageProvider {
   private readonly devlogDir: string;
   private readonly entriesDir: string;
   private initialized = false;
-  
+
   // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
   private fileWatcher?: FSWatcher;
@@ -125,7 +125,7 @@ export class JsonStorageProvider implements StorageProvider {
     const entries = await this.loadAllEntries();
 
     const filteredEntries = this.applyFilterAndSort(entries, filter);
-    
+
     // Always return paginated result for consistency
     // Use default pagination if none provided
     const pagination = filter?.pagination || { page: 1, limit: 100 };
@@ -153,7 +153,7 @@ export class JsonStorageProvider implements StorageProvider {
     await this.initialize();
     // Load all entries from filesystem for accurate statistics
     const entries = await this.loadAllEntries();
-    
+
     // Apply filtering but not pagination for stats
     const filteredEntries = this.applyFilterAndSort(entries, filter);
     return calculateDevlogStats(filteredEntries);
@@ -161,7 +161,7 @@ export class JsonStorageProvider implements StorageProvider {
 
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
-    
+
     // Load all entries from storage for analysis
     const result = await this.list();
     const allDevlogs = result.items;
@@ -179,30 +179,30 @@ export class JsonStorageProvider implements StorageProvider {
   /**
    * Get the next available ID for a new entry
    * Uses simple incremental numbering: 1, 2, 3, 4, ...
-   * 
+   *
    * Note: For multi-agent parallel access patterns, consider using
    * more advanced storage providers that handle concurrent access better.
    */
   async getNextId(): Promise<DevlogId> {
     // Get all existing entries to find the highest ID
     const entries = await this.loadAllEntries();
-    
+
     if (entries.length === 0) {
       return 1;
     }
-    
+
     // Find the highest existing ID and return the next one
-    const maxId = Math.max(...entries.map(entry => entry.id || 0));
+    const maxId = Math.max(...entries.map((entry) => entry.id || 0));
     return maxId + 1;
   }
 
   private async loadAllEntries(): Promise<DevlogEntry[]> {
     try {
       const files = await fs.readdir(this.entriesDir);
-      const jsonFiles = files.filter(file => file.endsWith('.json'));
-      
+      const jsonFiles = files.filter((file) => file.endsWith('.json'));
+
       const entries: DevlogEntry[] = [];
-      
+
       for (const file of jsonFiles) {
         try {
           const filePath = path.join(this.entriesDir, file);
@@ -211,10 +211,9 @@ export class JsonStorageProvider implements StorageProvider {
           entries.push(entry);
         } catch {
           // Skip invalid files
-          continue;
         }
       }
-      
+
       return entries;
     } catch {
       return [];
@@ -224,7 +223,7 @@ export class JsonStorageProvider implements StorageProvider {
   private async findFileById(id: DevlogId): Promise<string | null> {
     try {
       const files = await fs.readdir(this.entriesDir);
-      
+
       // Look for files that start with the ID (supports various padding formats)
       for (const file of files) {
         if (file.endsWith('.json')) {
@@ -235,7 +234,7 @@ export class JsonStorageProvider implements StorageProvider {
           }
         }
       }
-      
+
       return null;
     } catch {
       return null;
@@ -253,7 +252,7 @@ export class JsonStorageProvider implements StorageProvider {
         if (filter.assignee && entry.assignee !== filter.assignee) return false;
         if (filter.fromDate && entry.createdAt < filter.fromDate) return false;
         if (filter.toDate && entry.createdAt > filter.toDate) return false;
-        
+
         // Filter by archived status (default to non-archived if not specified)
         if (filter.archived !== undefined) {
           const isArchived = entry.archived === true;
@@ -262,7 +261,7 @@ export class JsonStorageProvider implements StorageProvider {
           // Default behavior: exclude archived entries unless explicitly requested
           if (entry.archived === true) return false;
         }
-        
+
         return true;
       });
     } else {
@@ -314,75 +313,104 @@ temp/
   // Note: JSON storage is not recommended for chat data due to size concerns
 
   async saveChatSession(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async getChatSession(): Promise<null> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async listChatSessions(): Promise<[]> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async deleteChatSession(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async saveChatMessages(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async getChatMessages(): Promise<[]> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async searchChatContent(): Promise<[]> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async getChatStats(): Promise<any> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async saveChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async getChatDevlogLinks(): Promise<[]> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async removeChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async getChatWorkspaces(): Promise<[]> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   async saveChatWorkspace(): Promise<void> {
-    throw new Error('Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.');
+    throw new Error(
+      'Chat storage is not supported in JSON provider due to size concerns. Use SQLite or database provider.',
+    );
   }
 
   /**
    * Apply pagination to a list of entries
    * @private
    */
-  private paginateResults(entries: DevlogEntry[], pagination: PaginationOptions): PaginatedResult<DevlogEntry> {
+  private paginateResults(
+    entries: DevlogEntry[],
+    pagination: PaginationOptions,
+  ): PaginatedResult<DevlogEntry> {
     const page = pagination.page || 1;
     const limit = pagination.limit || 20;
     const offset = pagination.offset || (page - 1) * limit;
-    
+
     // Apply sorting if specified
     if (pagination.sortBy) {
       entries = this.sortEntries(entries, pagination.sortBy, pagination.sortOrder || 'desc');
     }
-    
+
     const total = entries.length;
     const totalPages = Math.ceil(total / limit);
     const paginatedItems = entries.slice(offset, offset + limit);
-    
+
     return {
       items: paginatedItems,
       pagination: {
@@ -400,10 +428,14 @@ temp/
    * Sort entries by specified field
    * @private
    */
-  private sortEntries(entries: DevlogEntry[], sortBy: string, sortOrder: 'asc' | 'desc'): DevlogEntry[] {
+  private sortEntries(
+    entries: DevlogEntry[],
+    sortBy: string,
+    sortOrder: 'asc' | 'desc',
+  ): DevlogEntry[] {
     return [...entries].sort((a, b) => {
       let aVal: any, bVal: any;
-      
+
       switch (sortBy) {
         case 'createdAt':
         case 'updatedAt':
@@ -416,7 +448,15 @@ temp/
           bVal = priorityOrder[b.priority];
           break;
         case 'status':
-          const statusOrder = { new: 1, 'in-progress': 2, blocked: 3, 'in-review': 4, testing: 5, done: 6, cancelled: 7 };
+          const statusOrder = {
+            new: 1,
+            'in-progress': 2,
+            blocked: 3,
+            'in-review': 4,
+            testing: 5,
+            done: 6,
+            cancelled: 7,
+          };
           aVal = statusOrder[a.status];
           bVal = statusOrder[b.status];
           break;
@@ -428,7 +468,7 @@ temp/
           aVal = a[sortBy as keyof DevlogEntry];
           bVal = b[sortBy as keyof DevlogEntry];
       }
-      
+
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
@@ -442,12 +482,12 @@ temp/
    */
   async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
     this.eventCallbacks.add(callback);
-    
+
     // Start watching if this is the first subscription
     if (this.eventCallbacks.size === 1 && !this.isWatching) {
       await this.startWatching();
     }
-    
+
     // Return unsubscribe function
     return () => {
       this.eventCallbacks.delete(callback);
@@ -467,54 +507,58 @@ temp/
     }
 
     try {
-      this.fileWatcher = watch(this.entriesDir, { recursive: false }, async (eventType, filename) => {
-        if (!filename || !filename.endsWith('.json')) {
-          return;
-        }
+      this.fileWatcher = watch(
+        this.entriesDir,
+        { recursive: false },
+        async (eventType, filename) => {
+          if (!filename || !filename.endsWith('.json')) {
+            return;
+          }
 
-        try {
-          const filePath = path.join(this.entriesDir, filename);
-          
-          if (eventType === 'rename') {
-            // Check if file exists to determine if it's create or delete
-            try {
-              await fs.access(filePath);
-              // File exists, it's a creation
+          try {
+            const filePath = path.join(this.entriesDir, filename);
+
+            if (eventType === 'rename') {
+              // Check if file exists to determine if it's create or delete
+              try {
+                await fs.access(filePath);
+                // File exists, it's a creation
+                const entry = await this.loadEntryFromFile(filePath);
+                if (entry) {
+                  this.emitEvent({
+                    type: 'created',
+                    timestamp: new Date().toISOString(),
+                    data: entry,
+                  });
+                }
+              } catch {
+                // File doesn't exist, it's a deletion
+                // Extract ID from filename to emit delete event
+                const id = this.extractIdFromFilename(filename);
+                if (id !== null) {
+                  this.emitEvent({
+                    type: 'deleted',
+                    timestamp: new Date().toISOString(),
+                    data: { id },
+                  });
+                }
+              }
+            } else if (eventType === 'change') {
+              // File was modified
               const entry = await this.loadEntryFromFile(filePath);
               if (entry) {
                 this.emitEvent({
-                  type: 'created',
+                  type: 'updated',
                   timestamp: new Date().toISOString(),
                   data: entry,
                 });
               }
-            } catch {
-              // File doesn't exist, it's a deletion
-              // Extract ID from filename to emit delete event
-              const id = this.extractIdFromFilename(filename);
-              if (id !== null) {
-                this.emitEvent({
-                  type: 'deleted',
-                  timestamp: new Date().toISOString(),
-                  data: { id },
-                });
-              }
             }
-          } else if (eventType === 'change') {
-            // File was modified
-            const entry = await this.loadEntryFromFile(filePath);
-            if (entry) {
-              this.emitEvent({
-                type: 'updated',
-                timestamp: new Date().toISOString(),
-                data: entry,
-              });
-            }
+          } catch (error) {
+            console.error('Error processing file watch event:', error);
           }
-        } catch (error) {
-          console.error('Error processing file watch event:', error);
-        }
-      });
+        },
+      );
 
       this.isWatching = true;
       console.log('Started watching devlog directory for changes:', this.entriesDir);

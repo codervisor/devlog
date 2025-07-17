@@ -2,18 +2,27 @@
  * MySQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, TimeSeriesRequest, TimeSeriesStats, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult, MySQLStorageOptions } from '../types/index.js';
-import { StorageProvider } from '../types/index.js';
+import {
+  DevlogEntry,
+  DevlogFilter,
+  DevlogId,
+  DevlogStats,
+  MySQLStorageOptions,
+  PaginatedResult,
+  StorageProvider,
+  TimeSeriesDataPoint,
+  TimeSeriesRequest,
+  TimeSeriesStats,
+} from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 import { createPaginatedResult } from '../utils/common.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
 
 export class MySQLStorageProvider implements StorageProvider {
   private connectionString: string;
   private options: MySQLStorageOptions;
   private connection: any = null;
-  
+
   // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
   private pollingInterval?: NodeJS.Timeout;
@@ -179,7 +188,7 @@ export class MySQLStorageProvider implements StorageProvider {
 
     const [rows] = await this.connection.execute(query, params);
     const entries = (rows as any[]).map((row) => this.rowToDevlogEntry(row));
-    
+
     // Return paginated result for consistency
     const pagination = filter?.pagination || { page: 1, limit: 100 };
     return createPaginatedResult(entries, pagination);
@@ -196,7 +205,7 @@ export class MySQLStorageProvider implements StorageProvider {
     );
 
     const entries = (rows as any[]).map((row) => this.rowToDevlogEntry(row));
-    
+
     // Return paginated result for consistency
     return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
@@ -243,22 +252,135 @@ export class MySQLStorageProvider implements StorageProvider {
     return calculateDevlogStats(entries);
   }
 
-    async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
-    
-    // Load all entries from storage for analysis
-    const result = await this.list();
-    const allDevlogs = result.items;
 
-    // Delegate to shared utility function
-    return calculateTimeSeriesStats(allDevlogs, request);
+    // Set defaults
+    const days = request.days || 30;
+    const endDate = request.to ? new Date(request.to) : new Date();
+    const startDate = request.from ? new Date(request.from) : new Date(endDate);
+    if (!request.from) {
+      startDate.setDate(endDate.getDate() - days + 1);
+    }
+
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    // Single efficient MySQL query using CTEs
+    const query = `
+      WITH RECURSIVE date_series AS (
+        SELECT ? AS date
+        UNION ALL
+        SELECT DATE_ADD(date, INTERVAL 1 DAY)
+        FROM date_series
+        WHERE date < ?
+      ),
+      daily_stats AS (
+        SELECT 
+          DATE(created_at) as created_date,
+          COUNT(*) as daily_created
+        FROM devlog_entries
+        WHERE DATE(created_at) BETWEEN ? AND ?
+        GROUP BY DATE(created_at)
+      ),
+      daily_completed AS (
+        SELECT 
+          DATE(closed_at) as completed_date,
+          COUNT(*) as daily_completed
+        FROM devlog_entries
+        WHERE DATE(closed_at) BETWEEN ? AND ? AND status = 'done'
+        GROUP BY DATE(closed_at)
+      ),
+      cumulative_stats AS (
+        SELECT 
+          ds.date,
+          COALESCE(dc.daily_created, 0) as daily_created,
+          COALESCE(comp.daily_completed, 0) as daily_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date) as total_created,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'done') as total_completed,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'cancelled') as total_cancelled,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'new') as current_new,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-progress') as current_in_progress,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'blocked') as current_blocked,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-review') as current_in_review,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'testing') as current_testing
+        FROM date_series ds
+        LEFT JOIN daily_stats dc ON ds.date = dc.created_date
+        LEFT JOIN daily_completed comp ON ds.date = comp.completed_date
+        ORDER BY ds.date
+      )
+      SELECT * FROM cumulative_stats;
+    `;
+
+    const [rows] = (await this.connection.execute(query, [
+      startDateStr,
+      endDateStr, // date_series parameters
+      startDateStr,
+      endDateStr, // daily_stats parameters
+      startDateStr,
+      endDateStr, // daily_completed parameters
+    ])) as [
+      Array<{
+        date: string;
+        daily_created: number;
+        daily_completed: number;
+        total_created: number;
+        total_completed: number;
+        total_cancelled: number;
+        current_new: number;
+        current_in_progress: number;
+        current_blocked: number;
+        current_in_review: number;
+        current_testing: number;
+      }>,
+      any,
+    ];
+
+    const dataPoints: TimeSeriesDataPoint[] = rows.map((row) => {
+      const totalClosed = row.total_completed + row.total_cancelled;
+      const currentOpen =
+        row.current_new +
+        row.current_in_progress +
+        row.current_blocked +
+        row.current_in_review +
+        row.current_testing;
+
+      return {
+        date: row.date,
+
+        // Cumulative data (primary Y-axis)
+        totalCreated: row.total_created,
+        totalCompleted: row.total_completed,
+        totalClosed,
+
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: row.current_new,
+        currentInProgress: row.current_in_progress,
+        currentBlocked: row.current_blocked,
+        currentInReview: row.current_in_review,
+        currentTesting: row.current_testing,
+
+        // Daily activity
+        dailyCreated: row.daily_created,
+        dailyCompleted: row.daily_completed,
+      };
+    });
+
+    return {
+      dataPoints,
+      dateRange: {
+        from: startDateStr,
+        to: endDateStr,
+      },
+    };
   }
 
   async cleanup(): Promise<void> {
     // Stop event polling
     await this.stopWatching();
     this.eventCallbacks.clear();
-    
+
     if (this.connection) {
       await this.connection.end();
       this.connection = null;
@@ -304,55 +426,81 @@ export class MySQLStorageProvider implements StorageProvider {
   // ===== Chat Storage Operations (TODO: Implement with proper MySQL schema) =====
 
   async saveChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatSession(): Promise<null> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async listChatSessions(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async deleteChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatMessages(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatMessages(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async searchChatContent(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatStats(): Promise<any> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatDevlogLinks(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async removeChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async getChatWorkspaces(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   async saveChatWorkspace(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.');
+    throw new Error(
+      'Chat storage not yet implemented for MySQL provider. Implementation coming in Phase 2.',
+    );
   }
 
   // ===== Event Subscription Operations =====
@@ -362,12 +510,12 @@ export class MySQLStorageProvider implements StorageProvider {
    */
   async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
     this.eventCallbacks.add(callback);
-    
+
     // Start polling if this is the first subscription
     if (this.eventCallbacks.size === 1 && !this.isWatching) {
       await this.startWatching();
     }
-    
+
     // Return unsubscribe function
     return () => {
       this.eventCallbacks.delete(callback);
@@ -388,20 +536,21 @@ export class MySQLStorageProvider implements StorageProvider {
 
     try {
       this.isWatching = true;
-      
+
       // Initialize known IDs with current state
       const [rows] = await this.connection.execute('SELECT id FROM devlog_entries');
       this.lastKnownEntryIds = new Set<number>(rows.map((row: any) => Number(row.id)));
-      
-      console.log(`[MySQLStorage] Started watching for database changes (tracking ${this.lastKnownEntryIds.size} entries)`);
-      
+
+      console.log(
+        `[MySQLStorage] Started watching for database changes (tracking ${this.lastKnownEntryIds.size} entries)`,
+      );
+
       // Poll every 3 seconds for changes (slightly slower than SQLite for network overhead)
       this.pollingInterval = setInterval(() => {
-        this.pollForChanges().catch(error => {
+        this.pollForChanges().catch((error) => {
           console.error('[MySQLStorage] Error polling for changes:', error);
         });
       }, 3000);
-      
     } catch (error) {
       console.error('[MySQLStorage] Failed to start database watching:', error);
       throw error;
@@ -430,37 +579,37 @@ export class MySQLStorageProvider implements StorageProvider {
 
     try {
       const currentTimestamp = new Date().toISOString();
-      
+
       // Query for entries updated since last poll
       const [changedEntries] = await this.connection.execute(
         'SELECT * FROM devlog_entries WHERE updated_at > ? ORDER BY updated_at ASC',
-        [this.lastPollTimestamp]
+        [this.lastPollTimestamp],
       );
-      
+
       for (const row of changedEntries as any[]) {
         const entry = this.rowToDevlogEntry(row);
-        
+
         // Skip if entry.id is undefined (shouldn't happen but be safe)
         if (entry.id === undefined) {
           console.warn('[MySQLStorage] Skipping entry with undefined ID');
           continue;
         }
-        
+
         // Determine if this is a creation or update by checking if we've seen this ID before
         const eventType = this.lastKnownEntryIds.has(entry.id) ? 'updated' : 'created';
         this.lastKnownEntryIds.add(entry.id);
-        
+
         this.emitEvent({
           type: eventType,
           timestamp: currentTimestamp,
           data: entry,
         });
       }
-      
+
       // Check for deletions by comparing current IDs with last known IDs
       const [allIdsResult] = await this.connection.execute('SELECT id FROM devlog_entries');
-      const currentIds = new Set<number>((allIdsResult as any[]).map(row => Number(row.id)));
-      
+      const currentIds = new Set<number>((allIdsResult as any[]).map((row) => Number(row.id)));
+
       for (const lastKnownId of this.lastKnownEntryIds) {
         if (!currentIds.has(lastKnownId)) {
           // Entry was deleted
@@ -471,11 +620,10 @@ export class MySQLStorageProvider implements StorageProvider {
           });
         }
       }
-      
+
       // Update our tracking
       this.lastKnownEntryIds = currentIds;
       this.lastPollTimestamp = currentTimestamp;
-      
     } catch (error) {
       console.error('[MySQLStorage] Error polling for changes:', error);
     }

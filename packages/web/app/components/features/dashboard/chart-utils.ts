@@ -10,9 +10,7 @@ export interface FormattedChartData {
   totalCreated: number;
   totalClosed: number;
   currentOpen: number;
-  // Legacy fields for backward compatibility
-  created: number;
-  completed: number;
+  // Add other fields that might be used
   [key: string]: any;
 }
 
@@ -60,9 +58,6 @@ export function formatTooltipValue(value: number, name: string): [number, string
     totalCreated: 'Total Created',
     totalClosed: 'Total Closed', 
     currentOpen: 'Currently Open',
-    // Legacy mappings
-    created: 'Created',
-    completed: 'Completed',
   };
   
   return [value, nameMap[name] || name];
