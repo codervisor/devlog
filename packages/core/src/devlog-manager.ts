@@ -180,7 +180,22 @@ export class DevlogManager {
     if (request.title !== undefined) updated.title = request.title;
     if (request.type !== undefined) updated.type = request.type;
     if (request.description !== undefined) updated.description = request.description;
-    if (request.status !== undefined) updated.status = request.status;
+    if (request.status !== undefined) {
+      const oldStatus = existing.status;
+      updated.status = request.status;
+      
+      // Set closedAt timestamp when status changes to 'done' or 'cancelled'
+      if ((request.status === 'done' || request.status === 'cancelled') && 
+          oldStatus !== 'done' && oldStatus !== 'cancelled') {
+        updated.closedAt = new Date().toISOString();
+      }
+      
+      // Clear closedAt if status changes from closed back to open
+      if ((oldStatus === 'done' || oldStatus === 'cancelled') &&
+          request.status !== 'done' && request.status !== 'cancelled') {
+        updated.closedAt = undefined;
+      }
+    }
     if (request.priority !== undefined) updated.priority = request.priority;
     if (request.assignee !== undefined) updated.assignee = request.assignee;
     if (request.files !== undefined) updated.files = request.files;

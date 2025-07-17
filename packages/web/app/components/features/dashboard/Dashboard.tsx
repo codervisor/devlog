@@ -8,7 +8,10 @@ import {
   AreaChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -114,39 +117,79 @@ export function Dashboard({
               <Col xs={24} lg={12}>
                 <div className={styles.chartCard}>
                   <Title level={4} className="mb-4">
-                    Development Activity (Last 30 Days)
+                    Project Progress & Current Workload
                   </Title>
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={chartData}>
+                    <ComposedChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" fontSize={12} tickLine={false} />
-                      <YAxis fontSize={12} tickLine={false} />
+                      
+                      {/* Primary Y-axis for cumulative data */}
+                      <YAxis 
+                        yAxisId="cumulative"
+                        fontSize={12} 
+                        tickLine={false}
+                        label={{ value: 'Total Items', angle: -90, position: 'insideLeft' }}
+                      />
+                      
+                      {/* Secondary Y-axis for current workload */}
+                      <YAxis 
+                        yAxisId="current"
+                        orientation="right"
+                        fontSize={12} 
+                        tickLine={false}
+                        label={{ value: 'Current Open', angle: 90, position: 'insideRight' }}
+                      />
+                      
                       <Tooltip
                         labelFormatter={(label, payload) => {
                           const data = payload[0]?.payload;
                           return data ? data.fullDate : label;
                         }}
+                        formatter={(value: number, name: string) => [
+                          value,
+                          name === 'totalCreated' ? 'Total Created' :
+                          name === 'totalCompleted' ? 'Total Completed' :
+                          name === 'totalClosed' ? 'Total Closed' :
+                          name === 'currentOpen' ? 'Currently Open' :
+                          name
+                        ]}
                       />
                       <Legend />
+                      
+                      {/* Cumulative data on primary axis */}
                       <Area
+                        yAxisId="cumulative"
                         type="monotone"
-                        dataKey="created"
+                        dataKey="totalCreated"
                         stackId="1"
                         stroke="#1890ff"
                         fill="#1890ff"
-                        fillOpacity={0.7}
-                        name="Created"
+                        fillOpacity={0.6}
+                        name="Total Created"
                       />
                       <Area
+                        yAxisId="cumulative"
                         type="monotone"
-                        dataKey="completed"
-                        stackId="1"
+                        dataKey="totalCompleted"
+                        stackId="2"
                         stroke="#52c41a"
                         fill="#52c41a"
-                        fillOpacity={0.7}
-                        name="Completed"
+                        fillOpacity={0.6}
+                        name="Total Completed"
                       />
-                    </AreaChart>
+                      
+                      {/* Current workload on secondary axis */}
+                      <Line
+                        yAxisId="current"
+                        type="monotone"
+                        dataKey="currentOpen"
+                        stroke="#fa8c16"
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        name="Currently Open"
+                      />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               </Col>

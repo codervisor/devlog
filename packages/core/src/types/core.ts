@@ -66,6 +66,7 @@ export interface DevlogEntry {
   priority: DevlogPriority;
   createdAt: string;
   updatedAt: string;
+  closedAt?: string; // ISO timestamp when status changed to 'done' or 'cancelled'
   assignee?: string;
   notes: DevlogNote[];
   files?: string[];
@@ -169,14 +170,42 @@ export interface DevlogStats {
 // Time series data for dashboard charts
 export interface TimeSeriesDataPoint {
   date: string; // ISO date string (YYYY-MM-DD)
+  
+  // Cumulative data (primary Y-axis) - shows total project progress over time
+  totalCreated: number;        // Running total of all created devlogs
+  totalCompleted: number;      // Running total of completed devlogs (status: 'done')
+  totalClosed: number;         // Running total of closed devlogs (status: 'done' + 'cancelled')
+  
+  // Snapshot data (secondary Y-axis) - shows current workload distribution at this point in time
+  currentOpen: number;         // Total currently open devlogs
+  currentNew: number;          // Currently in 'new' status
+  currentInProgress: number;   // Currently in 'in-progress' status
+  currentBlocked: number;      // Currently in 'blocked' status
+  currentInReview: number;     // Currently in 'in-review' status
+  currentTesting: number;      // Currently in 'testing' status
+  
+  // Daily activity (for velocity insights) - events that occurred on this specific day
+  dailyCreated: number;        // Devlogs created on this specific day
+  dailyCompleted: number;      // Devlogs completed on this specific day
+  
+  // Legacy fields (maintained for backward compatibility)
+  /** @deprecated Use totalCreated instead */
   created: number;
+  /** @deprecated Use totalCompleted instead */
   completed: number;
+  /** @deprecated Use currentInProgress instead */
   inProgress: number;
+  /** @deprecated Use currentInReview instead */
   inReview: number;
+  /** @deprecated Use currentTesting instead */
   testing: number;
+  /** @deprecated Use currentNew instead */
   new: number;
+  /** @deprecated Use currentBlocked instead */
   blocked: number;
+  /** @deprecated Use totalCompleted instead */
   done: number;
+  /** @deprecated Use currentOpen calculation instead */
   cancelled: number;
 }
 

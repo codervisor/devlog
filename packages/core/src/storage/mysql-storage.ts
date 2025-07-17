@@ -310,8 +310,49 @@ export class MySQLStorageProvider implements StorageProvider {
         {} as Record<string, number>,
       );
 
+      // Calculate cumulative totals up to this date
+      const totalCreated = allDevlogs.filter((devlog: any) => 
+        new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalCompleted = allDevlogs.filter((devlog: any) => 
+        devlog.status === 'done' && new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalCancelled = allDevlogs.filter((devlog: any) => 
+        devlog.status === 'cancelled' && new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalClosed = totalCompleted + totalCancelled;
+
+      // Calculate current open devlogs (all statuses except 'done' and 'cancelled')
+      const currentOpen = (statusCounts['new'] || 0) +
+                         (statusCounts['in-progress'] || 0) +
+                         (statusCounts['blocked'] || 0) +
+                         (statusCounts['in-review'] || 0) +
+                         (statusCounts['testing'] || 0);
+
       dataPoints.push({
         date: dateStr,
+        
+        // Cumulative data (primary Y-axis)
+        totalCreated,
+        totalCompleted,
+        totalClosed,
+        
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: statusCounts['new'] || 0,
+        currentInProgress: statusCounts['in-progress'] || 0,
+        currentBlocked: statusCounts['blocked'] || 0,
+        currentInReview: statusCounts['in-review'] || 0,
+        currentTesting: statusCounts['testing'] || 0,
+        
+        // Daily activity
+        dailyCreated: created,
+        dailyCompleted: completed,
+        
+        // Legacy fields for backward compatibility
         created,
         completed,
         inProgress: statusCounts['in-progress'] || 0,

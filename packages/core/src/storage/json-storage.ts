@@ -186,23 +186,11 @@ export class JsonStorageProvider implements StorageProvider {
 
       // Count devlogs completed on this date
       const completed = allDevlogs.filter((devlog: DevlogEntry) => {
-        if (devlog.status !== 'done') return false;
-
-        // If this is a "done" devlog and its updatedAt is on this date,
-        // AND it doesn't have any notes after the updatedAt time,
-        // then it was likely completed on this date
-        const updatedDate = new Date(devlog.updatedAt).toISOString().split('T')[0];
-        if (updatedDate === dateStr) {
-          // Check if there are any notes after the updatedAt time
-          const hasLaterNotes = devlog.notes?.some(note => 
-            new Date(note.timestamp) > new Date(devlog.updatedAt)
-          );
-          
-          // If no later notes, this was likely completed on updatedAt date
-          return !hasLaterNotes;
-        }
-
-        return false;
+        // Use closedAt field for reliable completion detection
+        if (!devlog.closedAt || devlog.status !== 'done') return false;
+        
+        const closedDate = new Date(devlog.closedAt).toISOString().split('T')[0];
+        return closedDate === dateStr;
       }).length;
 
       // Count status distribution as of this date (cumulative approach)
@@ -219,8 +207,49 @@ export class JsonStorageProvider implements StorageProvider {
         {} as Record<DevlogStatus, number>,
       );
 
+      // Calculate cumulative totals up to this date
+      const totalCreated = allDevlogs.filter(devlog => 
+        new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalCompleted = allDevlogs.filter(devlog => 
+        devlog.status === 'done' && new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalCancelled = allDevlogs.filter(devlog => 
+        devlog.status === 'cancelled' && new Date(devlog.createdAt) <= currentDate
+      ).length;
+
+      const totalClosed = totalCompleted + totalCancelled;
+
+      // Calculate current open devlogs (all statuses except 'done' and 'cancelled')
+      const currentOpen = (statusCounts['new'] || 0) +
+                         (statusCounts['in-progress'] || 0) +
+                         (statusCounts['blocked'] || 0) +
+                         (statusCounts['in-review'] || 0) +
+                         (statusCounts['testing'] || 0);
+
       dataPoints.push({
         date: dateStr,
+        
+        // Cumulative data (primary Y-axis)
+        totalCreated,
+        totalCompleted,
+        totalClosed,
+        
+        // Snapshot data (secondary Y-axis)
+        currentOpen,
+        currentNew: statusCounts['new'] || 0,
+        currentInProgress: statusCounts['in-progress'] || 0,
+        currentBlocked: statusCounts['blocked'] || 0,
+        currentInReview: statusCounts['in-review'] || 0,
+        currentTesting: statusCounts['testing'] || 0,
+        
+        // Daily activity
+        dailyCreated: created,
+        dailyCompleted: completed,
+        
+        // Legacy fields for backward compatibility
         created,
         completed,
         inProgress: statusCounts['in-progress'] || 0,
