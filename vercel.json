@@ -3,11 +3,6 @@
   "buildCommand": "npm run build:vercel",
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": "packages/web/.next",
-  "functions": {
-    "packages/web/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   }
