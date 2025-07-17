@@ -1,0 +1,44 @@
+{
+  "key": "test-cancelled-status-entry",
+  "title": "Test Cancelled Status Entry",
+  "type": "task",
+  "description": "Test entry to verify cancelled status shows up in stats",
+  "status": "cancelled",
+  "priority": "medium",
+  "createdAt": "2025-07-17T05:54:10.864Z",
+  "updatedAt": "2025-07-17T05:55:26.085Z",
+  "notes": [
+    {
+      "id": "afbaf05b-bc24-448a-aa03-497f07282c1a",
+      "timestamp": "2025-07-17T05:54:16.282Z",
+      "category": "progress",
+      "content": "Cancelled: Testing cancelled status in overview stats"
+    },
+    {
+      "id": "b9aa91a0-c995-4c50-9af4-106d79e2c4a9",
+      "timestamp": "2025-07-17T05:55:26.085Z",
+      "category": "progress",
+      "content": "Cancelled: Test entry completed - verified cancelled status shows in stats correctly"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T05:54:10.864Z",
+    "contextVersion": 1
+  },
+  "id": 155
+}

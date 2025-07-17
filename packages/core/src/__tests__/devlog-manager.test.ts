@@ -412,6 +412,69 @@ describe('DevlogManager', () => {
       expect(stats.byPriority.high).toBe(1);
       expect(stats.byPriority.medium).toBe(1);
     });
+
+    it('should include cancelled entries in statistics', async () => {
+      // Create entries with different statuses
+      const activeEntry = await devlogManager.createDevlog({
+        title: 'Active Task',
+        type: 'task',
+        description: 'An active task',
+      });
+
+      const cancelledEntry = await devlogManager.createDevlog({
+        title: 'Cancelled Task',
+        type: 'feature',
+        description: 'A task to be cancelled',
+      });
+
+      const completedEntry = await devlogManager.createDevlog({
+        title: 'Completed Task',
+        type: 'bugfix',
+        description: 'A completed task',
+      });
+
+      // Close one entry (cancelled)
+      await devlogManager.closeDevlog(cancelledEntry.id!, 'Not needed anymore');
+
+      // Complete one entry
+      await devlogManager.completeDevlog(completedEntry.id!);
+
+      const stats = await devlogManager.getStats();
+
+      // All entries should be included (cancelled should not be excluded from stats)
+      expect(stats.totalEntries).toBe(3);
+      expect(stats.byStatus.new).toBe(1);      // activeEntry
+      expect(stats.byStatus.cancelled).toBe(1); // cancelledEntry
+      expect(stats.byStatus.done).toBe(1);     // completedEntry
+      expect(stats.openEntries).toBe(1);       // activeEntry only
+      expect(stats.closedEntries).toBe(2);     // cancelled + done
+    });
+
+    it('should exclude archived entries from statistics', async () => {
+      // Create regular entries
+      const activeEntry = await devlogManager.createDevlog({
+        title: 'Active Task',
+        type: 'task',
+        description: 'An active task',
+      });
+
+      const archivedEntry = await devlogManager.createDevlog({
+        title: 'Archived Task',
+        type: 'feature',
+        description: 'A task to be archived',
+      });
+
+      // Archive one entry
+      await devlogManager.archiveDevlog(archivedEntry.id!);
+
+      const stats = await devlogManager.getStats();
+
+      // Only non-archived entries should be included
+      expect(stats.totalEntries).toBe(1);
+      expect(stats.byStatus.new).toBe(1);      // activeEntry only
+      expect(stats.byType.task).toBe(1);       // activeEntry only
+      expect(stats.byType.feature).toBeUndefined(); // archivedEntry excluded
+    });
   });
 
   describe('deleteDevlog', () => {

@@ -335,21 +335,28 @@ export class DevlogManager {
   }
 
   /**
-   * Apply default filters including exclusion of closed entries
+   * Apply default filters including exclusion of archived entries and optionally closed entries
    * @private
    */
-  private applyDefaultFilters(filter?: DevlogFilter): DevlogFilter {
+  private applyDefaultFilters(filter?: DevlogFilter, options: { includeAllStatuses?: boolean } = {}): DevlogFilter {
     const enhancedFilter = { ...filter };
 
-    // If no status filter is provided, exclude closed entries by default
-    // If status filter is provided, respect it (user explicitly requested specific statuses)
-    if (!enhancedFilter.status) {
-      // Exclude closed entries by including all open statuses plus 'done'
-      // Note: 'done' is included to maintain backward compatibility with existing behavior
-      enhancedFilter.status = [...getOpenStatuses(), 'done'];
+    // Always exclude archived entries by default unless explicitly requested
+    if (enhancedFilter.archived === undefined) {
+      enhancedFilter.archived = false;
     }
-    // If status filter is provided and includes 'cancelled', keep it as-is
-    // This allows users to explicitly request cancelled entries
+
+    // Apply status filtering only if not requesting all statuses (e.g., for lists but not stats)
+    if (!options.includeAllStatuses) {
+      // If no status filter is provided, exclude closed entries by default (for cleaner list UX)
+      // If status filter is provided, respect it (user explicitly requested specific statuses)
+      if (!enhancedFilter.status) {
+        // For list views: exclude closed entries by showing only open statuses
+        enhancedFilter.status = getOpenStatuses();
+      }
+      // If status filter is provided and includes closed statuses, keep it as-is
+      // This allows users to explicitly request closed entries
+    }
 
     return enhancedFilter;
   }
@@ -414,13 +421,13 @@ export class DevlogManager {
 
   /**
    * Get devlog statistics
-   * Uses the same default filtering as listDevlogs() to ensure consistency
+   * Includes all statuses (including cancelled) but excludes archived entries by default
    */
   async getStats(): Promise<DevlogStats> {
     await this.ensureInitialized();
     
-    // Apply the same default filters as listDevlogs() for consistency
-    const enhancedFilter = this.applyDefaultFilters({});
+    // For stats, include all statuses but exclude archived entries
+    const enhancedFilter = this.applyDefaultFilters({}, { includeAllStatuses: true });
     
     return await this.storageProvider.getStats(enhancedFilter);
   }
