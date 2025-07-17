@@ -1,0 +1,65 @@
+{
+  "key": "fix-vercel-runtime-error-cannot-create-devlog-dire",
+  "title": "Fix: Vercel runtime error - cannot create .devlog directory in read-only serverless filesystem",
+  "type": "bugfix",
+  "description": "Vercel serverless deployment fails at runtime because the application tries to create a .devlog directory in the read-only filesystem. The getWorkspaceRoot() function returns process.cwd() in production, which points to /var/task/packages/web in Vercel, where mkdir operations are not permitted.",
+  "status": "in-review",
+  "priority": "critical",
+  "createdAt": "2025-07-17T16:32:39.103Z",
+  "updatedAt": "2025-07-17T16:35:43.640Z",
+  "notes": [
+    {
+      "id": "fa2e5804-8db3-4d8d-b80a-df80b171c621",
+      "timestamp": "2025-07-17T16:33:06.790Z",
+      "category": "solution",
+      "content": "ROOT CAUSE ANALYSIS: The configuration manager correctly prioritizes database storage (PostgreSQL, MySQL, SQLite) over JSON storage, but no database URL environment variables are set in Vercel deployment. This causes fallback to JSON storage, which attempts to create .devlog directory in read-only serverless filesystem. The proper solution is to configure DATABASE_URL or POSTGRES_URL in Vercel environment variables to enable PostgreSQL storage."
+    },
+    {
+      "id": "a6fe1381-7ae0-4e75-89be-ae471eb79211",
+      "timestamp": "2025-07-17T16:35:21.912Z",
+      "category": "solution",
+      "content": "SOLUTION IMPLEMENTED: Added serverless environment detection to getWorkspaceRoot() function. When NODE_ENV=production and serverless environment variables (VERCEL, AWS_LAMBDA_FUNCTION_NAME, NETLIFY) are detected, the function now returns a temp directory path (/tmp/devlog-serverless) instead of the current working directory. This allows JSON storage to work in serverless environments where the main filesystem is read-only.",
+      "files": [
+        "packages/core/src/utils/storage.ts"
+      ],
+      "codeChanges": "Modified getWorkspaceRoot() in packages/core/src/utils/storage.ts to detect serverless environments (VERCEL, AWS_LAMBDA_FUNCTION_NAME, NETLIFY) and use /tmp/devlog-serverless directory instead of trying to create directories in read-only filesystem"
+    },
+    {
+      "id": "800d1535-9931-423d-aaf3-9c3cbac4416b",
+      "timestamp": "2025-07-17T16:35:29.497Z",
+      "category": "progress",
+      "content": "VALIDATION COMPLETED: Local testing confirms the fix works correctly. Test script shows that when VERCEL=1 and NODE_ENV=production, getWorkspaceRoot() returns '/tmp/devlog-serverless' path. The application should now be able to create .devlog directories in the writable /tmp filesystem in Vercel serverless environment."
+    },
+    {
+      "id": "9bf90a16-0e21-4113-8b02-57f9bfcbc9e4",
+      "timestamp": "2025-07-17T16:35:37.950Z",
+      "category": "reminder",
+      "content": "RECOMMENDED LONG-TERM SOLUTION: While this fix enables JSON storage in serverless environments, the recommended production approach is to configure a database (PostgreSQL) by setting DATABASE_URL or POSTGRES_URL environment variable in Vercel. This provides persistent storage, better performance, and avoids the limitations of temporary filesystem storage. The configuration manager already supports automatic PostgreSQL detection when these environment variables are present."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Critical production deployment blocker preventing the deployed web application from functioning. Users cannot access the devlog interface due to filesystem permission errors in serverless environment.",
+    "technicalContext": "Vercel serverless functions have read-only filesystems except for /tmp directory. The current JSON storage configuration attempts to create .devlog directory in the working directory, but this fails with ENOENT error in serverless environment. Need to either use database storage or modify the storage logic to handle serverless constraints.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Web application starts successfully on Vercel without filesystem errors",
+      "Storage configuration properly detects serverless environment",
+      "Application falls back to appropriate storage backend for production",
+      "No runtime errors related to directory creation in serverless environment"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T16:32:39.103Z",
+    "contextVersion": 1
+  },
+  "id": 180
+}

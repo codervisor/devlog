@@ -17,6 +17,11 @@ export function getDevlogDirFromJsonConfig(config: JsonConfig): string {
 
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {
   if (process.env.NODE_ENV === 'production') {
+    // Detect serverless environments where filesystem is read-only
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY) {
+      // Use /tmp directory in serverless environments for write operations
+      return path.join(os.tmpdir(), 'devlog-serverless');
+    }
     // Use working directory in production
     return process.cwd();
   } else if (parseBoolean(process.env.UNIT_TEST)) {
