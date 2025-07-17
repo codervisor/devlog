@@ -2,7 +2,6 @@
   "name": "@devlog/web",
   "version": "1.0.0",
   "description": "Web interface for devlog management",
-  "main": "./next.config.js",
   "scripts": {
     "dev": "next dev",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
