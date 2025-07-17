@@ -5,7 +5,7 @@ import { Alert, Breadcrumb, Button, Popconfirm, Space, Tag, message } from 'antd
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { DevlogDetails, LoadingPage, PageLayout } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
+import { useDevlogDetails } from '@/hooks/useDevlogDetails';
 import { DevlogEntry } from '@devlog/core';
 import { useRouter } from 'next/navigation';
 import {
@@ -21,10 +21,7 @@ interface DevlogDetailsPageProps {
 }
 
 export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
-  const { devlogs, updateDevlog, deleteDevlog } = useDevlogs();
-  const [devlog, setDevlog] = useState<DevlogEntry | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { devlog, loading, error: fetchError, updateDevlog, deleteDevlog } = useDevlogDetails(id);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -34,31 +31,9 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
   const saveHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const discardHandlerRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    const foundDevlog = devlogs.find((d: DevlogEntry) => d.id === parseInt(id));
-    if (foundDevlog) {
-      // Only update the devlog state if it's actually different
-      // This prevents unnecessary re-renders that could interfere with unsaved changes
-      setDevlog((currentDevlog) => {
-        if (!currentDevlog || currentDevlog.updatedAt !== foundDevlog.updatedAt) {
-          return foundDevlog;
-        }
-        return currentDevlog;
-      });
-      setLoading(false);
-    } else if (devlogs.length > 0) {
-      // If devlogs are loaded but no match found
-      setError('Devlog not found');
-      setLoading(false);
-    }
-    // If devlogs are still loading, keep loading state
-  }, [devlogs, id]);
-
   const handleUpdate = async (data: any) => {
     try {
       await updateDevlog(data);
-      // The devlogs array will be updated automatically by fetchDevlogs() in updateDevlog
-      // The useEffect will update the local devlog state when devlogs changes
       message.success('Changes saved successfully');
     } catch (error) {
       console.error('Failed to update devlog:', error);
@@ -114,10 +89,10 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
     );
   }
 
-  if (error) {
+  if (fetchError) {
     return (
       <PageLayout>
-        <Alert message="Error" description={error} type="error" showIcon />
+        <Alert message="Error" description={fetchError} type="error" showIcon />
       </PageLayout>
     );
   }

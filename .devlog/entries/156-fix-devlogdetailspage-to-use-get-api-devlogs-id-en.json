@@ -1,0 +1,54 @@
+{
+  "key": "fix-devlogdetailspage-to-use-get-api-devlogs-id-en",
+  "title": "Fix DevlogDetailsPage to use GET /api/devlogs/[id] endpoint instead of list lookup",
+  "type": "bugfix",
+  "description": "The DevlogDetailsPage component has a critical API design issue. Instead of using the proper GET /api/devlogs/[id] endpoint to fetch individual devlog details, it currently:\n\n1. Uses the useDevlogs() hook to fetch ALL devlogs via GET /api/devlogs\n2. Searches through the array to find the specific devlog by ID\n3. Depends on the entire list being loaded before displaying details\n\nThis approach is inefficient and incorrect because:\n- It fetches unnecessary data (all devlogs instead of just one)\n- It's slower due to larger payload and client-side filtering\n- It creates unnecessary dependency on the list endpoint for detail views\n- It wastes bandwidth and server resources\n\nThe API already has a proper GET /api/devlogs/[id] endpoint implemented that returns a single devlog efficiently.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-17T06:08:14.942Z",
+  "updatedAt": "2025-07-17T06:10:42.230Z",
+  "notes": [
+    {
+      "id": "2b628c0e-f1f2-4977-9cdd-d281407667c9",
+      "timestamp": "2025-07-17T06:10:36.191Z",
+      "category": "solution",
+      "content": "Successfully implemented the fix for DevlogDetailsPage API usage. \n\n✅ **Key Changes Made:**\n1. **Created new hook `useDevlogDetails`**: Dedicated hook for fetching individual devlog details via GET /api/devlogs/[id]\n2. **Updated DevlogDetailsPage**: Replaced useDevlogs() hook with useDevlogDetails(id) \n3. **Removed inefficient list lookup**: No longer fetches all devlogs just to find one\n4. **Maintained all functionality**: Preserved update, delete, real-time updates, and error handling\n5. **Improved performance**: Faster loading, less bandwidth usage, proper API design\n\n✅ **Technical Implementation:**\n- New hook handles individual devlog fetching with proper error states\n- Real-time updates still work via Server-Sent Events for the specific devlog\n- Maintains backward compatibility with all existing UI behavior\n- Build passes with no TypeScript errors\n\n✅ **Benefits:**\n- Much faster page loads (only fetches needed data)\n- Scales properly as devlog database grows\n- Follows REST API best practices\n- Reduces server load and bandwidth usage",
+      "files": [
+        "packages/web/app/hooks/useDevlogDetails.ts",
+        "packages/web/app/devlogs/[id]/DevlogDetailsPage.tsx"
+      ]
+    },
+    {
+      "id": "3fb3a2bb-b0d5-4ccd-879a-9eaac8bcb292",
+      "timestamp": "2025-07-17T06:10:42.230Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed the critical API design issue in DevlogDetailsPage. The component now uses the proper GET /api/devlogs/[id] endpoint via a new useDevlogDetails hook instead of inefficiently fetching all devlogs and searching through them. This improves performance, follows REST best practices, and scales properly as the database grows. All existing functionality including real-time updates and error handling has been preserved."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Efficient API usage is critical for performance, especially as the devlog database grows. Using the list endpoint for detail views will scale poorly and create unnecessary load.",
+    "technicalContext": "The web application is built with Next.js App Router, and the DevlogDetailsPage is a client component. The API layer already has the correct endpoint implemented in /app/api/devlogs/[id]/route.ts with proper GET, PUT, and DELETE methods.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "DevlogDetailsPage uses GET /api/devlogs/[id] to fetch individual devlog",
+      "Remove dependency on useDevlogs hook for fetching data",
+      "Maintain existing update and delete functionality",
+      "Preserve all current UI behavior and error handling",
+      "Page loads faster without fetching unnecessary data"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T06:08:14.942Z",
+    "contextVersion": 1
+  },
+  "id": 156
+}
