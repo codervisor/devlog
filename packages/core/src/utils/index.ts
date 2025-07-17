@@ -12,3 +12,4 @@ export * from './github-type-mapper.js';
 export * from './lru-cache.js';
 export * from './rate-limiter.js';
 export * from './storage.js';
+export * from './time-series.js';

@@ -31,6 +31,7 @@ import type { DevlogEvent } from '../events/devlog-events.js';
 import { initializeChatTables } from './chat-schema.js';
 import { createPaginatedResult } from '../utils/common.js';
 import { calculateDevlogStats } from '../utils/storage.js';
+import { calculateTimeSeriesStats } from '../utils/time-series.js';
 
 export class SQLiteStorageProvider implements StorageProvider {
   private db: any = null;
@@ -385,120 +386,15 @@ export class SQLiteStorageProvider implements StorageProvider {
     return calculateDevlogStats(entries);
   }
 
-  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
-    if (!this.db) throw new Error('Database not initialized');
+    async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+    await this.initialize();
+    
+    // Load all entries from storage for analysis
+    const result = await this.list();
+    const allDevlogs = result.items;
 
-    // Set defaults
-    const days = request.days || 30;
-    const endDate = request.to ? new Date(request.to) : new Date();
-    const startDate = request.from
-      ? new Date(request.from)
-      : new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
-
-    // Get all entries for analysis - could be optimized with SQL in future
-    const stmt = this.db.prepare('SELECT * FROM devlog_entries');
-    const rows = stmt.all() as any[];
-    const allDevlogs = rows.map((row) => this.rowToDevlogEntry(row));
-
-    // Create time series data points (using same logic as JSON provider for now)
-    // TODO: Optimize with SQL queries for better performance
-    const dataPoints: TimeSeriesDataPoint[] = [];
-    const currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-
-      // Count devlogs created on this date
-      const created = allDevlogs.filter((devlog) => {
-        const createdDate = new Date(devlog.createdAt).toISOString().split('T')[0];
-        return createdDate === dateStr;
-      }).length;
-
-      // Count devlogs completed on this date
-      const completed = allDevlogs.filter((devlog) => {
-        // Use closedAt field for reliable completion detection
-        if (!devlog.closedAt || devlog.status !== 'done') return false;
-        
-        const closedDate = new Date(devlog.closedAt).toISOString().split('T')[0];
-        return closedDate === dateStr;
-      }).length;
-
-      // Count status distribution as of this date (cumulative approach)
-      const statusCounts = allDevlogs.reduce(
-        (acc: Record<DevlogStatus, number>, devlog) => {
-          const createdDate = new Date(devlog.createdAt);
-          if (createdDate <= currentDate) {
-            acc[devlog.status] = (acc[devlog.status] || 0) + 1;
-          }
-          return acc;
-        },
-        {} as Record<DevlogStatus, number>,
-      );
-
-      // Calculate cumulative totals up to this date
-      const totalCreated = allDevlogs.filter(devlog => 
-        new Date(devlog.createdAt) <= currentDate
-      ).length;
-
-      const totalCompleted = allDevlogs.filter(devlog => 
-        devlog.status === 'done' && new Date(devlog.createdAt) <= currentDate
-      ).length;
-
-      const totalCancelled = allDevlogs.filter(devlog => 
-        devlog.status === 'cancelled' && new Date(devlog.createdAt) <= currentDate
-      ).length;
-
-      const totalClosed = totalCompleted + totalCancelled;
-
-      // Calculate current open devlogs (all statuses except 'done' and 'cancelled')
-      const currentOpen = (statusCounts['new'] || 0) +
-                         (statusCounts['in-progress'] || 0) +
-                         (statusCounts['blocked'] || 0) +
-                         (statusCounts['in-review'] || 0) +
-                         (statusCounts['testing'] || 0);
-
-      dataPoints.push({
-        date: dateStr,
-        
-        // Cumulative data (primary Y-axis)
-        totalCreated,
-        totalCompleted,
-        totalClosed,
-        
-        // Snapshot data (secondary Y-axis)
-        currentOpen,
-        currentNew: statusCounts['new'] || 0,
-        currentInProgress: statusCounts['in-progress'] || 0,
-        currentBlocked: statusCounts['blocked'] || 0,
-        currentInReview: statusCounts['in-review'] || 0,
-        currentTesting: statusCounts['testing'] || 0,
-        
-        // Daily activity
-        dailyCreated: created,
-        dailyCompleted: completed,
-        
-        // Legacy fields for backward compatibility
-        created,
-        completed,
-        inProgress: statusCounts['in-progress'] || 0,
-        inReview: statusCounts['in-review'] || 0,
-        testing: statusCounts['testing'] || 0,
-        new: statusCounts['new'] || 0,
-        blocked: statusCounts['blocked'] || 0,
-        done: statusCounts['done'] || 0,
-        cancelled: statusCounts['cancelled'] || 0,
-      });
-
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return {
-      dataPoints,
-      dateRange: {
-        from: startDate.toISOString().split('T')[0],
-        to: endDate.toISOString().split('T')[0],
-      },
-    };
+    // Delegate to shared utility function
+    return calculateTimeSeriesStats(allDevlogs, request);
   }
 
   async cleanup(): Promise<void> {

@@ -6,6 +6,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import {
   Area,
   AreaChart,
+  Bar,
   CartesianGrid,
   Cell,
   ComposedChart,
@@ -24,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { getStatusColor, getStatusIcon } from '@/lib/devlog-ui-utils';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
+import { formatTimeSeriesData, CHART_COLORS, CHART_OPACITY, formatTooltipValue, formatTooltipLabel } from './chart-utils';
 import styles from './Dashboard.module.css';
 import { Gutter } from 'antd/es/grid/row';
 
@@ -48,29 +50,21 @@ export function Dashboard({
 }: DashboardProps) {
   const router = useRouter();
 
-  // Format data for charts
-  const chartData = React.useMemo(() => {
-    if (!timeSeriesData) return [];
+  // Format data for charts using utility function
+  const chartData = React.useMemo(() => formatTimeSeriesData(timeSeriesData), [timeSeriesData]);
 
-    return timeSeriesData.dataPoints.map((point) => ({
-      ...point,
-      date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      fullDate: point.date,
-    }));
-  }, [timeSeriesData]);
-
-  // Format pie chart data for current status distribution
+  // Format pie chart data for current status distribution using utility colors
   const pieChartData = React.useMemo(() => {
     if (!stats) return [];
 
     return [
-      { name: 'New', value: stats.byStatus['new'] || 0, color: '#722ed1' },
-      { name: 'In Progress', value: stats.byStatus['in-progress'] || 0, color: '#faad14' },
-      { name: 'Blocked', value: stats.byStatus['blocked'] || 0, color: '#ff4d4f' },
+      { name: 'New', value: stats.byStatus['new'] || 0, color: CHART_COLORS.purple },
+      { name: 'In Progress', value: stats.byStatus['in-progress'] || 0, color: CHART_COLORS.warning },
+      { name: 'Blocked', value: stats.byStatus['blocked'] || 0, color: CHART_COLORS.error },
       { name: 'In Review', value: stats.byStatus['in-review'] || 0, color: '#fa8c16' },
-      { name: 'Testing', value: stats.byStatus['testing'] || 0, color: '#13c2c2' },
-      { name: 'Done', value: stats.byStatus['done'] || 0, color: '#52c41a' },
-      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: '#595959' },
+      { name: 'Testing', value: stats.byStatus['testing'] || 0, color: CHART_COLORS.cyan },
+      { name: 'Done', value: stats.byStatus['done'] || 0, color: CHART_COLORS.success },
+      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: CHART_COLORS.grey },
     ].filter((item) => item.value > 0);
   }, [stats]);
 
@@ -142,51 +136,41 @@ export function Dashboard({
                       />
                       
                       <Tooltip
-                        labelFormatter={(label, payload) => {
-                          const data = payload[0]?.payload;
-                          return data ? data.fullDate : label;
-                        }}
-                        formatter={(value: number, name: string) => [
-                          value,
-                          name === 'totalCreated' ? 'Total Created' :
-                          name === 'totalCompleted' ? 'Total Completed' :
-                          name === 'totalClosed' ? 'Total Closed' :
-                          name === 'currentOpen' ? 'Currently Open' :
-                          name
-                        ]}
+                        labelFormatter={formatTooltipLabel}
+                        formatter={formatTooltipValue}
                       />
                       <Legend />
                       
-                      {/* Cumulative data on primary axis */}
+                      {/* Cumulative data on primary axis with transparency */}
                       <Area
                         yAxisId="cumulative"
                         type="monotone"
                         dataKey="totalCreated"
                         stackId="1"
-                        stroke="#1890ff"
-                        fill="#1890ff"
-                        fillOpacity={0.6}
+                        stroke={CHART_COLORS.primary}
+                        fill={CHART_COLORS.primary}
+                        fillOpacity={CHART_OPACITY.area}
+                        strokeWidth={2}
                         name="Total Created"
                       />
                       <Area
                         yAxisId="cumulative"
                         type="monotone"
-                        dataKey="totalCompleted"
+                        dataKey="totalClosed"
                         stackId="2"
-                        stroke="#52c41a"
-                        fill="#52c41a"
-                        fillOpacity={0.6}
-                        name="Total Completed"
+                        stroke={CHART_COLORS.success}
+                        fill={CHART_COLORS.success}
+                        fillOpacity={CHART_OPACITY.area}
+                        strokeWidth={2}
+                        name="Total Closed"
                       />
                       
-                      {/* Current workload on secondary axis */}
-                      <Line
+                      {/* Current workload on secondary axis using bar chart */}
+                      <Bar
                         yAxisId="current"
-                        type="monotone"
                         dataKey="currentOpen"
-                        stroke="#fa8c16"
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
+                        fill={CHART_COLORS.warning}
+                        fillOpacity={CHART_OPACITY.bar}
                         name="Currently Open"
                       />
                     </ComposedChart>
