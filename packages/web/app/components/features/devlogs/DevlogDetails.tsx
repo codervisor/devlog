@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, Checkbox, List, Skeleton, Space, Tag, Timeline, Typography } from 'antd';
+import classNames from 'classnames';
 import {
   ApartmentOutlined,
   BulbOutlined,
@@ -132,6 +133,10 @@ export function DevlogDetails({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  
+  // State for tracking note animations
+  const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());
+  const [newNoteIds, setNewNoteIds] = useState<Set<string>>(new Set());
 
   // Setup sticky header detection
   useStickyHeaders({
@@ -153,6 +158,36 @@ export function DevlogDetails({
       setSaveError(null);
     }
   }, [devlog.id, devlog.updatedAt, originalDevlog.id, originalDevlog.updatedAt, hasUnsavedChanges]);
+
+  // Track new notes for animation
+  useEffect(() => {
+    if (!devlog.notes) return;
+
+    const currentNoteIds = new Set(devlog.notes.map(note => note.id));
+    
+    // On first load, mark all existing notes as seen without animation
+    if (seenNoteIds.size === 0) {
+      setSeenNoteIds(currentNoteIds);
+      return;
+    }
+
+    // Find new notes that weren't seen before
+    const newIds = new Set([...currentNoteIds].filter(id => !seenNoteIds.has(id)));
+    
+    if (newIds.size > 0) {
+      setNewNoteIds(newIds);
+      setSeenNoteIds(currentNoteIds);
+      
+      // Clear the new note highlights after animation completes
+      const timeout = setTimeout(() => {
+        setNewNoteIds(new Set());
+      }, 2500); // Total animation duration (0.4s slide + 2s highlight)
+      
+      return () => clearTimeout(timeout);
+    }
+    
+    return undefined;
+  }, [devlog.notes, seenNoteIds]);
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
@@ -758,18 +793,30 @@ export function DevlogDetails({
               </Title>
             </div>
             <Timeline className={styles.notesTimeline}>
-              {[...devlog.notes].reverse().map((note) => (
-                <Timeline.Item key={note.id} dot={getCategoryIcon(note.category)}>
-                  <div className={styles.noteItem}>
-                    <MarkdownRenderer content={note.content} maxHeight={false} />
-                  </div>
-                  <Text type="secondary" className={styles.noteTimestamp}>
-                    <span title={formatTimeAgoWithTooltip(note.timestamp).fullDate}>
-                      {formatTimeAgoWithTooltip(note.timestamp).timeAgo}
-                    </span>
-                  </Text>
-                </Timeline.Item>
-              ))}
+              {[...devlog.notes].reverse().map((note) => {
+                const isNewNote = newNoteIds.has(note.id);
+                const noteItemClass = classNames(styles.noteItem, {
+                  [styles.noteItemNew]: isNewNote,
+                  [styles.noteItemEnter]: !isNewNote && seenNoteIds.has(note.id),
+                });
+                
+                return (
+                  <Timeline.Item 
+                    key={note.id} 
+                    dot={getCategoryIcon(note.category)}
+                    className={noteItemClass}
+                  >
+                    <div>
+                      <MarkdownRenderer content={note.content} maxHeight={false} />
+                    </div>
+                    <Text type="secondary" className={styles.noteTimestamp}>
+                      <span title={formatTimeAgoWithTooltip(note.timestamp).fullDate}>
+                        {formatTimeAgoWithTooltip(note.timestamp).timeAgo}
+                      </span>
+                    </Text>
+                  </Timeline.Item>
+                );
+              })}
             </Timeline>
           </div>
         )}
