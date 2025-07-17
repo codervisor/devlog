@@ -115,39 +115,44 @@ export class JsonStorageProvider implements StorageProvider {
     }
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>> {
+  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.initialize();
     // Load all entries from filesystem
     const entries = await this.loadAllEntries();
 
     const filteredEntries = this.applyFilterAndSort(entries, filter);
     
-    // If pagination is requested, return paginated result
-    if (filter?.pagination) {
-      return this.paginateResults(filteredEntries, filter.pagination);
-    }
-    
-    return filteredEntries;
+    // Always return paginated result for consistency
+    // Use default pagination if none provided
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return this.paginateResults(filteredEntries, pagination);
   }
 
-  async search(query: string): Promise<DevlogEntry[]> {
+  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
     const result = await this.list();
-    const entries = Array.isArray(result) ? result : result.items;
+    const entries = result.items; // Always a PaginatedResult now
     const lowerQuery = query.toLowerCase();
 
-    return entries.filter((entry) => {
+    const filteredEntries = entries.filter((entry) => {
       return (
         entry.title.toLowerCase().includes(lowerQuery) ||
         entry.description.toLowerCase().includes(lowerQuery) ||
         entry.notes.some((note) => note.content.toLowerCase().includes(lowerQuery))
       );
     });
+
+    // Return paginated result for consistency
+    return this.paginateResults(filteredEntries, { page: 1, limit: 100 });
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    const result = await this.list(filter);
-    const entries = Array.isArray(result) ? result : result.items;
-    return calculateDevlogStats(entries);
+    await this.initialize();
+    // Load all entries from filesystem for accurate statistics
+    const entries = await this.loadAllEntries();
+    
+    // Apply filtering but not pagination for stats
+    const filteredEntries = this.applyFilterAndSort(entries, filter);
+    return calculateDevlogStats(filteredEntries);
   }
 
   async cleanup(): Promise<void> {

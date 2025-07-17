@@ -64,7 +64,7 @@ If no database URL is provided, the system defaults to JSON file storage:
 DEVLOG_JSON_DIRECTORY=".devlog"
 DEVLOG_JSON_FILE_PATTERN="{id:auto}-{slug}.json"
 DEVLOG_JSON_MIN_PADDING="3"
-DEVLOG_JSON_GLOBAL="true"
+DEVLOG_JSON_GLOBAL="false"  # Default: project-local storage
 ```
 
 ## 🔄 Configuration Mapping

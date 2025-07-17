@@ -11,7 +11,7 @@ import {
   UpdateDevlogRequest,
   DevlogConfig,
   NoteCategory,
-  AIContext, 
+  AIContext,
   DevlogContext,
 } from '@devlog/core';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -129,16 +129,19 @@ export class MCPDevlogAdapter {
       status: args.status ? [args.status] : undefined,
       type: args.type ? [args.type] : undefined,
       priority: args.priority ? [args.priority] : undefined,
-      pagination: (args.page || args.limit || args.sortBy) ? {
-        page: args.page,
-        limit: args.limit,
-        sortBy: args.sortBy,
-        sortOrder: args.sortOrder,
-      } : undefined,
+      pagination:
+        args.page || args.limit || args.sortBy
+          ? {
+              page: args.page,
+              limit: args.limit,
+              sortBy: args.sortBy,
+              sortOrder: args.sortOrder,
+            }
+          : undefined,
     };
 
     const result = await this.devlogManager.listDevlogs(filter);
-    
+
     // Handle both paginated and non-paginated results
     const entries = Array.isArray(result) ? result : result.items;
     const pagination = Array.isArray(result) ? null : result.pagination;
@@ -354,7 +357,7 @@ export class MCPDevlogAdapter {
     };
 
     const result = await this.devlogManager.listDevlogs(filter);
-    const entries = Array.isArray(result) ? result : result.items;
+    const entries = result.items;
     const limited = entries.slice(0, args.limit || 10);
 
     if (limited.length === 0) {
@@ -540,11 +543,16 @@ export class MCPDevlogAdapter {
     if (args.status) updates.status = args.status;
     if (args.priority) updates.priority = args.priority;
 
-    const entry = await this.devlogManager.updateWithProgress(args.id, { id: args.id, ...updates }, args.note, {
-      category: args.category || 'progress',
-      files: args.files,
-      codeChanges: args.codeChanges,
-    });
+    const entry = await this.devlogManager.updateWithProgress(
+      args.id,
+      { id: args.id, ...updates },
+      args.note,
+      {
+        category: args.category || 'progress',
+        files: args.files,
+        codeChanges: args.codeChanges,
+      },
+    );
 
     return {
       content: [

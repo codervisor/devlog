@@ -6,55 +6,47 @@ import * as path from 'path';
 import * as os from 'os';
 
 describe('DevlogManager', () => {
-  let manager: DevlogManager;
+  let devlogManager: DevlogManager;
   let testTmpDir: string;
   let originalCwd: string;
+  let originalEnv: NodeJS.ProcessEnv;
 
   beforeEach(async () => {
-    // Store original working directory
+    // Store original working directory and environment
     originalCwd = process.cwd();
+    originalEnv = { ...process.env };
     
     // Create a unique temporary directory for each test
     testTmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'devlog-test-'));
     
-    // Create a test configuration file in the temp directory
-    const testConfig = {
-      storage: {
-        type: 'json' as const,
-        json: {
-          directory: '.devlog-test', // Use different directory name to avoid confusion
-          filePattern: '{id:auto}-{slug}.json',
-          minPadding: 3,
-          global: false, // Use local directory, not global
-        },
-      },
-    };
-    
-    // Write the test config to the temp directory
-    await fs.writeFile(
-      path.join(testTmpDir, 'devlog.config.json'),
-      JSON.stringify(testConfig, null, 2)
-    );
+    // Set up environment variables for testing instead of config file
+    process.env.DEVLOG_JSON_DIRECTORY = '.devlog-test';
+    process.env.DEVLOG_JSON_GLOBAL = 'false';
+    process.env.DEVLOG_JSON_MIN_PADDING = '3';
     
     // Change to the test directory BEFORE creating DevlogManager
     // This ensures getWorkspaceRoot() finds our test directory
     process.chdir(testTmpDir);
-    
+
+    // Create package.json to make it look like a project root  
+    await fs.writeFile(
+      path.join(testTmpDir, 'package.json'), 
+      JSON.stringify({ name: 'test-project' }, null, 2)
+    );
+
     // Create isolated DevlogManager instance - this will now find our test config
-    manager = new DevlogManager();
+    devlogManager = new DevlogManager();
     
-    // IMPORTANT: Initialize the manager while still in test directory
+    // Initialize the manager (this will load config from environment and create storage)
     // This ensures ConfigurationManager.initialize() captures the correct workspace root
-    await manager.initialize();
+    await devlogManager.initialize();
     
-    // Now we can safely restore the original working directory
-    process.chdir(originalCwd);
-    
-    // DO NOT DELETE ENTRIES - The temp directory should start clean
-    // and the DevlogManager should be isolated to that directory
   });
 
   afterEach(async () => {
+    // Restore original environment
+    process.env = originalEnv;
+    
     // Ensure we're back in original directory
     process.chdir(originalCwd);
     
@@ -66,7 +58,7 @@ describe('DevlogManager', () => {
 
   describe('createDevlog', () => {
     it('should create a new devlog entry', async () => {
-      const result = await manager.createDevlog({
+      const result = await devlogManager.createDevlog({
         title: 'Test Feature',
         type: 'feature',
         description: 'A test feature',
@@ -85,7 +77,7 @@ describe('DevlogManager', () => {
     });
 
     it('should create a devlog with default priority', async () => {
-      const result = await manager.createDevlog({
+      const result = await devlogManager.createDevlog({
         title: 'Default Priority Test',
         type: 'bugfix',
         description: 'Testing default priority',
@@ -97,13 +89,13 @@ describe('DevlogManager', () => {
 
   describe('updateDevlog', () => {
     it('should update an existing devlog', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Update Test',
         type: 'feature',
         description: 'Testing updates',
       });
 
-      const result = await manager.updateDevlog({
+      const result = await devlogManager.updateDevlog({
         id: created.id!,
         status: 'in-progress',
       });
@@ -114,13 +106,13 @@ describe('DevlogManager', () => {
     });
 
     it('should update multiple fields', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Multi Update Test',
         type: 'task',
         description: 'Testing multiple updates',
       });
 
-      const result = await manager.updateDevlog({
+      const result = await devlogManager.updateDevlog({
         id: created.id!,
         title: 'Updated Title',
         priority: 'critical',
@@ -135,13 +127,13 @@ describe('DevlogManager', () => {
 
   describe('getDevlog', () => {
     it('should retrieve an existing devlog', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Get Test',
         type: 'task',
         description: 'Testing retrieval',
       });
 
-      const result = await manager.getDevlog(created.id!);
+      const result = await devlogManager.getDevlog(created.id!);
 
       expect(result).not.toBeNull();
       expect(result!.title).toBe('Get Test');
@@ -150,131 +142,131 @@ describe('DevlogManager', () => {
     });
 
     it('should return null for non-existent devlog', async () => {
-      const result = await manager.getDevlog(999); // Non-existent ID
+      const result = await devlogManager.getDevlog(999); // Non-existent ID
       expect(result).toBeNull();
     });
   });
 
   describe('listDevlogs', () => {
     it('should list all devlogs', async () => {
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Feature 1',
         type: 'feature',
         description: 'First feature',
       });
 
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Bug Fix 1',
         type: 'bugfix',
         description: 'First bug fix',
       });
 
-      const result = await manager.listDevlogs();
+      const result = await devlogManager.listDevlogs();
 
-      expect(result).toHaveLength(2);
-      expect(result.some((entry) => entry.title === 'Feature 1')).toBe(true);
-      expect(result.some((entry) => entry.title === 'Bug Fix 1')).toBe(true);
+      expect(result.items).toHaveLength(2);
+      expect(result.items.some((entry) => entry.title === 'Feature 1')).toBe(true);
+      expect(result.items.some((entry) => entry.title === 'Bug Fix 1')).toBe(true);
     });
 
     it('should filter devlogs by status', async () => {
-      const created1 = await manager.createDevlog({
+      const created1 = await devlogManager.createDevlog({
         title: 'Todo Task',
         type: 'task',
         description: 'A todo task',
       });
 
-      const created2 = await manager.createDevlog({
+      const created2 = await devlogManager.createDevlog({
         title: 'Done Task',
         type: 'task',
         description: 'A done task',
       });
 
-      await manager.updateDevlog({
+      await devlogManager.updateDevlog({
         id: created2.id!,
         status: 'done',
       });
 
-      const todoItems = await manager.listDevlogs({ status: ['new'] });
-      const doneItems = await manager.listDevlogs({ status: ['done'] });
+      const todoItems = await devlogManager.listDevlogs({ status: ['new'] });
+      const doneItems = await devlogManager.listDevlogs({ status: ['done'] });
 
-      expect(todoItems).toHaveLength(1);
-      expect(todoItems[0].title).toBe('Todo Task');
-      expect(doneItems).toHaveLength(1);
-      expect(doneItems[0].title).toBe('Done Task');
+      expect(todoItems.items).toHaveLength(1);
+      expect(todoItems.items[0].title).toBe('Todo Task');
+      expect(doneItems.items).toHaveLength(1);
+      expect(doneItems.items[0].title).toBe('Done Task');
     });
 
     it('should filter devlogs by type', async () => {
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Feature Task',
         type: 'feature',
         description: 'A feature',
       });
 
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Bug Task',
         type: 'bugfix',
         description: 'A bug fix',
       });
 
-      const features = await manager.listDevlogs({ type: ['feature'] });
-      const bugfixes = await manager.listDevlogs({ type: ['bugfix'] });
+      const features = await devlogManager.listDevlogs({ type: ['feature'] });
+      const bugfixes = await devlogManager.listDevlogs({ type: ['bugfix'] });
 
-      expect(features).toHaveLength(1);
-      expect(features[0].title).toBe('Feature Task');
-      expect(bugfixes).toHaveLength(1);
-      expect(bugfixes[0].title).toBe('Bug Task');
+      expect(features.items).toHaveLength(1);
+      expect(features.items[0].title).toBe('Feature Task');
+      expect(bugfixes.items).toHaveLength(1);
+      expect(bugfixes.items[0].title).toBe('Bug Task');
     });
 
     it('should exclude cancelled entries by default', async () => {
-      const activeEntry = await manager.createDevlog({
+      const activeEntry = await devlogManager.createDevlog({
         title: 'Active Task',
         type: 'task',
         description: 'An active task',
       });
 
-      const closableEntry = await manager.createDevlog({
+      const closableEntry = await devlogManager.createDevlog({
         title: 'Closable Task',
         type: 'task',
         description: 'A task to be cancelled',
       });
 
       // Close one entry
-      await manager.closeDevlog(closableEntry.id!, 'Test closure');
+      await devlogManager.closeDevlog(closableEntry.id!, 'Test closure');
 
       // Default list should exclude cancelled entries
-      const defaultResults = await manager.listDevlogs();
-      expect(defaultResults).toHaveLength(1);
-      expect(defaultResults[0].title).toBe('Active Task');
+      const defaultResults = await devlogManager.listDevlogs();
+      expect(defaultResults.items).toHaveLength(1);
+      expect(defaultResults.items[0].title).toBe('Active Task');
 
       // Explicit filter for cancelled should show cancelled entries
-      const cancelledResults = await manager.listDevlogs({ status: ['cancelled'] });
-      expect(cancelledResults).toHaveLength(1);
-      expect(cancelledResults[0].title).toBe('Closable Task');
+      const cancelledResults = await devlogManager.listDevlogs({ status: ['cancelled'] });
+      expect(cancelledResults.items).toHaveLength(1);
+      expect(cancelledResults.items[0].title).toBe('Closable Task');
 
       // All entries (including cancelled) should be accessible when explicitly requested
-      const allResults = await manager.listDevlogs({ 
+      const allResults = await devlogManager.listDevlogs({ 
         status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'] 
       });
-      expect(allResults).toHaveLength(2);
+      expect(allResults.items).toHaveLength(2);
     });
   });
 
   describe('searchDevlogs', () => {
     it('should search devlogs by text', async () => {
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Authentication Feature',
         type: 'feature',
         description: 'Implement user authentication',
       });
 
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Database Bug',
         type: 'bugfix',
         description: 'Fix database connection issue',
       });
 
-      const authResults = await manager.searchDevlogs('authentication');
-      const dbResults = await manager.searchDevlogs('database');
+      const authResults = await devlogManager.searchDevlogs('authentication');
+      const dbResults = await devlogManager.searchDevlogs('database');
 
       expect(authResults).toHaveLength(1);
       expect(authResults[0].title).toBe('Authentication Feature');
@@ -283,28 +275,28 @@ describe('DevlogManager', () => {
     });
 
     it('should exclude cancelled entries from search by default', async () => {
-      const activeEntry = await manager.createDevlog({
+      const activeEntry = await devlogManager.createDevlog({
         title: 'Active Search Test',
         type: 'feature',
         description: 'Search functionality',
       });
 
-      const closableEntry = await manager.createDevlog({
+      const closableEntry = await devlogManager.createDevlog({
         title: 'Cancelled Search Test',
         type: 'feature',
         description: 'Search functionality',
       });
 
       // Close one entry
-      await manager.closeDevlog(closableEntry.id!, 'Test closure');
+      await devlogManager.closeDevlog(closableEntry.id!, 'Test closure');
 
       // Default search should exclude cancelled entries
-      const defaultResults = await manager.searchDevlogs('search');
+      const defaultResults = await devlogManager.searchDevlogs('search');
       expect(defaultResults).toHaveLength(1);
       expect(defaultResults[0].title).toBe('Active Search Test');
 
       // Search with explicit cancelled filter should show cancelled entries
-      const cancelledResults = await manager.searchDevlogs('search', { status: ['cancelled'] });
+      const cancelledResults = await devlogManager.searchDevlogs('search', { status: ['cancelled'] });
       expect(cancelledResults).toHaveLength(1);
       expect(cancelledResults[0].title).toBe('Cancelled Search Test');
     });
@@ -312,13 +304,13 @@ describe('DevlogManager', () => {
 
   describe('addNote', () => {
     it('should add a note to an existing devlog', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Note Test',
         type: 'task',
         description: 'Testing notes',
       });
 
-      const result = await manager.addNote(
+      const result = await devlogManager.addNote(
         created.id!,
         'Made some progress on this task',
         'progress',
@@ -332,13 +324,13 @@ describe('DevlogManager', () => {
 
   describe('completeDevlog', () => {
     it('should mark a devlog as complete', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Complete Test',
         type: 'task',
         description: 'Testing completion',
       });
 
-      const result = await manager.completeDevlog(created.id!, 'Task completed successfully');
+      const result = await devlogManager.completeDevlog(created.id!, 'Task completed successfully');
 
       expect(result.status).toBe('done');
       expect(result.notes).toHaveLength(1);
@@ -348,29 +340,29 @@ describe('DevlogManager', () => {
 
   describe('getActiveContext', () => {
     it('should return active devlogs only', async () => {
-      const active1 = await manager.createDevlog({
+      const active1 = await devlogManager.createDevlog({
         title: 'Active Task 1',
         type: 'task',
         description: 'An active task',
         priority: 'high',
       });
 
-      const active2 = await manager.createDevlog({
+      const active2 = await devlogManager.createDevlog({
         title: 'Active Task 2',
         type: 'feature',
         description: 'Another active task',
         priority: 'medium',
       });
 
-      const completed = await manager.createDevlog({
+      const completed = await devlogManager.createDevlog({
         title: 'Completed Task',
         type: 'task',
         description: 'A completed task',
       });
 
-      await manager.completeDevlog(completed.id!);
+      await devlogManager.completeDevlog(completed.id!);
 
-      const context = await manager.getActiveContext();
+      const context = await devlogManager.getActiveContext();
 
       expect(context).toHaveLength(2);
       expect(context.some((entry) => entry.title === 'Active Task 1')).toBe(true);
@@ -380,37 +372,37 @@ describe('DevlogManager', () => {
 
     it('should respect the limit parameter', async () => {
       for (let i = 1; i <= 5; i++) {
-        await manager.createDevlog({
+        await devlogManager.createDevlog({
           title: `Task ${i}`,
           type: 'task',
           description: `Task number ${i}`,
         });
       }
 
-      const context = await manager.getActiveContext(3);
+      const context = await devlogManager.getActiveContext(3);
       expect(context).toHaveLength(3);
     });
   });
 
   describe('getStats', () => {
     it('should return correct statistics', async () => {
-      await manager.createDevlog({
+      await devlogManager.createDevlog({
         title: 'Feature 1',
         type: 'feature',
         description: 'A feature',
         priority: 'high',
       });
 
-      const bugfix = await manager.createDevlog({
+      const bugfix = await devlogManager.createDevlog({
         title: 'Bug 1',
         type: 'bugfix',
         description: 'A bug fix',
         priority: 'medium',
       });
 
-      await manager.completeDevlog(bugfix.id!);
+      await devlogManager.completeDevlog(bugfix.id!);
 
-      const stats = await manager.getStats();
+      const stats = await devlogManager.getStats();
 
       expect(stats.totalEntries).toBe(2);
       expect(stats.byType.feature).toBe(1);
@@ -424,20 +416,20 @@ describe('DevlogManager', () => {
 
   describe('deleteDevlog', () => {
     it('should delete an existing devlog', async () => {
-      const created = await manager.createDevlog({
+      const created = await devlogManager.createDevlog({
         title: 'Delete Test',
         type: 'task',
         description: 'Testing deletion',
       });
 
-      await manager.deleteDevlog(created.id!);
+      await devlogManager.deleteDevlog(created.id!);
 
-      const result = await manager.getDevlog(created.id!);
+      const result = await devlogManager.getDevlog(created.id!);
       expect(result).toBeNull();
     });
 
     it('should throw error for non-existent devlog', async () => {
-      await expect(manager.deleteDevlog(999)).rejects.toThrow('not found');
+      await expect(devlogManager.deleteDevlog(999)).rejects.toThrow('not found');
     });
   });
 });

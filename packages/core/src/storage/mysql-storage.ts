@@ -2,10 +2,11 @@
  * MySQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
+import { createPaginatedResult } from '../utils/common.js';
 
 export class MySQLStorageProvider implements StorageProvider {
   private connectionString: string;
@@ -132,7 +133,7 @@ export class MySQLStorageProvider implements StorageProvider {
     await this.connection.execute('DELETE FROM devlog_entries WHERE id = ?', [id]);
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     let query = 'SELECT * FROM devlog_entries';
     const conditions: string[] = [];
     const params: any[] = [];
@@ -176,10 +177,14 @@ export class MySQLStorageProvider implements StorageProvider {
     query += ' ORDER BY updated_at DESC';
 
     const [rows] = await this.connection.execute(query, params);
-    return (rows as any[]).map((row) => this.rowToDevlogEntry(row));
+    const entries = (rows as any[]).map((row) => this.rowToDevlogEntry(row));
+    
+    // Return paginated result for consistency
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return createPaginatedResult(entries, pagination);
   }
 
-  async search(query: string): Promise<DevlogEntry[]> {
+  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
     const [rows] = await this.connection.execute(
       `
       SELECT * FROM devlog_entries
@@ -189,12 +194,51 @@ export class MySQLStorageProvider implements StorageProvider {
       [query, query],
     );
 
-    return (rows as any[]).map((row) => this.rowToDevlogEntry(row));
+    const entries = (rows as any[]).map((row) => this.rowToDevlogEntry(row));
+    
+    // Return paginated result for consistency
+    return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    // Get filtered entries and calculate stats from them
-    const entries = await this.list(filter);
+    // Get ALL entries for accurate statistics, not paginated results
+    let query = 'SELECT * FROM devlog_entries';
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (filter) {
+      if (filter.status && filter.status.length > 0) {
+        conditions.push(`status IN (${filter.status.map(() => '?').join(', ')})`);
+        params.push(...filter.status);
+      }
+
+      if (filter.type && filter.type.length > 0) {
+        conditions.push(`type IN (${filter.type.map(() => '?').join(', ')})`);
+        params.push(...filter.type);
+      }
+
+      if (filter.priority && filter.priority.length > 0) {
+        conditions.push(`priority IN (${filter.priority.map(() => '?').join(', ')})`);
+        params.push(...filter.priority);
+      }
+
+      if (filter.fromDate) {
+        conditions.push('created_at >= ?');
+        params.push(filter.fromDate);
+      }
+
+      if (filter.toDate) {
+        conditions.push('created_at <= ?');
+        params.push(filter.toDate);
+      }
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const [rows] = await this.connection.execute(query, params);
+    const entries = (rows as any[]).map((row) => this.rowToDevlogEntry(row));
     return calculateDevlogStats(entries);
   }
 

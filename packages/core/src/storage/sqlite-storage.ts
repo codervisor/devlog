@@ -19,10 +19,12 @@ import {
   ChatSearchResult,
   ChatDevlogLink,
   ChatWorkspace,
+  PaginatedResult,
 } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { initializeChatTables } from './chat-schema.js';
+import { createPaginatedResult } from '../utils/common.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 
 export class SQLiteStorageProvider implements StorageProvider {
@@ -262,7 +264,7 @@ export class SQLiteStorageProvider implements StorageProvider {
     stmt.run(id);
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     if (!this.db) throw new Error('Database not initialized');
 
     let query = 'SELECT * FROM devlog_entries';
@@ -309,11 +311,14 @@ export class SQLiteStorageProvider implements StorageProvider {
 
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as any[];
+    const entries = rows.map((row) => this.rowToDevlogEntry(row));
 
-    return rows.map((row) => this.rowToDevlogEntry(row));
+    // Return paginated result for consistency
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return createPaginatedResult(entries, pagination);
   }
 
-  async search(query: string): Promise<DevlogEntry[]> {
+  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
     if (!this.db) throw new Error('Database not initialized');
 
     const stmt = this.db.prepare(`
@@ -324,14 +329,54 @@ export class SQLiteStorageProvider implements StorageProvider {
     `);
 
     const rows = stmt.all(query) as any[];
-    return rows.map((row) => this.rowToDevlogEntry(row));
+    const entries = rows.map((row) => this.rowToDevlogEntry(row));
+    
+    // Return paginated result for consistency
+    return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
     if (!this.db) throw new Error('Database not initialized');
 
-    // Get filtered entries and calculate stats from them
-    const entries = await this.list(filter);
+    // Get ALL entries for accurate statistics, not paginated results
+    let query = 'SELECT * FROM devlog_entries';
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (filter) {
+      if (filter.status && filter.status.length > 0) {
+        conditions.push(`status IN (${filter.status.map(() => '?').join(', ')})`);
+        params.push(...filter.status);
+      }
+
+      if (filter.type && filter.type.length > 0) {
+        conditions.push(`type IN (${filter.type.map(() => '?').join(', ')})`);
+        params.push(...filter.type);
+      }
+
+      if (filter.priority && filter.priority.length > 0) {
+        conditions.push(`priority IN (${filter.priority.map(() => '?').join(', ')})`);
+        params.push(...filter.priority);
+      }
+
+      if (filter.fromDate) {
+        conditions.push('created_at >= ?');
+        params.push(filter.fromDate);
+      }
+
+      if (filter.toDate) {
+        conditions.push('created_at <= ?');
+        params.push(filter.toDate);
+      }
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as any[];
+    const entries = rows.map((row) => this.rowToDevlogEntry(row));
     return calculateDevlogStats(entries);
   }
 

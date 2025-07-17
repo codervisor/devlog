@@ -133,14 +133,14 @@ export interface StorageProvider {
 
   /**
    * List all devlog entries with optional filtering
-   * Returns paginated results if pagination options are provided in filter
+   * Returns paginated results for consistency
    */
-  list(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>>;
+  list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>>;
 
   /**
    * Search devlog entries by text query
    */
-  search(query: string): Promise<DevlogEntry[]>;
+  search(query: string): Promise<PaginatedResult<DevlogEntry>>;
 
   /**
    * Get statistics about devlog entries

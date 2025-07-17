@@ -2,10 +2,11 @@
  * PostgreSQL storage provider for production-grade devlog storage
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace } from '../types/index.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, ChatSession, ChatMessage, ChatFilter, ChatStats, ChatSessionId, ChatMessageId, ChatSearchResult, ChatDevlogLink, ChatWorkspace, PaginatedResult } from '../types/index.js';
 import { StorageProvider } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
+import { createPaginatedResult } from '../utils/common.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
   private connectionString: string;
@@ -174,7 +175,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     await this.client.query('DELETE FROM devlog_entries WHERE id = $1', [id]);
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     let query = 'SELECT * FROM devlog_entries';
     const conditions: string[] = [];
     const params: any[] = [];
@@ -225,10 +226,14 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     query += ' ORDER BY updated_at DESC';
 
     const result = await this.client.query(query, params);
-    return result.rows.map((row: any) => this.rowToDevlogEntry(row));
+    const entries = result.rows.map((row: any) => this.rowToDevlogEntry(row));
+    
+    // Return paginated result for consistency
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return createPaginatedResult(entries, pagination);
   }
 
-  async search(query: string): Promise<DevlogEntry[]> {
+  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
     const result = await this.client.query(
       `
       SELECT * FROM devlog_entries
@@ -238,12 +243,57 @@ export class PostgreSQLStorageProvider implements StorageProvider {
       [query],
     );
 
-    return result.rows.map((row: any) => this.rowToDevlogEntry(row));
+    const entries = result.rows.map((row: any) => this.rowToDevlogEntry(row));
+    
+    // Return paginated result for consistency
+    return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    // Get filtered entries and calculate stats from them
-    const entries = await this.list(filter);
+    // Get ALL entries for accurate statistics, not paginated results
+    let query = 'SELECT * FROM devlog_entries';
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 0;
+
+    if (filter) {
+      if (filter.status && filter.status.length > 0) {
+        paramCount++;
+        conditions.push(`status = ANY($${paramCount})`);
+        params.push(filter.status);
+      }
+
+      if (filter.type && filter.type.length > 0) {
+        paramCount++;
+        conditions.push(`type = ANY($${paramCount})`);
+        params.push(filter.type);
+      }
+
+      if (filter.priority && filter.priority.length > 0) {
+        paramCount++;
+        conditions.push(`priority = ANY($${paramCount})`);
+        params.push(filter.priority);
+      }
+
+      if (filter.fromDate) {
+        paramCount++;
+        conditions.push(`created_at >= $${paramCount}`);
+        params.push(filter.fromDate);
+      }
+
+      if (filter.toDate) {
+        paramCount++;
+        conditions.push(`created_at <= $${paramCount}`);
+        params.push(filter.toDate);
+      }
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await this.client.query(query, params);
+    const entries = result.rows.map((row: any) => this.rowToDevlogEntry(row));
     return calculateDevlogStats(entries);
   }
 

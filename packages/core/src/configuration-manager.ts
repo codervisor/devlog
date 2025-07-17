@@ -28,14 +28,6 @@ export class ConfigurationManager {
   }
 
   /**
-   * Save configuration to environment (deprecated - configs should be managed via .env files)
-   */
-  async saveConfig(config: DevlogConfig): Promise<void> {
-    console.warn('saveConfig is deprecated. Please use .env files for configuration management.');
-    throw new Error('Configuration saving is deprecated. Use .env files instead.');
-  }
-
-  /**
    * Detect the best storage configuration automatically
    */
   getDefaultStorageConfig(): StorageConfig {
@@ -130,7 +122,7 @@ export class ConfigurationManager {
         directory: process.env.DEVLOG_JSON_DIRECTORY || '.devlog',
         filePattern: process.env.DEVLOG_JSON_FILE_PATTERN || '{id:auto}-{slug}.json',
         minPadding: process.env.DEVLOG_JSON_MIN_PADDING ? parseInt(process.env.DEVLOG_JSON_MIN_PADDING, 10) : 3,
-        global: this.parseBoolean(process.env.DEVLOG_JSON_GLOBAL, true),
+        global: this.parseBoolean(process.env.DEVLOG_JSON_GLOBAL, false),
       },
     };
   }

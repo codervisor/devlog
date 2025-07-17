@@ -306,10 +306,9 @@ export class DevlogManager {
 
   /**
    * List devlog entries with optional filtering
-   * By default, excludes closed entries unless explicitly requested
-   * Returns paginated results if pagination options are provided
+   * Returns paginated results for consistency with storage layer
    */
-  async listDevlogs(filter?: DevlogFilter): Promise<DevlogEntry[] | PaginatedResult<DevlogEntry>> {
+  async listDevlogs(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     // Apply default exclusion of closed entries
@@ -331,12 +330,8 @@ export class DevlogManager {
 
     const result = await this.storageProvider.list(enhancedFilter);
 
-    // If the result is paginated, extract the items array
-    if (Array.isArray(result)) {
-      return result;
-    } else {
-      return result.items;
-    }
+    // Always extract items from paginated result
+    return result.items;
   }
 
   /**
@@ -370,8 +365,8 @@ export class DevlogManager {
     // Apply default filters to search results (including closed exclusion)
     const enhancedFilter = this.applyDefaultFilters(filter);
 
-    // Filter results based on the enhanced filter
-    return this.filterEntries(results, enhancedFilter);
+    // Filter results based on the enhanced filter - extract items from paginated result
+    return this.filterEntries(results.items, enhancedFilter);
   }
 
   /**

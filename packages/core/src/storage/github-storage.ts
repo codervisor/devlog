@@ -9,24 +9,14 @@ import {
   DevlogFilter,
   DevlogStats,
   GitHubStorageConfig,
-  DevlogStatus,
-  DevlogType,
-  DevlogPriority,
-  ChatSession,
-  ChatMessage,
-  ChatFilter,
-  ChatStats,
-  ChatSessionId,
-  ChatMessageId,
-  ChatSearchResult,
-  ChatDevlogLink,
-  ChatWorkspace,
+  PaginatedResult,
 } from '../types/index.js';
-import { GitHubAPIClient, GitHubAPIError, GitHubIssue } from '../utils/github-api.js';
+import { GitHubAPIClient, GitHubIssue } from '../utils/github-api.js';
 import { RateLimiter } from '../utils/rate-limiter.js';
 import { LRUCache } from '../utils/lru-cache.js';
 import { DevlogGitHubMapper } from '../utils/github-mapper.js';
 import { GitHubLabelManager } from '../utils/github-labels.js';
+import { createPaginatedResult } from '../utils/common.js';
 import { 
   mapDevlogTypeToGitHubType, 
   mapDevlogTypeToGitHubLabel 
@@ -149,7 +139,7 @@ export class GitHubStorageProvider implements StorageProvider {
     this.cache.delete(`issue-${id}`);
   }
 
-  async list(filter?: DevlogFilter): Promise<DevlogEntry[]> {
+  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     const searchQuery = this.buildSearchQuery(filter);
     console.debug('GitHub storage list query:', searchQuery);
 
@@ -170,25 +160,29 @@ export class GitHubStorageProvider implements StorageProvider {
       const devlogIssues = allIssues.filter(issue => this.looksLikeDevlogIssue(issue));
       console.debug('Filtered devlog-like issues:', devlogIssues.length);
       
-      return devlogIssues.map((issue) => this.dataMapper.issueToDevlog(issue));
+      const entries = devlogIssues.map((issue) => this.dataMapper.issueToDevlog(issue));
+      return createPaginatedResult(entries, filter?.pagination || { page: 1, limit: 100 });
     }
 
-    return issues.map((issue) => this.dataMapper.issueToDevlog(issue));
+    const entries = issues.map((issue) => this.dataMapper.issueToDevlog(issue));
+    return createPaginatedResult(entries, filter?.pagination || { page: 1, limit: 100 });
   }
 
-  async search(query: string): Promise<DevlogEntry[]> {
+  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
     const searchQuery = `repo:${this.config.owner}/${this.config.repo} is:issue ${query}`;
 
     const issues = await this.rateLimiter.executeWithRateLimit(async () => {
       return await this.apiClient.searchIssues(searchQuery);
     });
 
-    return issues.map((issue) => this.dataMapper.issueToDevlog(issue));
+    const entries = issues.map((issue) => this.dataMapper.issueToDevlog(issue));
+    return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    // Get filtered entries and calculate stats from them
-    const entries = await this.list(filter);
+    // Get ALL entries for accurate statistics, not paginated results
+    const result = await this.list(filter);
+    const entries = result.items; // Extract items from paginated result
     return calculateDevlogStats(entries);
   }
 

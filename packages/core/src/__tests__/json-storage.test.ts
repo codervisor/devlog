@@ -192,9 +192,9 @@ describe('JsonStorageProvider', () => {
       await createTestEntries();
       
       const entries = await storage.list();
-      expect(entries).toHaveLength(3);
+      expect(entries.items).toHaveLength(3);
       
-      const titles = entries.map(e => e.title).sort();
+      const titles = entries.items.map(e => e.title).sort();
       expect(titles).toEqual(['Bug Fix B', 'Feature A', 'Task C']);
     });
 
@@ -202,32 +202,32 @@ describe('JsonStorageProvider', () => {
       await createTestEntries();
       
       const newEntries = await storage.list({ status: ['new'] });
-      expect(newEntries).toHaveLength(1);
-      expect(newEntries[0].title).toBe('Feature A');
+      expect(newEntries.items).toHaveLength(1);
+      expect(newEntries.items[0].title).toBe('Feature A');
       
       const inProgressEntries = await storage.list({ status: ['in-progress'] });
-      expect(inProgressEntries).toHaveLength(1);
-      expect(inProgressEntries[0].title).toBe('Bug Fix B');
+      expect(inProgressEntries.items).toHaveLength(1);
+      expect(inProgressEntries.items[0].title).toBe('Bug Fix B');
     });
 
     it('should filter entries by type', async () => {
       await createTestEntries();
       
       const features = await storage.list({ type: ['feature'] });
-      expect(features).toHaveLength(1);
-      expect(features[0].title).toBe('Feature A');
+      expect(features.items).toHaveLength(1);
+      expect(features.items[0].title).toBe('Feature A');
       
       const bugfixes = await storage.list({ type: ['bugfix'] });
-      expect(bugfixes).toHaveLength(1);
-      expect(bugfixes[0].title).toBe('Bug Fix B');
+      expect(bugfixes.items).toHaveLength(1);
+      expect(bugfixes.items[0].title).toBe('Bug Fix B');
     });
 
     it('should filter entries by priority', async () => {
       await createTestEntries();
       
       const highPriority = await storage.list({ priority: ['high'] });
-      expect(highPriority).toHaveLength(1);
-      expect(highPriority[0].title).toBe('Feature A');
+      expect(highPriority.items).toHaveLength(1);
+      expect(highPriority.items[0].title).toBe('Feature A');
     });
 
     it('should sort entries by updatedAt (most recent first)', async () => {
@@ -257,9 +257,9 @@ describe('JsonStorageProvider', () => {
       await storage.save(entry2);
       
       const entries = await storage.list();
-      expect(entries).toHaveLength(2);
-      expect(entries[0].title).toBe('New Entry'); // Most recent first
-      expect(entries[1].title).toBe('Old Entry');
+      expect(entries.items).toHaveLength(2);
+      expect(entries.items[0].title).toBe('New Entry'); // Most recent first
+      expect(entries.items[1].title).toBe('Old Entry');
     });
   });
 
@@ -292,18 +292,18 @@ describe('JsonStorageProvider', () => {
 
       // Search by title
       const reactResults = await storage.search('React');
-      expect(reactResults).toHaveLength(1);
-      expect(reactResults[0].title).toBe('React Component');
+      expect(reactResults.items).toHaveLength(1);
+      expect(reactResults.items[0].title).toBe('React Component');
 
       // Search by description
       const apiResults = await storage.search('API');
-      expect(apiResults).toHaveLength(1);
-      expect(apiResults[0].title).toBe('Fix Bug');
+      expect(apiResults.items).toHaveLength(1);
+      expect(apiResults.items[0].title).toBe('Fix Bug');
 
       // Search by partial match
       const componentResults = await storage.search('component');
-      expect(componentResults).toHaveLength(1);
-      expect(componentResults[0].title).toBe('React Component');
+      expect(componentResults.items).toHaveLength(1);
+      expect(componentResults.items[0].title).toBe('React Component');
     });
 
     it('should search in notes content', async () => {
@@ -326,8 +326,8 @@ describe('JsonStorageProvider', () => {
       await storage.save(entry);
 
       const results = await storage.search('special implementation');
-      expect(results).toHaveLength(1);
-      expect(results[0].title).toBe('Test Entry');
+      expect(results.items).toHaveLength(1);
+      expect(results.items[0].title).toBe('Test Entry');
     });
   });
 
@@ -433,9 +433,9 @@ describe('JsonStorageProvider', () => {
 
       // Verify all entries were saved with unique IDs
       const savedEntries = await storage.list();
-      expect(savedEntries).toHaveLength(5);
+      expect(savedEntries.items).toHaveLength(5);
       
-      const ids = savedEntries.map(e => e.id);
+      const ids = savedEntries.items.map(e => e.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(5); // All IDs should be unique
     });
