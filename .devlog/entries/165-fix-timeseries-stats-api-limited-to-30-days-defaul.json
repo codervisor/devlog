@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-17T08:30:58.657Z",
-  "updatedAt": "2025-07-17T08:36:38.172Z",
+  "updatedAt": "2025-07-17T09:22:30.626Z",
   "notes": [
     {
       "id": "77bafd50-907f-4968-841d-affc5a9c8924",
@@ -25,6 +25,12 @@
       "timestamp": "2025-07-17T08:36:38.172Z",
       "category": "progress",
       "content": "Completed: Successfully identified and fixed the timeseries stats issue. The problem was that the new 'closedAt' field was missing from existing closed entries, causing the timeseries calculation to not count historical completed work properly. Created and ran a migration script that populated closedAt=updatedAt for 142 existing closed entries. The timeseries stats should now display historical data correctly."
+    },
+    {
+      "id": "c4bebb28-2e1a-4329-874c-5207fa9492cb",
+      "timestamp": "2025-07-17T09:22:30.626Z",
+      "category": "progress",
+      "content": "Completed: Fixed timeseries stats API that was limited to 30 days by default. The issue was missing closedAt timestamps for existing closed entries. Created and ran migration script to populate closedAt=updatedAt for 142 existing closed entries."
     }
   ],
   "files": [],
@@ -52,5 +58,6 @@
     "lastAIUpdate": "2025-07-17T08:30:58.657Z",
     "contextVersion": 1
   },
-  "id": 165
+  "id": 165,
+  "closedAt": "2025-07-17T09:22:30.626Z"
 }

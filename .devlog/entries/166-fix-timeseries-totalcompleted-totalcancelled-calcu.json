@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "high",
   "createdAt": "2025-07-17T08:41:11.548Z",
-  "updatedAt": "2025-07-17T08:49:21.684Z",
+  "updatedAt": "2025-07-17T09:22:40.190Z",
   "notes": [
     {
       "id": "ccb545a3-ecaa-410f-8dcf-14c28832e2e5",
@@ -25,6 +25,12 @@
       "timestamp": "2025-07-17T08:49:21.684Z",
       "category": "progress",
       "content": "Completed: Successfully refactored timeseries calculation to use accurate closedAt timestamps. Removed totalCompleted and totalCancelled in favor of a single totalClosed metric based on closedAt timestamps. Updated dailyCompleted to dailyClosed for consistency. Fixed all storage providers (JSON, SQLite, MySQL, PostgreSQL) to use the new accurate calculation method. The timeseries data now properly reflects when entries were actually closed rather than when they were created."
+    },
+    {
+      "id": "449df713-55fe-4ccd-98a0-f318e241ff89",
+      "timestamp": "2025-07-17T09:22:40.190Z",
+      "category": "progress",
+      "content": "Completed: Fixed timeseries calculation to use accurate closedAt timestamps instead of createdAt for completion dates. Updated all storage providers (JSON, SQLite, MySQL, PostgreSQL) to use closedAt for totalCompleted and totalCancelled calculations."
     }
   ],
   "files": [],
@@ -52,5 +58,6 @@
     "lastAIUpdate": "2025-07-17T08:41:11.548Z",
     "contextVersion": 1
   },
-  "id": 166
+  "id": 166,
+  "closedAt": "2025-07-17T09:22:40.190Z"
 }

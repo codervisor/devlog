@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "high",
   "createdAt": "2025-07-17T08:59:29.685Z",
-  "updatedAt": "2025-07-17T09:14:35.573Z",
+  "updatedAt": "2025-07-17T09:22:58.211Z",
   "notes": [
     {
       "id": "4c0273e1-d43b-4622-8c47-d67baa91fdce",
@@ -31,6 +31,12 @@
       "timestamp": "2025-07-17T09:14:35.573Z",
       "category": "progress",
       "content": "Completed: Successfully completed refactoring and naming improvements: 1) Removed unnecessary currentNew/currentInProgress/etc fields from TimeSeriesDataPoint interface, 2) Created reusable SQL utility functions to eliminate code duplication across storage providers, 3) Fixed currentOpen calculation to use simple delta (totalCreated - totalClosed), 4) Renamed 'currentOpen' to 'open' for clearer historical context. All storage providers now use consistent, accurate calculations with better naming."
+    },
+    {
+      "id": "23b239f0-ad7e-4882-ae0c-3266933ec32b",
+      "timestamp": "2025-07-17T09:22:58.211Z",
+      "category": "progress",
+      "content": "Completed: Refactored timeseries calculation: removed unnecessary status fields, created shared SQL utilities, fixed currentOpen calculation to use totalCreated-totalClosed, and renamed currentOpen to 'open' for clearer historical context."
     }
   ],
   "files": [],
@@ -58,5 +64,6 @@
     "lastAIUpdate": "2025-07-17T08:59:29.685Z",
     "contextVersion": 1
   },
-  "id": 168
+  "id": 168,
+  "closedAt": "2025-07-17T09:22:58.211Z"
 }
