@@ -308,11 +308,11 @@ export class DevlogManager {
    * List devlog entries with optional filtering
    * Returns paginated results for consistency with storage layer
    */
-  async listDevlogs(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+  async listDevlogs(filter?: DevlogFilter, options?: { includeAllStatuses?: boolean }): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     // Apply default exclusion of closed entries
-    const enhancedFilter = this.applyDefaultFilters(filter);
+    const enhancedFilter = this.applyDefaultFilters(filter, options);
 
     return await this.storageProvider.list(enhancedFilter);
   }

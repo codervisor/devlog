@@ -60,10 +60,19 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Check if any filters were explicitly provided
+    const hasExplicitFilters = filterTypeParam || statusParam || 
+                               searchParams.get('type') || searchParams.get('priority');
+
     // Use search or list based on whether search query is provided
-    const devlogs = searchQuery
-      ? await devlogManager.searchDevlogs(searchQuery, filter)
-      : await devlogManager.listDevlogs(filter);
+    let devlogs;
+    if (searchQuery) {
+      devlogs = await devlogManager.searchDevlogs(searchQuery, filter);
+    } else {
+      // If no explicit filters provided, include all statuses (API should return everything by default)
+      // If explicit filters provided, use normal filtering behavior
+      devlogs = await devlogManager.listDevlogs(filter, { includeAllStatuses: !hasExplicitFilters });
+    }
 
     return NextResponse.json(devlogs);
   } catch (error) {
