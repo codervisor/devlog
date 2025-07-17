@@ -12,6 +12,9 @@ import type {
   DevlogStats,
   DevlogStatus,
   DevlogType,
+  TimeSeriesRequest,
+  TimeSeriesStats,
+  TimeSeriesDataPoint,
   JsonConfig,
   StorageProvider,
   ChatSession,
@@ -153,6 +156,92 @@ export class JsonStorageProvider implements StorageProvider {
     // Apply filtering but not pagination for stats
     const filteredEntries = this.applyFilterAndSort(entries, filter);
     return calculateDevlogStats(filteredEntries);
+  }
+
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+    await this.initialize();
+    
+    // Set defaults
+    const days = request.days || 30;
+    const endDate = request.to ? new Date(request.to) : new Date();
+    const startDate = request.from
+      ? new Date(request.from)
+      : new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+
+    // Load all entries for analysis
+    const allDevlogs = await this.loadAllEntries();
+
+    // Create time series data points
+    const dataPoints: TimeSeriesDataPoint[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+
+      // Count devlogs created on this date
+      const created = allDevlogs.filter((devlog: DevlogEntry) => {
+        const createdDate = new Date(devlog.createdAt).toISOString().split('T')[0];
+        return createdDate === dateStr;
+      }).length;
+
+      // Count devlogs completed on this date
+      const completed = allDevlogs.filter((devlog: DevlogEntry) => {
+        if (devlog.status !== 'done') return false;
+
+        // If this is a "done" devlog and its updatedAt is on this date,
+        // AND it doesn't have any notes after the updatedAt time,
+        // then it was likely completed on this date
+        const updatedDate = new Date(devlog.updatedAt).toISOString().split('T')[0];
+        if (updatedDate === dateStr) {
+          // Check if there are any notes after the updatedAt time
+          const hasLaterNotes = devlog.notes?.some(note => 
+            new Date(note.timestamp) > new Date(devlog.updatedAt)
+          );
+          
+          // If no later notes, this was likely completed on updatedAt date
+          return !hasLaterNotes;
+        }
+
+        return false;
+      }).length;
+
+      // Count status distribution as of this date (cumulative approach)
+      // This gives us the state of all devlogs that existed by this date
+      const statusCounts = allDevlogs.reduce(
+        (acc: Record<DevlogStatus, number>, devlog: DevlogEntry) => {
+          const createdDate = new Date(devlog.createdAt);
+          // Only include devlogs that were created by this date
+          if (createdDate <= currentDate) {
+            acc[devlog.status] = (acc[devlog.status] || 0) + 1;
+          }
+          return acc;
+        },
+        {} as Record<DevlogStatus, number>,
+      );
+
+      dataPoints.push({
+        date: dateStr,
+        created,
+        completed,
+        inProgress: statusCounts['in-progress'] || 0,
+        inReview: statusCounts['in-review'] || 0,
+        testing: statusCounts['testing'] || 0,
+        new: statusCounts['new'] || 0,
+        blocked: statusCounts['blocked'] || 0,
+        done: statusCounts['done'] || 0,
+        cancelled: statusCounts['cancelled'] || 0,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return {
+      dataPoints,
+      dateRange: {
+        from: startDate.toISOString().split('T')[0],
+        to: endDate.toISOString().split('T')[0],
+      },
+    };
   }
 
   async cleanup(): Promise<void> {

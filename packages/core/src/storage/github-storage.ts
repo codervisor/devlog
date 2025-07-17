@@ -10,6 +10,9 @@ import {
   DevlogStats,
   GitHubStorageConfig,
   PaginatedResult,
+  TimeSeriesRequest,
+  TimeSeriesDataPoint,
+  TimeSeriesStats,
 } from '../types/index.js';
 import { GitHubAPIClient, GitHubIssue } from '../utils/github-api.js';
 import { RateLimiter } from '../utils/rate-limiter.js';
@@ -184,6 +187,83 @@ export class GitHubStorageProvider implements StorageProvider {
     const result = await this.list(filter);
     const entries = result.items; // Extract items from paginated result
     return calculateDevlogStats(entries);
+  }
+
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+    // Set defaults
+    const days = request.days || 30;
+    const endDate = request.to ? new Date(request.to) : new Date();
+    const startDate = request.from
+      ? new Date(request.from)
+      : new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+
+    // Get all entries for analysis
+    const result = await this.list();
+    const allDevlogs = result.items;
+
+    // Create time series data points (using same logic as other providers)
+    const dataPoints: TimeSeriesDataPoint[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+
+      // Count devlogs created on this date
+      const created = allDevlogs.filter((devlog: any) => {
+        const createdDate = new Date(devlog.createdAt).toISOString().split('T')[0];
+        return createdDate === dateStr;
+      }).length;
+
+      // Count devlogs completed on this date
+      const completed = allDevlogs.filter((devlog: any) => {
+        if (devlog.status !== 'done') return false;
+
+        const updatedDate = new Date(devlog.updatedAt).toISOString().split('T')[0];
+        if (updatedDate === dateStr) {
+          const hasLaterNotes = devlog.notes?.some((note: any) => 
+            new Date(note.timestamp) > new Date(devlog.updatedAt)
+          );
+          return !hasLaterNotes;
+        }
+
+        return false;
+      }).length;
+
+      // Count status distribution as of this date (cumulative approach)
+      const statusCounts = allDevlogs.reduce(
+        (acc: Record<string, number>, devlog: any) => {
+          const createdDate = new Date(devlog.createdAt);
+          if (createdDate <= currentDate) {
+            acc[devlog.status] = (acc[devlog.status] || 0) + 1;
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      dataPoints.push({
+        date: dateStr,
+        created,
+        completed,
+        inProgress: statusCounts['in-progress'] || 0,
+        inReview: statusCounts['in-review'] || 0,
+        testing: statusCounts['testing'] || 0,
+        new: statusCounts['new'] || 0,
+        blocked: statusCounts['blocked'] || 0,
+        done: statusCounts['done'] || 0,
+        cancelled: statusCounts['cancelled'] || 0,
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return {
+      dataPoints,
+      dateRange: {
+        from: startDate.toISOString().split('T')[0],
+        to: endDate.toISOString().split('T')[0],
+      },
+    };
   }
 
   async cleanup(): Promise<void> {

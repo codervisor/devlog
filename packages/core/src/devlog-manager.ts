@@ -437,76 +437,7 @@ export class DevlogManager {
    */
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.ensureInitialized();
-
-    // Set defaults
-    const days = request.days || 30;
-    const endDate = request.to ? new Date(request.to) : new Date();
-    const startDate = request.from
-      ? new Date(request.from)
-      : new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
-
-    // Get all devlogs to analyze
-    const allDevlogs = await this.getAllDevlogsAsArray();
-
-    // Create time series data points
-    const dataPoints: TimeSeriesDataPoint[] = [];
-    const currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-
-      // Count devlogs created on this date
-      const created = allDevlogs.filter((devlog: DevlogEntry) => {
-        const createdDate = new Date(devlog.createdAt).toISOString().split('T')[0];
-        return createdDate === dateStr;
-      }).length;
-
-      // Count devlogs completed on this date (status changed to 'done')
-      const completed = allDevlogs.filter((devlog: DevlogEntry) => {
-        if (devlog.status !== 'done') return false;
-
-        // Check if completed on this date (simplified - using updatedAt as proxy)
-        const updatedDate = new Date(devlog.updatedAt).toISOString().split('T')[0];
-        return updatedDate === dateStr;
-      }).length;
-
-      // Count current status distribution at end of this date
-      // For simplicity, we'll use current status distribution
-      // In a real implementation, you'd track status changes over time
-      const statusCounts = allDevlogs.reduce(
-        (acc: Record<DevlogStatus, number>, devlog: DevlogEntry) => {
-          const createdDate = new Date(devlog.createdAt);
-          if (createdDate <= currentDate) {
-            acc[devlog.status] = (acc[devlog.status] || 0) + 1;
-          }
-          return acc;
-        },
-        {} as Record<DevlogStatus, number>,
-      );
-
-      dataPoints.push({
-        date: dateStr,
-        created,
-        completed,
-        inProgress: statusCounts['in-progress'] || 0,
-        inReview: statusCounts['in-review'] || 0,
-        testing: statusCounts['testing'] || 0,
-        new: statusCounts['new'] || 0,
-        blocked: statusCounts['blocked'] || 0,
-        done: statusCounts['done'] || 0,
-        cancelled: statusCounts['cancelled'] || 0,
-      });
-
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    return {
-      dataPoints,
-      dateRange: {
-        from: startDate.toISOString().split('T')[0],
-        to: endDate.toISOString().split('T')[0],
-      },
-    };
+    return this.storageProvider.getTimeSeriesStats(request);
   }
 
   /**

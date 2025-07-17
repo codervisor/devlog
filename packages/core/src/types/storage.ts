@@ -2,7 +2,7 @@
  * Storage configuration and provider types
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, PaginatedResult } from './core.js';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, PaginatedResult, TimeSeriesRequest, TimeSeriesStats } from './core.js';
 import { 
   ChatSession, 
   ChatMessage, 
@@ -147,6 +147,12 @@ export interface StorageProvider {
    * @param filter Optional filter to apply before calculating stats
    */
   getStats(filter?: DevlogFilter): Promise<DevlogStats>;
+
+  /**
+   * Get time series statistics for dashboard charts
+   * @param request Optional parameters for time range and granularity
+   */
+  getTimeSeriesStats(request?: TimeSeriesRequest): Promise<TimeSeriesStats>;
 
   /**
    * Cleanup resources
