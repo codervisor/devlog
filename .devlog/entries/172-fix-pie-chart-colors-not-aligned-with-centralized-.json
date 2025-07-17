@@ -1,0 +1,47 @@
+{
+  "key": "fix-pie-chart-colors-not-aligned-with-centralized-",
+  "title": "Fix: Pie chart colors not aligned with centralized color system",
+  "type": "bugfix",
+  "description": "The pie chart in the dashboard uses inconsistent colors that don't align with the centralized color system defined in devlog-ui-utils.tsx. Specifically:\n\n1. **New** status uses CHART_COLORS.purple (#722ed1) instead of getStatusColor('new') which should be blue (#1890ff)\n2. **In Review** status uses hardcoded '#fa8c16' instead of getStatusColor('in-review') which should be purple (#722ed1)\n3. Other status colors may also be misaligned with the tag colors used elsewhere in the application\n\nThis creates visual inconsistency where the pie chart colors don't match the status tag colors used in devlog lists, overview stats, and other UI components.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-17T15:16:38.087Z",
+  "updatedAt": "2025-07-17T15:21:55.663Z",
+  "notes": [
+    {
+      "id": "82d36d35-659a-4649-b719-331ac391827e",
+      "timestamp": "2025-07-17T15:21:55.663Z",
+      "category": "solution",
+      "content": "✅ **Successfully fixed pie chart color alignment issue!**\n\n**Changes Made:**\n1. **Added import** for `getColorHex` function from devlog-ui-utils.tsx\n2. **Replaced hardcoded colors** in pieChartData with centralized color system calls:\n   - `getColorHex(getStatusColor('new'))` for New status → now blue (#1890ff)\n   - `getColorHex(getStatusColor('in-progress'))` for In Progress → now orange (#fa8c16)  \n   - `getColorHex(getStatusColor('in-review'))` for In Review → now purple (#722ed1)\n   - All other statuses now use centralized colors consistently\n\n**Verification:**\n- ✅ Web app runs successfully in development mode\n- ✅ Pie chart displays with correct colors aligned to status tags\n- ✅ Legend shows consistent colors matching the status color scheme\n- ✅ Visual consistency achieved across dashboard components\n\n**Impact:**\nThe pie chart now uses the same color scheme as status tags throughout the application, providing a consistent visual experience for users. Colors semantically match their meanings (blue for new, orange for in-progress, green for done, etc.).",
+      "files": [
+        "packages/web/app/components/features/dashboard/Dashboard.tsx"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Visual consistency across all components improves user experience and reduces confusion. Users expect the same status to have the same color whether they see it in a pie chart, tag, or overview stats.",
+    "technicalContext": "The Dashboard component has hardcoded colors in the pieChartData that don't use the centralized getStatusColor utility. The chart-utils.ts file defines its own CHART_COLORS but these don't align with the semantic status colors from devlog-ui-utils.tsx.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Pie chart status colors match the colors from getStatusColor() utility",
+      "All status representations (tags, pie chart, overview stats) use the same color scheme",
+      "No hardcoded color values in pie chart data construction",
+      "Visual consistency maintained across all dashboard components"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T15:16:38.087Z",
+    "contextVersion": 1
+  },
+  "id": 172,
+  "closedAt": "2025-07-17T15:21:55.661Z"
+}

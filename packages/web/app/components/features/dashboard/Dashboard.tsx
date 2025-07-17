@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
-import { getStatusColor, getStatusIcon } from '@/lib/devlog-ui-utils';
+import { getStatusColor, getStatusIcon, getColorHex } from '@/lib/devlog-ui-utils';
 import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { formatTimeSeriesData, CHART_COLORS, CHART_OPACITY, formatTooltipValue, formatTooltipLabel } from './chart-utils';
@@ -53,18 +53,18 @@ export function Dashboard({
   // Format data for charts using utility function
   const chartData = React.useMemo(() => formatTimeSeriesData(timeSeriesData), [timeSeriesData]);
 
-  // Format pie chart data for current status distribution using utility colors
+  // Format pie chart data for current status distribution using centralized color system
   const pieChartData = React.useMemo(() => {
     if (!stats) return [];
 
     return [
-      { name: 'New', value: stats.byStatus['new'] || 0, color: CHART_COLORS.purple },
-      { name: 'In Progress', value: stats.byStatus['in-progress'] || 0, color: CHART_COLORS.warning },
-      { name: 'Blocked', value: stats.byStatus['blocked'] || 0, color: CHART_COLORS.error },
-      { name: 'In Review', value: stats.byStatus['in-review'] || 0, color: '#fa8c16' },
-      { name: 'Testing', value: stats.byStatus['testing'] || 0, color: CHART_COLORS.cyan },
-      { name: 'Done', value: stats.byStatus['done'] || 0, color: CHART_COLORS.success },
-      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: CHART_COLORS.grey },
+      { name: 'New', value: stats.byStatus['new'] || 0, color: getColorHex(getStatusColor('new')) },
+      { name: 'In Progress', value: stats.byStatus['in-progress'] || 0, color: getColorHex(getStatusColor('in-progress')) },
+      { name: 'Blocked', value: stats.byStatus['blocked'] || 0, color: getColorHex(getStatusColor('blocked')) },
+      { name: 'In Review', value: stats.byStatus['in-review'] || 0, color: getColorHex(getStatusColor('in-review')) },
+      { name: 'Testing', value: stats.byStatus['testing'] || 0, color: getColorHex(getStatusColor('testing')) },
+      { name: 'Done', value: stats.byStatus['done'] || 0, color: getColorHex(getStatusColor('done')) },
+      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: getColorHex(getStatusColor('cancelled')) },
     ].filter((item) => item.value > 0);
   }, [stats]);
 
