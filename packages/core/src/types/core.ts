@@ -4,19 +4,86 @@
 
 export type DevlogType = 'feature' | 'bugfix' | 'task' | 'refactor' | 'docs';
 
+/**
+ * Devlog status representing the current stage of work
+ * 
+ * **Typical Workflow Progression:**
+ * ```
+ * new → in-progress → in-review → testing → done
+ *                   ↓
+ *                 blocked (can return to in-progress)
+ *                   ↓  
+ *               cancelled (work stopped)
+ * ```
+ * 
+ * **Status Categories:**
+ * - **Open Statuses** (active work): `new`, `in-progress`, `blocked`, `in-review`, `testing`
+ * - **Closed Statuses** (completed work): `done`, `cancelled`
+ */
 export type DevlogStatus =
+  /** 
+   * **New** - Work item has been created but not yet started
+   * - Initial status for all new devlog entries
+   * - Indicates work is ready to be picked up
+   * - Use when: Creating a new task, feature, or bug report
+   */
   | 'new'
+  /** 
+   * **In Progress** - Work is actively being developed
+   * - Developer/AI is actively working on the implementation
+   * - Main development phase where code is being written
+   * - Use when: Starting work, making changes, implementing features
+   */
   | 'in-progress'
+  /** 
+   * **Blocked** - Work is temporarily stopped due to dependencies or issues
+   * - Cannot proceed until external dependencies are resolved
+   * - Waiting for decisions, resources, or other work to complete
+   * - Use when: Stuck waiting for external factors, need clarification, dependencies not ready
+   */
   | 'blocked'
+  /** 
+   * **In Review** - Work is complete and awaiting review/approval
+   * - Implementation is finished and ready for human/peer review
+   * - Code review, design review, or stakeholder approval phase
+   * - Focus on quality, standards compliance, and design validation
+   * - Use when: Pull request submitted, awaiting code review, design needs approval
+   */
   | 'in-review'
+  /** 
+   * **Testing** - Work has passed review and is being validated through testing
+   * - Quality assurance, functional testing, or user acceptance testing
+   * - Verifying the solution works correctly and meets requirements
+   * - Can include automated testing, manual testing, or staging deployment
+   * - Use when: Deployed to staging, running test suites, user acceptance testing
+   */
   | 'testing'
+  /** 
+   * **Done** - Work is completed successfully and delivered
+   * - All requirements met, tested, and accepted
+   * - Work is deployed/delivered and functioning as expected
+   * - Final status for successfully completed work
+   * - Use when: Feature is live, bug is fixed, task is completed and verified
+   */
   | 'done'
+  /** 
+   * **Cancelled** - Work was stopped and will not be completed
+   * - Requirements changed, priorities shifted, or work became unnecessary
+   * - Different from "done" - represents abandoned rather than completed work
+   * - Use when: Feature cancelled, bug no longer relevant, task deprioritized permanently
+   */
   | 'cancelled';
 
 export type DevlogPriority = 'low' | 'medium' | 'high' | 'critical';
 
 /**
  * Categories for devlog notes - used to classify and organize different types of information
+ * 
+ * **Usage Guidelines:**
+ * - Choose the most specific category that matches your note's primary purpose
+ * - Use `progress` for general updates and status changes
+ * - Use `issue` for problems and `solution` for their resolutions
+ * - Use `feedback` for external input and `idea` for suggestions
  *
  * @example
  * ```typescript
@@ -29,17 +96,47 @@ export type DevlogPriority = 'low' | 'medium' | 'high' | 'critical';
  * ```
  */
 export type NoteCategory =
-  /** Work progress updates, milestones, and status changes */
+  /** 
+   * **Progress** - Work progress updates, milestones, and status changes
+   * - General updates on development progress
+   * - Status transitions and milestone achievements
+   * - Use for: Daily standup updates, completion of subtasks, general progress notes
+   */
   | 'progress'
-  /** Problems encountered, bugs found, or obstacles discovered */
+  /** 
+   * **Issue** - Problems encountered, bugs found, or obstacles discovered
+   * - Technical problems, build failures, or unexpected behavior
+   * - Blockers and challenges that need to be addressed
+   * - Use for: Bug reports, technical difficulties, unexpected complications
+   */
   | 'issue'
-  /** Solutions implemented, fixes applied, or workarounds found */
+  /** 
+   * **Solution** - Solutions implemented, fixes applied, or workarounds found
+   * - How problems were resolved or addressed
+   * - Technical solutions and implementation details
+   * - Use for: Bug fixes, problem resolutions, workaround implementations
+   */
   | 'solution'
-  /** New ideas, suggestions, or potential improvements */
+  /** 
+   * **Idea** - New ideas, suggestions, or potential improvements
+   * - Enhancement suggestions and new feature ideas
+   * - Alternative approaches or optimization opportunities
+   * - Use for: Feature suggestions, improvement ideas, alternative implementations
+   */
   | 'idea'
-  /** Important reminders, action items, or follow-up tasks */
+  /** 
+   * **Reminder** - Important reminders, action items, or follow-up tasks
+   * - Things to remember for future work
+   * - Follow-up actions and TODO items
+   * - Use for: Technical debt items, future improvements, cleanup tasks
+   */
   | 'reminder'
-  /** External feedback from users, customers, stakeholders, or usability testing */
+  /** 
+   * **Feedback** - External feedback from users, customers, stakeholders, or usability testing
+   * - Input from users, customers, or stakeholders
+   * - Results from usability testing or user research
+   * - Use for: User feedback, stakeholder input, testing results, customer requests
+   */
   | 'feedback';
 
 /**

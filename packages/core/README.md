@@ -13,6 +13,26 @@ updating, querying, and management of development logs.
 - **AI Context Management**: Special handling for AI assistant context and insights
 - **Decision Tracking**: Record important decisions with rationale
 - **Statistics**: Get overview statistics of your devlog entries
+- **Status Workflow**: Comprehensive status system for tracking work progression
+
+## Devlog Status System
+
+Devlog entries use a well-defined status system to track work progression:
+
+**Open Statuses (Active Work):**
+- `new` - Work ready to start
+- `in-progress` - Actively being developed
+- `blocked` - Temporarily stopped due to dependencies
+- `in-review` - Awaiting review/approval  
+- `testing` - Being validated through testing
+
+**Closed Statuses (Completed Work):**
+- `done` - Successfully completed
+- `cancelled` - Abandoned/deprioritized
+
+**Typical Workflow:** `new` → `in-progress` → `in-review` → `testing` → `done`
+
+📖 **[View Complete Status Workflow Guide](../../docs/reference/devlog-status-workflow.md)**
 
 ## Installation
 
