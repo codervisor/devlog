@@ -1,0 +1,50 @@
+{
+  "key": "configure-devlog-web-for-vercel-postgres-deploymen",
+  "title": "Configure @devlog/web for Vercel Postgres Deployment",
+  "type": "task",
+  "description": "Set up @devlog/web package to deploy on Vercel using Vercel Postgres as the database backend. This includes configuring the PostgreSQL storage provider, setting up environment variables, creating deployment configuration, and ensuring the web application works properly with cloud PostgreSQL.",
+  "status": "in-progress",
+  "priority": "high",
+  "createdAt": "2025-07-17T02:27:56.439Z",
+  "updatedAt": "2025-07-17T02:31:42.245Z",
+  "notes": [
+    {
+      "id": "5c00d637-f780-4686-a627-95524d9be5ce",
+      "timestamp": "2025-07-17T02:30:36.586Z",
+      "category": "progress",
+      "content": "Configured Vercel Postgres deployment setup. Key changes:\n1. ✅ Created vercel.json with Next.js deployment config  \n2. ✅ Added .env.example with Vercel Postgres environment variables\n3. ✅ Added pg and @types/pg dependencies to package.json\n4. ✅ Created devlog.config.json for PostgreSQL with ${POSTGRES_URL} environment variable\n5. ✅ Kept devlog-manager.ts simple - it automatically uses the config file\n\nThe core package already supports PostgreSQL storage provider, so we don't need custom storage configuration logic. The ConfigurationManager will automatically load the devlog.config.json and expand environment variables."
+    },
+    {
+      "id": "9c1b29a0-4696-4af1-8c33-f9b64b2badad",
+      "timestamp": "2025-07-17T02:31:42.244Z",
+      "category": "issue",
+      "content": "🚨 CRITICAL ISSUE: Monorepo dependency problem for Vercel deployment. @devlog/web depends on @devlog/core (workspace:*) which Vercel can't resolve by default. Need to either:\n1. Deploy entire monorepo to Vercel \n2. Use Vercel's turborepo/monorepo support\n3. Bundle dependencies before deployment\n4. Use a different platform that handles monorepos better"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Enable cloud deployment of the devlog web interface to make it accessible for remote teams and provide a scalable solution for devlog management. Vercel provides reliable hosting with built-in PostgreSQL integration.",
+    "technicalContext": "The web package currently uses @devlog/core which supports multiple storage backends including PostgreSQL. Need to configure Vercel-specific database connection strings and deployment settings. Vercel Postgres provides managed PostgreSQL with connection pooling.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Web app successfully deploys to Vercel",
+      "PostgreSQL database initializes with proper schema",
+      "All devlog CRUD operations work with Vercel Postgres",
+      "Environment variables properly configured",
+      "Real-time updates work in production"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T02:27:56.439Z",
+    "contextVersion": 1
+  },
+  "id": 150
+}
