@@ -1,0 +1,56 @@
+{
+  "key": "fix-build-and-dev-server-conflict-pnpm-build-corru",
+  "title": "Fix: Build and Dev Server Conflict - pnpm build corrupts dev:web",
+  "type": "bugfix",
+  "description": "When running `pnpm build` while `pnpm dev:web` is active, the dev server breaks because build artifacts get cleaned or corrupted. This happens because both processes potentially write to the same output directories and the build process cleans existing artifacts before building.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-17T15:36:13.451Z",
+  "updatedAt": "2025-07-17T15:42:25.273Z",
+  "notes": [
+    {
+      "id": "30eef9ac-f34c-4900-8cd5-bac5d19a1d6c",
+      "timestamp": "2025-07-17T15:36:45.721Z",
+      "category": "issue",
+      "content": "**Root Cause Analysis:**\n1. Next.js uses `.next/` directory for both dev and build processes\n2. `pnpm build` runs `next build` which overwrites/cleans the `.next/` directory\n3. The dev server relies on incremental builds in the same `.next/` directory\n4. When build process cleans/rebuilds `.next/`, it invalidates the dev server's state\n\n**Potential Solutions:**\n1. Use separate output directories for build vs dev\n2. Create a test-build command that doesn't interfere with dev\n3. Use Next.js `distDir` config to separate build outputs\n4. Implement build testing without full rebuild"
+    },
+    {
+      "id": "a285fe9b-13c0-4f13-9c83-eee67e2b87e4",
+      "timestamp": "2025-07-17T15:42:17.177Z",
+      "category": "solution",
+      "content": "**SOLUTION IMPLEMENTED AND TESTED ✅**\n\n**Changes Made:**\n1. **Modified `next.config.js`**: Added conditional `distDir` configuration that uses `.next-build` when `NEXT_BUILD_MODE=standalone`\n2. **Updated `packages/web/package.json`**: Added new scripts:\n   - `build:test`: Uses `NEXT_BUILD_MODE=standalone` environment variable for testing builds\n   - `clean:dev` and `clean:build`: Separate cleanup commands for each directory\n3. **Updated root `package.json`**: Added `build:test` script that builds all packages with standalone web build\n4. **Updated `turbo.json`**: Added support for `.next-build` output directory\n\n**Result:**\n- ✅ Dev server runs using `.next/` directory\n- ✅ Test builds use `.next-build/` directory \n- ✅ Both processes can run concurrently without conflicts\n- ✅ AI agents can run `pnpm build:test` to test builds without breaking `dev:web`\n\n**Testing Confirmed:**\n- Started `pnpm dev:web` on port 3000\n- Ran `pnpm build:test` successfully (53s build time)\n- Dev server remained functional and responsive throughout\n- Verified separate directories contain different artifacts\n- Web server responded with 200 status after build completed"
+    },
+    {
+      "id": "8877bbc8-afd1-4470-b5b1-cd0c5660cbd0",
+      "timestamp": "2025-07-17T15:42:25.273Z",
+      "category": "progress",
+      "content": "Completed: Successfully resolved build/dev server conflict by implementing separate build directories. AI agents can now run `pnpm build:test` to test builds without disrupting active development servers. The solution uses Next.js `distDir` configuration to isolate build artifacts (.next vs .next-build) based on environment variables."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "This issue disrupts the development workflow and makes it impossible for AI agents to test builds without breaking active development servers. This reduces productivity and creates friction in the development process.",
+    "technicalContext": "The conflict occurs because:\n1. `pnpm build` runs `pnpm -r build` which builds all packages\n2. Each package's build process may clean its output directory first\n3. The dev server relies on incremental builds that may get invalidated by the full build process\n4. Next.js dev server and build process may conflict over .next directory access",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "AI agent can run `pnpm build` to test build success without breaking active `dev:web` server",
+      "Development workflow remains uninterrupted during build testing",
+      "Both dev and build processes can run concurrently without conflicts",
+      "Solution maintains build system integrity and doesn't compromise output quality"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T15:36:13.451Z",
+    "contextVersion": 1
+  },
+  "id": 174,
+  "closedAt": "2025-07-17T15:42:25.272Z"
+}

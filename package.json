@@ -4,6 +4,7 @@
   "description": "Monorepo for development logging tools and MCP server",
   "scripts": {
     "build": "pnpm -r build",
+    "build:test": "pnpm --filter @devlog/ai build && pnpm --filter @devlog/core build && pnpm --filter @devlog/web build:test",
     "start": "pnpm --filter @devlog/mcp start",
     "dev": "pnpm --filter @devlog/mcp dev",
     "test": "pnpm -r test",
@@ -17,7 +18,7 @@
     "build:web": "pnpm --filter @devlog/web build",
     "build:vercel": "pnpm --filter @devlog/ai build && pnpm --filter @devlog/core build && pnpm --filter @devlog/web build",
     "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
-    "dev:web": "concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
+    "dev:web": "scripts/dev-with-check.sh concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
     "start:web": "pnpm --filter @devlog/web start",
     "preview:web": "pnpm --filter @devlog/web preview"
   },

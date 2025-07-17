@@ -3,7 +3,11 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["build/**", ".next/**", "dist/**"]
+      "outputs": ["build/**", ".next/**", ".next-build/**", "dist/**"]
+    },
+    "build:test": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**", ".next-build/**", "dist/**"]
     },
     "dev": {
       "cache": false,

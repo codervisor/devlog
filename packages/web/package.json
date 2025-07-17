@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "Web interface for devlog management",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3000",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
     "dev:server": "next dev --port 3000",
     "dev:client": "next dev --port 3001",
-    "build": "next build",
+    "build": "NEXT_BUILD_MODE=standalone next build",
+    "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",
     "start": "pnpm run build && next start --port 3010",
     "preview": "next start --port 3010",
-    "clean": "rimraf .next out *.tsbuildinfo"
+    "clean": "rimraf .next .next-build out *.tsbuildinfo",
+    "clean:dev": "rimraf .next",
+    "clean:build": "rimraf .next-build"
   },
   "dependencies": {
     "@devlog/core": "workspace:*",

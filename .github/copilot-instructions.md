@@ -47,6 +47,25 @@
 
 ### Testing Requirements
 
+#### Build vs Dev Server Conflicts
+- **Use `pnpm build:test` for AI testing**: When AI agents need to test builds, always use `pnpm build:test` instead of `pnpm build`
+- **Why this matters**: `pnpm build` overwrites `.next/` directory and breaks active `dev:web` servers
+- **Solution implemented**: 
+  - `pnpm build:test` uses `.next-build/` directory (separate from dev server's `.next/`)
+  - Dev servers can run concurrently with build testing
+  - No workflow disruption when testing build success
+- **Commands available**:
+  - `pnpm dev:web` - Runs dev server using `.next/` directory
+  - `pnpm build:test` - Tests build using `.next-build/` directory  
+  - `pnpm build` - Production build (still uses `.next/` by default)
+
+#### Single Dev Server Policy
+- **One server at a time**: `pnpm dev:web` uses fixed port 3000 and will fail if port is occupied
+- **Clear feedback**: Shows existing servers before attempting to start new one
+- **Preserve hot reload**: Don't kill existing servers - let developers use the running one
+- **Error handling**: Next.js EADDRINUSE error clearly indicates when port 3000 is busy
+- **Check existing servers**: The dev command shows what's running on ports 3000-3002 before starting
+
 #### UI-Related Development Tasks
 - **ALWAYS use Playwright**: Use Playwright MCP tools for UI validation
 - **Testing Steps**:

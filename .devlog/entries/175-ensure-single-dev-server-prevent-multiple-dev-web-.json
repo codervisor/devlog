@@ -1,0 +1,69 @@
+{
+  "key": "ensure-single-dev-server-prevent-multiple-dev-web-",
+  "title": "Ensure Single Dev Server: Prevent Multiple dev:web Instances",
+  "type": "feature",
+  "description": "Implement a mechanism to ensure only one dev server runs at a time. When `pnpm dev:web` is executed, it should automatically detect and stop any existing dev servers before starting a new one, preventing port conflicts and confusion.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-17T15:44:45.378Z",
+  "updatedAt": "2025-07-17T15:53:44.177Z",
+  "notes": [
+    {
+      "id": "084c4640-96c6-40c2-810d-841b72e6ce0c",
+      "timestamp": "2025-07-17T15:46:03.680Z",
+      "category": "progress",
+      "content": "Cancelled: Current behavior is actually preferable - multiple dev servers provide hot reload, parallel development capabilities, and port isolation without conflicts. No changes needed."
+    },
+    {
+      "id": "fdefd237-9613-46ac-8640-b3bbe83991fb",
+      "timestamp": "2025-07-17T15:46:48.943Z",
+      "category": "idea",
+      "content": "**Better Approach - Don't Restart Running Servers**\n\nUser feedback: Instead of killing existing dev servers, we should preserve them to maintain hot reload functionality.\n\n**New Strategy:**\n1. **Detect existing dev server** - Check if dev server is already running\n2. **Show connection info** - Display the URL of existing server instead of starting new one\n3. **Prevent duplicate starts** - Exit gracefully if server already running\n4. **Preserve hot reload** - Don't interrupt running dev workflows\n\nThis maintains the developer experience while preventing confusion about multiple servers."
+    },
+    {
+      "id": "762ed7f0-dfc1-44b3-8408-2d8c56fc142b",
+      "timestamp": "2025-07-17T15:50:10.681Z",
+      "category": "issue",
+      "content": "**Previous Approach Too Complicated**\n\nUser feedback: The shell+js script approach is overly complex and doesn't work reliably.\n\n**Issues:**\n- Complex dependencies between shell and Node.js scripts\n- Unreliable process detection\n- Over-engineered for a simple problem\n\n**Need simpler approach** - leverage existing Next.js capabilities and package.json configurations instead of custom scripts."
+    },
+    {
+      "id": "4dd79c05-fa07-454b-9189-0e1b14b94493",
+      "timestamp": "2025-07-17T15:53:10.659Z",
+      "category": "solution",
+      "content": "**SIMPLE SOLUTION IMPLEMENTED ✅**\n\n**Approach: Force Single Port + Clear Feedback**\n1. **Fixed port**: Modified `packages/web/package.json` to use `next dev --port 3000` (no auto-port-finding)\n2. **Port check script**: Added simple `scripts/dev-with-check.sh` that shows current port usage\n3. **Clear failure**: When port is in use, Next.js gives clear EADDRINUSE error\n\n**User Experience:**\n- ✅ Shows existing servers: \"📡 Port 3000 is in use: http://localhost:3000\"  \n- ✅ Clear failure message when trying to start duplicate\n- ✅ Preserves hot reload on existing server\n- ✅ No complex detection logic - leverages Next.js built-in error handling\n\n**Result:** Simple, reliable, and user-friendly. AI agents and developers get clear feedback about existing servers."
+    },
+    {
+      "id": "01b7d97a-7d0d-4e6c-b265-ee87a12dc80a",
+      "timestamp": "2025-07-17T15:53:44.177Z",
+      "category": "progress",
+      "content": "Completed: Implemented simple and effective solution to prevent dev server confusion. Fixed port assignment to 3000, added port check script for clear feedback, and leveraged Next.js built-in error handling. No complex process detection needed - when port is in use, clear EADDRINUSE error guides users to existing server."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Multiple dev servers create confusion and consume unnecessary resources. When both AI agents and human developers try to start servers, they often end up on different ports, making it unclear which server is active and causing potential conflicts.",
+    "technicalContext": "Currently, Next.js will automatically find an available port if the default is busy, leading to multiple servers. We need to implement a pre-check that kills existing dev processes before starting new ones.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Only one dev server can run at a time",
+      "Starting a new dev server automatically stops any existing ones",
+      "Clear feedback when stopping/starting servers",
+      "Works for both AI agents and human developers",
+      "No port conflicts or confusion about which server is active"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T15:44:45.378Z",
+    "contextVersion": 1
+  },
+  "id": 175,
+  "closedAt": "2025-07-17T15:53:44.175Z"
+}
