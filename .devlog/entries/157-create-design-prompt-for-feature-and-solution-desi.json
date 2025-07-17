@@ -1,0 +1,53 @@
+{
+  "key": "create-design-prompt-for-feature-and-solution-desi",
+  "title": "Create Design Prompt for Feature and Solution Design Workflows",
+  "type": "task",
+  "description": "Create a new task-level prompt file (design.prompt.md) that provides AI agents with comprehensive guidance for designing features and solutions without implementation. This prompt should follow the established prompt ecosystem architecture and integrate with the devlog workflow.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-17T06:16:10.366Z",
+  "updatedAt": "2025-07-17T06:17:28.067Z",
+  "notes": [
+    {
+      "id": "5431a7a9-599c-4c2b-af0c-54abe7f31e93",
+      "timestamp": "2025-07-17T06:17:28.067Z",
+      "category": "solution",
+      "content": "Successfully created design.prompt.md following established prompt ecosystem patterns. The design prompt provides comprehensive guidance for feature and solution design workflows, including requirements analysis, solution exploration, design documentation, and validation frameworks.",
+      "files": [
+        "/home/marvin/projects/codervisor/devlog/.github/prompts/design.prompt.md"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The project needs a dedicated design prompt to guide AI agents through feature design and solution architecture phases before implementation. This will improve design quality, reduce implementation rework, and create better documentation of design decisions.",
+    "technicalContext": "Following the multi-tier prompt architecture (System → Pattern → Task), this design prompt will be a task-level prompt that works with the existing devlog ecosystem. It should integrate with MCP tools and follow established patterns from other prompt files.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Design prompt file created following established prompt patterns",
+      "Comprehensive design workflow guidance provided",
+      "Integration with devlog discovery and creation patterns",
+      "Clear separation between design and implementation phases",
+      "Validation framework for design quality included"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Existing prompts (arch.prompt.md, docs.prompt.md, reflect.prompt.md) follow consistent patterns",
+      "All prompts start with mandatory devlog discovery step",
+      "Multi-tier analysis frameworks are common",
+      "Clear success criteria and execution checklists are standard",
+      "Integration with MCP tools is essential"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T06:16:10.366Z",
+    "contextVersion": 1
+  },
+  "id": 157
+}
