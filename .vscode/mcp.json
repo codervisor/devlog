@@ -9,7 +9,7 @@
             "args": [
                 "--filter", 
                 "@devlog/mcp", 
-                "start"
+                "dev:nodemon"
             ],
             "cwd": ".",
             "env": {
