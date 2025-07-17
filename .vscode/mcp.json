@@ -7,10 +7,14 @@
             "type": "stdio",
             "command": "pnpm",
             "args": [
-                "--filter",
-                "@devlog/mcp",
-                "start"
-            ]
+                "--filter", 
+                "@devlog/mcp", 
+                "dev:watch"
+            ],
+            "cwd": ".",
+            "env": {
+                "NODE_ENV": "development"
+            }
         },
         "playwright": {
             "command": "npx",

@@ -26,6 +26,7 @@
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsx src/index.ts",
+    "dev:watch": "tsx watch --clear-screen=false src/index.ts",
     "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
     "test": "vitest run",
     "test:watch": "vitest",
