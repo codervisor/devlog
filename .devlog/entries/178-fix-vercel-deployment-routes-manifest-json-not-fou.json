@@ -1,0 +1,59 @@
+{
+  "key": "fix-vercel-deployment-routes-manifest-json-not-fou",
+  "title": "Fix: Vercel deployment - routes-manifest.json not found due to standalone build output directory mismatch",
+  "type": "bugfix",
+  "description": "Vercel deployment is failing with \"The file '/vercel/path0/packages/web/.next/routes-manifest.json' couldn't be found\" because the build uses NEXT_BUILD_MODE=standalone which outputs to .next-build directory, but vercel.json is configured to look for files in .next directory.",
+  "status": "in-review",
+  "priority": "critical",
+  "createdAt": "2025-07-17T16:15:12.651Z",
+  "updatedAt": "2025-07-17T16:18:56.449Z",
+  "notes": [
+    {
+      "id": "0afb9600-b705-44ab-935e-7864e724d6cf",
+      "timestamp": "2025-07-17T16:15:31.780Z",
+      "category": "solution",
+      "content": "ROOT CAUSE IDENTIFIED: The issue is a mismatch between Next.js output directory and vercel.json configuration. The web package build script uses NEXT_BUILD_MODE=standalone which triggers next.config.js to output to .next-build directory instead of .next, but vercel.json outputDirectory is still set to .next. This causes Vercel to look for routes-manifest.json in the wrong location."
+    },
+    {
+      "id": "d39fe857-c509-4755-b644-4c6f9a773fc6",
+      "timestamp": "2025-07-17T16:18:28.815Z",
+      "category": "solution",
+      "content": "SOLUTION IMPLEMENTED: Updated vercel.json outputDirectory from '.next' to '.next-build' to match the actual build output when NEXT_BUILD_MODE=standalone is used. The Next.js configuration conditionally outputs to .next-build when in standalone mode, and this was confirmed by local testing. The routes-manifest.json file is correctly generated in .next-build directory.",
+      "files": [
+        "vercel.json"
+      ],
+      "codeChanges": "Changed outputDirectory in vercel.json from '.next' to '.next-build' to match the standalone build output directory"
+    },
+    {
+      "id": "e12e45ea-f7c9-4e6e-84aa-809fede88483",
+      "timestamp": "2025-07-17T16:18:49.971Z",
+      "category": "progress",
+      "content": "VALIDATION COMPLETED: Local testing confirms the fix works correctly. The build process generates all required files (routes-manifest.json, build-manifest.json, BUILD_ID, etc.) in the .next-build directory, which now matches the vercel.json outputDirectory configuration. The deployment should now succeed without the 'routes-manifest.json not found' error."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Critical production deployment blocker preventing the web application from being deployed to Vercel. This affects the ability to showcase the devlog web interface publicly and blocks any updates to the production environment.",
+    "technicalContext": "The Next.js configuration conditionally changes the output directory based on NEXT_BUILD_MODE environment variable. When set to 'standalone', it outputs to '.next-build' instead of '.next'. The build:vercel script sets this environment variable, but vercel.json still expects output in '.next' directory.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Vercel deployment succeeds without routes-manifest.json errors",
+      "Build output directory matches vercel.json configuration",
+      "Web application builds and deploys successfully",
+      "No regression in local development or other build modes"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T16:15:12.651Z",
+    "contextVersion": 1
+  },
+  "id": 178
+}

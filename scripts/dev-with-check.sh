@@ -4,7 +4,7 @@
 
 echo "🔍 Checking for dev servers..."
 
-for port in 3000 3001 3002; do
+for port in 3000; do
     if lsof -ti:$port > /dev/null 2>&1; then
         echo "📡 Port $port is in use: http://localhost:$port"
         exit 0
