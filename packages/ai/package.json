@@ -6,7 +6,7 @@
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "bin": {
-    "ai-chat": "./build/cli/index.js"
+    "ai": "./build/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -17,6 +17,7 @@
     "test:watch": "vitest --watch"
   },
   "keywords": [
+    "ai",
     "ai-chat",
     "github-copilot",
     "cursor",

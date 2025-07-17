@@ -1,0 +1,63 @@
+{
+  "key": "rename-devlog-ai-chat-package-to-devlog-ai",
+  "title": "Rename @devlog/ai-chat package to @devlog/ai",
+  "type": "refactor",
+  "description": "Rename the @devlog/ai-chat package to @devlog/ai to simplify the package name and better align with its current and future AI-related functionality. This involves updating package.json files, import statements, and any references throughout the codebase.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-17T02:04:16.718Z",
+  "updatedAt": "2025-07-17T02:11:54.405Z",
+  "notes": [
+    {
+      "id": "e2d11594-3353-475e-9723-7731d953b5ab",
+      "timestamp": "2025-07-17T02:04:38.018Z",
+      "category": "progress",
+      "content": "Starting package rename process. First updating the main package.json file to change name from @devlog/ai-chat to @devlog/ai"
+    },
+    {
+      "id": "8a161e98-a186-428f-a551-38fb2eb45e88",
+      "timestamp": "2025-07-17T02:11:54.405Z",
+      "category": "progress",
+      "content": "✅ Package rename completed successfully! All references updated from @devlog/ai-chat to @devlog/ai:\n\n**Completed tasks:**\n- ✅ Renamed physical directory: packages/ai-chat → packages/ai  \n- ✅ Updated package.json: name, CLI binary (ai-chat → ai), keywords\n- ✅ Updated workspace references in root tsconfig.json and package.json scripts\n- ✅ Updated dependency references in @devlog/core package\n- ✅ Updated import statements in core services  \n- ✅ Updated README.md: title, CLI examples, programmatic usage examples\n- ✅ Updated GitHub Actions CI workflow to use new package name\n- ✅ Rebuilt all packages successfully - no build errors\n- ✅ Verified CLI functionality works with new binary structure\n\n**Verification results:**\n- ✅ Package builds successfully  \n- ✅ Core package imports work correctly\n- ✅ CLI functionality tested and working\n- ✅ Full monorepo build completes without errors\n- ✅ All CI workflow tests updated to use new package name",
+      "files": [
+        "packages/ai/package.json",
+        "packages/ai/README.md",
+        "packages/core/package.json",
+        "packages/core/tsconfig.json",
+        "packages/core/src/services/chat-import-service.ts",
+        "package.json",
+        "tsconfig.json",
+        ".github/workflows/ci.yml"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Simplifying package names improves developer experience and makes the codebase more maintainable. The shorter name @devlog/ai better reflects the broader AI-related functionality this package will contain.",
+    "technicalContext": "This is a continuation of previous package rename work (devlog entry #145 renamed codehist to ai-chat). Need to update package.json, imports, references, and rebuild dependencies.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Package name updated in packages/ai-chat/package.json",
+      "All import statements updated throughout codebase",
+      "Workspace references updated",
+      "Dependencies updated and rebuilt",
+      "No broken imports or references remain"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "Previous package rename from codehist to ai-chat (devlog #145)",
+      "Standard package renaming workflow in monorepo"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T02:04:16.718Z",
+    "contextVersion": 1
+  },
+  "id": 149
+}

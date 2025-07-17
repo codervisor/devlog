@@ -41,7 +41,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "16.5.0",
-    "@devlog/ai-chat": "workspace:*"
+    "@devlog/ai": "workspace:*"
   },
   "peerDependencies": {
     "better-sqlite3": "^11.0.0",

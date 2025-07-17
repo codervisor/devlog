@@ -27,7 +27,7 @@
   "references": [
     { "path": "./packages/core" },
     { "path": "./packages/mcp" },
-    { "path": "./packages/ai-chat" },
+    { "path": "./packages/ai" },
     { "path": "./packages/web" }
   ],
   "files": [],

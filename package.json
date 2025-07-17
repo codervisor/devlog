@@ -15,8 +15,8 @@
     "build:mcp": "pnpm --filter @devlog/mcp build",
     "build:core": "pnpm --filter @devlog/core build",
     "build:web": "pnpm --filter @devlog/web build",
-    "dev:mcp": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
-    "dev:web": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
+    "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
+    "dev:web": "concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
     "start:web": "pnpm --filter @devlog/web start",
     "preview:web": "pnpm --filter @devlog/web preview"
   },

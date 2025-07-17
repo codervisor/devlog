@@ -9,7 +9,7 @@
     "composite": false,
     "incremental": false,
     "paths": {
-      "@devlog/ai-chat": ["../ai-chat/build"]
+      "@devlog/ai": ["../ai/build"]
     }
   },
   "include": [

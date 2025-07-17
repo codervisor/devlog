@@ -1,4 +1,4 @@
-# @devlog/ai-chat
+# @devlog/ai
 
 AI Chat History Extractor - TypeScript implementation for GitHub Copilot and other AI coding assistants in the devlog ecosystem.
 
@@ -19,7 +19,7 @@ AI Chat History Extractor - TypeScript implementation for GitHub Copilot and oth
 pnpm install
 
 # Build the package
-pnpm --filter @devlog/ai-chat build
+pnpm --filter @devlog/ai build
 ```
 
 ## Usage
@@ -27,26 +27,24 @@ pnpm --filter @devlog/ai-chat build
 ### Command Line Interface
 
 ```bash
-# Show chat statistics
-npx @devlog/ai-chat stats
+npx @devlog/ai stats
 
-# List all chat sessions
-npx @devlog/ai-chat chat
+# View all chat conversations  
+npx @devlog/ai chat
 
-# Search chat content
-npx @devlog/ai-chat search "error handling"
+# Search for specific content
+npx @devlog/ai search "error handling"
 
-# Export to JSON
-npx @devlog/ai-chat export --format json --output chat_history.json
+# Export to different formats
+npx @devlog/ai export --format json --output chat_history.json
 
-# Export to Markdown
-npx @devlog/ai-chat export --format markdown --output chat_history.md
+npx @devlog/ai export --format markdown --output chat_history.md
 ```
 
 ### Programmatic Usage
 
 ```typescript
-import { CopilotParser, JSONExporter } from '@devlog/ai-chat';
+import { CopilotParser, JSONExporter } from '@devlog/ai';
 
 // Parse chat data
 const parser = new CopilotParser();

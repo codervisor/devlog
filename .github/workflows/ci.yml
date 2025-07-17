@@ -64,8 +64,8 @@ jobs:
         run: |
           # Ensure workspace dependencies are properly linked
           echo "📦 Verifying workspace structure..."
-          echo "🔗 Checking ai-chat package..."
-          [ -d "packages/ai-chat" ] && echo "✅ ai-chat package found" || echo "❌ ai-chat package missing"
+          echo "🔗 Checking ai package..."
+          [ -d "packages/ai" ] && echo "✅ ai package found" || echo "❌ ai package missing"
           echo "🔗 Checking core package..."
           [ -d "packages/core" ] && echo "✅ core package found" || echo "❌ core package missing"
           echo "🔗 Checking mcp package..."
@@ -73,19 +73,19 @@ jobs:
           echo "🔗 Checking web package..."
           [ -d "packages/web" ] && echo "✅ web package found" || echo "❌ web package missing"
           echo "📂 Package dependencies:"
-          echo "Core depends on ai-chat:"
+          echo "Core depends on ai:"
           cat packages/core/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
           echo "MCP depends on core:"
           cat packages/mcp/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
 
-      - name: Build ai-chat package first
-        run: pnpm --filter @devlog/ai-chat build
+      - name: Build ai package first
+        run: pnpm --filter @devlog/ai build
 
-      - name: Verify ai-chat build
+      - name: Verify ai build
         run: |
-          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
-          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
-          echo "✅ AI-Chat package built successfully"
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
+          echo "✅ AI package built successfully"
 
       - name: Build core package
         run: pnpm --filter @devlog/core build
@@ -113,7 +113,7 @@ jobs:
         run: |
           echo "🧪 Running unit tests for packages with test scripts..."
           # Run tests for packages that have test scripts
-          pnpm --filter @devlog/ai-chat test
+          pnpm --filter @devlog/ai test
           pnpm --filter @devlog/core test
           pnpm --filter @devlog/mcp test
 
@@ -126,8 +126,8 @@ jobs:
       - name: Verify build artifacts
         run: |
           # Check that essential build artifacts exist
-          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
-          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
@@ -136,8 +136,8 @@ jobs:
           [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
           echo "✅ All build artifacts verified!"
 
-  ai-chat-cli-tests:
-    name: AI-Chat CLI Tests
+  ai-cli-tests:
+    name: AI CLI Tests
     runs-on: ubuntu-latest
     needs: test
     
@@ -159,27 +159,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build ai-chat package
-        run: pnpm --filter @devlog/ai-chat build
+      - name: Build ai package
+        run: pnpm --filter @devlog/ai build
 
-      - name: Verify ai-chat build artifacts
+      - name: Verify ai build artifacts
         run: |
-          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat library build failed"; exit 1; }
-          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
-          [ -f "packages/ai-chat/build/cli/index.js" ] || { echo "❌ AI-Chat CLI build failed"; exit 1; }
-          echo "✅ AI-Chat build artifacts verified!"
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI library build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
+          [ -f "packages/ai/build/cli/index.js" ] || { echo "❌ AI CLI build failed"; exit 1; }
+          echo "✅ AI build artifacts verified!"
 
-      - name: Test ai-chat CLI functionality
+      - name: Test ai CLI functionality
         run: |
-          cd packages/ai-chat
+          cd packages/ai
           # Test help command
           node build/cli/index.js --help
           # Test version command if available
           node build/cli/index.js --version || echo "Version command not available, that's ok"
 
-      - name: Run ai-chat unit tests
+      - name: Run ai unit tests
         run: |
-          cd packages/ai-chat
+          cd packages/ai
           pnpm test
 
   mcp-server-tests:
@@ -205,8 +205,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build ai-chat package first
-        run: pnpm --filter @devlog/ai-chat build
+      - name: Build ai package first
+        run: pnpm --filter @devlog/ai build
 
       - name: Build core package first  
         run: pnpm --filter @devlog/core build
@@ -216,8 +216,8 @@ jobs:
 
       - name: Verify MCP build artifacts
         run: |
-          [ -f "packages/ai-chat/build/index.js" ] || { echo "❌ AI-Chat build failed"; exit 1; }
-          [ -f "packages/ai-chat/build/index.d.ts" ] || { echo "❌ AI-Chat type declarations failed"; exit 1; }
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
