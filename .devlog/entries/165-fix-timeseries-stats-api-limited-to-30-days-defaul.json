@@ -1,0 +1,56 @@
+{
+  "key": "fix-timeseries-stats-api-limited-to-30-days-defaul",
+  "title": "Fix timeseries stats API limited to 30 days default range",
+  "type": "bugfix",
+  "description": "The timeseries stats API currently defaults to 30 days when no specific date range is provided, which may be limiting results to fewer data points than expected. Users may expect to see more historical data by default or have configurable limits.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-17T08:30:58.657Z",
+  "updatedAt": "2025-07-17T08:36:38.172Z",
+  "notes": [
+    {
+      "id": "77bafd50-907f-4968-841d-affc5a9c8924",
+      "timestamp": "2025-07-17T08:31:54.824Z",
+      "category": "progress",
+      "content": "Confirmed that JSON storage also uses the same 30-day default limit through the shared calculateTimeSeriesStats utility function. Need to investigate where the \"cap of 100\" is coming from since both JSON and SQLite storage default to 30 days."
+    },
+    {
+      "id": "4be9a503-e701-407f-a095-87f172fe446b",
+      "timestamp": "2025-07-17T08:35:53.000Z",
+      "category": "solution",
+      "content": "Root cause identified: The new 'closedAt' field is missing from existing entries that were closed before this field was added. Need to migrate existing closed entries to set closedAt = updatedAt for proper timeseries calculation."
+    },
+    {
+      "id": "c07bf990-bd78-43c9-bbaf-4e7871167b6c",
+      "timestamp": "2025-07-17T08:36:38.172Z",
+      "category": "progress",
+      "content": "Completed: Successfully identified and fixed the timeseries stats issue. The problem was that the new 'closedAt' field was missing from existing closed entries, causing the timeseries calculation to not count historical completed work properly. Created and ran a migration script that populated closedAt=updatedAt for 142 existing closed entries. The timeseries stats should now display historical data correctly."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users analyzing project trends and patterns need access to longer historical data by default to make informed decisions about project health and progress over time.",
+    "technicalContext": "The getTimeSeriesStats method in storage providers defaults to `const days = request.days || 30` which limits the date range to 30 days. The TimeSeriesRequest interface currently only supports days, from, and to parameters without any explicit limit control.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Investigate if 30-day default is causing the perceived 100-item limit",
+      "Consider increasing default date range or making it configurable",
+      "Ensure timeseries can handle larger date ranges efficiently",
+      "Test performance with extended date ranges",
+      "Update documentation if defaults change"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T08:30:58.657Z",
+    "contextVersion": 1
+  },
+  "id": 165
+}

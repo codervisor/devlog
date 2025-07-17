@@ -173,8 +173,7 @@ export interface TimeSeriesDataPoint {
   
   // Cumulative data (primary Y-axis) - shows total project progress over time
   totalCreated: number;        // Running total of all created devlogs
-  totalCompleted: number;      // Running total of completed devlogs (status: 'done')
-  totalClosed: number;         // Running total of closed devlogs (status: 'done' + 'cancelled')
+  totalClosed: number;         // Running total of closed devlogs (based on closedAt timestamp)
   
   // Snapshot data (secondary Y-axis) - shows current workload distribution at this point in time
   currentOpen: number;         // Total currently open devlogs
@@ -186,7 +185,7 @@ export interface TimeSeriesDataPoint {
   
   // Daily activity (for velocity insights) - events that occurred on this specific day
   dailyCreated: number;        // Devlogs created on this specific day
-  dailyCompleted: number;      // Devlogs completed on this specific day
+  dailyClosed: number;         // Devlogs closed on this specific day (done + cancelled)
 }
 
 export interface TimeSeriesStats {

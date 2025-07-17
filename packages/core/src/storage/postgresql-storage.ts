@@ -334,22 +334,21 @@ export class PostgreSQLStorageProvider implements StorageProvider {
         WHERE DATE(created_at) BETWEEN $3 AND $4
         GROUP BY DATE(created_at)
       ),
-      daily_completed AS (
+      daily_closed AS (
         SELECT 
-          DATE(closed_at) as completed_date,
-          COUNT(*) as daily_completed
+          DATE(closed_at) as closed_date,
+          COUNT(*) as daily_closed
         FROM devlog_entries
-        WHERE DATE(closed_at) BETWEEN $5 AND $6 AND status = 'done'
+        WHERE DATE(closed_at) BETWEEN $5 AND $6 AND closed_at IS NOT NULL
         GROUP BY DATE(closed_at)
       ),
       cumulative_stats AS (
         SELECT 
           ds.date,
           COALESCE(dc.daily_created, 0) as daily_created,
-          COALESCE(comp.daily_completed, 0) as daily_completed,
+          COALESCE(closed.daily_closed, 0) as daily_closed,
           (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date) as total_created,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'done') as total_completed,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'cancelled') as total_cancelled,
+          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(closed_at) <= ds.date AND closed_at IS NOT NULL) as total_closed,
           (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'new') as current_new,
           (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-progress') as current_in_progress,
           (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'blocked') as current_blocked,
@@ -357,7 +356,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
           (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'testing') as current_testing
         FROM date_series ds
         LEFT JOIN daily_stats dc ON ds.date = dc.created_date
-        LEFT JOIN daily_completed comp ON ds.date = comp.completed_date
+        LEFT JOIN daily_closed closed ON ds.date = closed.closed_date
         ORDER BY ds.date
       )
       SELECT * FROM cumulative_stats;
@@ -369,16 +368,15 @@ export class PostgreSQLStorageProvider implements StorageProvider {
       startDateStr,
       endDateStr, // daily_stats parameters
       startDateStr,
-      endDateStr, // daily_completed parameters
+      endDateStr, // daily_closed parameters
     ]);
 
     const rows = result.rows as Array<{
       date: string;
       daily_created: number;
-      daily_completed: number;
+      daily_closed: number;
       total_created: number;
-      total_completed: number;
-      total_cancelled: number;
+      total_closed: number;
       current_new: number;
       current_in_progress: number;
       current_blocked: number;
@@ -387,7 +385,6 @@ export class PostgreSQLStorageProvider implements StorageProvider {
     }>;
 
     const dataPoints: TimeSeriesDataPoint[] = rows.map((row) => {
-      const totalClosed = row.total_completed + row.total_cancelled;
       const currentOpen =
         row.current_new +
         row.current_in_progress +
@@ -400,8 +397,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
 
         // Cumulative data (primary Y-axis)
         totalCreated: row.total_created,
-        totalCompleted: row.total_completed,
-        totalClosed,
+        totalClosed: row.total_closed,
 
         // Snapshot data (secondary Y-axis)
         currentOpen,
@@ -413,7 +409,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
 
         // Daily activity
         dailyCreated: row.daily_created,
-        dailyCompleted: row.daily_completed,
+        dailyClosed: row.daily_closed,
       };
     });
 
