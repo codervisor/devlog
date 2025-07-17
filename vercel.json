@@ -3,7 +3,6 @@
   "buildCommand": "cd ../.. && pnpm run build:vercel",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "outputDirectory": ".next",
-  "rootDirectory": "packages/web",
   "env": {
     "NODE_ENV": "production"
   }
