@@ -17,35 +17,26 @@ describe('MCP Server Integration', () => {
     originalCwd = process.cwd();
     originalEnv = { ...process.env };
     
-    // Create test workspace
-    testWorkspace = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-test-'));
+    // Create test workspace with unique timestamp to avoid conflicts
+    testWorkspace = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-integration-test-'));
+    
+    // Change to test workspace
+    process.chdir(testWorkspace);
     
     // Set up environment variables for testing instead of config file
-    process.env.DEVLOG_JSON_DIRECTORY = '.devlog';
+    process.env.DEVLOG_JSON_DIRECTORY = '.devlog-test';
     process.env.DEVLOG_JSON_GLOBAL = 'false';
-    originalCwd = process.cwd();
-    testWorkspace = path.join(os.tmpdir(), 'mcp-integration-test-workspace');
     
-    // Ensure test workspace exists
-    await fs.mkdir(testWorkspace, { recursive: true });
-    
-    // Create a minimal devlog config for testing
-    const testConfig = {
-      storage: {
-        type: 'json',
-        json: {
-          directory: '.devlog',
-          global: false
-        }
-      }
+    // Create minimal package.json to make directory detectable as project root
+    const packageJson = {
+      name: 'mcp-integration-test',
+      version: '1.0.0',
+      private: true
     };
     await fs.writeFile(
-      path.join(testWorkspace, 'devlog.config.json'), 
-      JSON.stringify(testConfig, null, 2)
+      path.join(testWorkspace, 'package.json'), 
+      JSON.stringify(packageJson, null, 2)
     );
-    
-    // Set up environment for testing
-    process.chdir(testWorkspace);
   });
 
   afterAll(async () => {
@@ -97,8 +88,10 @@ describe('MCP Server Integration', () => {
     expect(devlogManager).toBeDefined();
     
     // Test basic functionality
-    const devlogs = await devlogManager.listDevlogs({});
-    expect(Array.isArray(devlogs)).toBe(true);
+    const result = await devlogManager.listDevlogs({});
+    expect(result).toBeDefined();
+    expect(result.items).toBeDefined();
+    expect(Array.isArray(result.items)).toBe(true);
     
     // Clean up
     await devlogManager.dispose();

@@ -1,0 +1,43 @@
+{
+  "key": "fix-mcp-integration-test-failures-caused-by-projec",
+  "title": "Fix MCP integration test failures caused by project root detection",
+  "type": "bugfix",
+  "description": "The MCP integration tests are failing because the findProjectRoot function can't find project indicators in temporary test directories. The function throws \"Unable to find project root for /tmp/mcp-integration-test-workspace\" errors during test initialization. Need to fix the storage utility to handle test environments properly and update test setup to follow best practices.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-17T04:46:16.438Z",
+  "updatedAt": "2025-07-17T04:47:40.773Z",
+  "notes": [
+    {
+      "id": "855694aa-7265-4c24-a785-d2f7febefa34",
+      "timestamp": "2025-07-17T04:47:40.773Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed all MCP integration test failures. The main issues were: 1) Project root detection failing in temporary test directories - fixed by creating package.json in test workspace, 2) Test assertion expecting array instead of PaginatedResult - fixed by checking result.items property. All tests now pass consistently with proper test environment setup following the test instructions guidelines."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Critical for CI/CD pipeline and development workflow - test failures block refactoring completion and deployment",
+    "technicalContext": "The issue is in packages/core/src/utils/storage.ts findProjectRoot function. Test environments use temporary directories without package.json or other project indicators that the function requires. Tests should follow the test instructions pattern and properly mock/configure the workspace detection.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "All MCP integration tests pass",
+      "Test setup follows test instructions guidelines",
+      "Proper project root detection in test environments",
+      "No false failures in CI/CD pipeline"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T04:46:16.438Z",
+    "contextVersion": 1
+  },
+  "id": 153
+}
