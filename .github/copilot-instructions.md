@@ -32,6 +32,19 @@
 
 ## Essential SOPs
 
+### Temporary Files and Scripts
+
+#### Use `tmp/` Folder for Temporary Work
+- **ALWAYS use `tmp/` folder**: Place all temporary scripts, test files, and experimental code in the `tmp/` directory
+- **Not committed to git**: The `tmp/` folder is gitignored and will not be committed to version control
+- **Examples of tmp/ usage**:
+  - Test scripts for debugging
+  - Temporary configuration files
+  - Experimental code snippets
+  - One-off migration scripts
+  - Build artifacts for testing
+- **Clean up**: Remove temporary files when no longer needed to keep the tmp directory tidy
+
 ### Testing Requirements
 
 #### UI-Related Development Tasks
