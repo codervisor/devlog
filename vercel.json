@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm build:core && pnpm build:web",
+  "buildCommand": "npm run build:vercel",
   "installCommand": "pnpm install --frozen-lockfile",
   "outputDirectory": "packages/web/.next",
   "functions": {

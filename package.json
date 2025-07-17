@@ -15,6 +15,7 @@
     "build:mcp": "pnpm --filter @devlog/mcp build",
     "build:core": "pnpm --filter @devlog/core build",
     "build:web": "pnpm --filter @devlog/web build",
+    "build:vercel": "cd packages/ai && npm run build && cd ../core && npm run build && cd ../web && npm run build",
     "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
     "dev:web": "concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
     "start:web": "pnpm --filter @devlog/web start",

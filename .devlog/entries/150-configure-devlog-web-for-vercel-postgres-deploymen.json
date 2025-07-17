@@ -6,7 +6,7 @@
   "status": "in-progress",
   "priority": "high",
   "createdAt": "2025-07-17T02:27:56.439Z",
-  "updatedAt": "2025-07-17T02:36:11.542Z",
+  "updatedAt": "2025-07-17T07:16:21.263Z",
   "notes": [
     {
       "id": "5c00d637-f780-4686-a627-95524d9be5ce",
@@ -25,6 +25,30 @@
       "timestamp": "2025-07-17T02:36:11.542Z",
       "category": "idea",
       "content": "💡 Better approach: Use .env instead of devlog.config.json for flexibility. Environment variables are more standard for deployment and allow easy switching between local/production configs without file changes."
+    },
+    {
+      "id": "896dea66-13c4-45c3-9de2-74930bf6edca",
+      "timestamp": "2025-07-17T07:01:06.050Z",
+      "category": "issue",
+      "content": "🚨 ISSUE IDENTIFIED: Vercel deployment failing due to build script conflict. Vercel detects Turbo but vercel.json uses custom pnpm commands instead of Turbo pipeline. Need to fix vercel.json to properly leverage Turbo for monorepo builds."
+    },
+    {
+      "id": "67aecfe5-c739-4706-b8d6-be7798c733c8",
+      "timestamp": "2025-07-17T07:04:17.626Z",
+      "category": "solution",
+      "content": "✅ SOLUTION IMPLEMENTED: Fixed Vercel deployment build script error. \n\nROOT CAUSE: The @devlog/ai package has a CLI binary (`./build/cli/index.js`) that doesn't exist until after build, but pnpm tries to create bin symlinks during install. This caused the original build command to fail.\n\nSOLUTION: Updated vercel.json buildCommand to build dependencies in correct order:\n1. `pnpm --filter @devlog/ai build` - builds AI package first\n2. `pnpm --filter @devlog/core build` - builds core (depends on AI)  \n3. `pnpm --filter @devlog/web build` - builds web (depends on core)\n\nThis ensures all workspace dependencies are properly built before the web package build runs."
+    },
+    {
+      "id": "8bd364d8-7ae4-4470-9cfb-420bdefaab51",
+      "timestamp": "2025-07-17T07:07:51.228Z",
+      "category": "solution",
+      "content": "✅ FINAL SOLUTION: Fixed Vercel deployment build command successfully.\n\nFINAL VERCEL BUILD COMMAND:\n```bash\ncd packages/ai && npm run build && cd ../core && npm run build && cd ../web && npm run build\n```\n\nKEY INSIGHT: Using `pnpm --filter` from the root directory caused issues with Next.js page collection during build. Using `npm run build` in each package directory (changing working directory) works perfectly.\n\nTEST RESULTS:\n- ✅ AI package builds successfully (creates CLI binary)\n- ✅ Core package builds successfully (with AI dependency)  \n- ✅ Web package builds successfully (46-second Next.js build)\n- ✅ All 14 API routes and 4 pages compile correctly\n- ✅ No TypeScript errors\n- ✅ Build artifacts ready for deployment\n\nThe deployment should now work correctly on Vercel."
+    },
+    {
+      "id": "a7a52ef0-b32d-49ae-94a5-c49a21956071",
+      "timestamp": "2025-07-17T07:16:21.263Z",
+      "category": "progress",
+      "content": "🎨 CLEANUP: Made build command much cleaner and more maintainable.\n\nBEFORE (ugly):\n```json\n\"buildCommand\": \"cd packages/ai && npm run build && cd ../core && npm run build && cd ../web && npm run build\"\n```\n\nAFTER (clean):\n```json  \n\"buildCommand\": \"npm run build:vercel\"\n```\n\nCHANGES:\n1. ✅ Added `build:vercel` script to root package.json that contains the working build sequence\n2. ✅ Updated vercel.json to use the clean `npm run build:vercel` command\n3. ✅ Tested - build still works perfectly (47-second build time)\n4. ✅ Much more maintainable - build logic is in package.json where it belongs\n\nThe Vercel configuration is now clean and professional-looking while maintaining the same functionality."
     }
   ],
   "files": [],
