@@ -1,0 +1,56 @@
+{
+  "key": "fix-timeseries-cumulative-totals-to-show-all-time-",
+  "title": "Fix timeseries cumulative totals to show all-time data instead of date-range-filtered data",
+  "type": "bugfix",
+  "description": "The timeseries calculation incorrectly applies date range filters to cumulative totals (totalCreated/totalClosed). These should be all-time cumulative counts up to each date, while only daily activity metrics should be filtered by the query date range.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-17T08:51:53.247Z",
+  "updatedAt": "2025-07-17T08:57:37.792Z",
+  "notes": [
+    {
+      "id": "39f3cb21-3988-4a11-b91c-eb05ac620de9",
+      "timestamp": "2025-07-17T08:53:22.878Z",
+      "category": "issue",
+      "content": "Found potential timezone/date boundary issue: Entry 1 created on 2025-06-26T14:26:46.312Z shows up in totalCreated count on 2025-06-27 instead of 2025-06-26. This suggests a date parsing or timezone handling problem in the timeseries calculation."
+    },
+    {
+      "id": "bb39c9d9-0b66-4db6-85aa-aca9438399df",
+      "timestamp": "2025-07-17T08:56:00.325Z",
+      "category": "issue",
+      "content": "Found the real issue: Overview stats shows 155 total entries, but timeseries totalCreated for last day shows only 100. There's a discrepancy of 55 entries not being counted in timeseries calculation."
+    },
+    {
+      "id": "3f13badf-7fdc-4539-8b92-9dbbea72f69a",
+      "timestamp": "2025-07-17T08:57:37.792Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed the timeseries calculation issues. Root cause was that getTimeSeriesStats was using the paginated list() method which only returned 100 entries instead of all entries. Also fixed timezone handling by using end-of-day timestamps for accurate date comparisons. The totalCreated on the last day now correctly matches the overview stats total (155), confirming accurate cumulative calculation across all time periods."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Cumulative metrics should show historical progress from project inception, not just within the queried time window. This is essential for understanding long-term project trends and velocity.",
+    "technicalContext": "The SQL queries and utility functions currently filter cumulative totals by the query date range (BETWEEN startDate AND endDate). The cumulative totals should only filter by <= currentDate for all-time counts, while daily metrics can keep the date range filters.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "totalCreated shows all-time cumulative count up to each date",
+      "totalClosed shows all-time cumulative count up to each date",
+      "Remove date range filters from cumulative total calculations",
+      "Daily activity metrics still use date range filters correctly",
+      "Test with different date ranges to verify totals are consistent"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T08:51:53.247Z",
+    "contextVersion": 1
+  },
+  "id": 167
+}

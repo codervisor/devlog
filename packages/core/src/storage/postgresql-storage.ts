@@ -16,6 +16,12 @@ import {
 } from '../types/index.js';
 import type { DevlogEvent } from '../events/devlog-events.js';
 import { calculateDevlogStats } from '../utils/storage.js';
+import { 
+  generateTimeSeriesSQL, 
+  generateTimeSeriesParams, 
+  mapSQLRowsToDataPoints, 
+  generateDateRange 
+} from '../utils/sql-time-series.js';
 import { createPaginatedResult } from '../utils/common.js';
 
 export class PostgreSQLStorageProvider implements StorageProvider {
@@ -310,115 +316,26 @@ export class PostgreSQLStorageProvider implements StorageProvider {
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
 
-    // Set defaults
-    const days = request.days || 30;
-    const endDate = request.to ? new Date(request.to) : new Date();
-    const startDate = request.from ? new Date(request.from) : new Date(endDate);
-    if (!request.from) {
-      startDate.setDate(endDate.getDate() - days + 1);
-    }
+    // Generate SQL query and parameters using shared utility
+    const query = generateTimeSeriesSQL('postgresql');
+    const params = generateTimeSeriesParams(request, 'postgresql');
 
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    // Single efficient PostgreSQL query using CTEs and window functions
-    const query = `
-      WITH date_series AS (
-        SELECT generate_series($1::date, $2::date, '1 day'::interval)::date AS date
-      ),
-      daily_stats AS (
-        SELECT 
-          DATE(created_at) as created_date,
-          COUNT(*) as daily_created
-        FROM devlog_entries
-        WHERE DATE(created_at) BETWEEN $3 AND $4
-        GROUP BY DATE(created_at)
-      ),
-      daily_closed AS (
-        SELECT 
-          DATE(closed_at) as closed_date,
-          COUNT(*) as daily_closed
-        FROM devlog_entries
-        WHERE DATE(closed_at) BETWEEN $5 AND $6 AND closed_at IS NOT NULL
-        GROUP BY DATE(closed_at)
-      ),
-      cumulative_stats AS (
-        SELECT 
-          ds.date,
-          COALESCE(dc.daily_created, 0) as daily_created,
-          COALESCE(closed.daily_closed, 0) as daily_closed,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date) as total_created,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(closed_at) <= ds.date AND closed_at IS NOT NULL) as total_closed,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'new') as current_new,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-progress') as current_in_progress,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'blocked') as current_blocked,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'in-review') as current_in_review,
-          (SELECT COUNT(*) FROM devlog_entries WHERE DATE(created_at) <= ds.date AND status = 'testing') as current_testing
-        FROM date_series ds
-        LEFT JOIN daily_stats dc ON ds.date = dc.created_date
-        LEFT JOIN daily_closed closed ON ds.date = closed.closed_date
-        ORDER BY ds.date
-      )
-      SELECT * FROM cumulative_stats;
-    `;
-
-    const result = await this.client.query(query, [
-      startDateStr,
-      endDateStr, // date_series parameters
-      startDateStr,
-      endDateStr, // daily_stats parameters
-      startDateStr,
-      endDateStr, // daily_closed parameters
-    ]);
-
+    // Execute query
+    const result = await this.client.query(query, params);
     const rows = result.rows as Array<{
       date: string;
       daily_created: number;
       daily_closed: number;
       total_created: number;
       total_closed: number;
-      current_new: number;
-      current_in_progress: number;
-      current_blocked: number;
-      current_in_review: number;
-      current_testing: number;
     }>;
 
-    const dataPoints: TimeSeriesDataPoint[] = rows.map((row) => {
-      const currentOpen =
-        row.current_new +
-        row.current_in_progress +
-        row.current_blocked +
-        row.current_in_review +
-        row.current_testing;
-
-      return {
-        date: row.date,
-
-        // Cumulative data (primary Y-axis)
-        totalCreated: row.total_created,
-        totalClosed: row.total_closed,
-
-        // Snapshot data (secondary Y-axis)
-        currentOpen,
-        currentNew: row.current_new,
-        currentInProgress: row.current_in_progress,
-        currentBlocked: row.current_blocked,
-        currentInReview: row.current_in_review,
-        currentTesting: row.current_testing,
-
-        // Daily activity
-        dailyCreated: row.daily_created,
-        dailyClosed: row.daily_closed,
-      };
-    });
+    // Map results to TimeSeriesDataPoint objects
+    const dataPoints = mapSQLRowsToDataPoints(rows);
 
     return {
       dataPoints,
-      dateRange: {
-        from: startDateStr,
-        to: endDateStr,
-      },
+      dateRange: generateDateRange(request),
     };
   }
 

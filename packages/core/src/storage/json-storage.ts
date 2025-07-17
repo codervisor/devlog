@@ -162,9 +162,8 @@ export class JsonStorageProvider implements StorageProvider {
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
 
-    // Load all entries from storage for analysis
-    const result = await this.list();
-    const allDevlogs = result.items;
+    // Load all entries from storage for analysis (not paginated!)
+    const allDevlogs = await this.loadAllEntries();
 
     // Delegate to shared utility function
     return calculateTimeSeriesStats(allDevlogs, request);

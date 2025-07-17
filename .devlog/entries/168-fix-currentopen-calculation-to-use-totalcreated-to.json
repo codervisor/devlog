@@ -1,0 +1,50 @@
+{
+  "key": "fix-currentopen-calculation-to-use-totalcreated-to",
+  "title": "Fix currentOpen calculation to use totalCreated - totalClosed instead of status counts",
+  "type": "bugfix",
+  "description": "The currentOpen calculation incorrectly uses current status counts at historical dates, which doesn't account for status changes over time. It should be calculated as totalCreated - totalClosed to show the actual number of open entries at each point in time.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-17T08:59:29.685Z",
+  "updatedAt": "2025-07-17T09:09:21.460Z",
+  "notes": [
+    {
+      "id": "4c0273e1-d43b-4622-8c47-d67baa91fdce",
+      "timestamp": "2025-07-17T09:03:28.622Z",
+      "category": "solution",
+      "content": "Refactoring approach: 1) Remove unnecessary current status fields from TimeSeriesDataPoint interface, 2) Extract common SQL logic from storage providers into reusable utility functions to eliminate code duplication."
+    },
+    {
+      "id": "2d577323-2a7a-4394-922d-30f06f2ad4d9",
+      "timestamp": "2025-07-17T09:09:21.460Z",
+      "category": "progress",
+      "content": "Completed: Successfully refactored timeseries calculation system: 1) Removed unnecessary currentNew/currentInProgress/etc fields from TimeSeriesDataPoint interface, 2) Fixed currentOpen calculation to use simple delta (totalCreated - totalClosed), 3) Created shared SQL utilities in sql-time-series.ts to eliminate code duplication across SQLite/MySQL/PostgreSQL storage providers, 4) Refactored all storage providers to use the shared utilities. The currentOpen calculation is now mathematically accurate and historically reliable."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Accurate open/closed metrics are essential for project health monitoring and workload analysis. The current status-based calculation is misleading because it doesn't reflect historical state changes.",
+    "technicalContext": "Current logic tries to count entries by status that existed by a certain date, but since status can change, this gives inaccurate historical data. The simple delta calculation (totalCreated - totalClosed) provides the correct historical open count.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "currentOpen = totalCreated - totalClosed for each date",
+      "Remove incorrect status-based currentOpen calculation",
+      "Verify currentOpen + totalClosed = totalCreated for all dates",
+      "Update all storage providers consistently",
+      "Test with historical data to confirm accuracy"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-17T08:59:29.685Z",
+    "contextVersion": 1
+  },
+  "id": 168
+}

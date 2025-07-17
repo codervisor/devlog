@@ -33,6 +33,9 @@ export function calculateTimeSeriesStats(
 
   while (currentDate <= endDate) {
     const dateStr = currentDate.toISOString().split('T')[0];
+    
+    // Create end-of-day timestamp for accurate comparisons
+    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
 
     // Daily activity: count devlogs created on this specific date
     const dailyCreated = allDevlogs.filter((devlog) => {
@@ -49,35 +52,17 @@ export function calculateTimeSeriesStats(
       return closedDate === dateStr;
     }).length;
 
-    // Count status distribution as of this date (cumulative approach)
-    // This gives us the state of all devlogs that existed by this date
-    const statusCounts = allDevlogs.reduce(
-      (acc: Record<DevlogStatus, number>, devlog: DevlogEntry) => {
-        const createdDate = new Date(devlog.createdAt);
-        // Only include devlogs that were created by this date
-        if (createdDate <= currentDate) {
-          acc[devlog.status] = (acc[devlog.status] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<DevlogStatus, number>,
-    );
-
-    // Calculate cumulative totals up to this date
+    // Calculate cumulative totals up to end of this date
     const totalCreated = allDevlogs.filter(devlog => 
-      new Date(devlog.createdAt) <= currentDate
+      new Date(devlog.createdAt) <= endOfDay
     ).length;
 
     const totalClosed = allDevlogs.filter(devlog => 
-      devlog.closedAt && new Date(devlog.closedAt) <= currentDate
+      devlog.closedAt && new Date(devlog.closedAt) <= endOfDay
     ).length;
 
-    // Calculate current open devlogs (all statuses except 'done' and 'cancelled')
-    const currentOpen = (statusCounts['new'] || 0) +
-                       (statusCounts['in-progress'] || 0) +
-                       (statusCounts['blocked'] || 0) +
-                       (statusCounts['in-review'] || 0) +
-                       (statusCounts['testing'] || 0);
+    // Calculate current open as simple delta (this is the accurate historical view)
+    const currentOpen = totalCreated - totalClosed;
 
       dataPoints.push({
         date: dateStr,
@@ -88,11 +73,6 @@ export function calculateTimeSeriesStats(
         
         // Snapshot data (secondary Y-axis)
         currentOpen,
-        currentNew: statusCounts['new'] || 0,
-        currentInProgress: statusCounts['in-progress'] || 0,
-        currentBlocked: statusCounts['blocked'] || 0,
-        currentInReview: statusCounts['in-review'] || 0,
-        currentTesting: statusCounts['testing'] || 0,
         
         // Daily activity
         dailyCreated,

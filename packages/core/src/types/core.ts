@@ -176,12 +176,7 @@ export interface TimeSeriesDataPoint {
   totalClosed: number;         // Running total of closed devlogs (based on closedAt timestamp)
   
   // Snapshot data (secondary Y-axis) - shows current workload distribution at this point in time
-  currentOpen: number;         // Total currently open devlogs
-  currentNew: number;          // Currently in 'new' status
-  currentInProgress: number;   // Currently in 'in-progress' status
-  currentBlocked: number;      // Currently in 'blocked' status
-  currentInReview: number;     // Currently in 'in-review' status
-  currentTesting: number;      // Currently in 'testing' status
+  currentOpen: number;         // Total currently open devlogs (calculated as totalCreated - totalClosed)
   
   // Daily activity (for velocity insights) - events that occurred on this specific day
   dailyCreated: number;        // Devlogs created on this specific day
