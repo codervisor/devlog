@@ -3,6 +3,10 @@
  * Now uses environment variables instead of devlog.config.json
  */
 
+// Load environment variables from .env file
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import type {
   DevlogConfig,
   StorageConfig,
@@ -16,11 +20,6 @@ import { getWorkspaceRoot } from './utils/storage.js';
 
 export class ConfigurationManager {
   private workspaceRoot: string | null = null;
-  private currentWorkspace: string | null = null;
-
-  constructor(workspace?: string) {
-    this.currentWorkspace = workspace || null;
-  }
 
   async initialize(): Promise<void> {
     this.workspaceRoot = getWorkspaceRoot();
