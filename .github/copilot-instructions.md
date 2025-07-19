@@ -67,13 +67,26 @@
 - **Check existing servers**: The dev command shows what's running on ports 3000-3002 before starting
 
 #### UI-Related Development Tasks
-- **ALWAYS use Playwright**: Use Playwright MCP tools for UI validation
+- **ALWAYS use Playwright**: Use Playwright MCP tools for UI validation and debugging
+- **Browser Tool Selection**:
+  - **Playwright**: Required for React error debugging, console monitoring, state analysis
+  - **Simple Browser**: Basic navigation/UI testing only - NOT reliable for error detection
 - **Testing Steps**:
   - **Start Web App**: Run `pnpm --filter @devlog/web dev` to start the web app
   - **Verify**: Ensure the web app is running correctly before testing
   - **Run Tests**: Use Playwright to run UI tests against the web app
   - **Update Devlog**: Add test results and any fixes to the devlog entry
   - **Stop Web App**: After testing, stop the web app with `Ctrl+C` in the terminal
+
+#### React Debugging Verification Protocol
+- **MANDATORY for React Issues**: Use Playwright console monitoring before concluding any fix
+- **Verification Checklist**:
+  - [ ] Playwright console messages captured and analyzed
+  - [ ] No "Maximum update depth exceeded" errors
+  - [ ] No React warnings or error boundary triggers
+  - [ ] Functional testing of affected user workflows
+- **Multi-Stage Validation**: Apply Fix → Playwright Test → Console Analysis → User Flow Test → Confirmation
+- **If ANY stage fails**: Return to analysis phase, do not mark issue as resolved
 
 #### Build Dependencies
 - **Build order**: Core → MCP → Web (follow dependency chain)
