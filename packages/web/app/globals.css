@@ -6,3 +6,8 @@
 @import './styles/antd-overrides.css';
 @import './styles/layout.css';
 @import './styles/responsive.css';
+
+/* Font class for Inter */
+.font-inter {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}

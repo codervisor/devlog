@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { ConfigProvider } from 'antd';
 import { AppLayout } from './AppLayout';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'], display: 'swap', fallback: ['system-ui', 'arial'] });
+import './fonts.css';
 
 export const metadata: Metadata = {
   title: 'Devlog Management',
@@ -17,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-inter">
         <ConfigProvider>
           <AppLayout>{children}</AppLayout>
         </ConfigProvider>
