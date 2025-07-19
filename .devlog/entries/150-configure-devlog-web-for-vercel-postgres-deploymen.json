@@ -3,10 +3,10 @@
   "title": "Configure @devlog/web for Vercel Postgres Deployment",
   "type": "task",
   "description": "Set up @devlog/web package to deploy on Vercel using Vercel Postgres as the database backend. This includes configuring the PostgreSQL storage provider, setting up environment variables, creating deployment configuration, and ensuring the web application works properly with cloud PostgreSQL.",
-  "status": "in-progress",
+  "status": "done",
   "priority": "high",
   "createdAt": "2025-07-17T02:27:56.439Z",
-  "updatedAt": "2025-07-17T07:16:21.263Z",
+  "updatedAt": "2025-07-17T16:38:03.700Z",
   "notes": [
     {
       "id": "5c00d637-f780-4686-a627-95524d9be5ce",
@@ -76,5 +76,6 @@
     "lastAIUpdate": "2025-07-17T02:27:56.439Z",
     "contextVersion": 1
   },
-  "id": 150
+  "id": 150,
+  "closedAt": "2025-07-17T16:38:03.700Z"
 }
