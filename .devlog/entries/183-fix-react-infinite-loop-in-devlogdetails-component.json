@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "critical",
   "createdAt": "2025-07-19T07:24:10.142Z",
-  "updatedAt": "2025-07-19T07:24:53.435Z",
+  "updatedAt": "2025-07-19T07:39:54.248Z",
   "notes": [
     {
       "id": "ebe53dc7-8596-4993-ac50-44fe0210e0cb",
@@ -29,6 +29,28 @@
       "timestamp": "2025-07-19T07:24:53.435Z",
       "category": "progress",
       "content": "Completed: Successfully fixed the React infinite loop error by removing handleSave and handleDiscard from useEffect dependencies in DevlogDetails component. The fix prevents the \"Maximum update depth exceeded\" error and allows devlog detail pages to load properly without performance issues."
+    },
+    {
+      "id": "de503a29-bf91-49cf-b3fb-d78584fcd500",
+      "timestamp": "2025-07-19T07:35:55.751Z",
+      "category": "issue",
+      "content": "❌ **Issue Still Persists - Found Root Cause**\n\nThe infinite loop issue is still occurring, and I discovered it's NOT from the useEffect dependencies I fixed. The real issue is in **Ant Design's Typography component** with ellipsis measurement.\n\n**Error Details:**\n- Error: \"Maximum update depth exceeded\" \n- Stack trace points to: `antd/es/typography/Base/Ellipsis.js:110:13`\n- The component `EllipsisMeasure` is causing setState loops in useLayoutEffect\n- Specifically affecting devlogs with empty notes (like devlog 182)\n\n**The Previous Fix Was Incomplete:**\n- Removing handleSave/handleDiscard from useEffect dependencies wasn't the actual cause\n- The real infinite loop is coming from Ant Design's Text component ellipsis functionality\n\n**Next Steps:**\n1. Need to identify which Text component is causing the ellipsis measurement loop\n2. Likely related to empty content or specific conditions that trigger measurement issues"
+    },
+    {
+      "id": "90d57a7f-1082-4f3d-b92c-6d8478f371e5",
+      "timestamp": "2025-07-19T07:39:47.157Z",
+      "category": "solution",
+      "content": "✅ **Root Cause Found and Fixed!**\n\nThe issue was indeed related to empty notes, but not in the Typography components. The problem was in the **note animation tracking useEffect**.\n\n**Root Cause:**\n- The useEffect for tracking new notes had `devlog.notes` and `seenNoteIds` as dependencies\n- When `devlog.notes` is an empty array `[]`, the array reference changes on each render\n- This caused the useEffect to run repeatedly, even though the array was always empty\n- `seenNoteIds` being in the dependency array also contributed to the loop\n\n**Fix Applied:**\n1. Changed the early return condition to check both null and empty: `if (!devlog.notes || devlog.notes.length === 0)`\n2. Added proper handling for empty notes case - reset seenNoteIds if needed\n3. **Removed `seenNoteIds` from dependency array** to prevent dependency loops\n4. Changed dependencies to `[devlog.notes?.length, devlog.id]` - more stable references\n\n**Verification:**\n- Tested devlog 182 (which has empty notes: `\"notes\":[]`)  \n- Page loads successfully without infinite loop errors\n- Only minor warnings remain (font loading, Timeline deprecation)\n- No more \"Maximum update depth exceeded\" errors",
+      "files": [
+        "packages/web/app/components/features/devlogs/DevlogDetails.tsx"
+      ],
+      "codeChanges": "Fixed useEffect dependency issues in note animation tracking logic for devlogs with empty notes arrays."
+    },
+    {
+      "id": "93abf8a7-9566-4ad0-a8bf-6e491217809c",
+      "timestamp": "2025-07-19T07:39:54.248Z",
+      "category": "progress",
+      "content": "Completed: Successfully identified and fixed the React infinite loop issue affecting devlogs with empty notes arrays. The root cause was in the note animation tracking useEffect which had unstable dependencies causing repeated re-renders. Fixed by optimizing dependency array and handling empty notes case properly."
     }
   ],
   "files": [],
@@ -62,5 +84,5 @@
     "contextVersion": 1
   },
   "id": 183,
-  "closedAt": "2025-07-19T07:24:53.434Z"
+  "closedAt": "2025-07-19T07:39:54.247Z"
 }

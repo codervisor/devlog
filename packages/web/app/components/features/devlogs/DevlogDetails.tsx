@@ -161,7 +161,13 @@ export function DevlogDetails({
 
   // Track new notes for animation
   useEffect(() => {
-    if (!devlog.notes) return;
+    if (!devlog.notes || devlog.notes.length === 0) {
+      // For empty notes, just reset the seen notes if they exist
+      if (seenNoteIds.size > 0) {
+        setSeenNoteIds(new Set());
+      }
+      return;
+    }
 
     const currentNoteIds = new Set(devlog.notes.map(note => note.id));
     
@@ -187,7 +193,7 @@ export function DevlogDetails({
     }
     
     return undefined;
-  }, [devlog.notes, seenNoteIds]);
+  }, [devlog.notes?.length, devlog.id]); // Remove seenNoteIds from dependencies to avoid loops
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
