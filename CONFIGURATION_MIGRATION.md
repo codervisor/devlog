@@ -35,8 +35,6 @@ Choose one of the following storage options:
 #### PostgreSQL (Recommended for Production)
 ```bash
 POSTGRES_URL="postgresql://username:password@host:5432/database"
-# OR
-DATABASE_URL="postgresql://username:password@host:5432/database"
 ```
 
 #### MySQL
@@ -164,7 +162,7 @@ POSTGRES_URL="postgres://default:password@host.postgres.vercel-storage.com:5432/
 
 The system automatically detects storage type based on available environment variables:
 
-1. **PostgreSQL**: If `POSTGRES_URL` or `DATABASE_URL` is set
+1. **PostgreSQL**: If `POSTGRES_URL` is set
 2. **MySQL**: If `MYSQL_URL` is set  
 3. **SQLite**: If `SQLITE_URL` is set
 4. **GitHub**: If `GITHUB_TOKEN`, `GITHUB_OWNER`, and `GITHUB_REPO` are set

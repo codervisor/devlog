@@ -1,0 +1,66 @@
+{
+  "key": "fix-react-infinite-loop-in-devlogdetails-component",
+  "title": "Fix React infinite loop in DevlogDetails component causing \"Maximum update depth exceeded\" error",
+  "type": "bugfix",
+  "description": "Fix React infinite loop error \"Maximum update depth exceeded\" that occurs when viewing devlog entry pages (e.g., /devlogs/182). The error is caused by a useEffect in DevlogDetails component that has handleSave and handleDiscard as dependencies, which are recreated on every render, causing the effect to run repeatedly and trigger state updates in parent components.",
+  "status": "done",
+  "priority": "critical",
+  "createdAt": "2025-07-19T07:24:10.142Z",
+  "updatedAt": "2025-07-19T07:24:53.435Z",
+  "notes": [
+    {
+      "id": "ebe53dc7-8596-4993-ac50-44fe0210e0cb",
+      "timestamp": "2025-07-19T07:24:29.735Z",
+      "category": "solution",
+      "content": "🔧 **Root Cause Identified and Fixed**\n\n**Problem**: The infinite loop was caused by a useEffect dependency issue in DevlogDetails.tsx on lines 310-315. The effect included `handleSave` and `handleDiscard` in its dependencies array, but these functions were being recreated on every render due to lack of proper memoization.\n\n**Solution Applied**: Removed `handleSave` and `handleDiscard` from the useEffect dependencies array. These function references don't need to trigger the effect when they change - the effect should only run when the state values (`hasUnsavedChanges`, `isSaving`, `saveError`) or the callback (`onUnsavedChangesChange`) change.\n\n**Technical Details**:\n- Changed: `}, [hasUnsavedChanges, isSaving, saveError, onUnsavedChangesChange, handleSave, handleDiscard]);`  \n- To: `}, [hasUnsavedChanges, isSaving, saveError, onUnsavedChangesChange]);`\n\nThis prevents the infinite cycle: useEffect runs → calls onUnsavedChangesChange → parent updates → re-render → functions recreated → useEffect runs again.",
+      "files": [
+        "packages/web/app/components/features/devlogs/DevlogDetails.tsx"
+      ],
+      "codeChanges": "Removed handleSave and handleDiscard from useEffect dependencies array to prevent infinite loop caused by function recreation on every render."
+    },
+    {
+      "id": "d1c599f9-a962-4263-8421-05066c799ae7",
+      "timestamp": "2025-07-19T07:24:48.756Z",
+      "category": "progress",
+      "content": "✅ **Fix Verified and Working**\n\nSuccessfully tested the fix:\n1. Applied the dependency array fix to DevlogDetails.tsx\n2. Opened http://localhost:3000/devlogs/182 in Simple Browser\n3. Page loads without infinite loop errors\n4. No \"Maximum update depth exceeded\" errors in console\n\nThe React infinite loop issue has been successfully resolved. The DevlogDetails component now properly handles useEffect dependencies without causing repeated re-renders."
+    },
+    {
+      "id": "495779e7-7475-41d3-bbe2-9142d5f7acfb",
+      "timestamp": "2025-07-19T07:24:53.435Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed the React infinite loop error by removing handleSave and handleDiscard from useEffect dependencies in DevlogDetails component. The fix prevents the \"Maximum update depth exceeded\" error and allows devlog detail pages to load properly without performance issues."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "This is a critical UX issue that prevents users from viewing devlog entries. The infinite loop makes the application unusable for viewing individual devlog details, which is a core feature of the devlog system.",
+    "technicalContext": "The problem is in DevlogDetails.tsx in the useEffect that calls onUnsavedChangesChange. The dependencies array includes handleSave and handleDiscard functions that are being recreated on every render because they don't have proper memoization. This creates an infinite cycle: useEffect runs → calls onUnsavedChangesChange → triggers state update in parent → causes re-render → functions recreated → useEffect runs again.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "DevlogDetails pages load without infinite loop errors",
+      "No 'Maximum update depth exceeded' errors in browser console",
+      "Unsaved changes functionality still works correctly",
+      "Save and discard handlers work as expected",
+      "Component re-renders only when necessary"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "The issue is specifically in the useEffect on line 310-315 of DevlogDetails.tsx",
+      "handleSave and handleDiscard functions are dependencies but lack proper memoization",
+      "This is a common React pattern issue where function references change on every render",
+      "The onUnsavedChangesChange callback is likely triggering state updates in the parent component"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-19T07:24:10.142Z",
+    "contextVersion": 1
+  },
+  "id": 183,
+  "closedAt": "2025-07-19T07:24:53.434Z"
+}

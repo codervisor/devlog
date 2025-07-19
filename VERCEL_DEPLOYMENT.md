@@ -75,7 +75,7 @@ pnpm dev:web
 
 The devlog system automatically detects your database from environment variables:
 
-- **`POSTGRES_URL`** or **`DATABASE_URL`** → PostgreSQL
+- **`POSTGRES_URL`** → PostgreSQL
 - **`MYSQL_URL`** → MySQL  
 - **`SQLITE_URL`** → SQLite
 - **None** → JSON file storage (default)

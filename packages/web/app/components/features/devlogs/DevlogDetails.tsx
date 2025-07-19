@@ -312,7 +312,7 @@ export function DevlogDetails({
     if (onUnsavedChangesChange) {
       onUnsavedChangesChange(hasUnsavedChanges, handleSave, handleDiscard, isSaving, saveError);
     }
-  }, [hasUnsavedChanges, isSaving, saveError, onUnsavedChangesChange, handleSave, handleDiscard]);
+  }, [hasUnsavedChanges, isSaving, saveError, onUnsavedChangesChange]);
 
   return (
     <div>

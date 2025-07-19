@@ -3,14 +3,14 @@
  * Now uses environment variables instead of devlog.config.json
  */
 
-import type { 
-  DevlogConfig, 
-  StorageConfig, 
+import type {
+  DevlogConfig,
+  StorageConfig,
   StorageType,
   PostgreSQLStorageOptions,
   MySQLStorageOptions,
   SQLiteStorageOptions,
-  JsonStorageOptions 
+  JsonStorageOptions,
 } from './types/index.js';
 import { getWorkspaceRoot } from './utils/storage.js';
 
@@ -31,7 +31,7 @@ export class ConfigurationManager {
    */
   async loadConfig(): Promise<DevlogConfig> {
     await this.ensureInitialized();
-    
+
     return this.createConfigFromEnvironment();
   }
 
@@ -41,14 +41,16 @@ export class ConfigurationManager {
   getDefaultStorageConfig(): StorageConfig {
     // Check for explicit storage type specification
     const explicitStorageType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase() as StorageType;
-    
+
     if (explicitStorageType) {
       console.log(`🎯 Using explicitly configured storage type: ${explicitStorageType}`);
       return this.createStorageConfigForType(explicitStorageType);
     }
-    
+
     // Default to JSON storage (no auto-detection)
-    console.log('📄 Using default JSON storage (set DEVLOG_STORAGE_TYPE to use other storage types)');
+    console.log(
+      '📄 Using default JSON storage (set DEVLOG_STORAGE_TYPE to use other storage types)',
+    );
     return this.createJsonConfig();
   }
 
@@ -68,7 +70,9 @@ export class ConfigurationManager {
       case 'json':
         return this.createJsonConfig();
       default:
-        throw new Error(`Unsupported storage type: ${storageType}. Supported types: postgres, mysql, sqlite, github, json`);
+        throw new Error(
+          `Unsupported storage type: ${storageType}. Supported types: postgres, mysql, sqlite, github, json`,
+        );
     }
   }
 
@@ -76,15 +80,17 @@ export class ConfigurationManager {
    * Create PostgreSQL storage configuration
    */
   private createPostgreSQLConfig(): StorageConfig {
-    let connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-    
+    let connectionString = process.env.POSTGRES_URL;
+
     // If no connection string provided, try to build from individual parameters
     if (!connectionString) {
       connectionString = this.buildPostgreSQLConnectionString() || undefined;
     }
-    
+
     if (!connectionString) {
-      throw new Error('PostgreSQL connection not configured. Set POSTGRES_URL/DATABASE_URL or individual parameters (POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DATABASE).');
+      throw new Error(
+        'PostgreSQL connection not configured. Set POSTGRES_URL or individual parameters (POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DATABASE).',
+      );
     }
 
     const options: PostgreSQLStorageOptions = {
@@ -108,14 +114,16 @@ export class ConfigurationManager {
    */
   private createMySQLConfig(): StorageConfig {
     let connectionString = process.env.MYSQL_URL;
-    
+
     // If no connection string provided, try to build from individual parameters
     if (!connectionString) {
       connectionString = this.buildMySQLConnectionString() || undefined;
     }
-    
+
     if (!connectionString) {
-      throw new Error('MySQL connection not configured. Set MYSQL_URL or individual parameters (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE).');
+      throw new Error(
+        'MySQL connection not configured. Set MYSQL_URL or individual parameters (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE).',
+      );
     }
 
     const options: MySQLStorageOptions = {
@@ -139,7 +147,8 @@ export class ConfigurationManager {
    * Create SQLite storage configuration
    */
   private createSQLiteConfig(): StorageConfig {
-    const connectionString = process.env.SQLITE_URL || process.env.SQLITE_PATH || '.devlog/database.sqlite';
+    const connectionString =
+      process.env.SQLITE_URL || process.env.SQLITE_PATH || '.devlog/database.sqlite';
 
     const options: SQLiteStorageOptions = {
       enableWAL: this.parseBoolean(process.env.SQLITE_ENABLE_WAL, true),
@@ -166,7 +175,9 @@ export class ConfigurationManager {
     const githubRepo = process.env.GITHUB_REPO;
 
     if (!githubToken || !githubOwner || !githubRepo) {
-      throw new Error('GitHub storage requires GITHUB_TOKEN, GITHUB_OWNER, and GITHUB_REPO environment variables.');
+      throw new Error(
+        'GitHub storage requires GITHUB_TOKEN, GITHUB_OWNER, and GITHUB_REPO environment variables.',
+      );
     }
 
     return {
@@ -182,7 +193,9 @@ export class ConfigurationManager {
           useNativeType: this.parseBoolean(process.env.GITHUB_USE_NATIVE_TYPE, true),
           useNativeLabels: this.parseBoolean(process.env.GITHUB_USE_NATIVE_LABELS, true),
           useStateReason: this.parseBoolean(process.env.GITHUB_USE_STATE_REASON, true),
-          projectId: process.env.GITHUB_PROJECT_ID ? parseInt(process.env.GITHUB_PROJECT_ID, 10) : undefined,
+          projectId: process.env.GITHUB_PROJECT_ID
+            ? parseInt(process.env.GITHUB_PROJECT_ID, 10)
+            : undefined,
         },
         rateLimit: {
           requestsPerHour: this.parseNumber(process.env.GITHUB_RATE_LIMIT_PER_HOUR, 4000),
@@ -253,7 +266,7 @@ export class ConfigurationManager {
     // Build connection string
     const portPart = port ? `:${port}` : ':5432';
     const passwordPart = password ? `:${encodeURIComponent(password)}` : '';
-    
+
     return `postgresql://${encodeURIComponent(username)}${passwordPart}@${host}${portPart}/${encodeURIComponent(database)}`;
   }
 
@@ -275,7 +288,7 @@ export class ConfigurationManager {
     // Build connection string
     const portPart = port ? `:${port}` : ':3306';
     const passwordPart = password ? `:${encodeURIComponent(password)}` : '';
-    
+
     return `mysql://${encodeURIComponent(username)}${passwordPart}@${host}${portPart}/${encodeURIComponent(database)}`;
   }
 
@@ -300,7 +313,7 @@ export class ConfigurationManager {
     if (value.toLowerCase() === 'true') {
       return process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : true;
     }
-    
+
     try {
       return JSON.parse(value);
     } catch {
@@ -312,36 +325,45 @@ export class ConfigurationManager {
   /**
    * Parse SQLite journal mode from environment variable
    */
-  private parseJournalMode(value: string | undefined, defaultValue: 'DELETE' | 'TRUNCATE' | 'PERSIST' | 'MEMORY' | 'WAL'): 'DELETE' | 'TRUNCATE' | 'PERSIST' | 'MEMORY' | 'WAL' {
+  private parseJournalMode(
+    value: string | undefined,
+    defaultValue: 'DELETE' | 'TRUNCATE' | 'PERSIST' | 'MEMORY' | 'WAL',
+  ): 'DELETE' | 'TRUNCATE' | 'PERSIST' | 'MEMORY' | 'WAL' {
     if (value === undefined) {
       return defaultValue;
     }
     const validModes = ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL'];
     const upperValue = value.toUpperCase();
-    return validModes.includes(upperValue) ? upperValue as any : defaultValue;
+    return validModes.includes(upperValue) ? (upperValue as any) : defaultValue;
   }
 
   /**
    * Parse SQLite synchronous mode from environment variable
    */
-  private parseSynchronousMode(value: string | undefined, defaultValue: 'OFF' | 'NORMAL' | 'FULL' | 'EXTRA'): 'OFF' | 'NORMAL' | 'FULL' | 'EXTRA' {
+  private parseSynchronousMode(
+    value: string | undefined,
+    defaultValue: 'OFF' | 'NORMAL' | 'FULL' | 'EXTRA',
+  ): 'OFF' | 'NORMAL' | 'FULL' | 'EXTRA' {
     if (value === undefined) {
       return defaultValue;
     }
     const validModes = ['OFF', 'NORMAL', 'FULL', 'EXTRA'];
     const upperValue = value.toUpperCase();
-    return validModes.includes(upperValue) ? upperValue as any : defaultValue;
+    return validModes.includes(upperValue) ? (upperValue as any) : defaultValue;
   }
 
   /**
    * Parse encoding from environment variable
    */
-  private parseEncoding(value: string | undefined, defaultValue: 'utf8' | 'utf16le' | 'latin1'): 'utf8' | 'utf16le' | 'latin1' {
+  private parseEncoding(
+    value: string | undefined,
+    defaultValue: 'utf8' | 'utf16le' | 'latin1',
+  ): 'utf8' | 'utf16le' | 'latin1' {
     if (value === undefined) {
       return defaultValue;
     }
     const validEncodings = ['utf8', 'utf16le', 'latin1'];
-    return validEncodings.includes(value) ? value as any : defaultValue;
+    return validEncodings.includes(value) ? (value as any) : defaultValue;
   }
 
   /**
