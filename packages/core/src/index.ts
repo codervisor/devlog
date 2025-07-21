@@ -32,3 +32,6 @@ export * from './types/index.js';
 
 // Utilities
 export * from './utils/index.js';
+
+// Environment Configuration
+export { loadRootEnv, getMonorepoRoot, initializeEnv } from './utils/env-loader.js';

@@ -1,10 +1,13 @@
-import { DevlogManager } from '@devlog/core';
+import { DevlogManager, loadRootEnv } from '@devlog/core';
 import { sseEventBridge } from './sse-event-bridge';
 
 let devlogManager: DevlogManager | null = null;
 
 export async function getDevlogManager(): Promise<DevlogManager> {
   if (!devlogManager) {
+    // Ensure environment variables are loaded from root before initializing
+    loadRootEnv();
+    
     const { DevlogManager } = await import('@devlog/core');
     devlogManager = new DevlogManager();
     await devlogManager.initialize();

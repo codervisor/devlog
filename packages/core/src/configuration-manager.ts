@@ -3,9 +3,8 @@
  * Now uses environment variables instead of devlog.config.json
  */
 
-// Load environment variables from .env file
-import * as dotenv from 'dotenv';
-dotenv.config();
+// Load environment variables from root .env file
+import { loadRootEnv } from './utils/env-loader.js';
 
 import type {
   DevlogConfig,
@@ -22,6 +21,8 @@ export class ConfigurationManager {
   private workspaceRoot: string | null = null;
 
   async initialize(): Promise<void> {
+    // Load environment variables from root directory
+    loadRootEnv();
     this.workspaceRoot = getWorkspaceRoot();
   }
 
