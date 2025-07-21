@@ -125,7 +125,7 @@ export function parseTypeORMConfig(): TypeORMStorageOptions {
   const postgresUrl = process.env.POSTGRES_URL;
   const dbType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase();
 
-  if (postgresUrl && (dbType === 'postgres' || dbType === 'postgresql')) {
+  if (postgresUrl && dbType === 'postgres') {
     return {
       type: 'postgres',
       url: postgresUrl,

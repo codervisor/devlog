@@ -23,7 +23,7 @@ import type {
   ExternalReference,
 } from '../types/core.js';
 import type { StorageType } from '../types';
-import { loadRootEnv } from '../utils/env-loader';
+import { loadRootEnv } from '../utils/env-loader.js';
 
 loadRootEnv();
 

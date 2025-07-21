@@ -26,10 +26,10 @@ export { TypeORMStorageProvider } from './storage/typeorm-storage.js';
 export { EnterpriseSync } from './integrations/enterprise-sync.js';
 
 // TypeORM Support
-export { 
-  createDataSource, 
+export {
+  createDataSource,
   parseTypeORMConfig,
-  type TypeORMStorageOptions 
+  type TypeORMStorageOptions,
 } from './storage/typeorm-config.js';
 export { DevlogEntryEntity } from './entities/devlog-entry.entity.js';
 

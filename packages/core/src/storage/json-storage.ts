@@ -3,38 +3,27 @@
  * Uses direct file discovery for resilient multi-agent access patterns
  */
 
-import type {
+import path from 'path';
+import * as fs from 'fs/promises';
+import { FSWatcher, watch } from 'fs';
+import os from 'os';
+import type { DevlogEvent } from '../events/devlog-events.js';
+import { calculateDevlogStats, getWorkspaceRoot } from '../utils/storage.js';
+import { calculateTimeSeriesStats } from '../utils/time-series.js';
+import {
   DevlogEntry,
   DevlogFilter,
   DevlogId,
-  DevlogNote,
-  DevlogPriority,
   DevlogStats,
-  DevlogStatus,
-  DevlogType,
-  TimeSeriesRequest,
-  TimeSeriesStats,
-  TimeSeriesDataPoint,
   JsonConfig,
-  StorageProvider,
-  ChatSession,
-  ChatMessage,
-  ChatFilter,
-  ChatStats,
-  ChatSessionId,
-  ChatMessageId,
-  ChatSearchResult,
-  ChatDevlogLink,
-  ChatWorkspace,
   PaginatedResult,
   PaginationOptions,
+  StorageProvider,
+  TimeSeriesRequest,
+  TimeSeriesStats,
 } from '../types/index.js';
-import type { DevlogEvent } from '../events/devlog-events.js';
-import * as path from 'path';
-import * as fs from 'fs/promises';
-import { FSWatcher, watch } from 'fs';
-import { getDevlogDirFromJsonConfig, calculateDevlogStats } from '../utils/storage.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
+
+export const DEFAULT_DEVLOG_DIR_NAME = '.devlog';
 
 export class JsonStorageProvider implements StorageProvider {
   private readonly config: Required<JsonConfig>;
@@ -49,13 +38,13 @@ export class JsonStorageProvider implements StorageProvider {
 
   constructor(config: JsonConfig = {}) {
     this.config = {
-      directory: config.directory || '.devlog',
+      directory: config.directory || DEFAULT_DEVLOG_DIR_NAME,
       filePattern: config.filePattern || '{id:auto}-{slug}.json',
       minPadding: config.minPadding || 3,
       global: config.global !== undefined ? config.global : true,
     };
 
-    this.devlogDir = getDevlogDirFromJsonConfig(this.config);
+    this.devlogDir = this.getDevlogDirFromJsonConfig(this.config);
     this.entriesDir = path.join(this.devlogDir, 'entries');
   }
 
@@ -612,5 +601,21 @@ temp/
     // Assuming filename format: "001-some-slug.json"
     const match = filename.match(/^(\d+)-/);
     return match ? parseInt(match[1], 10) : null;
+  }
+
+  private getDevlogDirFromJsonConfig(config: Required<JsonConfig>): string {
+    const devlogDir = config.directory;
+    if (config.global) {
+      // Use global directory (e.g., ~/.devlog)
+      return path.join(os.homedir(), devlogDir);
+    } else {
+      if (devlogDir === DEFAULT_DEVLOG_DIR_NAME) {
+        // Use local directory (e.g., ./devlog)
+        return path.join(getWorkspaceRoot(), devlogDir);
+      } else {
+        // Use custom directory
+        return path.resolve(devlogDir);
+      }
+    }
   }
 }

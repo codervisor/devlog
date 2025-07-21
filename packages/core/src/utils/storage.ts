@@ -1,19 +1,14 @@
 import path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import { JsonConfig, DevlogEntry, DevlogStats, DevlogStatus, DevlogType, DevlogPriority } from '../types/index.js';
+import {
+  DevlogEntry,
+  DevlogPriority,
+  DevlogStats,
+  DevlogStatus,
+  DevlogType,
+} from '../types/index.js';
 import { parseBoolean } from './common.js';
-
-export function getDevlogDirFromJsonConfig(config: JsonConfig): string {
-  const devlogDir = config.directory || '.devlog';
-  if (config.global) {
-    // Use global directory (e.g., ~/.devlog)
-    return path.join(os.homedir(), devlogDir);
-  } else {
-    // Use local directory (e.g., ./devlog)
-    return path.join(getWorkspaceRoot(), devlogDir);
-  }
-}
 
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {
   if (process.env.NODE_ENV === 'production') {
@@ -69,7 +64,7 @@ export function findProjectRoot(startPath: string = process.cwd()): string {
       if (fs.existsSync(indicator)) {
         // Found a basic project file, use this as fallback but continue looking for stronger indicators
         const potentialRoot = currentDir;
-        
+
         // Check parent directories for stronger indicators
         let parentDir = path.dirname(currentDir);
         let foundStrongerIndicator = false;
