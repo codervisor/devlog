@@ -25,7 +25,16 @@ export { JsonStorageProvider } from './storage/json-storage.js';
 export { PostgreSQLStorageProvider } from './storage/postgresql-storage.js';
 export { MySQLStorageProvider } from './storage/mysql-storage.js';
 export { GitHubStorageProvider } from './storage/github-storage.js';
+export { TypeORMStorageProvider } from './storage/typeorm-storage.js';
 export { EnterpriseSync } from './integrations/enterprise-sync.js';
+
+// TypeORM Support
+export { 
+  createDataSource, 
+  parseTypeORMConfig,
+  type TypeORMStorageOptions 
+} from './storage/typeorm-config.js';
+export { DevlogEntryEntity } from './entities/devlog-entry.entity.js';
 
 // Re-export types for convenience
 export * from './types/index.js';

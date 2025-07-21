@@ -67,6 +67,8 @@ export class PostgreSQLStorageProvider implements StorageProvider {
         priority TEXT NOT NULL DEFAULT 'medium',
         created_at TIMESTAMPTZ NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL,
+        closed_at TIMESTAMPTZ,
+        archived BOOLEAN DEFAULT FALSE,
         assignee TEXT,
         files JSONB,
         related_devlogs JSONB,

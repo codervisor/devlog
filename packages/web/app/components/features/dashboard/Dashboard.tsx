@@ -1,18 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Avatar, Col, Empty, FloatButton, List, Row, Skeleton, Typography } from 'antd';
+import { Col, Empty, FloatButton, List, Row, Skeleton, Typography } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   Area,
-  AreaChart,
   Bar,
   CartesianGrid,
   Cell,
   ComposedChart,
   Legend,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -22,12 +19,19 @@ import {
 } from 'recharts';
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
 import { useRouter } from 'next/navigation';
-import { getStatusColor, getStatusIcon, getColorHex } from '@/lib/devlog-ui-utils';
-import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
+import { getColorHex, getStatusColor } from '@/lib/devlog-ui-utils';
+import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import { formatTimeSeriesData, CHART_COLORS, CHART_OPACITY, formatTooltipValue, formatTooltipLabel } from './chart-utils';
+import {
+  CHART_COLORS,
+  CHART_OPACITY,
+  formatTimeSeriesData,
+  formatTooltipLabel,
+  formatTooltipValue,
+} from './chart-utils';
 import styles from './Dashboard.module.css';
 import { Gutter } from 'antd/es/grid/row';
+import { useStickyHeaders } from '@/hooks/useStickyHeaders';
 
 const { Title, Text } = Typography;
 
@@ -59,21 +63,53 @@ export function Dashboard({
 
     return [
       { name: 'New', value: stats.byStatus['new'] || 0, color: getColorHex(getStatusColor('new')) },
-      { name: 'In Progress', value: stats.byStatus['in-progress'] || 0, color: getColorHex(getStatusColor('in-progress')) },
-      { name: 'Blocked', value: stats.byStatus['blocked'] || 0, color: getColorHex(getStatusColor('blocked')) },
-      { name: 'In Review', value: stats.byStatus['in-review'] || 0, color: getColorHex(getStatusColor('in-review')) },
-      { name: 'Testing', value: stats.byStatus['testing'] || 0, color: getColorHex(getStatusColor('testing')) },
-      { name: 'Done', value: stats.byStatus['done'] || 0, color: getColorHex(getStatusColor('done')) },
-      { name: 'Cancelled', value: stats.byStatus['cancelled'] || 0, color: getColorHex(getStatusColor('cancelled')) },
+      {
+        name: 'In Progress',
+        value: stats.byStatus['in-progress'] || 0,
+        color: getColorHex(getStatusColor('in-progress')),
+      },
+      {
+        name: 'Blocked',
+        value: stats.byStatus['blocked'] || 0,
+        color: getColorHex(getStatusColor('blocked')),
+      },
+      {
+        name: 'In Review',
+        value: stats.byStatus['in-review'] || 0,
+        color: getColorHex(getStatusColor('in-review')),
+      },
+      {
+        name: 'Testing',
+        value: stats.byStatus['testing'] || 0,
+        color: getColorHex(getStatusColor('testing')),
+      },
+      {
+        name: 'Done',
+        value: stats.byStatus['done'] || 0,
+        color: getColorHex(getStatusColor('done')),
+      },
+      {
+        name: 'Cancelled',
+        value: stats.byStatus['cancelled'] || 0,
+        color: getColorHex(getStatusColor('cancelled')),
+      },
     ].filter((item) => item.value > 0);
   }, [stats]);
 
   // Define gutter for chart rows
   const chartRowGutter = [48, 24] as [Gutter, Gutter];
 
+  // Setup sticky header detection
+  useStickyHeaders({
+    selectorClass: styles.sectionHeader,
+    stickyClass: styles.isSticky,
+    topOffset: 0,
+    dependencies: [],
+  });
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <div className="scrollable-content">
+      <div className={`${styles.dashboardContent} scrollable-content`}>
         {/* Charts Section */}
         <div className={styles.dashboardChartsSection}>
           {isLoadingTimeSeries ? (
@@ -117,30 +153,27 @@ export function Dashboard({
                     <ComposedChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" fontSize={12} tickLine={false} />
-                      
+
                       {/* Primary Y-axis for cumulative data */}
-                      <YAxis 
+                      <YAxis
                         yAxisId="cumulative"
-                        fontSize={12} 
+                        fontSize={12}
                         tickLine={false}
                         label={{ value: 'Total Items', angle: -90, position: 'insideLeft' }}
                       />
-                      
+
                       {/* Secondary Y-axis for current workload */}
-                      <YAxis 
+                      <YAxis
                         yAxisId="current"
                         orientation="right"
-                        fontSize={12} 
+                        fontSize={12}
                         tickLine={false}
                         label={{ value: 'Current Open', angle: 90, position: 'insideRight' }}
                       />
-                      
-                      <Tooltip
-                        labelFormatter={formatTooltipLabel}
-                        formatter={formatTooltipValue}
-                      />
+
+                      <Tooltip labelFormatter={formatTooltipLabel} formatter={formatTooltipValue} />
                       <Legend />
-                      
+
                       {/* Cumulative data on primary axis with transparency */}
                       <Area
                         yAxisId="cumulative"
@@ -164,7 +197,7 @@ export function Dashboard({
                         strokeWidth={2}
                         name="Total Closed"
                       />
-                      
+
                       {/* Current workload on secondary axis using bar chart */}
                       <Bar
                         yAxisId="current"
@@ -221,11 +254,13 @@ export function Dashboard({
         </div>
 
         {/* Scrollable Content */}
-        <div className={`${styles.recentDevlogs} flex-1 overflow-hidden flex flex-col`}>
-          <Title level={3} className={styles.recentDevlogsTitle}>
-            Recent Devlogs
-          </Title>
-          <div className="flex-1 overflow-x-hidden overflow-y-auto thin-scrollbar-vertical">
+        <div className={`${styles.recentDevlogs} flex-1 flex flex-col`}>
+          <div className={styles.sectionHeader}>
+            <Title level={3} className={styles.recentDevlogsTitle}>
+              Recent Devlogs
+            </Title>
+          </div>
+          <div className="flex-1 overflow-hidden thin-scrollbar-vertical">
             {isLoadingDevlogs ? (
               <List
                 itemLayout="horizontal"

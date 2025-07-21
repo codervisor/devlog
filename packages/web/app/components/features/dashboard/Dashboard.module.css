@@ -69,10 +69,6 @@
 .recentDevlogsTitle {
   padding: 12px 24px;
   margin-bottom: 0 !important;
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 999;
 }
 
 .emptyDevlogs {
@@ -210,6 +206,13 @@
 
 .skeletonDateContainer {
   width: 80px;
+}
+
+.sectionHeader {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 20;
 }
 
 /* Responsive adjustments */
