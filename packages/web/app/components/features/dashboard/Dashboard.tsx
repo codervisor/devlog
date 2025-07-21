@@ -133,11 +133,25 @@ export function Dashboard({
             </Row>
           ) : chartData.length === 0 ? (
             <Row gutter={chartRowGutter}>
-              <Col xs={24}>
+              <Col xs={24} lg={12}>
                 <div className={styles.chartCard}>
+                  <Title level={4} className="mb-4">
+                    Project Progress & Current Workload
+                  </Title>
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No historical data available yet"
+                    description="No development activity data available yet"
+                  />
+                </div>
+              </Col>
+              <Col xs={24} lg={12}>
+                <div className={styles.chartCard}>
+                  <Title level={4} className="mb-4">
+                    Current Status Distribution
+                  </Title>
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No status distribution data available yet"
                   />
                 </div>
               </Col>
