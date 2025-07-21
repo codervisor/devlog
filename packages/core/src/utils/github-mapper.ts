@@ -11,16 +11,14 @@
  */
 
 import {
+  Decision,
   DevlogEntry,
+  DevlogPriority,
   DevlogStatus,
   DevlogType,
-  DevlogPriority,
-  DevlogNote,
-  Decision,
   GitHubStorageConfig,
-  ExternalReference,
 } from '../types/index.js';
-import { GitHubIssue, CreateIssueRequest, UpdateIssueRequest } from './github-api.js';
+import { CreateIssueRequest, GitHubIssue, UpdateIssueRequest } from './github-api.js';
 import * as cheerio from 'cheerio';
 import { mapGitHubTypeToDevlogType, mapNativeLabelsToDevlogType } from './github-type-mapper.js';
 import { formatEnhancedGitHubTitle } from './emoji-mappings.js';
@@ -111,7 +109,7 @@ export class DevlogGitHubMapper {
     const labels = this.generateLabels(entry);
 
     // Enhanced title with emoji icons
-    const enhancedTitle = this.config.enableEmojiTitles 
+    const enhancedTitle = this.config.enableEmojiTitles
       ? formatEnhancedGitHubTitle(entry.title, entry.type, entry.status, entry.priority)
       : entry.title;
 
@@ -202,13 +200,13 @@ export class DevlogGitHubMapper {
 
     // Clone the details element to avoid modifying the original DOM
     const clonedDetails = detailsElement.clone();
-    
+
     // Remove the summary element from the cloned content
     clonedDetails.find('summary').remove();
-    
+
     // Get just the text content, preserving line breaks
     const textContent = clonedDetails.text().trim();
-    
+
     return textContent || null;
   }
 
@@ -687,7 +685,12 @@ export class DevlogGitHubMapper {
   private cleanEmojiFromTitle(title: string): string {
     // Remove common emoji patterns at the start of titles
     // This pattern matches emoji characters followed by optional spaces
-    return title.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F100}-\u{1F1FF}\u{1F200}-\u{1F2FF}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2300}-\u{23FF}\u{2B50}\u{25AA}-\u{25FE}\u{2139}\u{2194}-\u{2199}\u{21A9}-\u{21AA}\u{231A}-\u{231B}\u{2328}\u{23CF}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{24C2}\u{25B6}\u{25C0}\u{25FB}-\u{25FE}\u{2660}-\u{2668}\u{2934}-\u{2935}\u{2B05}-\u{2B07}\u{2B1B}-\u{2B1C}\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]+\s*/gu, '').trim();
+    return title
+      .replace(
+        /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F100}-\u{1F1FF}\u{1F200}-\u{1F2FF}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2300}-\u{23FF}\u{2B50}\u{25AA}-\u{25FE}\u{2139}\u{2194}-\u{2199}\u{21A9}-\u{21AA}\u{231A}-\u{231B}\u{2328}\u{23CF}\u{23E9}-\u{23F3}\u{23F8}-\u{23FA}\u{24C2}\u{25B6}\u{25C0}\u{25FB}-\u{25FE}\u{2660}-\u{2668}\u{2934}-\u{2935}\u{2B05}-\u{2B07}\u{2B1B}-\u{2B1C}\u{2B55}\u{3030}\u{303D}\u{3297}\u{3299}\u{FE0F}\u{200D}]+\s*/gu,
+        '',
+      )
+      .trim();
   }
 
   /**

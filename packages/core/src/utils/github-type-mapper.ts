@@ -10,17 +10,17 @@ import { DevlogType } from '../types/core.js';
  */
 export function mapDevlogTypeToGitHubType(devlogType: DevlogType | string): string {
   switch (devlogType) {
-    case 'bugfix': 
+    case 'bugfix':
       return 'bug';
-    case 'feature': 
+    case 'feature':
       return 'enhancement';
-    case 'docs': 
+    case 'docs':
       return 'documentation';
-    case 'refactor': 
+    case 'refactor':
       return 'refactor';
-    case 'task': 
+    case 'task':
       return 'task';
-    default: 
+    default:
       return devlogType;
   }
 }
@@ -30,17 +30,17 @@ export function mapDevlogTypeToGitHubType(devlogType: DevlogType | string): stri
  */
 export function mapDevlogTypeToGitHubLabel(devlogType: DevlogType | string): string {
   switch (devlogType) {
-    case 'bugfix': 
+    case 'bugfix':
       return 'bug';
-    case 'feature': 
+    case 'feature':
       return 'enhancement';
-    case 'docs': 
+    case 'docs':
       return 'documentation';
-    case 'refactor': 
+    case 'refactor':
       return 'refactor';
-    case 'task': 
+    case 'task':
       return 'task';
-    default: 
+    default:
       return devlogType;
   }
 }
@@ -48,8 +48,11 @@ export function mapDevlogTypeToGitHubLabel(devlogType: DevlogType | string): str
 /**
  * Map GitHub native type to devlog type
  */
-export function mapGitHubTypeToDevlogType(githubType: string): DevlogType {
-  const normalizedType = githubType.toLowerCase();
+export function mapGitHubTypeToDevlogType(githubType: string | { name: string }): DevlogType {
+  // Handle both string and object inputs
+  const typeString = typeof githubType === 'string' ? githubType : githubType.name;
+  const normalizedType = typeString.toLowerCase();
+  
   switch (normalizedType) {
     case 'bug':
       return 'bugfix';

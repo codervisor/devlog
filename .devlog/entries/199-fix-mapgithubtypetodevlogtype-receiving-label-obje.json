@@ -1,0 +1,60 @@
+{
+  "key": "fix-mapgithubtypetodevlogtype-receiving-label-obje",
+  "title": "Fix: mapGitHubTypeToDevlogType receiving label object instead of string",
+  "type": "bugfix",
+  "description": "The mapGitHubTypeToDevlogType function is receiving a GitHub label object instead of a string, causing type mapping failures. The function expects a string but gets an object with properties like {id, node_id, name, description, color, created_at, updated_at, is_enabled}.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-21T15:54:48.778Z",
+  "updatedAt": "2025-07-21T15:57:28.399Z",
+  "notes": [
+    {
+      "id": "befec1ad-df10-4d87-b9f8-37127879a151",
+      "timestamp": "2025-07-21T15:56:41.392Z",
+      "category": "progress",
+      "content": "Confirmed the issue: mapGitHubTypeToDevlogType is receiving a GitHub label object instead of a string. The console.info(githubType) is logging the full label object structure with properties like {id, node_id, name, description, color, created_at, updated_at, is_enabled}. Need to fix the function to extract the 'name' property from the object when it's not a string."
+    },
+    {
+      "id": "a1159f9b-dff9-4d3a-8ceb-2b56b9e8c40a",
+      "timestamp": "2025-07-21T15:57:21.980Z",
+      "category": "solution",
+      "content": "FIXED: Updated mapGitHubTypeToDevlogType to handle both string and object inputs. The function now checks if the input is a string or object and extracts the 'name' property when needed. Test passes successfully - GitHub integration now works without type mapping errors.",
+      "files": [
+        "packages/core/src/utils/github-type-mapper.ts"
+      ],
+      "codeChanges": "Modified mapGitHubTypeToDevlogType function to accept string | { name: string } and extract name property when object is passed"
+    },
+    {
+      "id": "b01454f0-bcae-4ab8-89db-04ea18ca7a45",
+      "timestamp": "2025-07-21T15:57:28.399Z",
+      "category": "progress",
+      "content": "Completed: Successfully fixed mapGitHubTypeToDevlogType function to handle both string and GitHub label object inputs. The function now correctly extracts the 'name' property from label objects and processes them properly. GitHub integration tests now pass without type mapping errors."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "GitHub integration is failing to properly map GitHub issue types to devlog types, which affects synchronization between GitHub Issues and devlog entries.",
+    "technicalContext": "The function is defined to accept a string parameter but the calling code is passing the entire GitHub label object. This causes the toLowerCase() call to fail and the mapping logic to break.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Function correctly extracts name from GitHub label object",
+      "Type mapping works for all supported GitHub label types",
+      "Round-trip testing passes without type mapping errors",
+      "Function handles both string and object inputs gracefully"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-21T15:54:48.778Z",
+    "contextVersion": 1
+  },
+  "id": 199,
+  "closedAt": "2025-07-21T15:57:28.398Z"
+}

@@ -1,0 +1,40 @@
+{
+  "key": "fix-github-issues-list-fallback-and-parsing-field-",
+  "title": "Fix: GitHub Issues List Fallback and Parsing Field Corruption",
+  "type": "bugfix",
+  "description": "Two critical issues discovered in GitHub devlog integration: 1) List GitHub issues always falls back to \"looks-alike\" parsing instead of proper structured parsing, 2) GitHub issue parsing has field corruption where technical context gets mixed/corrupted with other fields during the parsing process.",
+  "status": "new",
+  "priority": "high",
+  "createdAt": "2025-07-21T16:04:02.955Z",
+  "updatedAt": "2025-07-21T16:04:02.955Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users viewing GitHub devlog entries are experiencing data corruption and poor parsing quality, which undermines the reliability of the GitHub Issues integration as a devlog storage backend.",
+    "technicalContext": "The GitHub mapper appears to have two distinct parsing issues: the list operation is defaulting to fallback parsing mode, and the HTML content parsing is bleeding content between fields, particularly affecting the technical context field.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "List GitHub issues uses proper structured parsing instead of fallback",
+      "Technical context field parses cleanly without content corruption",
+      "All devlog fields maintain proper boundaries during parsing",
+      "Round-trip parsing maintains data integrity for all fields"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Issue appears to be in the HTML parsing logic of the GitHub mapper",
+      "Field boundary detection may be failing in the content extraction",
+      "List operation may not be triggering the correct parsing path"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-21T16:04:02.955Z",
+    "contextVersion": 1
+  },
+  "id": 200
+}
