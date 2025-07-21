@@ -176,7 +176,7 @@ export class DevlogGitHubMapper {
   }
 
   /**
-   * Extract content from a specific <details> section using Cheerio
+   * Extract content from a specific details section using Cheerio
    */
   private extractDetailsContentWithCheerio(
     $: cheerio.CheerioAPI,
@@ -184,7 +184,7 @@ export class DevlogGitHubMapper {
   ): string | null {
     // Find the details element that contains a summary with the specified text
     const detailsElement = $('details')
-      .filter((i, element) => {
+      .filter((_, element) => {
         const summaryElement = $(element).find('summary').first();
         return summaryElement.text().trim() === summaryText;
       })
@@ -194,16 +194,16 @@ export class DevlogGitHubMapper {
       return null;
     }
 
-    // Get the content inside the details element, excluding the summary
-    const summaryElement = detailsElement.find('summary').first();
-    const content = detailsElement.html() || '';
-    const summaryHTML = summaryElement.prop('outerHTML') || '';
-
-    // Remove the summary element from the content
-    const contentWithoutSummary = content.replace(summaryHTML, '').trim();
-
-    // Convert HTML back to text, preserving line breaks
-    return cheerio.load(contentWithoutSummary).text().trim() || null;
+    // Clone the details element to avoid modifying the original DOM
+    const clonedDetails = detailsElement.clone();
+    
+    // Remove the summary element from the cloned content
+    clonedDetails.find('summary').remove();
+    
+    // Get just the text content, preserving line breaks
+    const textContent = clonedDetails.text().trim();
+    
+    return textContent || null;
   }
 
   /**

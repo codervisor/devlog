@@ -23,6 +23,25 @@ export interface GitHubIssue {
   } | null;
 }
 
+export interface GitHubComment {
+  id: number;
+  body: string;
+  user: {
+    login: string;
+  };
+  created_at: string;
+  updated_at: string;
+  html_url: string;
+}
+
+export interface CreateCommentRequest {
+  body: string;
+}
+
+export interface UpdateCommentRequest {
+  body: string;
+}
+
 export interface GitHubRepository {
   name: string;
   full_name: string;
@@ -136,6 +155,23 @@ export class GitHubAPIClient {
 
   async getLabels(): Promise<Array<{ name: string; color: string }>> {
     return this.request('/labels');
+  }
+
+  // GitHub Comments API
+  async getIssueComments(issueNumber: number): Promise<GitHubComment[]> {
+    return this.request(`/issues/${issueNumber}/comments`);
+  }
+
+  async createIssueComment(issueNumber: number, commentData: CreateCommentRequest): Promise<GitHubComment> {
+    return this.request(`/issues/${issueNumber}/comments`, 'POST', commentData);
+  }
+
+  async updateIssueComment(commentId: number, commentData: UpdateCommentRequest): Promise<GitHubComment> {
+    return this.request(`/issues/comments/${commentId}`, 'PATCH', commentData);
+  }
+
+  async deleteIssueComment(commentId: number): Promise<void> {
+    await this.request(`/issues/comments/${commentId}`, 'DELETE');
   }
 
   async updateLabel(
