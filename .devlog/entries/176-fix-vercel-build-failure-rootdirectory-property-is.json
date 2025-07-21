@@ -3,10 +3,10 @@
   "title": "Fix: Vercel build failure - rootDirectory property is invalid in vercel.json schema",
   "type": "bugfix",
   "description": "Vercel deployment is failing with schema validation error: \"should NOT have additional property `rootDirectory`\". The rootDirectory property was previously used to fix monorepo deployment but is no longer a valid property in Vercel's configuration schema. Need to find alternative approach for monorepo deployment that doesn't use this deprecated property.",
-  "status": "in-review",
+  "status": "cancelled",
   "priority": "critical",
   "createdAt": "2025-07-17T16:00:20.322Z",
-  "updatedAt": "2025-07-17T16:03:39.643Z",
+  "updatedAt": "2025-07-21T16:06:49.735Z",
   "notes": [
     {
       "id": "97468e54-e711-4b87-94e1-19bab1600b1b",
@@ -35,6 +35,12 @@
       "timestamp": "2025-07-17T16:03:32.795Z",
       "category": "progress",
       "content": "SUCCESS: Build test completed successfully! The build:vercel command works correctly without the rootDirectory property. All packages (ai, core, web) built successfully and Next.js production build completed with optimized output. The fix is ready for deployment."
+    },
+    {
+      "id": "a9def3c0-9084-40f6-b853-ab83024d4131",
+      "timestamp": "2025-07-21T16:06:49.735Z",
+      "category": "progress",
+      "content": "Cancelled: Vercel deployment issues resolved - closing related entries"
     }
   ],
   "files": [],
@@ -61,5 +67,6 @@
     "lastAIUpdate": "2025-07-17T16:00:20.322Z",
     "contextVersion": 1
   },
-  "id": 176
+  "id": 176,
+  "closedAt": "2025-07-21T16:06:49.734Z"
 }

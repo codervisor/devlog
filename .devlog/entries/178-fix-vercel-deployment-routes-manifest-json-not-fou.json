@@ -3,10 +3,10 @@
   "title": "Fix: Vercel deployment - routes-manifest.json not found due to standalone build output directory mismatch",
   "type": "bugfix",
   "description": "Vercel deployment is failing with \"The file '/vercel/path0/packages/web/.next/routes-manifest.json' couldn't be found\" because the build uses NEXT_BUILD_MODE=standalone which outputs to .next-build directory, but vercel.json is configured to look for files in .next directory.",
-  "status": "in-review",
+  "status": "cancelled",
   "priority": "critical",
   "createdAt": "2025-07-17T16:15:12.651Z",
-  "updatedAt": "2025-07-17T16:18:56.449Z",
+  "updatedAt": "2025-07-21T16:06:49.704Z",
   "notes": [
     {
       "id": "0afb9600-b705-44ab-935e-7864e724d6cf",
@@ -29,6 +29,12 @@
       "timestamp": "2025-07-17T16:18:49.971Z",
       "category": "progress",
       "content": "VALIDATION COMPLETED: Local testing confirms the fix works correctly. The build process generates all required files (routes-manifest.json, build-manifest.json, BUILD_ID, etc.) in the .next-build directory, which now matches the vercel.json outputDirectory configuration. The deployment should now succeed without the 'routes-manifest.json not found' error."
+    },
+    {
+      "id": "632ee961-2bbb-4b4b-8272-e31632494815",
+      "timestamp": "2025-07-21T16:06:49.704Z",
+      "category": "progress",
+      "content": "Cancelled: Vercel deployment issues resolved - closing related entries"
     }
   ],
   "files": [],
@@ -55,5 +61,6 @@
     "lastAIUpdate": "2025-07-17T16:15:12.651Z",
     "contextVersion": 1
   },
-  "id": 178
+  "id": 178,
+  "closedAt": "2025-07-21T16:06:49.703Z"
 }
