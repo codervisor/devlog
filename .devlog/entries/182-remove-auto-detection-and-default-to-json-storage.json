@@ -3,10 +3,10 @@
   "title": "Remove Auto-Detection and Default to JSON Storage",
   "type": "refactor",
   "description": "Refactor configuration manager to use JSON (local) as the default storage type and remove auto-detection logic. This will make configuration more predictable and require explicit storage type specification for non-JSON storage.",
-  "status": "new",
+  "status": "cancelled",
   "priority": "medium",
   "createdAt": "2025-07-19T07:19:50.416Z",
-  "updatedAt": "2025-07-19T07:19:50.416Z",
+  "updatedAt": "2025-07-21T15:43:20.319Z",
   "notes": [],
   "files": [],
   "relatedDevlogs": [],
@@ -33,5 +33,6 @@
     "lastAIUpdate": "2025-07-19T07:19:50.416Z",
     "contextVersion": 1
   },
-  "id": 182
+  "id": 182,
+  "closedAt": "2025-07-21T15:43:20.319Z"
 }
