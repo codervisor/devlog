@@ -32,8 +32,11 @@ function getStorageType(): StorageType {
   if (['postgres', 'postgre', 'mysql', 'sqlite'].includes(storageType)) {
     return storageType as StorageType;
   }
+  if (storageType === 'json') {
+    return 'postgres';
+  }
   throw new Error(
-    'Invalid or unsupported storage type specified in environment variables. Supported types are: postgres, mysql, sqlite.',
+    `Invalid or unsupported storage type "${storageType}" specified in environment variables. Supported types are: postgres, mysql, sqlite.`,
   );
 }
 

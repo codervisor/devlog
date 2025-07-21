@@ -44,17 +44,7 @@
 }
 
 .chartCard {
-  & :global(.ant-card-body) {
-    padding: 20px;
-    height: calc(100% - 57px);
-    display: flex;
-    flex-direction: column;
-  }
-
-  & :global(.ant-card-head-title) {
-    font-weight: 600;
-    font-size: 16px;
-  }
+  height: 100%;
 }
 
 .chartLegendText {

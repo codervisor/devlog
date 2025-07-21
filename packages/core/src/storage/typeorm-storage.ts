@@ -4,7 +4,7 @@
  */
 
 import 'reflect-metadata';
-import { DataSource, Repository, Like, In, Between } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import {
   DevlogEntry,
   DevlogFilter,
@@ -20,6 +20,13 @@ import { calculateDevlogStats } from '../utils/storage.js';
 import { createPaginatedResult } from '../utils/common.js';
 import { DevlogEntryEntity } from '../entities/devlog-entry.entity.js';
 import { createDataSource, TypeORMStorageOptions } from './typeorm-config.js';
+import {
+  generateTimeSeriesSQL,
+  generateTimeSeriesParams,
+  mapSQLRowsToDataPoints,
+  generateDateRange,
+} from '../utils/sql-time-series.js';
+import { calculateTimeSeriesStats } from '../utils/time-series.js';
 
 export class TypeORMStorageProvider implements StorageProvider {
   private dataSource: DataSource;
@@ -58,7 +65,7 @@ export class TypeORMStorageProvider implements StorageProvider {
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
     if (!this.repository) throw new Error('Storage not initialized');
-    
+
     const entity = await this.repository.findOne({ where: { id } });
     if (!entity) return null;
 
@@ -81,7 +88,7 @@ export class TypeORMStorageProvider implements StorageProvider {
 
   async delete(id: DevlogId): Promise<void> {
     if (!this.repository) throw new Error('Storage not initialized');
-    
+
     const entry = await this.get(id);
     await this.repository.delete(id);
 
@@ -110,7 +117,9 @@ export class TypeORMStorageProvider implements StorageProvider {
       }
 
       if (filter.priority && filter.priority.length > 0) {
-        queryBuilder.andWhere('entry.priority IN (:...priorities)', { priorities: filter.priority });
+        queryBuilder.andWhere('entry.priority IN (:...priorities)', {
+          priorities: filter.priority,
+        });
       }
 
       if (filter.assignee) {
@@ -118,7 +127,9 @@ export class TypeORMStorageProvider implements StorageProvider {
       }
 
       if (filter.fromDate) {
-        queryBuilder.andWhere('entry.createdAt >= :fromDate', { fromDate: new Date(filter.fromDate) });
+        queryBuilder.andWhere('entry.createdAt >= :fromDate', {
+          fromDate: new Date(filter.fromDate),
+        });
       }
 
       if (filter.toDate) {
@@ -126,10 +137,9 @@ export class TypeORMStorageProvider implements StorageProvider {
       }
 
       if (filter.search) {
-        queryBuilder.andWhere(
-          '(entry.title ILIKE :search OR entry.description ILIKE :search)',
-          { search: `%${filter.search}%` }
-        );
+        queryBuilder.andWhere('(entry.title ILIKE :search OR entry.description ILIKE :search)', {
+          search: `%${filter.search}%`,
+        });
       }
 
       if (filter.archived !== undefined) {
@@ -145,12 +155,12 @@ export class TypeORMStorageProvider implements StorageProvider {
     // Apply pagination
     const page = filter?.pagination?.page || 1;
     const limit = filter?.pagination?.limit || 100;
-    const offset = ((page - 1) * limit);
+    const offset = (page - 1) * limit;
 
     queryBuilder.skip(offset).take(limit);
 
     const [entities, total] = await queryBuilder.getManyAndCount();
-    const entries = entities.map(entity => this.entityToDevlogEntry(entity));
+    const entries = entities.map((entity) => this.entityToDevlogEntry(entity));
 
     // Calculate pagination metadata manually since we have the total from the query
     const totalPages = Math.ceil(total / limit);
@@ -174,14 +184,11 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (!this.repository) throw new Error('Storage not initialized');
 
     const entities = await this.repository.find({
-      where: [
-        { title: Like(`%${query}%`) },
-        { description: Like(`%${query}%`) },
-      ],
+      where: [{ title: Like(`%${query}%`) }, { description: Like(`%${query}%`) }],
       order: { updatedAt: 'DESC' },
     });
 
-    const entries = entities.map(entity => this.entityToDevlogEntry(entity));
+    const entries = entities.map((entity) => this.entityToDevlogEntry(entity));
     return createPaginatedResult(entries, { page: 1, limit: 100 });
   }
 
@@ -189,26 +196,101 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (!this.repository) throw new Error('Storage not initialized');
 
     // For now, get all entries and calculate stats (can be optimized later with SQL)
-    const allEntries = await this.list(filter);
+    const allEntries = await this.list({
+      ...filter,
+      pagination: {
+        page: 1,
+        limit: 1_000_000, // Fetch a large number to calculate stats
+      },
+    });
     return calculateDevlogStats(allEntries.items);
   }
 
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     if (!this.repository) throw new Error('Storage not initialized');
 
-    // TODO: Implement time series queries with TypeORM
-    // For now, return empty data
-    const days = request.days || 30;
-    const to = request.to ? new Date(request.to) : new Date();
-    const from = request.from ? new Date(request.from) : new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+    try {
+      // For database providers, use optimized SQL queries when possible
+      if (this.options.type === 'postgres' || this.options.type === 'mysql') {
+        return await this.getTimeSeriesStatsWithSQL(request);
+      }
+
+      // For SQLite, we can also use SQL but might want to fall back to the utility function
+      // Let's try SQL first and fallback if there are issues
+      if (this.options.type === 'sqlite') {
+        try {
+          return await this.getTimeSeriesStatsWithSQL(request);
+        } catch (sqlError) {
+          console.warn(
+            '[TypeORMStorage] SQL time series failed for SQLite, falling back to utility function:',
+            sqlError,
+          );
+          return await this.getTimeSeriesStatsWithUtility(request);
+        }
+      }
+
+      // Fallback for any unsupported database types
+      return await this.getTimeSeriesStatsWithUtility(request);
+    } catch (error) {
+      console.error('[TypeORMStorage] Time series calculation failed:', error);
+      // Return empty data as fallback to prevent dashboard errors
+      const dateRange = generateDateRange(request);
+      return {
+        dataPoints: [],
+        dateRange,
+      };
+    }
+  }
+
+  /**
+   * Get time series stats using optimized SQL queries
+   * Works for PostgreSQL, MySQL, and SQLite
+   */
+  private async getTimeSeriesStatsWithSQL(
+    request: TimeSeriesRequest = {},
+  ): Promise<TimeSeriesStats> {
+    if (!this.repository) throw new Error('Storage not initialized');
+
+    // Map our database type to SQL dialect
+    const sqlDialect =
+      this.options.type === 'postgres'
+        ? 'postgresql'
+        : this.options.type === 'mysql'
+          ? 'mysql'
+          : 'sqlite';
+
+    // Generate SQL query and parameters
+    const sql = generateTimeSeriesSQL(sqlDialect);
+    const params = generateTimeSeriesParams(request);
+
+    // Execute raw SQL query
+    const rows = await this.dataSource.query(sql, params);
+
+    // Map SQL results to data points
+    const dataPoints = mapSQLRowsToDataPoints(rows);
+    const dateRange = generateDateRange(request);
 
     return {
-      dataPoints: [],
-      dateRange: {
-        from: from.toISOString().split('T')[0],
-        to: to.toISOString().split('T')[0],
-      },
+      dataPoints,
+      dateRange,
     };
+  }
+
+  /**
+   * Get time series stats using the shared utility function
+   * Fallback method that works by loading all entries
+   */
+  private async getTimeSeriesStatsWithUtility(
+    request: TimeSeriesRequest = {},
+  ): Promise<TimeSeriesStats> {
+    if (!this.repository) throw new Error('Storage not initialized');
+
+    // Load all entries (not paginated for accurate calculations)
+    const allEntities = await this.repository.find();
+    const allDevlogs = allEntities.map((entity) => this.entityToDevlogEntry(entity));
+
+    // Use shared calculation logic
+    return calculateTimeSeriesStats(allDevlogs, request);
   }
 
   async cleanup(): Promise<void> {
@@ -266,7 +348,7 @@ export class TypeORMStorageProvider implements StorageProvider {
 
   private devlogEntryToEntity(entry: DevlogEntry): DevlogEntryEntity {
     const entity = new DevlogEntryEntity();
-    
+
     if (entry.id) entity.id = entry.id;
     entity.key = entry.key || '';
     entity.title = entry.title;
@@ -294,7 +376,7 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (value === null || value === undefined) {
       return defaultValue;
     }
-    
+
     // For SQLite, values are stored as text and need parsing
     if (this.options.type === 'sqlite' && typeof value === 'string') {
       try {
@@ -303,7 +385,7 @@ export class TypeORMStorageProvider implements StorageProvider {
         return defaultValue;
       }
     }
-    
+
     // For PostgreSQL and MySQL, JSON fields are handled natively
     return value;
   }
@@ -312,12 +394,12 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (value === null || value === undefined) {
       return value;
     }
-    
+
     // For SQLite, we need to stringify JSON data
     if (this.options.type === 'sqlite') {
       return typeof value === 'string' ? value : JSON.stringify(value);
     }
-    
+
     // For PostgreSQL and MySQL, return the object directly
     return value;
   }
