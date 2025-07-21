@@ -92,8 +92,8 @@ export class GitHubAPIClient {
   private config: Required<GitHubStorageConfig>;
   private baseURL: string;
 
-  constructor(config: GitHubStorageConfig) {
-    this.config = this.normalizeConfig(config);
+  constructor(config: Required<GitHubStorageConfig>) {
+    this.config = config;
     this.baseURL = `${this.config.apiUrl}/repos/${this.config.owner}/${this.config.repo}`;
   }
 
@@ -206,31 +206,5 @@ export class GitHubAPIClient {
     }
 
     return response.json();
-  }
-
-  private normalizeConfig(config: GitHubStorageConfig): Required<GitHubStorageConfig> {
-    return {
-      ...config,
-      apiUrl: config.apiUrl || 'https://api.github.com',
-      branch: config.branch || 'main',
-      labelsPrefix: config.labelsPrefix || 'devlog',
-      mapping: {
-        useNativeType: true,
-        useNativeLabels: true,
-        useStateReason: true,
-        ...config.mapping,
-      },
-      rateLimit: {
-        requestsPerHour: 5000,
-        retryDelay: 1000,
-        maxRetries: 3,
-        ...config.rateLimit,
-      },
-      cache: {
-        enabled: true,
-        ttl: 300000, // 5 minutes
-        ...config.cache,
-      },
-    };
   }
 }

@@ -57,6 +57,7 @@ export interface GitHubStorageConfig {
   apiUrl?: string;         // For GitHub Enterprise (default: api.github.com)
   branch?: string;         // For repository-specific operations
   labelsPrefix?: string;   // Prefix for devlog labels (default: 'devlog')
+  enableEmojiTitles?: boolean; // Add emoji icons to issue titles (default: true)
   
   // Strategy for mapping devlog fields to GitHub features
   mapping?: {

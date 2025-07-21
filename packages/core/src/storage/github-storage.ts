@@ -368,6 +368,7 @@ export class GitHubStorageProvider implements StorageProvider {
       apiUrl: config.apiUrl || 'https://api.github.com',
       branch: config.branch || 'main',
       labelsPrefix: config.labelsPrefix || 'devlog',
+      enableEmojiTitles: config.enableEmojiTitles ?? true,
       mapping: {
         useNativeType: true,
         useNativeLabels: true,

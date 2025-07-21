@@ -4,6 +4,7 @@
 
 export * from './filter-mapping.js';
 export * from './common.js';
+export * from './emoji-mappings.js';
 export * from './errors.js';
 export * from './github-api.js';
 export * from './github-labels.js';
