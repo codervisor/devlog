@@ -5,7 +5,7 @@
  * Supports multiple emoji styles for different contexts and user preferences.
  */
 
-import { DevlogPriority, DevlogStatus, DevlogType } from '../types/index.js';
+import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../types/index.js';
 
 /**
  * Gets the appropriate emoji for a devlog status
@@ -66,6 +66,28 @@ export const getTypeEmoji = (type: DevlogType): string => {
       return '📚';          // Books (documentation)
     default:
       return '📝';          // Memo (general)
+  }
+};
+
+/**
+ * Gets the appropriate emoji for a note category
+ */
+export const getNoteCategoryEmoji = (category: NoteCategory): string => {
+  switch (category) {
+    case 'progress':
+      return '📈';          // Chart with upwards trend (progress)
+    case 'issue':
+      return '⚠️';          // Warning sign (problem/issue)
+    case 'solution':
+      return '✅';          // Check mark (solution/resolution)
+    case 'idea':
+      return '💡';          // Light bulb (idea/suggestion)
+    case 'reminder':
+      return '📌';          // Pushpin (reminder/important)
+    case 'feedback':
+      return '💬';          // Speech balloon (feedback/comment)
+    default:
+      return '📄';          // Page facing up (general note)
   }
 };
 
@@ -163,6 +185,12 @@ export const getTypeDisplayWithEmoji = (type: DevlogType): string => {
   return `${emoji} ${typeText}`;
 };
 
+export const getNoteCategoryDisplayWithEmoji = (category: NoteCategory): string => {
+  const emoji = getNoteCategoryEmoji(category);
+  const categoryText = category.charAt(0).toUpperCase() + category.slice(1);
+  return `${emoji} ${categoryText}`;
+};
+
 /**
  * Get all available emoji mappings for reference/documentation
  */
@@ -170,6 +198,7 @@ export const getAllEmojiMappings = () => {
   const statuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'];
   const priorities: DevlogPriority[] = ['low', 'medium', 'high', 'critical'];
   const types: DevlogType[] = ['feature', 'bugfix', 'task', 'refactor', 'docs'];
+  const noteCategories: NoteCategory[] = ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'];
 
   return {
     status: {
@@ -179,6 +208,7 @@ export const getAllEmojiMappings = () => {
     },
     priority: Object.fromEntries(priorities.map(p => [p, getPriorityEmoji(p)])),
     type: Object.fromEntries(types.map(t => [t, getTypeEmoji(t)])),
+    noteCategory: Object.fromEntries(noteCategories.map(n => [n, getNoteCategoryEmoji(n)])),
   };
 };
 
@@ -239,4 +269,38 @@ export const formatEnhancedGitHubTitle = (
     includePriority: priority === 'critical',
     statusStyle: 'default'
   });
+};
+
+/**
+ * Format GitHub issue comment with emoji prefix for note category
+ */
+export const formatGitHubComment = (
+  content: string,
+  category: NoteCategory,
+  options: {
+    includeEmoji?: boolean;
+    includeTimestamp?: boolean;
+    timestamp?: string;
+  } = {}
+): string => {
+  const {
+    includeEmoji = true,
+    includeTimestamp = false,
+    timestamp
+  } = options;
+
+  let formattedContent = content;
+  
+  if (includeEmoji) {
+    const emoji = getNoteCategoryEmoji(category);
+    const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+    formattedContent = `${emoji} **${categoryLabel}**\n\n${content}`;
+  }
+  
+  if (includeTimestamp && timestamp) {
+    const date = new Date(timestamp).toLocaleString();
+    formattedContent += `\n\n*Posted: ${date}*`;
+  }
+  
+  return formattedContent;
 };

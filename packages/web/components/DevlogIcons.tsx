@@ -10,12 +10,15 @@ import {
   DevlogPriority, 
   DevlogStatus, 
   DevlogType,
+  NoteCategory,
   getStatusEmojiByStyle,
   getPriorityEmoji,
   getTypeEmoji,
+  getNoteCategoryEmoji,
   getStatusDisplayWithEmoji,
   getPriorityDisplayWithEmoji,
   getTypeDisplayWithEmoji,
+  getNoteCategoryDisplayWithEmoji,
   type EmojiStyle
 } from '@devlog/core';
 
@@ -23,8 +26,8 @@ import {
  * Component props for devlog icon display
  */
 interface DevlogIconProps {
-  type: 'status' | 'priority' | 'type';
-  value: DevlogStatus | DevlogPriority | DevlogType;
+  type: 'status' | 'priority' | 'type' | 'noteCategory';
+  value: DevlogStatus | DevlogPriority | DevlogType | NoteCategory;
   useEmoji?: boolean;
   emojiStyle?: EmojiStyle;
   showText?: boolean;
@@ -56,6 +59,8 @@ export const DevlogIcon: React.FC<DevlogIconProps> = ({
           return getPriorityDisplayWithEmoji(value as DevlogPriority);
         case 'type':
           return getTypeDisplayWithEmoji(value as DevlogType);
+        case 'noteCategory':
+          return getNoteCategoryDisplayWithEmoji(value as NoteCategory);
       }
     } else {
       switch (type) {
@@ -65,6 +70,8 @@ export const DevlogIcon: React.FC<DevlogIconProps> = ({
           return getPriorityEmoji(value as DevlogPriority);
         case 'type':
           return getTypeEmoji(value as DevlogType);
+        case 'noteCategory':
+          return getNoteCategoryEmoji(value as NoteCategory);
       }
     }
   };
@@ -112,6 +119,15 @@ export const TypeIcon: React.FC<{
   className?: string;
 }> = ({ type, ...props }) => (
   <DevlogIcon type="type" value={type} {...props} />
+);
+
+export const NoteCategoryIcon: React.FC<{
+  category: NoteCategory;
+  useEmoji?: boolean;
+  showText?: boolean;
+  className?: string;
+}> = ({ category, ...props }) => (
+  <DevlogIcon type="noteCategory" value={category} {...props} />
 );
 
 /**
@@ -197,10 +213,12 @@ export const useDevlogEmojis = () => {
       getStatusEmojiByStyle(status, style),
     getPriorityEmoji,
     getTypeEmoji,
+    getNoteCategoryEmoji,
     getStatusDisplay: (status: DevlogStatus, style: EmojiStyle = 'default') => 
       getStatusDisplayWithEmoji(status, style),
     getPriorityDisplay: getPriorityDisplayWithEmoji,
     getTypeDisplay: getTypeDisplayWithEmoji,
+    getNoteCategoryDisplay: getNoteCategoryDisplayWithEmoji,
   }), []);
 };
 
@@ -208,7 +226,7 @@ export const useDevlogEmojis = () => {
  * Utility component for emoji legend/reference
  */
 export const EmojiLegend: React.FC<{
-  fields?: ('status' | 'priority' | 'type')[];
+  fields?: ('status' | 'priority' | 'type' | 'noteCategory')[];
   emojiStyle?: EmojiStyle;
   className?: string;
 }> = ({ 
@@ -219,6 +237,7 @@ export const EmojiLegend: React.FC<{
   const statuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'];
   const priorities: DevlogPriority[] = ['low', 'medium', 'high', 'critical'];
   const types: DevlogType[] = ['feature', 'bugfix', 'task', 'refactor', 'docs'];
+  const noteCategories: NoteCategory[] = ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'];
 
   return (
     <div className={className}>
@@ -258,6 +277,20 @@ export const EmojiLegend: React.FC<{
               <div key={type} className="flex items-center gap-2">
                 <TypeIcon type={type} />
                 <span className="capitalize">{type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {fields.includes('noteCategory') && (
+        <div>
+          <h4>Note Category Icons</h4>
+          <div className="space-y-1">
+            {noteCategories.map(category => (
+              <div key={category} className="flex items-center gap-2">
+                <NoteCategoryIcon category={category} />
+                <span className="capitalize">{category}</span>
               </div>
             ))}
           </div>
