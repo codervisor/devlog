@@ -10,7 +10,6 @@ import {
   PaginatedResult,
   PostgreSQLStorageOptions,
   StorageProvider,
-  TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
@@ -40,10 +39,9 @@ export class PostgreSQLStorageProvider implements StorageProvider {
   }
 
   async initialize(): Promise<void> {
-    // Dynamic import to make pg optional
+    // Import pg module - dependency should be present when using PostgreSQL storage
     try {
-      const pgModule = await import('pg' as any);
-      const { Client } = pgModule;
+      const { Client } = await import('pg');
 
       this.client = new Client({
         connectionString: this.connectionString,
@@ -504,8 +502,7 @@ export class PostgreSQLStorageProvider implements StorageProvider {
 
     try {
       // Create a separate client for notifications to avoid conflicts
-      const pgModule = await import('pg' as any);
-      const { Client } = pgModule;
+      const { Client } = await import('pg');
 
       this.notifyClient = new Client({
         connectionString: this.connectionString,

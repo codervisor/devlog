@@ -10,7 +10,6 @@ import {
   MySQLStorageOptions,
   PaginatedResult,
   StorageProvider,
-  TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
@@ -42,9 +41,9 @@ export class MySQLStorageProvider implements StorageProvider {
   }
 
   async initialize(): Promise<void> {
-    // Dynamic import to make mysql2 optional
+    // Import mysql2 module - dependency should be present when using MySQL storage
     try {
-      const mysql = await import('mysql2/promise' as any);
+      const mysql = await import('mysql2/promise');
 
       this.connection = await mysql.createConnection({
         uri: this.connectionString,
