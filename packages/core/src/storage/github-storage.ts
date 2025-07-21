@@ -28,6 +28,7 @@ import {
 } from '../utils/github-type-mapper.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 import { calculateTimeSeriesStats } from '../utils/time-series.js';
+import { formatGitHubComment } from '../utils/emoji-mappings.js';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;
@@ -118,8 +119,24 @@ export class GitHubStorageProvider implements StorageProvider {
     if (entry.id && (await this.exists(entry.id))) {
       // Update existing issue
       const issueNumber = entry.id;
+      
+      // Filter out invalid fields for GitHub API - only include UpdateIssueRequest fields
+      const updateData: any = {
+        title: issueData.title,
+        body: issueData.body,
+        labels: issueData.labels
+      };
+      
+      // Add state fields only if this is an UpdateIssueRequest
+      if ('state' in issueData) {
+        updateData.state = issueData.state;
+      }
+      if ('state_reason' in issueData) {
+        updateData.state_reason = issueData.state_reason;
+      }
+      
       await this.rateLimiter.executeWithRateLimit(async () => {
-        await this.apiClient.updateIssue(issueNumber, issueData as any);
+        await this.apiClient.updateIssue(issueNumber, updateData);
       });
       
       // Sync notes with GitHub comments
@@ -128,8 +145,21 @@ export class GitHubStorageProvider implements StorageProvider {
       }
     } else {
       // Create new issue
+      
+      // Filter out invalid fields for GitHub API - only include CreateIssueRequest fields
+      const createData: any = {
+        title: issueData.title,
+        body: issueData.body,
+        labels: issueData.labels
+      };
+      
+      // Ensure required fields are present
+      if (!createData.title) {
+        throw new Error('Issue title is required');
+      }
+      
       const issue = await this.rateLimiter.executeWithRateLimit(async () => {
-        return await this.apiClient.createIssue(issueData as any);
+        return await this.apiClient.createIssue(createData);
       });
       // Update entry ID to match GitHub issue number
       entry.id = issue.number;
@@ -502,7 +532,12 @@ export class GitHubStorageProvider implements StorageProvider {
    * Convert DevlogNotes to GitHub comment bodies
    */
   private noteToCommentBody(note: DevlogNote): string {
-    let body = note.content;
+    // Use emoji formatting for the note content
+    const formattedContent = formatGitHubComment(note.content, note.category, {
+      includeEmoji: this.config.enableEmojiTitles, // Use same config as title emojis
+      includeTimestamp: true,
+      timestamp: note.timestamp
+    });
     
     // Add metadata markers
     const metadata: string[] = [];
@@ -519,7 +554,19 @@ export class GitHubStorageProvider implements StorageProvider {
       metadata.push(`<!-- devlog-note-files: ${note.files.join(',')} -->`);
     }
     
-    return metadata.length > 0 ? `${metadata.join('\n')}\n\n${body}` : body;
+    // Add files and code changes to the visible content if present
+    let additionalInfo = '';
+    if (note.files && note.files.length > 0) {
+      additionalInfo += `\n\n📁 **Files:** ${note.files.map(f => `\`${f}\``).join(', ')}`;
+    }
+    
+    if (note.codeChanges) {
+      additionalInfo += `\n\n💻 **Code Changes:** ${note.codeChanges}`;
+    }
+    
+    const fullContent = formattedContent + additionalInfo;
+    
+    return metadata.length > 0 ? `${metadata.join('\n')}\n\n${fullContent}` : fullContent;
   }
 
   /**

@@ -58,7 +58,6 @@ export interface CreateIssueRequest {
   labels?: string[];
   assignees?: string[];
   milestone?: number;
-  type?: string;
 }
 
 export interface UpdateIssueRequest {
@@ -69,7 +68,6 @@ export interface UpdateIssueRequest {
   labels?: string[];
   assignees?: string[];
   milestone?: number | null;
-  type?: string | null;
 }
 
 export interface GitHubSearchResponse {
