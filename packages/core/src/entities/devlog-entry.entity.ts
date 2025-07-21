@@ -1,6 +1,7 @@
 /**
  * TypeORM entities for devlog storage
  * These entities map directly to the TypeScript interfaces in core.ts
+ * Uses conditional column decorators for database-specific optimizations
  */
 
 import 'reflect-metadata';
@@ -22,6 +23,51 @@ import type {
   ExternalReference,
 } from '../types/core.js';
 
+// Get database type from DEVLOG_STORAGE_TYPE environment variable
+const STORAGE_TYPE = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase() || 'sqlite';
+
+// Conditional column decorators based on storage type
+const TypeColumn = STORAGE_TYPE === 'sqlite' 
+  ? Column({ type: 'varchar', length: 50 })
+  : Column({ 
+      type: 'enum', 
+      enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'] 
+    });
+
+const StatusColumn = STORAGE_TYPE === 'sqlite'
+  ? Column({ type: 'varchar', length: 50, default: 'new' })
+  : Column({
+      type: 'enum',
+      enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
+      default: 'new',
+    });
+
+const PriorityColumn = STORAGE_TYPE === 'sqlite'
+  ? Column({ type: 'varchar', length: 50, default: 'medium' })
+  : Column({
+      type: 'enum',
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium',
+    });
+
+// Date columns - timestamptz for postgres, datetime for mysql/sqlite  
+const TimestampColumn = (options: any = {}) => {
+  if (STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql') {
+    return Column({ type: 'timestamptz', ...options });
+  }
+  return Column({ type: 'datetime', ...options });
+};
+
+// JSON columns - jsonb for postgres, json for mysql, text for sqlite
+const JsonColumn = (options: any = {}) => {
+  if (STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql') {
+    return Column({ type: 'jsonb', ...options });
+  } else if (STORAGE_TYPE === 'mysql') {
+    return Column({ type: 'json', ...options });
+  }
+  return Column({ type: 'text', ...options });
+};
+
 /**
  * Main DevlogEntry entity matching the DevlogEntry interface
  */
@@ -41,36 +87,25 @@ export class DevlogEntryEntity {
   @Column({ type: 'varchar', length: 500 })
   title!: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'],
-  })
+  @TypeColumn
   type!: DevlogType;
 
   @Column({ type: 'text' })
   description!: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
-    default: 'new',
-  })
+  @StatusColumn
   status!: DevlogStatus;
 
-  @Column({
-    type: 'enum',
-    enum: ['low', 'medium', 'high', 'critical'],
-    default: 'medium',
-  })
+  @PriorityColumn
   priority!: DevlogPriority;
 
-  @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
+  @CreateDateColumn({ type: STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql' ? 'timestamptz' : 'datetime', name: 'created_at' })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', name: 'updated_at' })
+  @UpdateDateColumn({ type: STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql' ? 'timestamptz' : 'datetime', name: 'updated_at' })
   updatedAt!: Date;
 
-  @Column({ type: 'timestamptz', nullable: true, name: 'closed_at' })
+  @TimestampColumn({ nullable: true, name: 'closed_at' })
   closedAt?: Date;
 
   @Column({ type: 'boolean', default: false })
@@ -79,21 +114,21 @@ export class DevlogEntryEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   assignee?: string;
 
-  @Column({ type: 'jsonb', default: [] })
+  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [] })
   notes!: DevlogNote[];
 
-  @Column({ type: 'jsonb', default: [] })
+  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [] })
   files!: string[];
 
-  @Column({ type: 'jsonb', default: [], name: 'related_devlogs' })
+  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [], name: 'related_devlogs' })
   relatedDevlogs!: string[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @JsonColumn({ nullable: true })
   context?: DevlogContext;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'ai_context' })
+  @JsonColumn({ nullable: true, name: 'ai_context' })
   aiContext?: AIContext;
 
-  @Column({ type: 'jsonb', default: [], name: 'external_references' })
+  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [], name: 'external_references' })
   externalReferences!: ExternalReference[];
 }

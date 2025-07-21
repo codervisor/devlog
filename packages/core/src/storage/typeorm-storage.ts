@@ -250,12 +250,12 @@ export class TypeORMStorageProvider implements StorageProvider {
       closedAt: entity.closedAt?.toISOString(),
       archived: entity.archived,
       assignee: entity.assignee,
-      notes: entity.notes || [],
-      files: entity.files || [],
-      relatedDevlogs: entity.relatedDevlogs || [],
-      context: entity.context,
-      aiContext: entity.aiContext,
-      externalReferences: entity.externalReferences || [],
+      notes: this.parseJsonField(entity.notes, []),
+      files: this.parseJsonField(entity.files, []),
+      relatedDevlogs: this.parseJsonField(entity.relatedDevlogs, []),
+      context: this.parseJsonField(entity.context, undefined),
+      aiContext: this.parseJsonField(entity.aiContext, undefined),
+      externalReferences: this.parseJsonField(entity.externalReferences, []),
     };
   }
 
@@ -274,14 +274,47 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (entry.closedAt) entity.closedAt = new Date(entry.closedAt);
     entity.archived = entry.archived || false;
     entity.assignee = entry.assignee;
-    entity.notes = entry.notes || [];
-    entity.files = entry.files || [];
-    entity.relatedDevlogs = entry.relatedDevlogs || [];
-    entity.context = entry.context;
-    entity.aiContext = entry.aiContext;
-    entity.externalReferences = entry.externalReferences || [];
+    entity.notes = this.stringifyJsonField(entry.notes || []);
+    entity.files = this.stringifyJsonField(entry.files || []);
+    entity.relatedDevlogs = this.stringifyJsonField(entry.relatedDevlogs || []);
+    entity.context = this.stringifyJsonField(entry.context);
+    entity.aiContext = this.stringifyJsonField(entry.aiContext);
+    entity.externalReferences = this.stringifyJsonField(entry.externalReferences || []);
 
     return entity;
+  }
+
+  // Helper methods for JSON field handling (database-specific)
+  private parseJsonField<T>(value: any, defaultValue: T): T {
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    
+    // For SQLite, values are stored as text and need parsing
+    if (this.options.type === 'sqlite' && typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return defaultValue;
+      }
+    }
+    
+    // For PostgreSQL and MySQL, JSON fields are handled natively
+    return value;
+  }
+
+  private stringifyJsonField(value: any): any {
+    if (value === null || value === undefined) {
+      return value;
+    }
+    
+    // For SQLite, we need to stringify JSON data
+    if (this.options.type === 'sqlite') {
+      return typeof value === 'string' ? value : JSON.stringify(value);
+    }
+    
+    // For PostgreSQL and MySQL, return the object directly
+    return value;
   }
 
   // ===== Event Subscription Operations =====
