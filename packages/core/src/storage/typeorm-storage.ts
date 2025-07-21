@@ -37,9 +37,14 @@ export class TypeORMStorageProvider implements StorageProvider {
 
   async initialize(): Promise<void> {
     try {
-      await this.dataSource.initialize();
+      // Check if already initialized to prevent "already connected" errors in development
+      if (!this.dataSource.isInitialized) {
+        await this.dataSource.initialize();
+        console.log('[TypeORMStorage] Connected to database successfully');
+      } else {
+        console.log('[TypeORMStorage] Database connection already exists, reusing');
+      }
       this.repository = this.dataSource.getRepository(DevlogEntryEntity);
-      console.log('[TypeORMStorage] Connected to database successfully');
     } catch (error) {
       throw new Error(`Failed to initialize TypeORM storage: ${error}`);
     }

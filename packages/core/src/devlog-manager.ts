@@ -23,16 +23,13 @@ import type {
   PaginatedResult,
   NoteCategory,
   StorageProvider,
-  TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
   UpdateDevlogRequest,
 } from './types/index.js';
 import { StorageProviderFactory } from './storage/storage-provider.js';
 import { ConfigurationManager } from './configuration-manager.js';
-import {
-  DevlogNotFoundError,
-} from './utils/errors.js';
+import { DevlogNotFoundError } from './utils/errors.js';
 import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
 
 export class DevlogManager {
@@ -53,7 +50,7 @@ export class DevlogManager {
     try {
       // Emit to local event system (in-process handlers)
       await devlogEvents.emit(event);
-      
+
       // Cross-process communication now happens through storage provider subscriptions
       // Each storage provider handles its own change detection and event emission
     } catch (error) {
@@ -68,7 +65,6 @@ export class DevlogManager {
     if (this.initialized) return;
 
     const config = await this.configManager.loadConfig();
-    console.debug('Initialized devlog config', config);
 
     this.storageProvider = await StorageProviderFactory.create(config.storage!);
     await this.storageProvider.initialize();
@@ -183,21 +179,27 @@ export class DevlogManager {
     if (request.status !== undefined) {
       const oldStatus = existing.status;
       updated.status = request.status;
-      
+
       // Set closedAt timestamp when status changes to 'done' or 'cancelled'
-      if ((request.status === 'done' || request.status === 'cancelled') && 
-          oldStatus !== 'done' && oldStatus !== 'cancelled') {
+      if (
+        (request.status === 'done' || request.status === 'cancelled') &&
+        oldStatus !== 'done' &&
+        oldStatus !== 'cancelled'
+      ) {
         updated.closedAt = new Date().toISOString();
       }
-      
+
       // Also set closedAt if the entry is already closed but missing the timestamp (migration case)
       if ((request.status === 'done' || request.status === 'cancelled') && !existing.closedAt) {
         updated.closedAt = new Date().toISOString();
       }
-      
+
       // Clear closedAt if status changes from closed back to open
-      if ((oldStatus === 'done' || oldStatus === 'cancelled') &&
-          request.status !== 'done' && request.status !== 'cancelled') {
+      if (
+        (oldStatus === 'done' || oldStatus === 'cancelled') &&
+        request.status !== 'done' &&
+        request.status !== 'cancelled'
+      ) {
         updated.closedAt = undefined;
       }
     }
@@ -329,7 +331,10 @@ export class DevlogManager {
    * By default, excludes archived entries only (includes done/cancelled entries)
    * Returns paginated results for consistency with storage layer
    */
-  async listDevlogs(filter?: DevlogFilter, options?: { includeAllStatuses?: boolean }): Promise<PaginatedResult<DevlogEntry>> {
+  async listDevlogs(
+    filter?: DevlogFilter,
+    options?: { includeAllStatuses?: boolean },
+  ): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     // Apply default exclusion of archived entries only
@@ -359,7 +364,10 @@ export class DevlogManager {
    * Apply default filters including exclusion of archived entries only
    * @private
    */
-  private applyDefaultFilters(filter?: DevlogFilter, options: { includeAllStatuses?: boolean } = {}): DevlogFilter {
+  private applyDefaultFilters(
+    filter?: DevlogFilter,
+    options: { includeAllStatuses?: boolean } = {},
+  ): DevlogFilter {
     const enhancedFilter = { ...filter };
 
     // Always exclude archived entries by default unless explicitly requested
@@ -368,7 +376,7 @@ export class DevlogManager {
     }
 
     // No longer exclude done/cancelled statuses by default - only exclude archived entries
-    // This means all statuses (new, in-progress, blocked, in-review, testing, done, cancelled) 
+    // This means all statuses (new, in-progress, blocked, in-review, testing, done, cancelled)
     // are included by default, only archived entries are filtered out
 
     return enhancedFilter;
@@ -438,10 +446,10 @@ export class DevlogManager {
    */
   async getStats(): Promise<DevlogStats> {
     await this.ensureInitialized();
-    
+
     // For stats, include all statuses but exclude archived entries
     const enhancedFilter = this.applyDefaultFilters({}, { includeAllStatuses: true });
-    
+
     return await this.storageProvider.getStats(enhancedFilter);
   }
 
@@ -579,11 +587,11 @@ export class DevlogManager {
       this.storageUnsubscribe();
       this.storageUnsubscribe = undefined;
     }
-    
+
     if (this.storageProvider) {
       await this.storageProvider.cleanup();
     }
-    
+
     this.initialized = false;
   }
 

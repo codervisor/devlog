@@ -3,8 +3,10 @@
  * This allows the web UI to receive realtime updates when devlogs are modified through any channel (MCP, API, etc.)
  */
 
-import { DevlogManager, devlogEvents, type DevlogEvent } from '@devlog/core';
 import { broadcastUpdate } from './sse-manager';
+
+// Types only - won't be bundled at runtime
+import type { DevlogManager, DevlogEvent } from '@devlog/core';
 
 class SSEEventBridge {
   private initialized = false;
@@ -20,6 +22,9 @@ class SSEEventBridge {
     }
 
     try {
+      // Dynamically import to avoid bundling TypeORM in client-side code
+      const { DevlogManager, devlogEvents } = await import('@devlog/core');
+      
       // Create and initialize DevlogManager for the web process
       this.devlogManager = new DevlogManager();
       await this.devlogManager.initialize();

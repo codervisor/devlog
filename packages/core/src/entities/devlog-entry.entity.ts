@@ -6,53 +6,67 @@
 
 import 'reflect-metadata';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import type {
-  DevlogType,
-  DevlogStatus,
-  DevlogPriority,
-  DevlogNote,
-  DevlogContext,
   AIContext,
+  DevlogContext,
+  DevlogNote,
+  DevlogPriority,
+  DevlogStatus,
+  DevlogType,
   ExternalReference,
 } from '../types/core.js';
+import type { StorageType } from '../types';
+import { loadRootEnv } from '../utils/env-loader';
 
-// Get database type from DEVLOG_STORAGE_TYPE environment variable
-const STORAGE_TYPE = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase() || 'sqlite';
+loadRootEnv();
+
+function getStorageType(): StorageType {
+  const storageType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase() || 'postgres';
+  if (['postgres', 'postgre', 'mysql', 'sqlite'].includes(storageType)) {
+    return storageType as StorageType;
+  }
+  throw new Error(
+    'Invalid or unsupported storage type specified in environment variables. Supported types are: postgres, mysql, sqlite.',
+  );
+}
 
 // Conditional column decorators based on storage type
-const TypeColumn = STORAGE_TYPE === 'sqlite' 
-  ? Column({ type: 'varchar', length: 50 })
-  : Column({ 
-      type: 'enum', 
-      enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'] 
-    });
+const TypeColumn =
+  getStorageType() === 'sqlite'
+    ? Column({ type: 'varchar', length: 50 })
+    : Column({
+        type: 'enum',
+        enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'],
+      });
 
-const StatusColumn = STORAGE_TYPE === 'sqlite'
-  ? Column({ type: 'varchar', length: 50, default: 'new' })
-  : Column({
-      type: 'enum',
-      enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
-      default: 'new',
-    });
+const StatusColumn =
+  getStorageType() === 'sqlite'
+    ? Column({ type: 'varchar', length: 50, default: 'new' })
+    : Column({
+        type: 'enum',
+        enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
+        default: 'new',
+      });
 
-const PriorityColumn = STORAGE_TYPE === 'sqlite'
-  ? Column({ type: 'varchar', length: 50, default: 'medium' })
-  : Column({
-      type: 'enum',
-      enum: ['low', 'medium', 'high', 'critical'],
-      default: 'medium',
-    });
+const PriorityColumn =
+  getStorageType() === 'sqlite'
+    ? Column({ type: 'varchar', length: 50, default: 'medium' })
+    : Column({
+        type: 'enum',
+        enum: ['low', 'medium', 'high', 'critical'],
+        default: 'medium',
+      });
 
-// Date columns - timestamptz for postgres, datetime for mysql/sqlite  
+// Date columns - timestamptz for postgres, datetime for mysql/sqlite
 const TimestampColumn = (options: any = {}) => {
-  if (STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql') {
+  if (getStorageType() === 'postgres') {
     return Column({ type: 'timestamptz', ...options });
   }
   return Column({ type: 'datetime', ...options });
@@ -60,9 +74,9 @@ const TimestampColumn = (options: any = {}) => {
 
 // JSON columns - jsonb for postgres, json for mysql, text for sqlite
 const JsonColumn = (options: any = {}) => {
-  if (STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql') {
+  if (getStorageType() === 'postgres') {
     return Column({ type: 'jsonb', ...options });
-  } else if (STORAGE_TYPE === 'mysql') {
+  } else if (getStorageType() === 'mysql') {
     return Column({ type: 'json', ...options });
   }
   return Column({ type: 'text', ...options });
@@ -99,10 +113,16 @@ export class DevlogEntryEntity {
   @PriorityColumn
   priority!: DevlogPriority;
 
-  @CreateDateColumn({ type: STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql' ? 'timestamptz' : 'datetime', name: 'created_at' })
+  @CreateDateColumn({
+    type: getStorageType() === 'postgres' ? 'timestamptz' : 'datetime',
+    name: 'created_at',
+  })
   createdAt!: Date;
 
-  @UpdateDateColumn({ type: STORAGE_TYPE === 'postgres' || STORAGE_TYPE === 'postgresql' ? 'timestamptz' : 'datetime', name: 'updated_at' })
+  @UpdateDateColumn({
+    type: getStorageType() === 'postgres' ? 'timestamptz' : 'datetime',
+    name: 'updated_at',
+  })
   updatedAt!: Date;
 
   @TimestampColumn({ nullable: true, name: 'closed_at' })
@@ -114,13 +134,13 @@ export class DevlogEntryEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   assignee?: string;
 
-  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [] })
+  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [] })
   notes!: DevlogNote[];
 
-  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [] })
+  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [] })
   files!: string[];
 
-  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [], name: 'related_devlogs' })
+  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'related_devlogs' })
   relatedDevlogs!: string[];
 
   @JsonColumn({ nullable: true })
@@ -129,6 +149,6 @@ export class DevlogEntryEntity {
   @JsonColumn({ nullable: true, name: 'ai_context' })
   aiContext?: AIContext;
 
-  @JsonColumn({ default: STORAGE_TYPE === 'sqlite' ? '[]' : [], name: 'external_references' })
+  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'external_references' })
   externalReferences!: ExternalReference[];
 }

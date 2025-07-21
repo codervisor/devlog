@@ -2,9 +2,9 @@
  * Abstract storage interface that supports different storage backends
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, StorageConfig, StorageProvider } from '../types/index.js';
+import { StorageConfig, StorageProvider } from '../types/index.js';
 import { TypeORMStorageProvider } from './typeorm-storage.js';
-import { parseTypeORMConfig, TypeORMStorageOptions } from './typeorm-config.js';
+import { TypeORMStorageOptions } from './typeorm-config.js';
 
 /**
  * Factory for creating storage providers based on configuration

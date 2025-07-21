@@ -26,10 +26,35 @@ export interface TypeORMStorageOptions {
   ssl?: boolean;
 }
 
+// Global cache for DataSource instances to prevent duplicate connections
+const dataSourceCache = new Map<string, DataSource>();
+
+/**
+ * Create a cache key for DataSource based on configuration
+ */
+function createCacheKey(options: TypeORMStorageOptions): string {
+  if (options.type === 'postgres' && options.url) {
+    return `postgres-${options.url}`;
+  }
+  if (options.type === 'sqlite') {
+    return `sqlite-${options.database_path || ':memory:'}`;
+  }
+  return `${options.type}-${options.host}-${options.port}-${options.database}`;
+}
+
 /**
  * Create TypeORM DataSource based on storage options
+ * Uses caching to prevent duplicate connections in development
  */
 export function createDataSource(options: TypeORMStorageOptions): DataSource {
+  const cacheKey = createCacheKey(options);
+  
+  // Return existing DataSource if already cached
+  const existingDataSource = dataSourceCache.get(cacheKey);
+  if (existingDataSource) {
+    return existingDataSource;
+  }
+
   const baseConfig: Partial<DataSourceOptions> = {
     entities: [DevlogEntryEntity],
     synchronize: options.synchronize ?? false, // Default to false for production safety
@@ -85,7 +110,12 @@ export function createDataSource(options: TypeORMStorageOptions): DataSource {
       throw new Error(`Unsupported database type: ${options.type}`);
   }
 
-  return new DataSource(config);
+  const dataSource = new DataSource(config);
+  
+  // Cache the DataSource to prevent duplicate connections
+  dataSourceCache.set(cacheKey, dataSource);
+  
+  return dataSource;
 }
 
 /**
