@@ -17,12 +17,12 @@ import {
 import { GitHubAPIClient, GitHubIssue } from '../utils/github-api.js';
 import { RateLimiter } from '../utils/rate-limiter.js';
 import { LRUCache } from '../utils/lru-cache.js';
-import { DevlogGitHubMapper } from '../utils/github-mapper.js';
+import { DevlogGitHubMapper } from '../utils/github-mapper';
 import { GitHubLabelManager } from '../utils/github-labels.js';
 import { createPaginatedResult } from '../utils/common.js';
-import { 
-  mapDevlogTypeToGitHubType, 
-  mapDevlogTypeToGitHubLabel 
+import {
+  mapDevlogTypeToGitHubType,
+  mapDevlogTypeToGitHubLabel,
 } from '../utils/github-type-mapper.js';
 import { calculateDevlogStats } from '../utils/storage.js';
 import { calculateTimeSeriesStats } from '../utils/time-series.js';
@@ -159,11 +159,11 @@ export class GitHubStorageProvider implements StorageProvider {
         return await this.apiClient.listIssues('all');
       });
       console.debug('listIssues fallback returned:', allIssues.length, 'issues');
-      
+
       // Filter issues that look like devlog entries (have the right structure)
-      const devlogIssues = allIssues.filter(issue => this.looksLikeDevlogIssue(issue));
+      const devlogIssues = allIssues.filter((issue) => this.looksLikeDevlogIssue(issue));
       console.debug('Filtered devlog-like issues:', devlogIssues.length);
-      
+
       const entries = devlogIssues.map((issue) => this.dataMapper.issueToDevlog(issue));
       return createPaginatedResult(entries, filter?.pagination || { page: 1, limit: 100 });
     }
@@ -190,9 +190,9 @@ export class GitHubStorageProvider implements StorageProvider {
     return calculateDevlogStats(entries);
   }
 
-    async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     await this.initialize();
-    
+
     // Load all entries from storage for analysis
     const result = await this.list();
     const allDevlogs = result.items;
@@ -241,14 +241,18 @@ export class GitHubStorageProvider implements StorageProvider {
           if (this.config.mapping.useStateReason) {
             return 'is:open';
           } else {
-            const labelPrefix = this.config.mapping.useNativeLabels ? 'status:' : `${this.config.labelsPrefix}-status:`;
+            const labelPrefix = this.config.mapping.useNativeLabels
+              ? 'status:'
+              : `${this.config.labelsPrefix}-status:`;
             return `is:open -label:"${labelPrefix}"`;
           }
         } else {
           if (this.config.mapping.useStateReason) {
-            return 'is:open';  // Native state_reason doesn't distinguish these
+            return 'is:open'; // Native state_reason doesn't distinguish these
           } else {
-            const labelPrefix = this.config.mapping.useNativeLabels ? 'status:' : `${this.config.labelsPrefix}-status:`;
+            const labelPrefix = this.config.mapping.useNativeLabels
+              ? 'status:'
+              : `${this.config.labelsPrefix}-status:`;
             return `label:"${labelPrefix}${status}"`;
           }
         }
@@ -280,7 +284,9 @@ export class GitHubStorageProvider implements StorageProvider {
 
     if (filter?.priority && filter.priority.length > 0) {
       const priorityQueries = filter.priority.map((priority) => {
-        const labelPrefix = this.config.mapping.useNativeLabels ? 'priority:' : `${this.config.labelsPrefix}-priority:`;
+        const labelPrefix = this.config.mapping.useNativeLabels
+          ? 'priority:'
+          : `${this.config.labelsPrefix}-priority:`;
         return `label:"${labelPrefix}${priority}"`;
       });
       query += ` (${priorityQueries.join(' OR ')})`;
@@ -311,26 +317,29 @@ export class GitHubStorageProvider implements StorageProvider {
   }
 
   private isEmptyFilter(filter: DevlogFilter): boolean {
-    return !filter.status?.length &&
-           !filter.type?.length &&
-           !filter.priority?.length &&
-           !filter.assignee &&
-           !filter.fromDate &&
-           !filter.toDate;
+    return (
+      !filter.status?.length &&
+      !filter.type?.length &&
+      !filter.priority?.length &&
+      !filter.assignee &&
+      !filter.fromDate &&
+      !filter.toDate
+    );
   }
 
   private looksLikeDevlogIssue(issue: GitHubIssue): boolean {
     // Check if issue has devlog-related labels or structure
-    const hasDevlogLabels = issue.labels.some((label: any) => 
-      label.name.startsWith(this.config.labelsPrefix)
+    const hasDevlogLabels = issue.labels.some((label: any) =>
+      label.name.startsWith(this.config.labelsPrefix),
     );
-    
+
     // Check if title/body suggests it's a devlog entry
-    const hasDevlogStructure = issue.title.toLowerCase().includes('devlog') ||
-                               (issue.body?.toLowerCase().includes('devlog') ?? false) ||
-                               (issue.body?.includes('## Business Context') ?? false) ||
-                               (issue.body?.includes('## Technical Context') ?? false);
-    
+    const hasDevlogStructure =
+      issue.title.toLowerCase().includes('devlog') ||
+      (issue.body?.toLowerCase().includes('devlog') ?? false) ||
+      (issue.body?.includes('## Business Context') ?? false) ||
+      (issue.body?.includes('## Technical Context') ?? false);
+
     return hasDevlogLabels || hasDevlogStructure;
   }
 
@@ -378,54 +387,80 @@ export class GitHubStorageProvider implements StorageProvider {
   // Note: GitHub provider focuses on devlog entries via Issues. Chat data should use database providers.
 
   async saveChatSession(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async getChatSession(): Promise<null> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async listChatSessions(): Promise<[]> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async deleteChatSession(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async saveChatMessages(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async getChatMessages(): Promise<[]> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async searchChatContent(): Promise<[]> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async getChatStats(): Promise<any> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async saveChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async getChatDevlogLinks(): Promise<[]> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async removeChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async getChatWorkspaces(): Promise<[]> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 
   async saveChatWorkspace(): Promise<void> {
-    throw new Error('Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.');
+    throw new Error(
+      'Chat storage is not supported in GitHub provider. Use SQLite or database provider for chat data.',
+    );
   }
 }
