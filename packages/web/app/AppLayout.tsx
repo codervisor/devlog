@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Layout } from 'antd';
 import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
+import { useDevlogContext } from './contexts/DevlogContext';
 import { useStats } from '@/hooks/useStats';
 
 const { Content } = Layout;
@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   
-  const { devlogs, error, connected } = useDevlogs();
+  const { error, connected } = useDevlogContext();
   const { stats, loading: isLoadingStats } = useStats();
 
   // Handle client-side hydration

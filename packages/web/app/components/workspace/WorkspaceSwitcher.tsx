@@ -1,34 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Avatar, Button, Dropdown, message, Select, Tooltip, Typography } from 'antd';
 import {
-  Select,
-  Typography,
-  message,
-  Tooltip,
-  Dropdown,
-  Menu,
-  Button,
-  Avatar,
-  Divider,
-} from 'antd';
-import {
-  DatabaseOutlined,
-  GithubOutlined,
-  FileTextOutlined,
-  CloudOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
+  CloudOutlined,
+  DatabaseOutlined,
+  DisconnectOutlined,
   DownOutlined,
-  SwapOutlined,
+  FileTextOutlined,
+  GithubOutlined,
   PlusOutlined,
   SettingOutlined,
+  WifiOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import styles from './WorkspaceSwitcher.module.css';
 
 const { Text } = Typography;
-const { Option } = Select;
 
 interface WorkspaceMetadata {
   id: string;
@@ -211,11 +200,11 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
     }
 
     if (status.connected) {
-      return <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '12px' }} />;
+      return <WifiOutlined style={{ color: '#52c41a', fontSize: '12px' }} />;
     } else {
       return (
         <Tooltip title={status.error || 'Connection failed'}>
-          <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '12px' }} />
+          <DisconnectOutlined style={{ color: '#ff4d4f', fontSize: '12px' }} />
         </Tooltip>
       );
     }
