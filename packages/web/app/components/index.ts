@@ -15,4 +15,4 @@ export * from './features/dashboard';
 export * from './features/devlogs';
 
 // Workspace Components
-export { WorkspaceSwitcher } from './WorkspaceSwitcher';
+export * from './workspace';

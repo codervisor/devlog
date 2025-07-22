@@ -1,122 +1,184 @@
-/* Workspace Management Page Styles */
-.workspace-management-page {
-    padding: 24px;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Workspace Management Page Styles - Professional Flat Design */
+
+/* Section Layouts */
+.workspaces-list-header {
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
 }
 
-.page-header {
-    margin-bottom: 32px;
+.section-title {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 600;
 }
 
-.page-header .ant-typography-title {
-    margin-bottom: 8px;
+/* Workspace List */
+.workspaces-list {
+  padding: 0;
 }
 
-.page-header .ant-typography-paragraph {
-    margin-bottom: 16px;
-    color: rgba(0, 0, 0, 0.65);
-    font-size: 16px;
+.workspace-item {
+  cursor: pointer;
+  padding: 16px 24px;
+  margin: 0;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:hover {
+    background-color: transparent;
+
+    .workspace-name {
+      color: #1890ff;
+    }
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
-.current-workspace-section {
-    margin-bottom: 24px;
+.workspace-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.current-workspace-section .ant-card {
-    border: 2px solid #52c41a;
-    background: #f6ffed;
+.workspace-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
-.workspaces-list-section .ant-list-item {
-    padding: 16px 24px;
-    border: 1px solid #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    background: #fff;
-    transition: all 0.2s;
+.workspace-name {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.4;
 }
 
-.workspaces-list-section .ant-list-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-color: #1890ff;
+.workspace-id {
+  font-size: 12px !important;
+  font-family: monospace;
+  color: #8c8c8c;
 }
 
-.workspaces-list-section .ant-list-item-meta-title {
-    margin-bottom: 8px;
+.workspace-description {
+  margin: 4px 0;
 }
 
-.workspace-switcher {
-    padding: 8px 0;
+.workspace-description .ant-typography {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
 }
 
-.workspace-switcher-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+.workspace-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
 }
 
-.workspace-switcher-compact .ant-select {
-    border-radius: 6px;
+.workspace-status {
+  display: flex;
+  align-items: center;
 }
 
-/* Storage type indicators */
-.storage-type-json {
-    color: #1890ff;
+.workspace-dates {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.storage-type-github {
-    color: #722ed1;
+.date-text {
+  font-size: 12px !important;
+  color: #8c8c8c;
 }
 
-.storage-type-postgres {
-    color: #52c41a;
+.workspace-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.storage-type-mysql {
-    color: #fa8c16;
+.workspace-actions .ant-btn {
+  font-size: 12px;
+  height: 28px;
+  padding: 4px 12px;
 }
 
-.storage-type-sqlite {
-    color: #13c2c2;
+/* Empty State */
+.empty-workspaces {
+  padding: 60px 24px;
+  text-align: center;
 }
 
-/* Connection status badges */
+/* Connection Status Styling */
 .ant-badge-status-success .ant-badge-status-dot {
-    background-color: #52c41a;
+  background-color: #52c41a;
 }
 
 .ant-badge-status-error .ant-badge-status-dot {
-    background-color: #ff4d4f;
+  background-color: #ff4d4f;
 }
 
 .ant-badge-status-processing .ant-badge-status-dot {
-    background-color: #1890ff;
+  background-color: #1890ff;
 }
 
-/* Modal styles */
-.ant-modal .ant-form-item-label>label {
-    font-weight: 500;
+/* Modal Styles */
+.ant-modal .ant-form-item-label > label {
+  font-weight: 500;
 }
 
 .ant-modal .ant-form-item-explain,
 .ant-modal .ant-form-item-extra {
-    font-size: 12px;
+  font-size: 12px;
 }
 
-/* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {
-    .workspace-management-page {
-        padding: 16px;
-    }
+  .workspace-header-section,
+  .current-workspace-section,
+  .workspaces-list-header {
+    padding: 16px;
+  }
 
-    .workspaces-list-section .ant-list-item-actions {
-        flex-direction: column;
-        gap: 8px;
-    }
+  .workspace-item {
+    padding: 16px;
+  }
 
-    .workspaces-list-section .ant-list-item-actions>li {
-        margin: 0;
-    }
+  .workspace-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .workspace-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .workspace-dates {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .workspace-actions .ant-btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .workspace-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .workspace-actions .ant-btn {
+    width: 100%;
+  }
 }

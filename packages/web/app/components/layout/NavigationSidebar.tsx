@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Button, Layout, Menu, Tooltip, Typography } from 'antd';
+import { Button, Layout, Menu, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   FileTextOutlined,
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
-  WifiOutlined,
   SettingOutlined,
+  WifiOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@devlog/core';
-import { OverviewStats } from '@/components';
+import { OverviewStats, WorkspaceSwitcher } from '@/components';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
-const { Text } = Typography;
 
 interface NavigationSidebarProps {
   stats?: DevlogStats | null;
@@ -177,10 +176,18 @@ export function NavigationSidebar({
         </div>
       </div>
 
+      <div
+        className={
+          collapsed ? styles.workspaceSwitcherContainerCollapsed : styles.workspaceSwitcherContainer
+        }
+      >
+        <WorkspaceSwitcher collapsed={collapsed} />
+      </div>
+
       <Menu
         mode="inline"
         selectedKeys={[getSelectedKey()]}
-        style={{ borderRight: 0 }}
+        style={{ borderRight: 0, flex: 1 }}
         items={menuItems}
         onClick={handleMenuClick}
       />
@@ -202,11 +209,7 @@ export function NavigationSidebar({
             </Tooltip>
 
             {(stats || statsLoading) && (
-              <OverviewStats
-                stats={stats || null}
-                loading={statsLoading}
-                variant="icon"
-              />
+              <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
             )}
           </div>
 

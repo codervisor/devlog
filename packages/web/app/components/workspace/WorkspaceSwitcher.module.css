@@ -1,0 +1,182 @@
+/* Workspace Switcher Component Styles - Enhanced with Avatars */
+
+.workspaceSwitcher {
+}
+
+.workspaceSwitcherButton {
+  width: calc(100% - 8px);
+  height: 40px;
+  line-height: 40px;
+  padding-left: 20px;
+  padding-right: 16px;
+  margin: 4px;
+  border: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.workspaceSwitcherButton:focus {
+  box-shadow: none;
+}
+
+.workspaceSwitcherButtonContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.workspaceSwitcherText {
+  flex-shrink: 1;
+  transition: all 0.2s ease;
+}
+
+.workspaceSwitcherText .ant-typography {
+  margin: 0 !important;
+  line-height: 1.2;
+}
+
+.workspaceSwitcherArrow {
+  font-size: 10px;
+  color: #bfbfbf;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Collapsed workspace switcher */
+.workspaceSwitcherCollapsed {
+}
+
+.workspaceSwitcherCollapsed .workspaceSwitcherButton {
+  justify-content: center;
+  padding: 0;
+}
+
+.workspaceSwitcherCollapsed .workspaceSwitcherButtonContent {
+  display: block;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  gap: 0;
+  inset-inline-start: 0;
+  padding-inline: calc(50% - 8px - 8px);
+  text-overflow: clip;
+}
+
+.workspaceSwitcherCollapsed .workspaceSwitcherText {
+  opacity: 0;
+}
+
+/* Enhanced dropdown content */
+.workspaceDropdownContent {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  min-width: 280px;
+  max-width: 320px;
+}
+
+.workspaceDropdownHeader {
+  padding: 8px 16px 4px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.workspaceList {
+  padding: 4px 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.workspaceItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspaceItem:hover {
+  background: #f5f5f5;
+}
+
+.workspaceItemCurrent {
+  background: #e6f7ff;
+  cursor: default;
+}
+
+.workspaceItemCurrent:hover {
+  background: #e6f7ff;
+}
+
+.workspaceItemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.workspaceItemMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workspaceItemStatus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workspaceActions {
+  padding: 4px 4px 8px 4px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.workspaceActionButton {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  height: 32px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  color: #595959;
+  font-size: 13px;
+}
+
+.workspaceActionButton:hover {
+  background: #f5f5f5;
+  color: #262626;
+}
+
+.workspaceActionButton .anticon {
+  font-size: 12px;
+}
+
+/* Override default dropdown styles */
+.workspaceDropdown .ant-dropdown {
+  padding: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .workspaceSwitcherButton {
+    padding: 4px 8px;
+  }
+
+  .workspaceSwitcherButtonContent {
+    gap: 6px;
+  }
+
+  .workspaceDropdownContent {
+    min-width: 260px;
+  }
+}

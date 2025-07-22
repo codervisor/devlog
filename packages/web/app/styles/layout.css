@@ -6,7 +6,7 @@
 }
 
 .app-content {
-  background: #f8f9fa;
+  background: #fff;
   overflow: hidden; /* Prevent outer scroll */
   display: flex;
   flex-direction: column;
@@ -34,7 +34,7 @@
 }
 
 .page-header {
-  background: #f8f9fa;
+  background: #fff;
   border-bottom: 1px solid #e8e8e8;
   padding: 0;
   margin: 0;

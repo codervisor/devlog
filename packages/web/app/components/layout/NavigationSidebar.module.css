@@ -66,6 +66,16 @@
   flex-shrink: 0;
 }
 
+.workspaceSwitcherContainer {
+  padding: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.workspaceSwitcherContainerCollapsed {
+  padding: 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
 .connectionStatus {
   flex: 1;
 }
