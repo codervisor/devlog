@@ -2,6 +2,8 @@ export { DevlogManager } from './devlog-manager.js';
 export { ConfigurationManager } from './configuration-manager.js';
 export { WorkspaceDevlogManager } from './workspace-devlog-manager.js';
 export { FileWorkspaceManager } from './workspace-manager.js';
+export { DatabaseWorkspaceManager } from './database-workspace-manager.js';
+export { AutoWorkspaceManager } from './auto-workspace-manager.js';
 
 // Event System
 export {
@@ -34,6 +36,7 @@ export {
   type TypeORMStorageOptions,
 } from './storage/typeorm/typeorm-config.js';
 export { DevlogEntryEntity } from './entities/devlog-entry.entity.js';
+export { WorkspaceEntity } from './entities/workspace.entity.js';
 
 // Re-export types for convenience
 export * from './types/index.js';

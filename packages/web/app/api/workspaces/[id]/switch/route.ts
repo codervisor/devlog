@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkspaceDevlogManager } from '@devlog/core';
-import { join } from 'path';
-import { homedir } from 'os';
+import { getWorkspaceManager } from '../../../../../lib/workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
-
-let workspaceManager: WorkspaceDevlogManager | null = null;
-
-async function getWorkspaceManager(): Promise<WorkspaceDevlogManager> {
-  if (!workspaceManager) {
-    workspaceManager = new WorkspaceDevlogManager({
-      workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
-      createWorkspaceConfigIfMissing: true,
-      fallbackToEnvConfig: true,
-    });
-    await workspaceManager.initialize();
-  }
-  return workspaceManager;
-}
 
 // PUT /api/workspaces/[id]/switch - Switch to workspace
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {

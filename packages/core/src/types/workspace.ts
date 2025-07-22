@@ -146,6 +146,16 @@ export interface WorkspaceManager {
    * Get current workspace context
    */
   getCurrentWorkspace(): Promise<WorkspaceContext | null>;
+  
+  /**
+   * Get workspace configuration (including storage config)
+   */
+  getWorkspaceConfig(id: string): Promise<WorkspaceConfiguration | null>;
+  
+  /**
+   * Get storage configuration for a workspace
+   */
+  getWorkspaceStorage(id: string): Promise<StorageConfig | null>;
 }
 
 /**

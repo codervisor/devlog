@@ -46,8 +46,11 @@ function createCacheKey(options: TypeORMStorageOptions): string {
  * Create TypeORM DataSource based on storage options
  * Uses caching to prevent duplicate connections in development
  */
-export function createDataSource(options: TypeORMStorageOptions): DataSource {
-  const cacheKey = createCacheKey(options);
+export function createDataSource(
+  options: TypeORMStorageOptions, 
+  entities?: Function[]
+): DataSource {
+  const cacheKey = createCacheKey(options) + (entities ? `-entities-${entities.length}` : '');
 
   // Return existing DataSource if already cached
   const existingDataSource = dataSourceCache.get(cacheKey);
@@ -56,7 +59,7 @@ export function createDataSource(options: TypeORMStorageOptions): DataSource {
   }
 
   const baseConfig: Partial<DataSourceOptions> = {
-    entities: [DevlogEntryEntity],
+    entities: entities || [DevlogEntryEntity],
     synchronize: options.synchronize ?? false, // Default to false for production safety
     logging: options.logging ?? false,
   };

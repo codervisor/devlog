@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkspaceDevlogManager } from '@devlog/core';
-import { join } from 'path';
-import { homedir } from 'os';
+import { getWorkspaceManager, getStorageInfo } from '../../../lib/workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
-
-let workspaceManager: WorkspaceDevlogManager | null = null;
-
-async function getWorkspaceManager(): Promise<WorkspaceDevlogManager> {
-    if (!workspaceManager) {
-        workspaceManager = new WorkspaceDevlogManager({
-            workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
-            createWorkspaceConfigIfMissing: true,
-            fallbackToEnvConfig: true,
-        });
-        await workspaceManager.initialize();
-    }
-    return workspaceManager;
-}
 
 // GET /api/workspaces - List all workspaces
 export async function GET(request: NextRequest) {
@@ -26,10 +10,12 @@ export async function GET(request: NextRequest) {
         const manager = await getWorkspaceManager();
         const workspaces = await manager.listWorkspaces();
         const currentWorkspace = await manager.getCurrentWorkspace();
+        const storageInfo = await getStorageInfo();
 
         return NextResponse.json({
             workspaces,
             currentWorkspace,
+            storageInfo, // Include storage type information for debugging
         });
     } catch (error) {
         console.error('Error fetching workspaces:', error);
