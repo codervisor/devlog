@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-22T15:00:17.607Z",
-  "updatedAt": "2025-07-22T15:09:14.725Z",
+  "updatedAt": "2025-07-22T15:18:26.666Z",
   "notes": [
     {
       "id": "1c2d2981-3422-4d61-911d-d9ee13261356",
@@ -17,6 +17,18 @@
         "packages/core/src/storage/typeorm/typeorm-config.ts",
         "packages/core/src/managers/workspace/auto-workspace-manager.ts",
         "packages/web/app/lib/workspace-manager.ts"
+      ]
+    },
+    {
+      "id": "8ddc6c22-e18b-471a-8263-c0beebfee96c",
+      "timestamp": "2025-07-22T15:18:26.666Z",
+      "category": "progress",
+      "content": "**Refactored Entity Files to Eliminate Code Duplication**\n\n✅ **Created shared decorators utility** (`decorators.ts`):\n- `JsonColumn` - Adapts to jsonb (PostgreSQL), json (MySQL), or text (SQLite) \n- `TimestampColumn` - Uses timestamptz (PostgreSQL) or datetime (MySQL/SQLite)\n- `TypeColumn`, `StatusColumn`, `PriorityColumn` - Enum vs varchar based on database type\n- `getTimestampType()` and `getStorageType()` helper functions\n\n✅ **Refactored both entity files**:\n- `devlog-entry.entity.ts` - Now imports shared decorators instead of duplicating logic\n- `workspace.entity.ts` - Aligned with same pattern, using conditional decorators\n\n✅ **Updated exports** - Added decorators to `entities/index.ts` for broader usage\n\n**Benefits**: \n- Eliminated ~50 lines of duplicated decorator code\n- Consistent database handling across all entities\n- Easier maintenance when adding new entities or database types\n- Single source of truth for database-specific column logic",
+      "files": [
+        "packages/core/src/entities/decorators.ts",
+        "packages/core/src/entities/devlog-entry.entity.ts",
+        "packages/core/src/entities/workspace.entity.ts",
+        "packages/core/src/entities/index.ts"
       ]
     }
   ],

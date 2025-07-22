@@ -2,8 +2,10 @@
  * Used for cloud deployments where file-based storage isn't viable
  */
 
+import 'reflect-metadata';
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 import type { StorageConfig, WorkspaceMetadata } from '../types/index.js';
+import { JsonColumn, TimestampColumn, getTimestampType } from './decorators.js';
 
 @Entity('devlog_workspaces')
 export class WorkspaceEntity {
@@ -16,16 +18,19 @@ export class WorkspaceEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @Column('simple-json', { nullable: true })
+  @JsonColumn({ nullable: true })
   settings?: Record<string, any>;
 
-  @Column('simple-json')
+  @JsonColumn()
   storage!: StorageConfig;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    type: getTimestampType(),
+    name: 'created_at',
+  })
   createdAt!: Date;
 
-  @Column()
+  @TimestampColumn({ name: 'last_accessed_at' })
   lastAccessedAt!: Date;
 
   /**

@@ -1,7 +1,7 @@
 /**
  * TypeORM entities for devlog storage
  * These entities map directly to the TypeScript interfaces in core.ts
- * Uses conditional column decorators for database-specific optimizations
+ * Uses shared conditional column decorators for database-specific optimizations
  */
 
 import 'reflect-metadata';
@@ -21,64 +21,16 @@ import type {
   DevlogStatus,
   DevlogType,
   ExternalReference,
-  StorageType,
 } from '../types/index.js';
-import { loadRootEnv } from '../utils/env-loader.js';
-
-loadRootEnv();
-
-function getStorageType(): StorageType {
-  const storageType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase() || 'postgres';
-  if (['postgres', 'postgre', 'mysql', 'sqlite'].includes(storageType)) {
-    return storageType as StorageType;
-  }
-  return 'postgres';
-}
-
-// Conditional column decorators based on storage type
-const TypeColumn =
-  getStorageType() === 'sqlite'
-    ? Column({ type: 'varchar', length: 50 })
-    : Column({
-        type: 'enum',
-        enum: ['feature', 'bugfix', 'task', 'refactor', 'docs'],
-      });
-
-const StatusColumn =
-  getStorageType() === 'sqlite'
-    ? Column({ type: 'varchar', length: 50, default: 'new' })
-    : Column({
-        type: 'enum',
-        enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
-        default: 'new',
-      });
-
-const PriorityColumn =
-  getStorageType() === 'sqlite'
-    ? Column({ type: 'varchar', length: 50, default: 'medium' })
-    : Column({
-        type: 'enum',
-        enum: ['low', 'medium', 'high', 'critical'],
-        default: 'medium',
-      });
-
-// Date columns - timestamptz for postgres, datetime for mysql/sqlite
-const TimestampColumn = (options: any = {}) => {
-  if (getStorageType() === 'postgres') {
-    return Column({ type: 'timestamptz', ...options });
-  }
-  return Column({ type: 'datetime', ...options });
-};
-
-// JSON columns - jsonb for postgres, json for mysql, text for sqlite
-const JsonColumn = (options: any = {}) => {
-  if (getStorageType() === 'postgres') {
-    return Column({ type: 'jsonb', ...options });
-  } else if (getStorageType() === 'mysql') {
-    return Column({ type: 'json', ...options });
-  }
-  return Column({ type: 'text', ...options });
-};
+import {
+  JsonColumn,
+  TimestampColumn,
+  TypeColumn,
+  StatusColumn,
+  PriorityColumn,
+  getTimestampType,
+  getStorageType,
+} from './decorators.js';
 
 /**
  * Main DevlogEntry entity matching the DevlogEntry interface
@@ -112,13 +64,13 @@ export class DevlogEntryEntity {
   priority!: DevlogPriority;
 
   @CreateDateColumn({
-    type: getStorageType() === 'postgres' ? 'timestamptz' : 'datetime',
+    type: getTimestampType(),
     name: 'created_at',
   })
   createdAt!: Date;
 
   @UpdateDateColumn({
-    type: getStorageType() === 'postgres' ? 'timestamptz' : 'datetime',
+    type: getTimestampType(),
     name: 'updated_at',
   })
   updatedAt!: Date;
