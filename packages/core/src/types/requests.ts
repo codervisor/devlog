@@ -2,15 +2,14 @@
  * API request and response types
  */
 
-import { DevlogEntry, DevlogId, DevlogPriority, DevlogStatus, DevlogType } from './core';
-
-import {
+import type { DevlogEntry, DevlogId, DevlogPriority, DevlogStatus, DevlogType } from './core.js';
+import type {
   ChatFilter,
   ChatImportConfig,
   ChatImportProgress,
   ChatSessionId,
   ChatStatus,
-} from './chat';
+} from './chat.js';
 
 export interface CreateDevlogRequest {
   title: string;

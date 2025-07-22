@@ -3,8 +3,12 @@
  */
 
 import { StorageConfig, StorageProvider } from '@/types';
-import { TypeORMStorageProvider, GitHubStorageProvider, JsonStorageProvider } from './providers';
-import { TypeORMStorageOptions } from './typeorm';
+import {
+  GitHubStorageProvider,
+  JsonStorageProvider,
+  TypeORMStorageProvider,
+} from './providers/index.js';
+import { TypeORMStorageOptions } from './typeorm/typeorm-config.js';
 
 /**
  * Factory for creating storage providers based on configuration

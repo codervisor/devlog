@@ -6,7 +6,7 @@
 import { broadcastUpdate } from './sse-manager';
 
 // Types only - won't be bundled at runtime
-import type { DevlogManager, DevlogEvent } from '@devlog/core';
+import type { DevlogManager } from '@devlog/core';
 
 class SSEEventBridge {
   private initialized = false;
@@ -24,7 +24,7 @@ class SSEEventBridge {
     try {
       // Dynamically import to avoid bundling TypeORM in client-side code
       const { DevlogManager, devlogEvents } = await import('@devlog/core');
-      
+
       // Create and initialize DevlogManager for the web process
       this.devlogManager = new DevlogManager();
       await this.devlogManager.initialize();
@@ -65,9 +65,9 @@ class SSEEventBridge {
     try {
       console.log('SSE Bridge: Broadcasting devlog-deleted event for ID:', event.data.id);
       // For deletion, we broadcast the ID and basic info
-      broadcastUpdate('devlog-deleted', { 
+      broadcastUpdate('devlog-deleted', {
         id: event.data.id,
-        deletedAt: event.timestamp 
+        deletedAt: event.timestamp,
       });
     } catch (error) {
       console.error('Error broadcasting devlog-deleted event:', error);
@@ -95,7 +95,7 @@ class SSEEventBridge {
         await this.devlogManager.dispose();
         this.devlogManager = undefined;
       }
-      
+
       this.initialized = false;
       console.log('SSE Event Bridge cleaned up');
     }

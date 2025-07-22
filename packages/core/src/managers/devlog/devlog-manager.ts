@@ -11,6 +11,7 @@ import type {
   BatchUpdateRequest,
   CreateDevlogRequest,
   DevlogEntry,
+  DevlogEvent,
   DevlogFilter,
   DevlogId,
   DevlogNote,
@@ -26,9 +27,9 @@ import type {
   TimeSeriesStats,
   UpdateDevlogRequest,
 } from '@/types';
+import { DevlogNotFoundError } from '../../utils/index.js';
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
-import { DevlogNotFoundError } from '../../utils/errors.js';
-import { DevlogEvent, devlogEvents } from '../../events/devlog-events.js';
+import { devlogEvents } from '../../events/devlog-events.js';
 import { DefaultChatImportService } from '../../services/chat-import-service.js';
 import { ConfigurationManager } from '../configuration/configuration-manager.js';
 

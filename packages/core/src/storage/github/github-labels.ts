@@ -3,7 +3,7 @@
  */
 
 import { GitHubStorageConfig } from '@/types';
-import { GitHubAPIClient } from '.';
+import { GitHubAPIClient } from './github-api.js';
 
 export interface DevlogLabel {
   name: string;

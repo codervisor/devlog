@@ -4,7 +4,7 @@
  */
 
 import { DevlogEntry, TimeSeriesDataPoint, TimeSeriesRequest, TimeSeriesStats } from '@/types';
-import { generateDateRangeToDates } from '../typeorm';
+import { generateDateRangeToDates } from '../typeorm/index.js';
 
 /**
  * Calculate time series statistics from a collection of devlog entries

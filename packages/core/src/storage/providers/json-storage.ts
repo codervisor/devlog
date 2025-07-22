@@ -7,10 +7,14 @@ import path from 'path';
 import * as fs from 'fs/promises';
 import { FSWatcher, watch } from 'fs';
 import os from 'os';
-import type { DevlogEvent } from '@/events';
-import { calculateDevlogStats, calculateTimeSeriesStats, getWorkspaceRoot } from '../shared';
+import {
+  calculateDevlogStats,
+  calculateTimeSeriesStats,
+  getWorkspaceRoot,
+} from '../shared/index.js';
 import {
   DevlogEntry,
+  DevlogEvent,
   DevlogFilter,
   DevlogId,
   DevlogStats,

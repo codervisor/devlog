@@ -2,14 +2,7 @@
  * Event system for devlog operations
  * Allows different parts of the application to react to devlog changes
  */
-
-export interface DevlogEvent {
-  type: 'created' | 'updated' | 'deleted' | 'note-added';
-  timestamp: string;
-  data: any;
-}
-
-export type DevlogEventHandler = (event: DevlogEvent) => void | Promise<void>;
+import { DevlogEvent, DevlogEventHandler } from '@/types';
 
 /**
  * Simple event emitter for devlog operations
@@ -48,14 +41,14 @@ export class DevlogEventEmitter {
     if (handlers) {
       // Execute all handlers in parallel
       await Promise.allSettled(
-        Array.from(handlers).map(handler => {
+        Array.from(handlers).map((handler) => {
           try {
             return Promise.resolve(handler(event));
           } catch (error) {
             console.error(`Error in devlog event handler for ${event.type}:`, error);
             return Promise.resolve();
           }
-        })
+        }),
       );
     }
   }

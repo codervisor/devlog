@@ -1,1 +1,1 @@
-export * from './devlog-events';
+export * from './devlog-events.js';

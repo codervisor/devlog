@@ -4,7 +4,7 @@
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { DevlogManager, ImportChatHistoryRequest } from '@devlog/core';
-import { createErrorResponse } from '@/utils';
+import { createErrorResponse } from '../utils/common.js';
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {

@@ -5,13 +5,21 @@
  * like GitHub Copilot, Cursor, Claude Code, etc.
  */
 
-import { ChatSession, WorkspaceData, SearchResult, ChatStatistics } from '@/models';
+import type {
+  ChatSession,
+  ChatStatistics,
+  SearchResult,
+  WorkspaceData,
+} from '../../models/index.js';
 
 // Logger interface for parsers
 export interface Logger {
   error?(message: string, ...args: unknown[]): void;
+
   warn?(message: string, ...args: unknown[]): void;
+
   info?(message: string, ...args: unknown[]): void;
+
   debug?(message: string, ...args: unknown[]): void;
 }
 

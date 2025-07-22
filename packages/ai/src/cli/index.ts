@@ -12,16 +12,16 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';
 import { resolve } from 'path';
-import { CopilotParser, ChatStatistics, SearchResult } from '@/parsers';
-import { JSONExporter, MarkdownExporter } from '@/exporters';
+import { ChatStatistics, CopilotParser, SearchResult } from '../parsers/index.js';
+import { JSONExporter, MarkdownExporter } from '../exporters/index.js';
 import {
   displayError,
+  displayHeader,
+  displayInfo,
   displaySuccess,
   displayWarning,
-  displayInfo,
-  displayHeader,
   formatCount,
-} from '@/utils';
+} from '../utils/index.js';
 
 // CLI option interfaces for better type safety
 interface ChatCommandOptions {

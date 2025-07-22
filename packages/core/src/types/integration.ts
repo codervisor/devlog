@@ -2,7 +2,7 @@
  * Integration service and enterprise integration types
  */
 
-import { DevlogEntry } from './core';
+import type { DevlogEntry } from './core.js';
 
 // Integration Service Types
 export interface ConflictData {

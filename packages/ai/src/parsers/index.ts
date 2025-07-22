@@ -9,10 +9,7 @@
 export { AIAssistantParser, Logger, SimpleConsoleLogger } from './base/ai-assistant-parser';
 
 // Export provider-specific parsers
-export { CopilotParser } from './copilot/copilot-parser';
+export { CopilotParser } from './copilot/copilot-parser.js';
 
 // Re-export types from models for convenience
-export type { SearchResult, ChatStatistics } from '@/models';
-
-// For backwards compatibility, re-export CopilotParser as the default export
-export { CopilotParser as default } from './copilot/copilot-parser';
+export type { SearchResult, ChatStatistics } from '../models/index.js';

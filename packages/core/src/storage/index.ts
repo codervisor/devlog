@@ -10,12 +10,12 @@
  */
 
 // Re-export storage provider factory and main interface
-export * from './storage-provider';
+export * from './storage-provider.js';
 
 // Re-export all storage providers from the providers folder
-export * from './providers';
+export * from './providers/index.js';
 
 // Re-export specialized modules
-export * from './github';
-export * from './typeorm';
-export * from './shared';
+export * from './github/index.js';
+export * from './typeorm/index.js';
+export * from './shared/index.js';

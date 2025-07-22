@@ -17,13 +17,9 @@ import {
   DevlogType,
   GitHubStorageConfig,
 } from '@/types';
-import {
-  CreateIssueRequest,
-  GitHubIssue,
-  UpdateIssueRequest,
-} from './github-api';
-import { formatEnhancedGitHubTitle } from './emoji-mappings';
-import { mapGitHubTypeToDevlogType } from './github-type-mapper';
+import { CreateIssueRequest, GitHubIssue, UpdateIssueRequest } from './github-api.js';
+import { formatEnhancedGitHubTitle } from './emoji-mappings.js';
+import { mapGitHubTypeToDevlogType } from './github-type-mapper.js';
 
 // Metadata structure for HTML comments
 interface DevlogMetadata {

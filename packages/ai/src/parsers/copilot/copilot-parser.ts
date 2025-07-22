@@ -11,13 +11,13 @@ import { homedir, platform } from 'os';
 import fg from 'fast-glob';
 import {
   ChatSession,
-  Message,
-  WorkspaceData,
   ChatSessionData,
+  Message,
   MessageData,
+  WorkspaceData,
   WorkspaceDataContainer,
-} from '@/models';
-import { AIAssistantParser, Logger } from '@/parsers';
+} from '../../models/index.js';
+import { AIAssistantParser, Logger } from '../base/ai-assistant-parser.js';
 
 export class CopilotParser extends AIAssistantParser {
   constructor(logger?: Logger) {

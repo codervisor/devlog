@@ -4,9 +4,9 @@
  * TypeScript implementation without complex configuration.
  */
 
-import { writeFile, mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import { dirname } from 'path';
-import { SearchResult, ChatStatistics } from '@/parsers';
+import type { ChatStatistics, SearchResult } from '../parsers/index.js';
 
 export interface MarkdownExportData {
   statistics?: ChatStatistics;

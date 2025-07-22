@@ -5,7 +5,7 @@
  * (primarily GitHub Copilot via codehist) and linking them to devlog entries.
  */
 
-import { DevlogId } from './core';
+import type { DevlogId } from './core.js';
 
 /**
  * ID type for chat sessions - using string to handle various formats

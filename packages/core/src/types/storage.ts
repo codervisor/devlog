@@ -2,7 +2,7 @@
  * Storage configuration and provider types
  */
 
-import {
+import type {
   DevlogEntry,
   DevlogFilter,
   DevlogId,
@@ -11,7 +11,8 @@ import {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from './core';
-import {
+
+import type {
   ChatDevlogLink,
   ChatFilter,
   ChatMessage,
@@ -21,7 +22,8 @@ import {
   ChatStats,
   ChatWorkspace,
 } from './chat';
-import { DevlogEvent } from '@/events';
+
+import type { DevlogEvent } from './event';
 
 // Storage Configuration Types
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';

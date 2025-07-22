@@ -7,6 +7,7 @@ import 'reflect-metadata';
 import { DataSource, Like, Repository } from 'typeorm';
 import {
   DevlogEntry,
+  DevlogEvent,
   DevlogFilter,
   DevlogId,
   DevlogStats,
@@ -15,20 +16,16 @@ import {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '@/types';
-import type { DevlogEvent } from '@/events';
-import { createPaginatedResult } from '../../utils/common';
-import { DevlogEntryEntity } from '../../entities/devlog-entry.entity';
-import { calculateDevlogStats, calculateTimeSeriesStats } from '../shared';
-import {
-  createDataSource,
-  TypeORMStorageOptions,
-} from '../typeorm/typeorm-config';
+import { createPaginatedResult } from '../../utils/common.js';
+import { DevlogEntryEntity } from '../../entities/devlog-entry.entity.js';
+import { calculateDevlogStats, calculateTimeSeriesStats } from '../../storage/shared/index.js';
+import { createDataSource, TypeORMStorageOptions } from '../typeorm/typeorm-config.js';
 import {
   generateDateRange,
   generateTimeSeriesParams,
   generateTimeSeriesSQL,
   mapSQLRowsToDataPoints,
-} from '../typeorm/sql-time-series';
+} from '../typeorm/sql-time-series.js';
 
 export class TypeORMStorageProvider implements StorageProvider {
   private dataSource: DataSource;
