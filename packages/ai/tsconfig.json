@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "./build",
     "rootDir": "./src",
-    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": false,
+    "incremental": false,
     "baseUrl": ".",
     "paths": {
       "@/*": [

@@ -24,20 +24,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "references": [
-    {
-      "path": "./packages/core"
-    },
-    {
-      "path": "./packages/mcp"
-    },
-    {
-      "path": "./packages/ai"
-    },
-    {
-      "path": "./packages/web"
-    }
-  ],
   "files": [],
   "exclude": [
     "node_modules",

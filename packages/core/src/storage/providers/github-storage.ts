@@ -28,7 +28,7 @@ import {
   mapDevlogTypeToGitHubType,
   RateLimiter,
 } from '../github';
-import { createPaginatedResult } from '@/utils';
+import { createPaginatedResult } from '../../utils/common';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;

@@ -7,7 +7,7 @@
 
 import { promises as fs } from 'fs';
 import { dirname } from 'path';
-import {
+import type {
   StorageConfig,
   WorkspaceMetadata,
   WorkspaceConfiguration,

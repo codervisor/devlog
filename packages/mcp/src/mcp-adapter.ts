@@ -3,6 +3,7 @@
  */
 
 import * as crypto from 'crypto';
+import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   AIContext,
   CreateDevlogRequest,
@@ -13,7 +14,6 @@ import {
   NoteCategory,
   UpdateDevlogRequest,
 } from '@devlog/core';
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   AddDecisionArgs,
   AddDevlogNoteArgs,

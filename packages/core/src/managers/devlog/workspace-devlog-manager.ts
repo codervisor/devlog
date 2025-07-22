@@ -14,12 +14,9 @@ import type {
   WorkspaceContext,
   WorkspaceMetadata,
 } from '@/types';
-import { StorageProviderFactory } from '@/storage';
-import { ConfigurationManager } from '../configuration/configuration-manager';
-import {
-  FileWorkspaceManager,
-  type WorkspaceManagerOptions,
-} from '../workspace';
+import { StorageProviderFactory } from '../../storage/storage-provider.js';
+import { ConfigurationManager } from '../configuration/configuration-manager.js';
+import { FileWorkspaceManager, type WorkspaceManagerOptions } from '../workspace';
 
 export interface WorkspaceDevlogManagerOptions {
   /** Path to workspace configuration file */

@@ -16,17 +16,19 @@ import {
   TimeSeriesStats,
 } from '@/types';
 import type { DevlogEvent } from '@/events';
-import { createPaginatedResult } from '@/utils';
-import { DevlogEntryEntity } from '@/entities';
+import { createPaginatedResult } from '../../utils/common';
+import { DevlogEntryEntity } from '../../entities/devlog-entry.entity';
 import { calculateDevlogStats, calculateTimeSeriesStats } from '../shared';
 import {
   createDataSource,
+  TypeORMStorageOptions,
+} from '../typeorm/typeorm-config';
+import {
   generateDateRange,
   generateTimeSeriesParams,
   generateTimeSeriesSQL,
   mapSQLRowsToDataPoints,
-  TypeORMStorageOptions,
-} from '@/storage';
+} from '../typeorm/sql-time-series';
 
 export class TypeORMStorageProvider implements StorageProvider {
   private dataSource: DataSource;

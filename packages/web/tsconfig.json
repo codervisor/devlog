@@ -19,7 +19,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "incremental": true,
+    "incremental": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "plugins": [
@@ -33,7 +33,7 @@
         "./app/*"
       ],
       "@devlog/core": [
-        "../core/src"
+        "../core/build"
       ]
     }
   },

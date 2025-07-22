@@ -19,11 +19,11 @@ import {
 } from '@/types';
 import {
   CreateIssueRequest,
-  formatEnhancedGitHubTitle,
   GitHubIssue,
-  mapGitHubTypeToDevlogType,
   UpdateIssueRequest,
-} from '.';
+} from './github-api';
+import { formatEnhancedGitHubTitle } from './emoji-mappings';
+import { mapGitHubTypeToDevlogType } from './github-type-mapper';
 
 // Metadata structure for HTML comments
 interface DevlogMetadata {

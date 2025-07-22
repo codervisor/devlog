@@ -9,7 +9,6 @@ import { CopilotParser } from '@devlog/ai';
 import type {
   ChatSession,
   ChatMessage,
-  ChatWorkspace,
   ChatImportConfig,
   ChatImportProgress,
   ChatDevlogLink,

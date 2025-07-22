@@ -26,11 +26,11 @@ import type {
   TimeSeriesStats,
   UpdateDevlogRequest,
 } from '@/types';
-import { StorageProviderFactory } from '@/storage';
-import { DevlogNotFoundError } from '@/utils';
-import { DevlogEvent, devlogEvents } from '@/events';
-import { DefaultChatImportService } from '@/services';
-import { ConfigurationManager } from '../configuration/configuration-manager';
+import { StorageProviderFactory } from '../../storage/storage-provider.js';
+import { DevlogNotFoundError } from '../../utils/errors.js';
+import { DevlogEvent, devlogEvents } from '../../events/devlog-events.js';
+import { DefaultChatImportService } from '../../services/chat-import-service.js';
+import { ConfigurationManager } from '../configuration/configuration-manager.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;

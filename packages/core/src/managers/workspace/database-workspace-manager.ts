@@ -11,8 +11,11 @@ import type {
   WorkspaceManager,
   WorkspaceMetadata,
 } from '@/types';
-import { WorkspaceEntity } from '@/entities';
-import { createDataSource, type TypeORMStorageOptions } from '@/storage';
+import { WorkspaceEntity } from '../../entities/workspace.entity.js';
+import {
+  createDataSource,
+  type TypeORMStorageOptions,
+} from '../../storage/typeorm/typeorm-config.js';
 
 export interface DatabaseWorkspaceManagerOptions {
   /** Database connection configuration */

@@ -4,7 +4,7 @@
 
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { DevlogEntryEntity } from '@/entities';
+import { DevlogEntryEntity } from '../../entities/devlog-entry.entity';
 
 /**
  * Configuration options for TypeORM storage

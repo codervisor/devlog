@@ -2,7 +2,7 @@ import path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import type { DevlogEntry, DevlogPriority, DevlogStats, DevlogStatus, DevlogType } from '@/types';
-import { parseBoolean } from '@/utils';
+import { parseBoolean } from '../../utils/common';
 
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {
   if (process.env.NODE_ENV === 'production') {

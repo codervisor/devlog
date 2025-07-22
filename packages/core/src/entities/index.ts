@@ -1,2 +1,2 @@
-export * from './devlog-entry.entity';
-export * from './workspace.entity';
+export * from './devlog-entry.entity.js';
+export * from './workspace.entity.js';

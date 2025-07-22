@@ -23,7 +23,7 @@ import type {
   ExternalReference,
   StorageType,
 } from '@/types';
-import { loadRootEnv } from '@/utils';
+import { loadRootEnv } from '../utils/env-loader';
 
 loadRootEnv();
 

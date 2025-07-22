@@ -13,16 +13,19 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "composite": false,
+    "incremental": false,
     "paths": {
       "@/*": [
         "./src/*"
       ],
       "@devlog/core": [
-        "../core/src"
+        "../core/build"
       ],
       "@devlog/core/*": [
-        "../core/src/*"
+        "../core/build/*"
       ]
     }
   },
@@ -34,10 +37,5 @@
     "build",
     "src/**/*.test.ts",
     "src/__tests__"
-  ],
-  "references": [
-    {
-      "path": "../core"
-    }
   ]
 }

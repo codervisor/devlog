@@ -1,2 +1,2 @@
-export * from './devlog-manager';
-export * from './workspace-devlog-manager';
+export * from './devlog-manager.js';
+export * from './workspace-devlog-manager.js';

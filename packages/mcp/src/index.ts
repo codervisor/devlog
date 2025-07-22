@@ -13,9 +13,8 @@ loadRootEnv();
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { MCPDevlogAdapter } from '@/mcp-adapter';
-import { allTools } from '@/tools';
-import {
+import { MCPDevlogAdapter } from './mcp-adapter.js';
+import type {
   CreateDevlogArgs,
   UpdateDevlogArgs,
   ListDevlogsArgs,
@@ -29,8 +28,9 @@ import {
   GetContextForAIArgs,
   DiscoverRelatedDevlogsArgs,
   UpdateAIContextArgs,
-} from '@/types';
-import {
+} from './types';
+import { allTools } from './tools/index.js';
+import type {
   ImportChatHistoryArgs,
   GetChatSessionArgs,
   ListChatSessionsArgs,
@@ -41,7 +41,7 @@ import {
   GetChatStatsArgs,
   UpdateChatSessionArgs,
   GetChatWorkspacesArgs,
-} from '@/tools/chat-tools';
+} from './tools/chat-tools';
 import {
   handleImportChatHistory,
   handleGetChatSession,
@@ -53,7 +53,7 @@ import {
   handleGetChatStats,
   handleUpdateChatSession,
   handleGetChatWorkspaces,
-} from './tools/chat-tools';
+} from './tools/chat-tools.js';
 
 const server = new Server(
   {
