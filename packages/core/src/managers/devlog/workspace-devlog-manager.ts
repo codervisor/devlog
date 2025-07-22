@@ -15,11 +15,11 @@ import type {
   WorkspaceMetadata,
 } from '@/types';
 import { StorageProviderFactory } from '@/storage';
+import { ConfigurationManager } from '../configuration/configuration-manager';
 import {
-  ConfigurationManager,
   FileWorkspaceManager,
   type WorkspaceManagerOptions,
-} from '@/managers';
+} from '../workspace';
 
 export interface WorkspaceDevlogManagerOptions {
   /** Path to workspace configuration file */

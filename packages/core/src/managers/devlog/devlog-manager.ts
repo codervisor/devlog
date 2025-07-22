@@ -30,7 +30,7 @@ import { StorageProviderFactory } from '@/storage';
 import { DevlogNotFoundError } from '@/utils';
 import { DevlogEvent, devlogEvents } from '@/events';
 import { DefaultChatImportService } from '@/services';
-import { ConfigurationManager } from '@/managers';
+import { ConfigurationManager } from '../configuration/configuration-manager';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;

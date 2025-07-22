@@ -17,7 +17,7 @@ import {
   type DatabaseWorkspaceManagerOptions,
   FileWorkspaceManager,
   type WorkspaceManagerOptions,
-} from '@/managers';
+} from './';
 import { parseTypeORMConfig } from '@/storage';
 
 export interface AutoWorkspaceManagerOptions {
