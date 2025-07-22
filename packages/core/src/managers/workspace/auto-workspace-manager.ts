@@ -83,7 +83,18 @@ export class AutoWorkspaceManager implements WorkspaceManager {
     if (this.options.storageType === 'file') return 'file';
     if (this.options.storageType === 'database') return 'database';
 
-    // Auto-detection logic
+    // Check explicit storage type configuration first (highest priority)
+    const explicitStorageType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase();
+    if (explicitStorageType) {
+      if (explicitStorageType === 'json') {
+        return 'file';
+      }
+      if (['postgres', 'postgresql', 'mysql', 'sqlite'].includes(explicitStorageType)) {
+        return 'database';
+      }
+    }
+
+    // Auto-detection logic (fallback when no explicit type is set)
     const hasPostgresUrl = !!process.env.POSTGRES_URL;
     const hasMysqlUrl = !!process.env.MYSQL_URL;
     const isVercel = !!process.env.VERCEL;

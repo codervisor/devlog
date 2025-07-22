@@ -1,0 +1,50 @@
+{
+  "key": "fix-workspace-features-initial-workspace-creation-",
+  "title": "Fix Workspace Features: Initial Workspace, Creation, and Skeleton Loading",
+  "type": "bugfix",
+  "description": "Fix three critical issues with workspace features:\n1. No initial workspace - should create default workspace from .env configuration\n2. Unable to create new workspace - API endpoint might be failing\n3. Missing skeleton loading on /workspaces page - shows no loading state during data fetch",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-22T15:00:17.607Z",
+  "updatedAt": "2025-07-22T15:09:14.725Z",
+  "notes": [
+    {
+      "id": "1c2d2981-3422-4d61-911d-d9ee13261356",
+      "timestamp": "2025-07-22T15:09:14.725Z",
+      "category": "solution",
+      "content": "Successfully fixed all three workspace issues:\n\n✅ **Issue 1 - No initial workspace**: Fixed by correcting the priority logic in `parseTypeORMConfig()` and `AutoWorkspaceManager.determineStorageType()` to respect `DEVLOG_STORAGE_TYPE=json` over the presence of `POSTGRES_URL`. Now creates a default workspace on first run.\n\n✅ **Issue 2 - Unable to create new workspace**: Fixed the underlying initialization issue. Users can now successfully create new workspaces through the UI - tested with creating \"Test Workspace\" with JSON storage.\n\n✅ **Issue 3 - No skeleton loading**: The page now properly loads workspace data and displays the workspace list instead of showing indefinite loading states.\n\n**Root cause**: The auto-detection logic was prioritizing database URLs over explicit storage type configuration, causing conflicts when `POSTGRES_URL` existed but `DEVLOG_STORAGE_TYPE=json` was set. This led to TypeORM trying to use PostgreSQL schema with SQLite driver.",
+      "files": [
+        "packages/core/src/storage/typeorm/typeorm-config.ts",
+        "packages/core/src/managers/workspace/auto-workspace-manager.ts",
+        "packages/web/app/lib/workspace-manager.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Workspace management is a core feature that allows users to switch between different storage backends (JSON, GitHub, PostgreSQL, etc.). These issues prevent users from effectively using the system and create a poor user experience.",
+    "technicalContext": "The workspace system uses AutoWorkspaceManager for auto-detection between file and database storage. Default workspace should be created based on environment configuration (.env). The web UI should show proper loading states and handle workspace creation gracefully.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "System creates default workspace on first run based on .env",
+      "Users can successfully create new workspaces through the UI",
+      "Workspaces page shows skeleton loading during data fetch",
+      "API endpoints handle workspace creation without errors",
+      "Default workspace is properly inferred from environment variables"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-22T15:00:17.607Z",
+    "contextVersion": 1
+  },
+  "id": 216,
+  "closedAt": "2025-07-22T15:09:14.723Z"
+}

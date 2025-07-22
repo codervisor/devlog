@@ -126,9 +126,11 @@ export function createDataSource(
  */
 export function parseTypeORMConfig(): TypeORMStorageOptions {
   const postgresUrl = process.env.POSTGRES_URL;
+  const mysqlUrl = process.env.MYSQL_URL;
   const dbType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase();
 
-  if (postgresUrl && dbType === 'postgres') {
+  // Respect explicit storage type configuration first
+  if (dbType === 'postgres' && postgresUrl) {
     return {
       type: 'postgres',
       url: postgresUrl,
@@ -139,16 +141,25 @@ export function parseTypeORMConfig(): TypeORMStorageOptions {
   }
 
   if (dbType === 'mysql') {
-    return {
-      type: 'mysql',
-      host: process.env.MYSQL_HOST,
-      port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT) : 3306,
-      username: process.env.MYSQL_USERNAME,
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE,
-      synchronize: process.env.NODE_ENV === 'development',
-      logging: process.env.NODE_ENV === 'development',
-    };
+    if (mysqlUrl) {
+      return {
+        type: 'mysql',
+        url: mysqlUrl,
+        synchronize: process.env.NODE_ENV === 'development',
+        logging: process.env.NODE_ENV === 'development',
+      };
+    } else {
+      return {
+        type: 'mysql',
+        host: process.env.MYSQL_HOST,
+        port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT) : 3306,
+        username: process.env.MYSQL_USERNAME,
+        password: process.env.MYSQL_PASSWORD,
+        database: process.env.MYSQL_DATABASE,
+        synchronize: process.env.NODE_ENV === 'development',
+        logging: process.env.NODE_ENV === 'development',
+      };
+    }
   }
 
   if (dbType === 'sqlite') {
@@ -158,6 +169,28 @@ export function parseTypeORMConfig(): TypeORMStorageOptions {
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
     };
+  }
+
+  // Fallback to URL-based auto-detection only if no explicit type is set
+  if (!dbType) {
+    if (postgresUrl) {
+      return {
+        type: 'postgres',
+        url: postgresUrl,
+        synchronize: process.env.NODE_ENV === 'development',
+        logging: process.env.NODE_ENV === 'development',
+        ssl: process.env.NODE_ENV === 'production',
+      };
+    }
+
+    if (mysqlUrl) {
+      return {
+        type: 'mysql',
+        url: mysqlUrl,
+        synchronize: process.env.NODE_ENV === 'development',
+        logging: process.env.NODE_ENV === 'development',
+      };
+    }
   }
 
   // Default to SQLite if no configuration is found

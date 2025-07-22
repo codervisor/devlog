@@ -16,10 +16,10 @@ export class WorkspaceEntity {
   @Column({ nullable: true })
   description?: string;
 
-  @Column('jsonb', { nullable: true })
+  @Column('simple-json', { nullable: true })
   settings?: Record<string, any>;
 
-  @Column('jsonb')
+  @Column('simple-json')
   storage!: StorageConfig;
 
   @CreateDateColumn()

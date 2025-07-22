@@ -15,6 +15,13 @@ let globalWorkspaceManager: AutoWorkspaceManager | null = null;
  */
 export async function getWorkspaceManager(): Promise<AutoWorkspaceManager> {
   if (!globalWorkspaceManager) {
+    console.log('[WorkspaceManager] Creating new AutoWorkspaceManager...');
+    console.log('[WorkspaceManager] Environment:', {
+      NODE_ENV: process.env.NODE_ENV,
+      POSTGRES_URL: !!process.env.POSTGRES_URL,
+      DEVLOG_STORAGE_TYPE: process.env.DEVLOG_STORAGE_TYPE,
+    });
+
     globalWorkspaceManager = new AutoWorkspaceManager({
       storageType: 'auto', // Let it auto-detect based on environment
       fileOptions: {
@@ -43,7 +50,14 @@ export async function getWorkspaceManager(): Promise<AutoWorkspaceManager> {
       },
     });
 
-    await globalWorkspaceManager.initialize();
+    console.log('[WorkspaceManager] Initializing manager...');
+    try {
+      await globalWorkspaceManager.initialize();
+      console.log('[WorkspaceManager] Manager initialized successfully');
+    } catch (error) {
+      console.error('[WorkspaceManager] Failed to initialize:', error);
+      throw error;
+    }
   }
 
   return globalWorkspaceManager;
@@ -53,8 +67,27 @@ export async function getWorkspaceManager(): Promise<AutoWorkspaceManager> {
  * Get storage information for debugging and monitoring
  */
 export async function getStorageInfo() {
-  const manager = await getWorkspaceManager();
-  return manager.getStorageInfo();
+  try {
+    const manager = await getWorkspaceManager();
+    
+    // Check if getStorageInfo method exists
+    if (typeof manager.getStorageInfo === 'function') {
+      return manager.getStorageInfo();
+    } else {
+      // Return basic info if method doesn't exist
+      return {
+        type: 'auto-detected',
+        status: 'initialized',
+      };
+    }
+  } catch (error) {
+    console.error('[WorkspaceManager] Error getting storage info:', error);
+    return {
+      type: 'unknown',
+      status: 'error',
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 /**
