@@ -180,11 +180,13 @@ export class GitHubStorageProvider implements StorageProvider {
       throw new Error(`Invalid issue number: ${id}`);
     }
 
-    // Close the issue and mark as deleted (GitHub doesn't allow permanent deletion)
+    // Close the issue and remove marker label to indicate deletion
+    const markerLabel = this.config.markerLabel || 'devlog';
     await this.rateLimiter.executeWithRateLimit(async () => {
       await this.apiClient.updateIssue(issueNumber, {
         state: 'closed',
-        labels: [`${this.config.labelsPrefix}-deleted`],
+        state_reason: 'not_planned',
+        labels: [], // Remove all labels to indicate deletion
       });
     });
 
@@ -268,14 +270,11 @@ export class GitHubStorageProvider implements StorageProvider {
     // Build flexible devlog identification query
     const devlogIdentifiers = [];
 
-    // Method 1: Label-based identification
-    if (this.config.mapping.useNativeType || this.config.mapping.useNativeLabels) {
-      devlogIdentifiers.push(`label:"${this.config.labelsPrefix}"`);
-    } else {
-      devlogIdentifiers.push(`label:"${this.config.labelsPrefix}-type"`);
-    }
+    // Method 1: Marker label identification (primary)
+    const markerLabel = this.config.markerLabel || 'devlog';
+    devlogIdentifiers.push(`label:"${markerLabel}"`);
 
-    // Method 2: Metadata-based identification (primary approach)
+    // Method 2: Metadata-based identification (fallback)
     devlogIdentifiers.push(`"DEVLOG_METADATA:" in:body`);
 
     // Use OR logic to match any identification method
@@ -293,19 +292,15 @@ export class GitHubStorageProvider implements StorageProvider {
           if (this.config.mapping.useStateReason) {
             return 'is:open';
           } else {
-            const labelPrefix = this.config.mapping.useNativeLabels
-              ? 'status:'
-              : `${this.config.labelsPrefix}-status:`;
-            return `is:open -label:"${labelPrefix}"`;
+            // Use clean status labels
+            return `is:open -label:"status:"`;
           }
         } else {
           if (this.config.mapping.useStateReason) {
             return 'is:open'; // Native state_reason doesn't distinguish these
           } else {
-            const labelPrefix = this.config.mapping.useNativeLabels
-              ? 'status:'
-              : `${this.config.labelsPrefix}-status:`;
-            return `label:"${labelPrefix}${status}"`;
+            // Use clean status labels (status:value)
+            return `label:"status:${status}"`;
           }
         }
       });
@@ -321,14 +316,10 @@ export class GitHubStorageProvider implements StorageProvider {
         });
         query += ` (${typeQueries.join(' OR ')})`;
       } else {
-        // Use labels
+        // Use clean native labels
         const typeQueries = filter.type.map((type) => {
-          if (this.config.mapping.useNativeLabels) {
-            const githubLabel = this.mapDevlogTypeToGitHubLabel(type);
-            return `label:"${githubLabel}"`;
-          } else {
-            return `label:"${this.config.labelsPrefix}-type:${type}"`;
-          }
+          const githubLabel = this.mapDevlogTypeToGitHubLabel(type);
+          return `label:"${githubLabel}"`;
         });
         query += ` (${typeQueries.join(' OR ')})`;
       }
@@ -336,10 +327,8 @@ export class GitHubStorageProvider implements StorageProvider {
 
     if (filter?.priority && filter.priority.length > 0) {
       const priorityQueries = filter.priority.map((priority) => {
-        const labelPrefix = this.config.mapping.useNativeLabels
-          ? 'priority:'
-          : `${this.config.labelsPrefix}-priority:`;
-        return `label:"${labelPrefix}${priority}"`;
+        // Use clean priority labels (priority:value)
+        return `label:"priority:${priority}"`;
       });
       query += ` (${priorityQueries.join(' OR ')})`;
     }
@@ -380,15 +369,17 @@ export class GitHubStorageProvider implements StorageProvider {
   }
 
   private looksLikeDevlogIssue(issue: GitHubIssue): boolean {
-    // Check if issue has devlog-related labels
-    const hasDevlogLabels = issue.labels.some((label: any) =>
-      label.name.startsWith(this.config.labelsPrefix),
+    const markerLabel = this.config.markerLabel || 'devlog';
+
+    // Check if issue has the marker label
+    const hasMarkerLabel = issue.labels.some((label: any) =>
+      label.name === markerLabel
     );
 
     // Check for new base64 metadata format (primary detection method)
     const hasDevlogMetadata = issue.body?.includes('<!-- DEVLOG_METADATA:') ?? false;
 
-    return hasDevlogLabels || hasDevlogMetadata;
+    return hasMarkerLabel || hasDevlogMetadata;
   }
 
   private normalizeConfig(config: GitHubStorageConfig): Required<GitHubStorageConfig> {
@@ -396,7 +387,8 @@ export class GitHubStorageProvider implements StorageProvider {
       ...config,
       apiUrl: config.apiUrl || 'https://api.github.com',
       branch: config.branch || 'main',
-      labelsPrefix: config.labelsPrefix || 'devlog',
+      labelsPrefix: config.labelsPrefix || 'devlog', // Keep for backward compatibility
+      markerLabel: config.markerLabel || 'devlog',
       enableEmojiTitles: config.enableEmojiTitles ?? true,
       mapping: {
         useNativeType: true,

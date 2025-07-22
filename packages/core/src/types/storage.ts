@@ -3,16 +3,16 @@
  */
 
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, PaginatedResult, TimeSeriesRequest, TimeSeriesStats } from './core.js';
-import { 
-  ChatSession, 
-  ChatMessage, 
-  ChatFilter, 
-  ChatStats, 
-  ChatSessionId, 
+import {
+  ChatSession,
+  ChatMessage,
+  ChatFilter,
+  ChatStats,
+  ChatSessionId,
   ChatMessageId,
   ChatSearchResult,
   ChatDevlogLink,
-  ChatWorkspace 
+  ChatWorkspace
 } from './chat.js';
 import { DevlogEvent } from '../events/devlog-events.js';
 
@@ -56,9 +56,10 @@ export interface GitHubStorageConfig {
   token: string;           // GitHub Personal Access Token
   apiUrl?: string;         // For GitHub Enterprise (default: api.github.com)
   branch?: string;         // For repository-specific operations
-  labelsPrefix?: string;   // Prefix for devlog labels (default: 'devlog')
+  labelsPrefix?: string;   // Prefix for devlog labels (default: 'devlog') - DEPRECATED: use markerLabel instead
+  markerLabel?: string;    // Marker label to identify devlog-managed issues (default: 'devlog')
   enableEmojiTitles?: boolean; // Add emoji icons to issue titles (default: true)
-  
+
   // Strategy for mapping devlog fields to GitHub features
   mapping?: {
     useNativeType?: boolean;      // Use GitHub's native 'type' field instead of labels (default: true)
@@ -71,7 +72,7 @@ export interface GitHubStorageConfig {
       type?: string;              // Project field name for type (if not using native)
     };
   };
-  
+
   rateLimit?: {
     requestsPerHour?: number;  // Default: 5000 (GitHub's limit)
     retryDelay?: number;       // Default: 1000ms
@@ -256,7 +257,7 @@ export interface StorageProvider {
 export interface DevlogConfig {
   // Traditional single workspace mode (backward compatibility)
   storage?: StorageConfig;
-  
+
   // TODO: Uncomment when integrations are implemented
   // integrations?: EnterpriseIntegration;
   // syncStrategy?: SyncStrategy;
