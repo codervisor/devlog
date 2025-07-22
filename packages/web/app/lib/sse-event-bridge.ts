@@ -6,7 +6,7 @@
 import { broadcastUpdate } from './sse-manager';
 
 // Types only - won't be bundled at runtime
-import type { DevlogManager } from '@devlog/core';
+import type { DevlogManager, DevlogEvent } from '@devlog/core';
 
 class SSEEventBridge {
   private initialized = false;

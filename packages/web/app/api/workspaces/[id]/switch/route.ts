@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getWorkspaceManager } from '../../../../lib/workspace-manager';
+import { broadcastUpdate } from '../../../../lib/sse-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -11,6 +12,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const workspaceId = params.id;
 
     const context = await manager.switchToWorkspace(workspaceId);
+
+    // Broadcast workspace switch event to all connected clients
+    broadcastUpdate('workspace-switched', {
+      workspaceId: context.workspaceId,
+      workspace: context.workspace,
+      isDefault: context.isDefault,
+    });
 
     return NextResponse.json({
       message: `Switched to workspace: ${context.workspace.name}`,

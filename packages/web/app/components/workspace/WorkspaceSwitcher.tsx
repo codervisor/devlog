@@ -14,6 +14,7 @@ import {
   WifiOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
+import { useServerSentEvents } from '@/hooks/useServerSentEvents';
 import styles from './WorkspaceSwitcher.module.css';
 
 const { Text } = Typography;
@@ -79,11 +80,27 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
     >
   >({});
   const router = useRouter();
+  const { subscribe, unsubscribe } = useServerSentEvents();
 
   // Load workspaces on component mount
   useEffect(() => {
     loadWorkspaces();
   }, []);
+
+  // Listen for workspace switch events to update UI
+  useEffect(() => {
+    const handleWorkspaceSwitched = (eventData: any) => {
+      console.log('WorkspaceSwitcher: Received workspace-switched event', eventData);
+      // Refresh workspace data to update the current workspace
+      loadWorkspaces();
+    };
+
+    subscribe('workspace-switched', handleWorkspaceSwitched);
+
+    return () => {
+      unsubscribe('workspace-switched');
+    };
+  }, [subscribe, unsubscribe]);
 
   const loadWorkspaces = async () => {
     try {
@@ -164,11 +181,11 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
       }
 
       const data = await response.json();
-      setCurrentWorkspace(data.workspace);
       message.success(`Switched to workspace: ${data.workspace.workspace.name}`);
 
-      // Reload the page to refresh all data with new workspace
-      window.location.reload();
+      // Force immediate hard reload to bypass hot reload and ensure all components update
+      // Using location.href to force a hard reload that bypasses React Fast Refresh
+      window.location.href = window.location.href;
     } catch (error) {
       console.error('Error switching workspace:', error);
       message.error('Failed to switch workspace');

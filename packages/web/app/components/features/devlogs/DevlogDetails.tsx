@@ -34,20 +34,20 @@ const { Title, Text } = Typography;
 interface DevlogDetailsProps {
   devlog?: DevlogEntry;
   loading?: boolean;
+  hasUnsavedChanges?: boolean;
   onUpdate: (data: any) => void;
   onDelete: () => void;
   onUnsavedChangesChange?: (
     hasChanges: boolean,
     saveHandler: () => Promise<void>,
     discardHandler: () => void,
-    isSaving: boolean,
-    saveError: string | null,
   ) => void;
 }
 
 export function DevlogDetails({
   devlog,
   loading = false,
+  hasUnsavedChanges = false,
   onUpdate,
   onUnsavedChangesChange,
 }: DevlogDetailsProps) {
@@ -130,10 +130,7 @@ export function DevlogDetails({
   // Local state for tracking changes
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
   const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry>(devlog);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  
+
   // State for tracking note animations
   const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());
   const [newNoteIds, setNewNoteIds] = useState<Set<string>>(new Set());
@@ -151,11 +148,13 @@ export function DevlogDetails({
     // Only reset if this is a completely different devlog (ID changed)
     // OR if the devlog was updated but we don't have any unsaved changes
     // This allows real-time updates to flow through while preserving unsaved edits
-    if (devlog.id !== originalDevlog.id || (!hasUnsavedChanges && devlog.updatedAt !== originalDevlog.updatedAt)) {
+    if (
+      devlog.id !== originalDevlog.id ||
+      (!hasUnsavedChanges && devlog.updatedAt !== originalDevlog.updatedAt)
+    ) {
       setLocalChanges({});
       setOriginalDevlog(devlog);
-      setHasUnsavedChanges(false);
-      setSaveError(null);
+      // Note: Parent will be notified via the main useEffect below
     }
   }, [devlog.id, devlog.updatedAt, originalDevlog.id, originalDevlog.updatedAt, hasUnsavedChanges]);
 
@@ -169,8 +168,8 @@ export function DevlogDetails({
       return;
     }
 
-    const currentNoteIds = new Set(devlog.notes.map(note => note.id));
-    
+    const currentNoteIds = new Set(devlog.notes.map((note) => note.id));
+
     // On first load, mark all existing notes as seen without animation
     if (seenNoteIds.size === 0) {
       setSeenNoteIds(currentNoteIds);
@@ -178,20 +177,20 @@ export function DevlogDetails({
     }
 
     // Find new notes that weren't seen before
-    const newIds = new Set([...currentNoteIds].filter(id => !seenNoteIds.has(id)));
-    
+    const newIds = new Set([...currentNoteIds].filter((id) => !seenNoteIds.has(id)));
+
     if (newIds.size > 0) {
       setNewNoteIds(newIds);
       setSeenNoteIds(currentNoteIds);
-      
+
       // Clear the new note highlights after animation completes
       const timeout = setTimeout(() => {
         setNewNoteIds(new Set());
       }, 2500); // Total animation duration (0.4s slide + 2s highlight)
-      
+
       return () => clearTimeout(timeout);
     }
-    
+
     return undefined;
   }, [devlog.notes?.length, devlog.id]); // Remove seenNoteIds from dependencies to avoid loops
 
@@ -267,8 +266,10 @@ export function DevlogDetails({
       return currentValue !== originalFieldValue;
     });
 
-    setHasUnsavedChanges(actualChanges);
-    setSaveError(null);
+    // Notify parent about changes instead of managing state locally
+    if (onUnsavedChangesChange) {
+      onUnsavedChangesChange(actualChanges, handleSave, handleDiscard);
+    }
   };
 
   const handleContextChange = (contextField: string, value: string) => {
@@ -277,9 +278,6 @@ export function DevlogDetails({
 
   const handleSave = useCallback(async () => {
     try {
-      setIsSaving(true);
-      setSaveError(null);
-
       // Build update data from local changes
       const updateData: any = { id: devlog.id };
 
@@ -301,24 +299,22 @@ export function DevlogDetails({
 
       // Note: localChanges will be cleared when the devlog prop updates and triggers the useEffect
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'Failed to save changes');
-    } finally {
-      setIsSaving(false);
+      // Let the parent handle save errors
+      throw error;
     }
   }, [localChanges, devlog.id, devlog.context, onUpdate]);
 
   const handleDiscard = useCallback(() => {
     setLocalChanges({});
-    setHasUnsavedChanges(false);
-    setSaveError(null);
+    // Note: Parent will be notified via the main useEffect when hasUnsavedChanges changes to false
   }, []);
 
   // Notify parent about unsaved changes state
   useEffect(() => {
     if (onUnsavedChangesChange) {
-      onUnsavedChangesChange(hasUnsavedChanges, handleSave, handleDiscard, isSaving, saveError);
+      onUnsavedChangesChange(hasUnsavedChanges, handleSave, handleDiscard);
     }
-  }, [hasUnsavedChanges, isSaving, saveError, onUnsavedChangesChange]);
+  }, [hasUnsavedChanges, handleSave, handleDiscard, onUnsavedChangesChange]);
 
   return (
     <div>
@@ -805,10 +801,10 @@ export function DevlogDetails({
                   [styles.noteItemNew]: isNewNote,
                   [styles.noteItemEnter]: !isNewNote && seenNoteIds.has(note.id),
                 });
-                
+
                 return (
-                  <Timeline.Item 
-                    key={note.id} 
+                  <Timeline.Item
+                    key={note.id}
                     dot={getCategoryIcon(note.category)}
                     className={noteItemClass}
                   >

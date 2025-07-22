@@ -24,7 +24,6 @@
   display: flex;
   align-items: center;
   min-height: 32px;
-  overflow: hidden;
 
   .devlogTitle {
     margin: 0 !important;
@@ -282,7 +281,9 @@
 }
 
 .noteItemNew {
-  animation: noteSlideIn 0.4s ease-out, noteHighlight 2s ease-out 0.4s;
+  animation:
+    noteSlideIn 0.4s ease-out,
+    noteHighlight 2s ease-out 0.4s;
 }
 
 @keyframes noteSlideIn {

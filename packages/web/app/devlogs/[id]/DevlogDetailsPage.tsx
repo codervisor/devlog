@@ -1,20 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Alert, Breadcrumb, Button, Popconfirm, Space, Tag, message } from 'antd';
+import React, { useCallback, useRef, useState } from 'react';
+import { Alert, Button, message, Popconfirm, Space } from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons';
-import Link from 'next/link';
-import { DevlogDetails, LoadingPage, PageLayout } from '@/components';
+import { DevlogDetails, PageLayout } from '@/components';
 import { useDevlogDetails } from '@/hooks/useDevlogDetails';
-import { DevlogEntry } from '@devlog/core';
 import { useRouter } from 'next/navigation';
-import {
-  getPriorityColor,
-  getPriorityIcon,
-  getStatusColor,
-  getStatusIcon,
-  getTypeIcon,
-} from '@/lib/devlog-ui-utils';
 
 interface DevlogDetailsPageProps {
   id: string;
@@ -24,7 +15,6 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
   const { devlog, loading, error: fetchError, updateDevlog, deleteDevlog } = useDevlogDetails(id);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const router = useRouter();
 
   // Use refs to store function references to avoid recreation on every render
@@ -33,32 +23,23 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
 
   const handleUpdate = async (data: any) => {
     try {
+      setIsSaving(true);
       await updateDevlog(data);
       message.success('Changes saved successfully');
     } catch (error) {
       console.error('Failed to update devlog:', error);
       throw error; // Re-throw so the component can handle the error
+    } finally {
+      setIsSaving(false);
+      setHasUnsavedChanges(false);
     }
   };
 
   const handleUnsavedChangesChange = useCallback(
-    (
-      hasChanges: boolean,
-      save: () => Promise<void>,
-      discard: () => void,
-      saving: boolean,
-      error: string | null,
-    ) => {
+    (hasChanges: boolean, save: () => Promise<void>, discard: () => void) => {
       setHasUnsavedChanges(hasChanges);
       saveHandlerRef.current = save;
       discardHandlerRef.current = discard;
-      setIsSaving(saving);
-      setSaveError(error);
-
-      // Show error message if save failed
-      if (error) {
-        message.error(`Failed to save changes: ${error}`);
-      }
     },
     [],
   );
@@ -81,6 +62,7 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
       <PageLayout>
         <DevlogDetails
           loading={true}
+          hasUnsavedChanges={hasUnsavedChanges}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
           onUnsavedChangesChange={handleUnsavedChangesChange}
@@ -147,6 +129,7 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
     <PageLayout actions={actions}>
       <DevlogDetails
         devlog={devlog}
+        hasUnsavedChanges={hasUnsavedChanges}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
         onUnsavedChangesChange={handleUnsavedChangesChange}
