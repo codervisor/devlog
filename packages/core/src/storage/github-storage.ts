@@ -96,7 +96,7 @@ export class GitHubStorageProvider implements StorageProvider {
       const comments = await this.rateLimiter.executeWithRateLimit(async () => {
         return await this.apiClient.getIssueComments(issueNumber);
       });
-      
+
       devlogEntry.notes = this.commentsToNotes(comments);
 
       if (this.config.cache.enabled) {
@@ -119,14 +119,14 @@ export class GitHubStorageProvider implements StorageProvider {
     if (entry.id && (await this.exists(entry.id))) {
       // Update existing issue
       const issueNumber = entry.id;
-      
+
       // Filter out invalid fields for GitHub API - only include UpdateIssueRequest fields
       const updateData: any = {
         title: issueData.title,
         body: issueData.body,
         labels: issueData.labels
       };
-      
+
       // Add state fields only if this is an UpdateIssueRequest
       if ('state' in issueData) {
         updateData.state = issueData.state;
@@ -134,36 +134,36 @@ export class GitHubStorageProvider implements StorageProvider {
       if ('state_reason' in issueData) {
         updateData.state_reason = issueData.state_reason;
       }
-      
+
       await this.rateLimiter.executeWithRateLimit(async () => {
         await this.apiClient.updateIssue(issueNumber, updateData);
       });
-      
+
       // Sync notes with GitHub comments
       if (entry.notes && entry.notes.length > 0) {
         await this.syncNotesWithComments(issueNumber, entry.notes);
       }
     } else {
       // Create new issue
-      
+
       // Filter out invalid fields for GitHub API - only include CreateIssueRequest fields
       const createData: any = {
         title: issueData.title,
         body: issueData.body,
         labels: issueData.labels
       };
-      
+
       // Ensure required fields are present
       if (!createData.title) {
         throw new Error('Issue title is required');
       }
-      
+
       const issue = await this.rateLimiter.executeWithRateLimit(async () => {
         return await this.apiClient.createIssue(createData);
       });
       // Update entry ID to match GitHub issue number
       entry.id = issue.number;
-      
+
       // Sync notes with GitHub comments
       if (entry.notes && entry.notes.length > 0) {
         await this.syncNotesWithComments(issue.number, entry.notes);
@@ -265,19 +265,22 @@ export class GitHubStorageProvider implements StorageProvider {
   private buildSearchQuery(filter?: DevlogFilter): string {
     let query = `repo:${this.config.owner}/${this.config.repo} is:issue`;
 
-    // Add devlog identifier - use type field or labels depending on configuration
-    if (this.config.mapping.useNativeType) {
-      // When using native type, we need a different way to identify devlog issues
-      // We could use a specific label or rely on the structure
-      query += ` label:"${this.config.labelsPrefix}"`;
+    // Build flexible devlog identification query
+    const devlogIdentifiers = [];
+
+    // Method 1: Label-based identification
+    if (this.config.mapping.useNativeType || this.config.mapping.useNativeLabels) {
+      devlogIdentifiers.push(`label:"${this.config.labelsPrefix}"`);
     } else {
-      // Use the traditional type label approach
-      if (this.config.mapping.useNativeLabels) {
-        // When using native labels, we need to identify devlog issues differently
-        query += ` label:"${this.config.labelsPrefix}"`;
-      } else {
-        query += ` label:"${this.config.labelsPrefix}-type"`;
-      }
+      devlogIdentifiers.push(`label:"${this.config.labelsPrefix}-type"`);
+    }
+
+    // Method 2: Metadata-based identification (primary approach)
+    devlogIdentifiers.push(`"DEVLOG_METADATA:" in:body`);
+
+    // Use OR logic to match any identification method
+    if (devlogIdentifiers.length > 0) {
+      query += ` (${devlogIdentifiers.join(' OR ')})`;
     }
 
     if (filter?.status && filter.status.length > 0) {
@@ -377,19 +380,15 @@ export class GitHubStorageProvider implements StorageProvider {
   }
 
   private looksLikeDevlogIssue(issue: GitHubIssue): boolean {
-    // Check if issue has devlog-related labels or structure
+    // Check if issue has devlog-related labels
     const hasDevlogLabels = issue.labels.some((label: any) =>
       label.name.startsWith(this.config.labelsPrefix),
     );
 
-    // Check if title/body suggests it's a devlog entry
-    const hasDevlogStructure =
-      issue.title.toLowerCase().includes('devlog') ||
-      (issue.body?.toLowerCase().includes('devlog') ?? false) ||
-      (issue.body?.includes('## Business Context') ?? false) ||
-      (issue.body?.includes('## Technical Context') ?? false);
+    // Check for new base64 metadata format (primary detection method)
+    const hasDevlogMetadata = issue.body?.includes('<!-- DEVLOG_METADATA:') ?? false;
 
-    return hasDevlogLabels || hasDevlogStructure;
+    return hasDevlogLabels || hasDevlogMetadata;
   }
 
   private normalizeConfig(config: GitHubStorageConfig): Required<GitHubStorageConfig> {
@@ -428,7 +427,7 @@ export class GitHubStorageProvider implements StorageProvider {
     } catch (error: any) {
       throw new Error(
         `GitHub API access verification failed: ${error.message}. ` +
-          `Please check your token permissions and repository access.`,
+        `Please check your token permissions and repository access.`,
       );
     }
   }
@@ -538,34 +537,34 @@ export class GitHubStorageProvider implements StorageProvider {
       includeTimestamp: true,
       timestamp: note.timestamp
     });
-    
+
     // Add metadata markers
     const metadata: string[] = [];
-    
+
     if (note.category && note.category !== 'progress') {
       metadata.push(`<!-- devlog-note-category: ${note.category} -->`);
     }
-    
+
     if (note.codeChanges) {
       metadata.push(`<!-- devlog-note-codeChanges: ${note.codeChanges} -->`);
     }
-    
+
     if (note.files && note.files.length > 0) {
       metadata.push(`<!-- devlog-note-files: ${note.files.join(',')} -->`);
     }
-    
+
     // Add files and code changes to the visible content if present
     let additionalInfo = '';
     if (note.files && note.files.length > 0) {
       additionalInfo += `\n\n📁 **Files:** ${note.files.map(f => `\`${f}\``).join(', ')}`;
     }
-    
+
     if (note.codeChanges) {
       additionalInfo += `\n\n💻 **Code Changes:** ${note.codeChanges}`;
     }
-    
+
     const fullContent = formattedContent + additionalInfo;
-    
+
     return metadata.length > 0 ? `${metadata.join('\n')}\n\n${fullContent}` : fullContent;
   }
 
@@ -585,7 +584,7 @@ export class GitHubStorageProvider implements StorageProvider {
   private extractCategoryFromComment(commentBody: string): NoteCategory {
     const match = commentBody.match(/<!-- devlog-note-category: ([^>]+) -->/);
     const category = match ? match[1] : 'progress';
-    
+
     // Validate that it's a valid NoteCategory
     const validCategories: NoteCategory[] = ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'];
     return validCategories.includes(category as NoteCategory) ? category as NoteCategory : 'progress';
@@ -618,7 +617,7 @@ export class GitHubStorageProvider implements StorageProvider {
 
     // Track which comments correspond to our notes
     const noteCommentMap = new Map<string, GitHubComment>();
-    
+
     // Find existing comments that match our notes
     for (const comment of existingComments) {
       const noteId = comment.id.toString();
@@ -643,7 +642,7 @@ export class GitHubStorageProvider implements StorageProvider {
         const newComment = await this.rateLimiter.executeWithRateLimit(async () => {
           return await this.apiClient.createIssueComment(issueNumber, { body: commentBody });
         });
-        
+
         // Update note ID to match the created comment ID
         note.id = newComment.id.toString();
       }
