@@ -6,7 +6,10 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@devlog/*": ["packages/*/src"]
+      "@devlog/ai": ["./packages/ai/src"],
+      "@devlog/core": ["./packages/core/src"],
+      "@devlog/mcp": ["./packages/mcp/src"],
+      "@devlog/web": ["./packages/web/src"]
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

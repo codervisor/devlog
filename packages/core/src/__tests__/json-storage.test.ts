@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { JsonStorageProvider } from '../storage/providers/json-storage.js';
-import type { DevlogEntry } from '../types/index.js';
+import { JsonStorageProvider } from '../storage';
+import type { DevlogEntry } from '../types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { tmpdir } from 'os';
@@ -19,21 +19,31 @@ describe('JsonStorageProvider', () => {
   beforeEach(async () => {
     // Store original working directory
     originalCwd = process.cwd();
-    
+
     // Create unique test directory for each test
-    testDir = path.join(tmpdir(), `devlog-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    testDir = path.join(
+      tmpdir(),
+      `devlog-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    );
     devlogDir = path.join(testDir, '.devlog');
     entriesDir = path.join(devlogDir, 'entries');
 
     // Create test directory and change to it
     await fs.mkdir(testDir, { recursive: true });
-    
+
     // Create a minimal package.json to make it look like a valid project root
-    await fs.writeFile(path.join(testDir, 'package.json'), JSON.stringify({
-      name: 'test-project',
-      version: '1.0.0'
-    }, null, 2));
-    
+    await fs.writeFile(
+      path.join(testDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'test-project',
+          version: '1.0.0',
+        },
+        null,
+        2,
+      ),
+    );
+
     process.chdir(testDir);
 
     // Initialize storage provider with relative path while in test directory
@@ -50,12 +60,12 @@ describe('JsonStorageProvider', () => {
     if (storage) {
       await storage.cleanup();
     }
-    
+
     // Restore original working directory before cleanup
     if (originalCwd && originalCwd !== process.cwd()) {
       process.chdir(originalCwd);
     }
-    
+
     try {
       await fs.rm(testDir, { recursive: true, force: true });
     } catch {
@@ -66,23 +76,35 @@ describe('JsonStorageProvider', () => {
   describe('initialization', () => {
     it('should create directory structure without index.json', async () => {
       // Verify directories exist (using absolute paths for verification)
-      const devlogExists = await fs.access(devlogDir).then(() => true).catch(() => false);
-      const entriesExists = await fs.access(entriesDir).then(() => true).catch(() => false);
-      
+      const devlogExists = await fs
+        .access(devlogDir)
+        .then(() => true)
+        .catch(() => false);
+      const entriesExists = await fs
+        .access(entriesDir)
+        .then(() => true)
+        .catch(() => false);
+
       expect(devlogExists).toBe(true);
       expect(entriesExists).toBe(true);
 
       // Verify index.json does NOT exist
       const indexPath = path.join(devlogDir, 'index.json');
-      const indexExists = await fs.access(indexPath).then(() => true).catch(() => false);
-      
+      const indexExists = await fs
+        .access(indexPath)
+        .then(() => true)
+        .catch(() => false);
+
       expect(indexExists).toBe(false);
     });
 
     it('should create .gitignore file', async () => {
       const gitignorePath = path.join(devlogDir, '.gitignore');
-      const gitignoreExists = await fs.access(gitignorePath).then(() => true).catch(() => false);
-      
+      const gitignoreExists = await fs
+        .access(gitignorePath)
+        .then(() => true)
+        .catch(() => false);
+
       expect(gitignoreExists).toBe(true);
     });
   });
@@ -101,7 +123,7 @@ describe('JsonStorageProvider', () => {
 
     it('should save and retrieve entries without index.json', async () => {
       const testEntry = createTestEntry('Test Entry 1');
-      
+
       // Save entry
       await storage.save(testEntry as DevlogEntry);
       expect(testEntry.id).toBeDefined();
@@ -114,21 +136,24 @@ describe('JsonStorageProvider', () => {
 
       // Verify no index.json was created
       const indexPath = path.join(devlogDir, 'index.json');
-      const indexExists = await fs.access(indexPath).then(() => true).catch(() => false);
+      const indexExists = await fs
+        .access(indexPath)
+        .then(() => true)
+        .catch(() => false);
       expect(indexExists).toBe(false);
     });
 
     it('should generate unique sequential IDs', async () => {
       const entry1 = createTestEntry('Entry 1');
       const entry2 = createTestEntry('Entry 2');
-      
+
       await storage.save(entry1 as DevlogEntry);
       await storage.save(entry2 as DevlogEntry);
 
       expect(entry1.id).toBeDefined();
       expect(entry2.id).toBeDefined();
       expect(entry1.id).not.toBe(entry2.id);
-      
+
       // IDs should be sequential numbers starting from 1
       expect(entry1.id!).toBeGreaterThan(0);
       expect(entry2.id!).toBeGreaterThan(0);
@@ -137,30 +162,30 @@ describe('JsonStorageProvider', () => {
 
     it('should handle entry existence checks', async () => {
       const testEntry = createTestEntry('Test Entry');
-      
+
       // Entry should not exist initially
       expect(await storage.exists(999999)).toBe(false);
-      
+
       // Save entry
       await storage.save(testEntry as DevlogEntry);
-      
+
       // Entry should exist now
       expect(await storage.exists(testEntry.id!)).toBe(true);
-      
+
       // Non-existent entry should still not exist
       expect(await storage.exists(999999)).toBe(false);
     });
 
     it('should delete entries', async () => {
       const testEntry = createTestEntry('Test Entry');
-      
+
       // Save and verify existence
       await storage.save(testEntry as DevlogEntry);
       expect(await storage.exists(testEntry.id!)).toBe(true);
-      
+
       // Delete entry
       await storage.delete(testEntry.id!);
-      
+
       // Verify deletion
       expect(await storage.exists(testEntry.id!)).toBe(false);
       expect(await storage.get(testEntry.id!)).toBe(null);
@@ -183,28 +208,28 @@ describe('JsonStorageProvider', () => {
           updatedAt: new Date().toISOString(),
           notes: [],
         } as DevlogEntry;
-        
+
         await storage.save(fullEntry);
       }
     };
 
     it('should list all entries using file discovery', async () => {
       await createTestEntries();
-      
+
       const entries = await storage.list();
       expect(entries.items).toHaveLength(3);
-      
-      const titles = entries.items.map(e => e.title).sort();
+
+      const titles = entries.items.map((e) => e.title).sort();
       expect(titles).toEqual(['Bug Fix B', 'Feature A', 'Task C']);
     });
 
     it('should filter entries by status', async () => {
       await createTestEntries();
-      
+
       const newEntries = await storage.list({ status: ['new'] });
       expect(newEntries.items).toHaveLength(1);
       expect(newEntries.items[0].title).toBe('Feature A');
-      
+
       const inProgressEntries = await storage.list({ status: ['in-progress'] });
       expect(inProgressEntries.items).toHaveLength(1);
       expect(inProgressEntries.items[0].title).toBe('Bug Fix B');
@@ -212,11 +237,11 @@ describe('JsonStorageProvider', () => {
 
     it('should filter entries by type', async () => {
       await createTestEntries();
-      
+
       const features = await storage.list({ type: ['feature'] });
       expect(features.items).toHaveLength(1);
       expect(features.items[0].title).toBe('Feature A');
-      
+
       const bugfixes = await storage.list({ type: ['bugfix'] });
       expect(bugfixes.items).toHaveLength(1);
       expect(bugfixes.items[0].title).toBe('Bug Fix B');
@@ -224,7 +249,7 @@ describe('JsonStorageProvider', () => {
 
     it('should filter entries by priority', async () => {
       await createTestEntries();
-      
+
       const highPriority = await storage.list({ priority: ['high'] });
       expect(highPriority.items).toHaveLength(1);
       expect(highPriority.items[0].title).toBe('Feature A');
@@ -241,7 +266,7 @@ describe('JsonStorageProvider', () => {
         updatedAt: '2025-01-01T00:00:00.000Z',
         notes: [],
       } as DevlogEntry;
-      
+
       const entry2 = {
         title: 'New Entry',
         description: 'New',
@@ -255,7 +280,7 @@ describe('JsonStorageProvider', () => {
 
       await storage.save(entry1);
       await storage.save(entry2);
-      
+
       const entries = await storage.list();
       expect(entries.items).toHaveLength(2);
       expect(entries.items[0].title).toBe('New Entry'); // Most recent first
@@ -315,12 +340,14 @@ describe('JsonStorageProvider', () => {
         priority: 'medium',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        notes: [{
-          id: 'note1',
-          timestamp: new Date().toISOString(),
-          category: 'progress',
-          content: 'This is a special implementation detail'
-        }],
+        notes: [
+          {
+            id: 'note1',
+            timestamp: new Date().toISOString(),
+            category: 'progress',
+            content: 'This is a special implementation detail',
+          },
+        ],
       } as DevlogEntry;
 
       await storage.save(entry);
@@ -349,12 +376,12 @@ describe('JsonStorageProvider', () => {
           updatedAt: new Date().toISOString(),
           notes: [],
         } as DevlogEntry;
-        
+
         await storage.save(entry);
       }
 
       const stats = await storage.getStats();
-      
+
       expect(stats.totalEntries).toBe(4);
       expect(stats.byType.feature).toBe(2);
       expect(stats.byType.bugfix).toBe(1);
@@ -397,18 +424,21 @@ describe('JsonStorageProvider', () => {
 
       // Check that files exist in entries directory
       const files = await fs.readdir(entriesDir);
-      const jsonFiles = files.filter(f => f.endsWith('.json'));
-      
+      const jsonFiles = files.filter((f) => f.endsWith('.json'));
+
       expect(jsonFiles).toHaveLength(2);
-      
+
       // Verify file naming pattern
-      jsonFiles.forEach(filename => {
+      jsonFiles.forEach((filename) => {
         expect(filename).toMatch(/^\d+-[\w-]+\.json$/);
       });
 
       // Verify no index.json was created
       const indexPath = path.join(devlogDir, 'index.json');
-      const indexExists = await fs.access(indexPath).then(() => true).catch(() => false);
+      const indexExists = await fs
+        .access(indexPath)
+        .then(() => true)
+        .catch(() => false);
       expect(indexExists).toBe(false);
     });
   });
@@ -434,8 +464,8 @@ describe('JsonStorageProvider', () => {
       // Verify all entries were saved with unique IDs
       const savedEntries = await storage.list();
       expect(savedEntries.items).toHaveLength(5);
-      
-      const ids = savedEntries.items.map(e => e.id);
+
+      const ids = savedEntries.items.map((e) => e.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(5); // All IDs should be unique
     });

@@ -3,7 +3,7 @@
  * Automatically selects appropriate storage backend for deployment environment
  */
 
-import { AutoWorkspaceManager } from '@devlog/core';
+import { AutoWorkspaceManager } from '@devlog/core/index';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -30,22 +30,22 @@ export async function getWorkspaceManager(): Promise<AutoWorkspaceManager> {
           name: 'Default Workspace',
           description: 'Default devlog workspace',
           settings: {
-            defaultPriority: 'medium'
-          }
+            defaultPriority: 'medium',
+          },
         },
         storage: {
           type: 'json',
           json: {
             directory: '.devlog',
-            global: false
-          }
-        }
-      }
+            global: false,
+          },
+        },
+      },
     });
-    
+
     await globalWorkspaceManager.initialize();
   }
-  
+
   return globalWorkspaceManager;
 }
 

@@ -3,7 +3,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import styles from './MarkdownEditor.module.css';
-import { configureMonaco } from '../../../lib/monaco-config';
+import { configureMonaco } from '../../lib/monaco-config';
 
 // Configure Monaco Editor environment
 if (typeof window !== 'undefined') {
@@ -146,7 +146,7 @@ export function MarkdownEditor({
           function updateHeight() {
             const model = editor.getModel();
             if (!model || !editorRef.current) return;
-            
+
             // Import monaco dynamically to avoid SSR issues
             import('monaco-editor/esm/vs/editor/editor.api').then((monaco) => {
               const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight);

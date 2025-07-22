@@ -27,9 +27,9 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./app/*"
-      ]
+      "@/*": ["./app/*"],
+      "@devlog/ai/*": ["../ai/src/*"],
+      "@devlog/core/*": ["../core/src/*"],
     }
   },
   "include": [

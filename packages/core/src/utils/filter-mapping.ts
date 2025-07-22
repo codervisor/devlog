@@ -1,16 +1,16 @@
 /**
  * Filter mapping utilities for devlog status and type filtering
- * 
+ *
  * This module provides centralized mapping between FilterType values and their
  * corresponding DevlogStatus arrays, eliminating hardcoded status arrays
  * throughout the codebase.
  */
 
-import type { DevlogStatus, FilterType } from '../types/core.js';
+import type { DevlogStatus, FilterType } from '@/types';
 
 /**
  * Mapping of filter types to their corresponding status arrays
- * 
+ *
  * This is the single source of truth for status groupings:
  * - 'open': Statuses representing active/in-progress work
  * - 'closed': Statuses representing completed/finished work
@@ -19,31 +19,31 @@ import type { DevlogStatus, FilterType } from '../types/core.js';
  */
 export const FILTER_TYPE_TO_STATUSES: Record<FilterType, DevlogStatus[]> = {
   // Aggregate categories
-  'open': ['new', 'in-progress', 'blocked', 'in-review', 'testing'],
-  'closed': ['done', 'cancelled'],
-  'total': ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
-  
+  open: ['new', 'in-progress', 'blocked', 'in-review', 'testing'],
+  closed: ['done', 'cancelled'],
+  total: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
+
   // Individual statuses (each maps to itself)
-  'new': ['new'],
+  new: ['new'],
   'in-progress': ['in-progress'],
-  'blocked': ['blocked'],
+  blocked: ['blocked'],
   'in-review': ['in-review'],
-  'testing': ['testing'],
-  'done': ['done'],
-  'cancelled': ['cancelled'],
+  testing: ['testing'],
+  done: ['done'],
+  cancelled: ['cancelled'],
 } as const;
 
 /**
  * Get the status array for a given filter type
- * 
+ *
  * @param filterType - The filter type to map to statuses
  * @returns Array of DevlogStatus values corresponding to the filter type
- * 
+ *
  * @example
  * ```typescript
  * const openStatuses = getStatusesForFilterType('open');
  * // Returns: ['new', 'in-progress', 'blocked', 'in-review', 'testing']
- * 
+ *
  * const newStatuses = getStatusesForFilterType('new');
  * // Returns: ['new']
  * ```
@@ -54,16 +54,16 @@ export function getStatusesForFilterType(filterType: FilterType): DevlogStatus[]
 
 /**
  * Check if a status belongs to a specific filter type category
- * 
+ *
  * @param status - The DevlogStatus to check
  * @param filterType - The FilterType category to check against
  * @returns True if the status belongs to the filter type category
- * 
+ *
  * @example
  * ```typescript
  * const isOpen = isStatusInFilterType('in-progress', 'open');
  * // Returns: true
- * 
+ *
  * const isClosed = isStatusInFilterType('in-progress', 'closed');
  * // Returns: false
  * ```
@@ -74,7 +74,7 @@ export function isStatusInFilterType(status: DevlogStatus, filterType: FilterTyp
 
 /**
  * Get all open statuses (shorthand for getStatusesForFilterType('open'))
- * 
+ *
  * @returns Array of DevlogStatus values representing open/active work
  */
 export function getOpenStatuses(): DevlogStatus[] {
@@ -83,7 +83,7 @@ export function getOpenStatuses(): DevlogStatus[] {
 
 /**
  * Get all closed statuses (shorthand for getStatusesForFilterType('closed'))
- * 
+ *
  * @returns Array of DevlogStatus values representing closed/finished work
  */
 export function getClosedStatuses(): DevlogStatus[] {
@@ -92,7 +92,7 @@ export function getClosedStatuses(): DevlogStatus[] {
 
 /**
  * Get all possible statuses (shorthand for getStatusesForFilterType('total'))
- * 
+ *
  * @returns Array of all DevlogStatus values
  */
 export function getAllStatuses(): DevlogStatus[] {
@@ -101,7 +101,7 @@ export function getAllStatuses(): DevlogStatus[] {
 
 /**
  * Check if a status represents open/active work
- * 
+ *
  * @param status - The DevlogStatus to check
  * @returns True if the status represents open work
  */
@@ -111,7 +111,7 @@ export function isOpenStatus(status: DevlogStatus): boolean {
 
 /**
  * Check if a status represents closed/finished work
- * 
+ *
  * @param status - The DevlogStatus to check
  * @returns True if the status represents closed work
  */
@@ -121,15 +121,15 @@ export function isClosedStatus(status: DevlogStatus): boolean {
 
 /**
  * Get the filter type category for a given status
- * 
+ *
  * @param status - The DevlogStatus to categorize
  * @returns The FilterType category ('open' or 'closed') for the status
- * 
+ *
  * @example
  * ```typescript
  * const category = getFilterTypeForStatus('in-progress');
  * // Returns: 'open'
- * 
+ *
  * const category = getFilterTypeForStatus('done');
  * // Returns: 'closed'
  * ```
@@ -141,16 +141,16 @@ export function getFilterTypeForStatus(status: DevlogStatus): 'open' | 'closed' 
 /**
  * Convert a FilterType to an appropriate status array for filtering operations
  * This is the main function to use when applying filters in storage/manager layers
- * 
+ *
  * @param filterType - The FilterType to convert
  * @returns Array of DevlogStatus values for filtering, or undefined if 'total' (no filtering needed)
- * 
+ *
  * @example
  * ```typescript
  * // For filtering operations
  * const statusFilter = filterTypeToStatusFilter('open');
  * // Returns: ['new', 'in-progress', 'blocked', 'in-review', 'testing']
- * 
+ *
  * const totalFilter = filterTypeToStatusFilter('total');
  * // Returns: undefined (no status filtering needed for 'total')
  * ```
@@ -160,6 +160,6 @@ export function filterTypeToStatusFilter(filterType: FilterType): DevlogStatus[]
   if (filterType === 'total') {
     return undefined;
   }
-  
+
   return getStatusesForFilterType(filterType);
 }

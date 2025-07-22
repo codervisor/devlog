@@ -3,33 +3,30 @@
  */
 
 import * as crypto from 'crypto';
-import { DevlogManager } from '@devlog/core';
 import {
-  CreateDevlogRequest,
-  DevlogStatus,
-  DevlogType,
-  UpdateDevlogRequest,
-  DevlogConfig,
-  NoteCategory,
   AIContext,
+  CreateDevlogRequest,
+  DevlogConfig,
   DevlogContext,
+  DevlogManager,
+  DevlogStatus,
+  NoteCategory,
+  UpdateDevlogRequest,
 } from '@devlog/core';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
-  CreateDevlogArgs,
-  UpdateDevlogArgs,
-  ListDevlogsArgs,
-  SearchDevlogsArgs,
-  AddDevlogNoteArgs,
-  UpdateDevlogWithNoteArgs,
   AddDecisionArgs,
-  CompleteDevlogArgs,
+  AddDevlogNoteArgs,
   CloseDevlogArgs,
+  CompleteDevlogArgs,
+  DiscoverRelatedDevlogsArgs,
   GetActiveContextArgs,
   GetContextForAIArgs,
-  DiscoverRelatedDevlogsArgs,
+  ListDevlogsArgs,
+  SearchDevlogsArgs,
   UpdateAIContextArgs,
-} from './types/tool-args.js';
+  UpdateDevlogWithNoteArgs,
+} from '@/types/tool-args';
 
 export class MCPDevlogAdapter {
   private devlogManager: DevlogManager;

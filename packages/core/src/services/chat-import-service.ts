@@ -1,6 +1,6 @@
 /**
  * Chat import service for importing chat history from various sources
- * 
+ *
  * This service handles importing chat data from sources like codehist (GitHub Copilot)
  * into the devlog storage system with proper workspace mapping and linking.
  */
@@ -18,7 +18,7 @@ import type {
   AgentType,
   ChatStatus,
   ChatSessionId,
-} from '../types/index.js';
+} from '@/types';
 
 export interface ChatImportService {
   /**
@@ -34,7 +34,10 @@ export interface ChatImportService {
   /**
    * Suggest links between chat sessions and devlog entries
    */
-  suggestChatDevlogLinks(sessionId?: ChatSessionId, minConfidence?: number): Promise<ChatDevlogLink[]>;
+  suggestChatDevlogLinks(
+    sessionId?: ChatSessionId,
+    minConfidence?: number,
+  ): Promise<ChatDevlogLink[]>;
 
   /**
    * Auto-link chat sessions to devlog entries based on various heuristics
@@ -61,9 +64,9 @@ export class DefaultChatImportService implements ChatImportService {
         processedSessions: 0,
         totalMessages: 0,
         processedMessages: 0,
-        percentage: 0
+        percentage: 0,
       },
-      startedAt: new Date().toISOString()
+      startedAt: new Date().toISOString(),
     };
 
     this.activeImports.set(importId, progress);
@@ -82,7 +85,10 @@ export class DefaultChatImportService implements ChatImportService {
     return this.activeImports.get(importId) || null;
   }
 
-  async suggestChatDevlogLinks(sessionId?: ChatSessionId, minConfidence = 0.5): Promise<ChatDevlogLink[]> {
+  async suggestChatDevlogLinks(
+    sessionId?: ChatSessionId,
+    minConfidence = 0.5,
+  ): Promise<ChatDevlogLink[]> {
     const suggestions: ChatDevlogLink[] = [];
 
     try {
@@ -95,9 +101,13 @@ export class DefaultChatImportService implements ChatImportService {
         }
       } else {
         // Get recent unlinked sessions
-        sessions = await this.storageProvider.listChatSessions({
-          includeArchived: false
-        }, 0, 50);
+        sessions = await this.storageProvider.listChatSessions(
+          {
+            includeArchived: false,
+          },
+          0,
+          50,
+        );
       }
 
       // Get all devlog entries for linking analysis (without pagination)
@@ -106,7 +116,11 @@ export class DefaultChatImportService implements ChatImportService {
 
       // Analyze each session for potential links
       for (const session of sessions) {
-        const sessionSuggestions = await this.analyzeChatSessionForLinks(session, devlogEntries, minConfidence);
+        const sessionSuggestions = await this.analyzeChatSessionForLinks(
+          session,
+          devlogEntries,
+          minConfidence,
+        );
         suggestions.push(...sessionSuggestions);
       }
 
@@ -123,7 +137,7 @@ export class DefaultChatImportService implements ChatImportService {
     try {
       for (const sessionId of sessionIds) {
         const suggestions = await this.suggestChatDevlogLinks(sessionId, threshold);
-        
+
         // Auto-confirm high-confidence suggestions
         for (const suggestion of suggestions) {
           if (suggestion.confidence >= threshold) {
@@ -154,7 +168,7 @@ export class DefaultChatImportService implements ChatImportService {
         progress.completedAt = new Date().toISOString();
         progress.error = {
           message: error.message,
-          details: { stack: error.stack }
+          details: { stack: error.stack },
         };
       }
     }
@@ -174,10 +188,13 @@ export class DefaultChatImportService implements ChatImportService {
       // Update progress with discovered data
       progress.progress.totalSessions = workspaceData.chat_sessions.length;
       progress.progress.totalMessages = workspaceData.chat_sessions.reduce(
-        (sum: number, session: any) => sum + session.messages.length, 0
+        (sum: number, session: any) => sum + session.messages.length,
+        0,
       );
 
-      console.log(`[ChatImportService] Discovered ${progress.progress.totalSessions} sessions with ${progress.progress.totalMessages} messages`);
+      console.log(
+        `[ChatImportService] Discovered ${progress.progress.totalSessions} sessions with ${progress.progress.totalMessages} messages`,
+      );
 
       // Process workspaces first
       await this.processWorkspaces(workspaceData, config);
@@ -191,7 +208,7 @@ export class DefaultChatImportService implements ChatImportService {
         try {
           // Convert to devlog chat session format
           const chatSession = await this.convertToDevlogChatSession(sessionData, config);
-          
+
           // Save session
           await this.storageProvider.saveChatSession(chatSession);
           importedSessions++;
@@ -215,11 +232,12 @@ export class DefaultChatImportService implements ChatImportService {
           progress.progress.processedSessions++;
           progress.progress.processedMessages += sessionData.messages.length;
           progress.progress.percentage = Math.round(
-            (progress.progress.processedSessions / progress.progress.totalSessions) * 100
+            (progress.progress.processedSessions / progress.progress.totalSessions) * 100,
           );
 
-          console.log(`[ChatImportService] Processed session ${progress.progress.processedSessions}/${progress.progress.totalSessions}`);
-
+          console.log(
+            `[ChatImportService] Processed session ${progress.progress.processedSessions}/${progress.progress.totalSessions}`,
+          );
         } catch (sessionError: any) {
           console.error(`[ChatImportService] Error processing session:`, sessionError);
           progress.results = progress.results || {
@@ -227,7 +245,7 @@ export class DefaultChatImportService implements ChatImportService {
             importedMessages: 0,
             linkedSessions: 0,
             errors: 0,
-            warnings: []
+            warnings: [],
           };
           progress.results.errors++;
         }
@@ -241,18 +259,20 @@ export class DefaultChatImportService implements ChatImportService {
         importedMessages,
         linkedSessions,
         errors: 0,
-        warnings: []
+        warnings: [],
       };
 
-      console.log(`[ChatImportService] Import ${importId} completed successfully:`, progress.results);
-
+      console.log(
+        `[ChatImportService] Import ${importId} completed successfully:`,
+        progress.results,
+      );
     } catch (error: any) {
       console.error(`[ChatImportService] Import ${importId} failed:`, error);
       progress.status = 'failed';
       progress.completedAt = new Date().toISOString();
       progress.error = {
         message: error.message,
-        details: { stack: error.stack }
+        details: { stack: error.stack },
       };
     }
   }
@@ -273,13 +293,13 @@ export class DefaultChatImportService implements ChatImportService {
             firstSeen: session.timestamp.toISOString(),
             lastSeen: session.timestamp.toISOString(),
             sessionCount: 0,
-            metadata: {}
+            metadata: {},
           });
         }
 
         const workspace = workspaceMap.get(workspaceId)!;
         workspace.sessionCount++;
-        
+
         // Update date range
         if (session.timestamp.toISOString() < workspace.firstSeen) {
           workspace.firstSeen = session.timestamp.toISOString();
@@ -298,14 +318,19 @@ export class DefaultChatImportService implements ChatImportService {
     console.log(`[ChatImportService] Processed ${workspaceMap.size} workspaces`);
   }
 
-  private async convertToDevlogChatSession(sessionData: any, config: ChatImportConfig): Promise<ChatSession> {
+  private async convertToDevlogChatSession(
+    sessionData: any,
+    config: ChatImportConfig,
+  ): Promise<ChatSession> {
     const now = new Date().toISOString();
-    
+
     return {
       id: sessionData.session_id || this.generateSessionId(),
       agent: 'GitHub Copilot' as AgentType,
       timestamp: sessionData.timestamp.toISOString(),
-      workspace: sessionData.workspace ? this.normalizeWorkspaceId(sessionData.workspace) : undefined,
+      workspace: sessionData.workspace
+        ? this.normalizeWorkspaceId(sessionData.workspace)
+        : undefined,
       workspacePath: sessionData.workspace,
       title: this.generateSessionTitle(sessionData),
       status: 'imported' as ChatStatus,
@@ -316,16 +341,19 @@ export class DefaultChatImportService implements ChatImportService {
       importedAt: now,
       updatedAt: now,
       linkedDevlogs: [],
-      archived: false
+      archived: false,
     };
   }
 
-  private async convertToDevlogChatMessages(sessionData: any, sessionId: ChatSessionId): Promise<ChatMessage[]> {
+  private async convertToDevlogChatMessages(
+    sessionData: any,
+    sessionId: ChatSessionId,
+  ): Promise<ChatMessage[]> {
     const messages: ChatMessage[] = [];
 
     for (let i = 0; i < sessionData.messages.length; i++) {
       const messageData = sessionData.messages[i];
-      
+
       messages.push({
         id: messageData.id || `${sessionId}_${i}`,
         sessionId,
@@ -334,7 +362,7 @@ export class DefaultChatImportService implements ChatImportService {
         timestamp: messageData.timestamp.toISOString(),
         sequence: i,
         metadata: messageData.metadata || {},
-        searchContent: this.optimizeForSearch(messageData.content)
+        searchContent: this.optimizeForSearch(messageData.content),
       });
     }
 
@@ -342,9 +370,9 @@ export class DefaultChatImportService implements ChatImportService {
   }
 
   private async analyzeChatSessionForLinks(
-    session: ChatSession, 
-    devlogEntries: DevlogEntry[], 
-    minConfidence: number
+    session: ChatSession,
+    devlogEntries: DevlogEntry[],
+    minConfidence: number,
   ): Promise<ChatDevlogLink[]> {
     const suggestions: ChatDevlogLink[] = [];
 
@@ -358,19 +386,22 @@ export class DefaultChatImportService implements ChatImportService {
     return suggestions;
   }
 
-  private async analyzeSessionDevlogPair(session: ChatSession, devlog: DevlogEntry): Promise<ChatDevlogLink | null> {
+  private async analyzeSessionDevlogPair(
+    session: ChatSession,
+    devlog: DevlogEntry,
+  ): Promise<ChatDevlogLink | null> {
     // Temporal analysis
     const temporalScore = this.calculateTemporalScore(session, devlog);
-    
+
     // Content analysis (requires messages)
     const messages = await this.storageProvider.getChatMessages(session.id);
     const contentScore = this.calculateContentScore(messages, devlog);
-    
+
     // Workspace analysis
     const workspaceScore = this.calculateWorkspaceScore(session, devlog);
 
     // Combined confidence
-    const confidence = (temporalScore * 0.3) + (contentScore * 0.5) + (workspaceScore * 0.2);
+    const confidence = temporalScore * 0.3 + contentScore * 0.5 + workspaceScore * 0.2;
 
     if (confidence < 0.1) {
       return null;
@@ -387,12 +418,12 @@ export class DefaultChatImportService implements ChatImportService {
         workspaceMatch: {
           chatWorkspace: session.workspace || '',
           devlogWorkspace: 'default', // TODO: Get from devlog workspace context
-          similarity: workspaceScore
-        }
+          similarity: workspaceScore,
+        },
       },
       confirmed: false,
       createdAt: new Date().toISOString(),
-      createdBy: 'system'
+      createdBy: 'system',
     };
   }
 
@@ -424,7 +455,10 @@ export class DefaultChatImportService implements ChatImportService {
     const firstMessage = sessionData.messages[0];
     if (firstMessage.role === 'user') {
       // Use first 60 characters of first user message
-      return firstMessage.content.substring(0, 60).trim() + (firstMessage.content.length > 60 ? '...' : '');
+      return (
+        firstMessage.content.substring(0, 60).trim() +
+        (firstMessage.content.length > 60 ? '...' : '')
+      );
     }
 
     return `Chat session with ${sessionData.messages.length} messages`;
@@ -437,7 +471,7 @@ export class DefaultChatImportService implements ChatImportService {
 
     const firstMessage = sessionData.messages[0];
     const lastMessage = sessionData.messages[sessionData.messages.length - 1];
-    
+
     return new Date(lastMessage.timestamp).getTime() - new Date(firstMessage.timestamp).getTime();
   }
 
@@ -458,12 +492,12 @@ export class DefaultChatImportService implements ChatImportService {
     // Check if session overlaps with devlog timeframe
     const timeDiff = Math.min(
       Math.abs(sessionTime - devlogCreated),
-      Math.abs(sessionTime - devlogUpdated)
+      Math.abs(sessionTime - devlogUpdated),
     );
 
     // Score based on time proximity (closer = higher score)
     const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-    
+
     if (daysDiff <= 1) return 1.0;
     if (daysDiff <= 7) return 0.8;
     if (daysDiff <= 30) return 0.5;
@@ -474,12 +508,16 @@ export class DefaultChatImportService implements ChatImportService {
   private calculateContentScore(messages: ChatMessage[], devlog: DevlogEntry): number {
     // Simple keyword matching for now
     const devlogText = `${devlog.title} ${devlog.description}`.toLowerCase();
-    const chatText = messages.map(m => m.content).join(' ').toLowerCase();
+    const chatText = messages
+      .map((m) => m.content)
+      .join(' ')
+      .toLowerCase();
 
-    const keywords = devlogText.split(/\s+/).filter(word => word.length > 3);
+    const keywords = devlogText.split(/\s+/).filter((word) => word.length > 3);
     let matches = 0;
 
-    for (const keyword of keywords.slice(0, 10)) { // Limit to first 10 keywords
+    for (const keyword of keywords.slice(0, 10)) {
+      // Limit to first 10 keywords
       if (chatText.includes(keyword)) {
         matches++;
       }
@@ -509,7 +547,7 @@ export class DefaultChatImportService implements ChatImportService {
       chatEnd: session.timestamp, // Single point in time for now
       devlogStart: devlog.createdAt,
       devlogEnd: devlog.updatedAt,
-      overlapHours: 0 // TODO: Calculate actual overlap
+      overlapHours: 0, // TODO: Calculate actual overlap
     };
   }
 }

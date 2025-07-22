@@ -1,1 +1,1 @@
-export { ConfigurationManager } from './configuration-manager.js';
+export { ConfigurationManager } from './configuration-manager';

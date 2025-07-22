@@ -7,7 +7,11 @@
     "declarationMap": true,
     "sourceMap": true,
     "composite": false,
-    "incremental": false
+    "incremental": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "src/**/*"

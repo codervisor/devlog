@@ -1,11 +1,11 @@
 /**
  * Abstract base class for AI assistant chat history parsers
- * 
+ *
  * Provides a common interface for parsing chat history from various AI coding assistants
  * like GitHub Copilot, Cursor, Claude Code, etc.
  */
 
-import { ChatSession, WorkspaceData, SearchResult, ChatStatistics } from '../../models/index.js';
+import { ChatSession, WorkspaceData, SearchResult, ChatStatistics } from '@/models';
 
 // Logger interface for parsers
 export interface Logger {
@@ -42,7 +42,7 @@ export class SimpleConsoleLogger implements Logger {
  */
 export abstract class AIAssistantParser {
   protected logger: Logger;
-  
+
   constructor(logger?: Logger) {
     this.logger = logger || new SimpleConsoleLogger();
   }
@@ -71,9 +71,9 @@ export abstract class AIAssistantParser {
    * Search for content in chat sessions
    */
   searchChatContent(
-    workspaceData: WorkspaceData, 
-    query: string, 
-    caseSensitive: boolean = false
+    workspaceData: WorkspaceData,
+    query: string,
+    caseSensitive: boolean = false,
   ): SearchResult[] {
     const results: SearchResult[] = [];
     const searchQuery = caseSensitive ? query : query.toLowerCase();
@@ -97,7 +97,7 @@ export abstract class AIAssistantParser {
             match_position: matchPos,
             context,
             full_content: message.content,
-            metadata: message.metadata
+            metadata: message.metadata,
           });
         }
       }
@@ -118,9 +118,9 @@ export abstract class AIAssistantParser {
       workspace_activity: {},
       date_range: {
         earliest: null,
-        latest: null
+        latest: null,
       },
-      agent_activity: {}
+      agent_activity: {},
     };
 
     const allTimestamps: Date[] = [];
@@ -141,7 +141,7 @@ export abstract class AIAssistantParser {
           sessions: 0,
           messages: 0,
           first_seen: session.timestamp.toISOString(),
-          last_seen: session.timestamp.toISOString()
+          last_seen: session.timestamp.toISOString(),
         };
       }
 
@@ -168,8 +168,8 @@ export abstract class AIAssistantParser {
     }
 
     if (allTimestamps.length > 0) {
-      const earliest = new Date(Math.min(...allTimestamps.map(d => d.getTime())));
-      const latest = new Date(Math.max(...allTimestamps.map(d => d.getTime())));
+      const earliest = new Date(Math.min(...allTimestamps.map((d) => d.getTime())));
+      const latest = new Date(Math.max(...allTimestamps.map((d) => d.getTime())));
       stats.date_range.earliest = earliest.toISOString();
       stats.date_range.latest = latest.toISOString();
     }

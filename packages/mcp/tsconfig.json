@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -15,7 +16,12 @@
     "declarationMap": true,
     "sourceMap": true,
     "composite": false,
-    "incremental": false
+    "incremental": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@devlog/core/*": ["../core/*"],
+    }
   },
   "include": [
     "src/**/*"

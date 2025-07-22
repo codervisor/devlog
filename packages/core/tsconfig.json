@@ -10,7 +10,9 @@
     "incremental": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "baseUrl": ".",
     "paths": {
+      "@/*": ["./src/*"],
       "@devlog/ai": ["../ai/build"]
     }
   },

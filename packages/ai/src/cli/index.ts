@@ -2,8 +2,8 @@
 
 /**
  * Simplified CLI for AI Chat - Focus on AI Assistant Chat History
- * 
- * TypeScript implementation of the main entry point focusing on 
+ *
+ * TypeScript implementation of the main entry point focusing on
  * core chat history extraction functionality from various AI assistants.
  */
 
@@ -12,9 +12,16 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';
 import { resolve } from 'path';
-import { CopilotParser, ChatStatistics, SearchResult } from '../parsers/index.js';
-import { JSONExporter, MarkdownExporter } from '../exporters/index.js';
-import { displayError, displaySuccess, displayWarning, displayInfo, displayHeader, formatCount } from '../utils/cli.js';
+import { CopilotParser, ChatStatistics, SearchResult } from '@/parsers';
+import { JSONExporter, MarkdownExporter } from '@/exporters';
+import {
+  displayError,
+  displaySuccess,
+  displayWarning,
+  displayInfo,
+  displayHeader,
+  formatCount,
+} from '@/utils';
 
 // CLI option interfaces for better type safety
 interface ChatCommandOptions {
@@ -56,46 +63,50 @@ program
   .option('-v, --verbose', 'Show detailed progress', false)
   .action(async (options: ChatCommandOptions) => {
     const spinner = options.verbose ? ora('Discovering GitHub Copilot chat data...').start() : null;
-    
+
     try {
       const parser = new CopilotParser();
-      
+
       if (options.verbose) {
         displayInfo('Discovering GitHub Copilot chat data...');
       }
-      
+
       const workspaceData = await parser.discoverVSCodeCopilotData();
-      
+
       if (workspaceData.chat_sessions.length === 0) {
         spinner?.stop();
         displayError('discovery', 'No GitHub Copilot chat data found');
-        displayWarning('Make sure VS Code or VS Code Insiders is installed and you have used GitHub Copilot chat');
+        displayWarning(
+          'Make sure VS Code or VS Code Insiders is installed and you have used GitHub Copilot chat',
+        );
         process.exit(1);
       }
-      
+
       spinner?.stop();
       displaySuccess(`Found ${formatCount(workspaceData.chat_sessions.length)} chat sessions`);
-      
+
       // Get statistics
       const stats = parser.getChatStatistics(workspaceData);
-      
+
       const result: ExportData = {
         chat_data: (workspaceData as any).toDict(),
-        statistics: stats
+        statistics: stats,
       };
-      
+
       // Search if query provided
       let searchResults: SearchResult[] = [];
       if (options.search) {
         searchResults = parser.searchChatContent(workspaceData, options.search);
         result.search_results = searchResults;
-        displaySuccess(`Found ${formatCount(searchResults.length)} matches for '${options.search}'`);
+        displaySuccess(
+          `Found ${formatCount(searchResults.length)} matches for '${options.search}'`,
+        );
       }
-      
+
       // Output results
       if (options.output) {
         const outputPath = resolve(options.output);
-        
+
         if (options.format === 'json') {
           const exporter = new JSONExporter();
           await exporter.exportData(result, outputPath);
@@ -105,7 +116,7 @@ program
           const markdownData = {
             statistics: result.statistics,
             chat_data: { chat_sessions: (result.chat_data as any).chat_sessions },
-            search_results: result.search_results
+            search_results: result.search_results,
           };
           await exporter.exportChatData(markdownData, outputPath);
         } else {
@@ -113,13 +124,12 @@ program
           displayWarning('Supported formats: json, md');
           process.exit(1);
         }
-        
+
         displaySuccess(`Chat data saved to ${outputPath}`);
       } else {
         // Print summary to console
         displayChatSummary(stats, searchResults, options.verbose);
       }
-      
     } catch (error) {
       spinner?.stop();
       if (options.verbose) {
@@ -139,32 +149,32 @@ program
     try {
       const parser = new CopilotParser();
       const workspaceData = await parser.discoverVSCodeCopilotData();
-      
+
       if (workspaceData.chat_sessions.length === 0) {
         displayError('discovery', 'No chat sessions found');
         return;
       }
-      
+
       const stats = parser.getChatStatistics(workspaceData);
-      
+
       // Display detailed statistics
       const table = new Table({
         head: [chalk.cyan('Metric'), chalk.green('Value')],
-        colWidths: [20, 50]
+        colWidths: [20, 50],
       });
-      
+
       table.push(
         ['Total Sessions', stats.total_sessions.toString()],
-        ['Total Messages', stats.total_messages.toString()]
+        ['Total Messages', stats.total_messages.toString()],
       );
-      
+
       if (stats.date_range.earliest) {
         table.push(['Date Range', `${stats.date_range.earliest} to ${stats.date_range.latest}`]);
       }
-      
+
       displayHeader('GitHub Copilot Chat Statistics');
       console.log(table.toString());
-      
+
       // Session types
       if (Object.keys(stats.session_types).length > 0) {
         console.log(chalk.bold.blue('\nSession Types:'));
@@ -172,7 +182,7 @@ program
           console.log(`  • ${sessionType}: ${count}`);
         }
       }
-      
+
       // Message types
       if (Object.keys(stats.message_types).length > 0) {
         console.log(chalk.bold.blue('\nMessage Types:'));
@@ -180,19 +190,22 @@ program
           console.log(`  • ${msgType}: ${count}`);
         }
       }
-      
+
       // Workspace activity
       if (Object.keys(stats.workspace_activity).length > 0) {
         console.log(chalk.bold.blue('\nWorkspace Activity:'));
-        const sortedWorkspaces = Object.entries(stats.workspace_activity)
-          .sort((a: [string, WorkspaceActivity], b: [string, WorkspaceActivity]) => b[1].sessions - a[1].sessions);
-        
+        const sortedWorkspaces = Object.entries(stats.workspace_activity).sort(
+          (a: [string, WorkspaceActivity], b: [string, WorkspaceActivity]) =>
+            b[1].sessions - a[1].sessions,
+        );
+
         for (const [workspace, activity] of sortedWorkspaces) {
           const workspaceName = workspace === 'unknown_workspace' ? 'Unknown' : workspace;
-          console.log(`  • ${workspaceName}: ${activity.sessions} sessions, ${activity.messages} messages`);
+          console.log(
+            `  • ${workspaceName}: ${activity.sessions} sessions, ${activity.messages} messages`,
+          );
         }
       }
-      
     } catch (error) {
       displayError('getting statistics', error);
       process.exit(1);
@@ -209,21 +222,21 @@ program
     try {
       const parser = new CopilotParser();
       const workspaceData = await parser.discoverVSCodeCopilotData();
-      
+
       if (workspaceData.chat_sessions.length === 0) {
         console.log(chalk.red('No chat sessions found'));
         return;
       }
-      
+
       const searchResults = parser.searchChatContent(workspaceData, query, options.caseSensitive);
-      
+
       if (searchResults.length === 0) {
         console.log(chalk.yellow(`No matches found for '${query}'`));
         return;
       }
-      
+
       console.log(chalk.green(`Found ${searchResults.length} matches for '${query}'`));
-      
+
       // Display results
       const limit = parseInt(options.limit, 10);
       for (let i = 0; i < Math.min(searchResults.length, limit); i++) {
@@ -233,11 +246,10 @@ program
         console.log(`  Role: ${result.role}`);
         console.log(`  Context: ${result.context.slice(0, 200)}...`);
       }
-      
+
       if (searchResults.length > limit) {
         console.log(chalk.yellow(`\n... and ${searchResults.length - limit} more matches`));
       }
-      
     } catch (error) {
       displayError('searching', error);
       process.exit(1);
@@ -251,41 +263,50 @@ interface WorkspaceActivity {
   last_seen: string;
 }
 
-function displayChatSummary(stats: ChatStatistics, searchResults: SearchResult[] = [], verbose: boolean = false): void {
+function displayChatSummary(
+  stats: ChatStatistics,
+  searchResults: SearchResult[] = [],
+  verbose: boolean = false,
+): void {
   console.log(chalk.bold.blue('\n📊 Chat History Summary'));
   console.log(`Sessions: ${stats.total_sessions}`);
   console.log(`Messages: ${stats.total_messages}`);
-  
+
   if (stats.date_range.earliest) {
     console.log(`Date range: ${stats.date_range.earliest} to ${stats.date_range.latest}`);
   }
-  
+
   if (verbose && Object.keys(stats.session_types).length > 0) {
     console.log(chalk.bold('\nSession types:'));
     for (const [sessionType, count] of Object.entries(stats.session_types)) {
       console.log(`  ${sessionType}: ${count}`);
     }
   }
-  
+
   if (verbose && Object.keys(stats.message_types).length > 0) {
     console.log(chalk.bold('\nMessage types:'));
     for (const [msgType, count] of Object.entries(stats.message_types)) {
       console.log(`  ${msgType}: ${count}`);
     }
   }
-  
+
   if (verbose && Object.keys(stats.workspace_activity).length > 0) {
     console.log(chalk.bold('\nWorkspaces:'));
     const sortedWorkspaces = Object.entries(stats.workspace_activity)
-      .sort((a: [string, WorkspaceActivity], b: [string, WorkspaceActivity]) => b[1].sessions - a[1].sessions)
+      .sort(
+        (a: [string, WorkspaceActivity], b: [string, WorkspaceActivity]) =>
+          b[1].sessions - a[1].sessions,
+      )
       .slice(0, 5); // Show top 5 workspaces
-    
+
     for (const [workspace, activity] of sortedWorkspaces) {
       const workspaceName = workspace === 'unknown_workspace' ? 'Unknown' : workspace;
-      console.log(`  ${workspaceName}: ${activity.sessions} sessions, ${activity.messages} messages`);
+      console.log(
+        `  ${workspaceName}: ${activity.sessions} sessions, ${activity.messages} messages`,
+      );
     }
   }
-  
+
   if (searchResults.length > 0) {
     console.log(chalk.green(`\nSearch found ${searchResults.length} matches`));
   }

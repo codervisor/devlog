@@ -14,19 +14,20 @@ import {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '../../types/index.js';
-import type { DevlogEvent } from '../../events/devlog-events.js';
-import { calculateDevlogStats } from '../shared/storage.js';
-import { createPaginatedResult } from '../../utils/common.js';
-import { DevlogEntryEntity } from '../../entities/devlog-entry.entity.js';
-import { createDataSource, TypeORMStorageOptions } from '../typeorm/typeorm-config.js';
+} from '@/types';
+import type { DevlogEvent } from '@/events';
+import { createPaginatedResult } from '@/utils';
+import { DevlogEntryEntity } from '@/entities';
 import {
-  generateTimeSeriesSQL,
-  generateTimeSeriesParams,
-  mapSQLRowsToDataPoints,
+  calculateDevlogStats,
+  calculateTimeSeriesStats,
+  createDataSource,
   generateDateRange,
-} from '../typeorm/sql-time-series.js';
-import { calculateTimeSeriesStats } from '../shared/time-series.js';
+  generateTimeSeriesParams,
+  generateTimeSeriesSQL,
+  mapSQLRowsToDataPoints,
+  TypeORMStorageOptions,
+} from '@/storage';
 
 export class TypeORMStorageProvider implements StorageProvider {
   private dataSource: DataSource;

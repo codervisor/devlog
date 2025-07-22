@@ -6,7 +6,7 @@
   "status": "new",
   "priority": "high",
   "createdAt": "2025-07-22T06:07:25.883Z",
-  "updatedAt": "2025-07-22T06:19:45.054Z",
+  "updatedAt": "2025-07-22T07:00:36.137Z",
   "notes": [
     {
       "id": "32326b53-f271-4d06-bd00-699fdfbec80d",
@@ -31,6 +31,12 @@
       "timestamp": "2025-07-22T06:19:45.054Z",
       "category": "progress",
       "content": "Implemented lazy initialization fix for workspace switching. Modified WorkspaceDevlogManager to skip expensive storage provider initialization during switchToWorkspace() and instead perform it lazily in getCurrentStorageProvider(). However, testing shows the web server is still experiencing performance issues. Need to further investigate the root cause."
+    },
+    {
+      "id": "8d67913b-094d-45ae-918c-1ecb88297d42",
+      "timestamp": "2025-07-22T07:00:36.137Z",
+      "category": "progress",
+      "content": "User reported workspace switching issue where returned data remains original after switching. Starting investigation to identify if this is a state management issue, API response problem, or page reload timing issue."
     }
   ],
   "files": [],

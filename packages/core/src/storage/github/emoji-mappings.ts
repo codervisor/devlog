@@ -5,7 +5,7 @@
  * Supports multiple emoji styles for different contexts and user preferences.
  */
 
-import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../../types/index.js';
+import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '@/types';
 
 /**
  * Gets the appropriate emoji for a devlog status
@@ -13,21 +13,21 @@ import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../../ty
 export const getStatusEmoji = (status: DevlogStatus): string => {
   switch (status) {
     case 'new':
-      return '🆕';          // New symbol
+      return '🆕'; // New symbol
     case 'in-progress':
-      return '🔄';          // Counterclockwise arrows (spinning/progress)
+      return '🔄'; // Counterclockwise arrows (spinning/progress)
     case 'blocked':
-      return '🛑';          // Stop sign
+      return '🛑'; // Stop sign
     case 'in-review':
-      return '👀';          // Eyes (under review)
+      return '👀'; // Eyes (under review)
     case 'testing':
-      return '🧪';          // Test tube (testing)
+      return '🧪'; // Test tube (testing)
     case 'done':
-      return '✅';          // Check mark
+      return '✅'; // Check mark
     case 'cancelled':
-      return '❌';          // Cross mark
+      return '❌'; // Cross mark
     default:
-      return '⏰';          // Clock (waiting/pending)
+      return '⏰'; // Clock (waiting/pending)
   }
 };
 
@@ -37,15 +37,15 @@ export const getStatusEmoji = (status: DevlogStatus): string => {
 export const getPriorityEmoji = (priority: DevlogPriority): string => {
   switch (priority) {
     case 'critical':
-      return '🔥';          // Fire (critical/urgent)
+      return '🔥'; // Fire (critical/urgent)
     case 'high':
-      return '⚠️';          // Warning sign
+      return '⚠️'; // Warning sign
     case 'medium':
-      return 'ℹ️';          // Information
+      return 'ℹ️'; // Information
     case 'low':
-      return '⬇️';          // Down arrow (low priority)
+      return '⬇️'; // Down arrow (low priority)
     default:
-      return '➖';          // Minus sign
+      return '➖'; // Minus sign
   }
 };
 
@@ -55,17 +55,17 @@ export const getPriorityEmoji = (priority: DevlogPriority): string => {
 export const getTypeEmoji = (type: DevlogType): string => {
   switch (type) {
     case 'feature':
-      return '⭐';          // Star (new feature)
+      return '⭐'; // Star (new feature)
     case 'bugfix':
-      return '🐛';          // Bug
+      return '🐛'; // Bug
     case 'task':
-      return '📋';          // Clipboard (task/checklist)
+      return '📋'; // Clipboard (task/checklist)
     case 'refactor':
-      return '🔧';          // Wrench (tool/refactor)
+      return '🔧'; // Wrench (tool/refactor)
     case 'docs':
-      return '📚';          // Books (documentation)
+      return '📚'; // Books (documentation)
     default:
-      return '📝';          // Memo (general)
+      return '📝'; // Memo (general)
   }
 };
 
@@ -75,19 +75,19 @@ export const getTypeEmoji = (type: DevlogType): string => {
 export const getNoteCategoryEmoji = (category: NoteCategory): string => {
   switch (category) {
     case 'progress':
-      return '📈';          // Chart with upwards trend (progress)
+      return '📈'; // Chart with upwards trend (progress)
     case 'issue':
-      return '⚠️';          // Warning sign (problem/issue)
+      return '⚠️'; // Warning sign (problem/issue)
     case 'solution':
-      return '✅';          // Check mark (solution/resolution)
+      return '✅'; // Check mark (solution/resolution)
     case 'idea':
-      return '💡';          // Light bulb (idea/suggestion)
+      return '💡'; // Light bulb (idea/suggestion)
     case 'reminder':
-      return '📌';          // Pushpin (reminder/important)
+      return '📌'; // Pushpin (reminder/important)
     case 'feedback':
-      return '💬';          // Speech balloon (feedback/comment)
+      return '💬'; // Speech balloon (feedback/comment)
     default:
-      return '📄';          // Page facing up (general note)
+      return '📄'; // Page facing up (general note)
   }
 };
 
@@ -99,21 +99,21 @@ export const getNoteCategoryEmoji = (category: NoteCategory): string => {
 export const getStatusEmojiAlt = (status: DevlogStatus): string => {
   switch (status) {
     case 'new':
-      return '✨';          // Sparkles (new/fresh)
+      return '✨'; // Sparkles (new/fresh)
     case 'in-progress':
-      return '⚡';          // Lightning (active/energetic)
+      return '⚡'; // Lightning (active/energetic)
     case 'blocked':
-      return '🚫';          // Prohibited sign
+      return '🚫'; // Prohibited sign
     case 'in-review':
-      return '🔍';          // Magnifying glass
+      return '🔍'; // Magnifying glass
     case 'testing':
-      return '🔬';          // Microscope
+      return '🔬'; // Microscope
     case 'done':
-      return '🎉';          // Party popper (celebration)
+      return '🎉'; // Party popper (celebration)
     case 'cancelled':
-      return '🗑️';          // Trash can
+      return '🗑️'; // Trash can
     default:
-      return '💭';          // Thought bubble
+      return '💭'; // Thought bubble
   }
 };
 
@@ -121,21 +121,21 @@ export const getStatusEmojiAlt = (status: DevlogStatus): string => {
 export const getStatusEmojiMinimal = (status: DevlogStatus): string => {
   switch (status) {
     case 'new':
-      return '○';           // White circle
+      return '○'; // White circle
     case 'in-progress':
-      return '◐';           // Half-filled circle
+      return '◐'; // Half-filled circle
     case 'blocked':
-      return '●';           // Black circle
+      return '●'; // Black circle
     case 'in-review':
-      return '◑';           // Different half-filled
+      return '◑'; // Different half-filled
     case 'testing':
-      return '◒';           // Different pattern
+      return '◒'; // Different pattern
     case 'done':
-      return '●';           // Filled circle
+      return '●'; // Filled circle
     case 'cancelled':
-      return '○';           // Empty circle
+      return '○'; // Empty circle
     default:
-      return '◯';           // Large circle
+      return '◯'; // Large circle
   }
 };
 
@@ -149,7 +149,7 @@ export type EmojiStyle = 'default' | 'alt' | 'minimal';
  */
 export const getStatusEmojiByStyle = (
   status: DevlogStatus,
-  style: EmojiStyle = 'default'
+  style: EmojiStyle = 'default',
 ): string => {
   switch (style) {
     case 'alt':
@@ -166,7 +166,7 @@ export const getStatusEmojiByStyle = (
  */
 export const getStatusDisplayWithEmoji = (
   status: DevlogStatus,
-  style: EmojiStyle = 'default'
+  style: EmojiStyle = 'default',
 ): string => {
   const emoji = getStatusEmojiByStyle(status, style);
   const statusText = status.charAt(0).toUpperCase() + status.slice(1);
@@ -195,20 +195,35 @@ export const getNoteCategoryDisplayWithEmoji = (category: NoteCategory): string 
  * Get all available emoji mappings for reference/documentation
  */
 export const getAllEmojiMappings = () => {
-  const statuses: DevlogStatus[] = ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'];
+  const statuses: DevlogStatus[] = [
+    'new',
+    'in-progress',
+    'blocked',
+    'in-review',
+    'testing',
+    'done',
+    'cancelled',
+  ];
   const priorities: DevlogPriority[] = ['low', 'medium', 'high', 'critical'];
   const types: DevlogType[] = ['feature', 'bugfix', 'task', 'refactor', 'docs'];
-  const noteCategories: NoteCategory[] = ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'];
+  const noteCategories: NoteCategory[] = [
+    'progress',
+    'issue',
+    'solution',
+    'idea',
+    'reminder',
+    'feedback',
+  ];
 
   return {
     status: {
-      default: Object.fromEntries(statuses.map(s => [s, getStatusEmoji(s)])),
-      alt: Object.fromEntries(statuses.map(s => [s, getStatusEmojiAlt(s)])),
-      minimal: Object.fromEntries(statuses.map(s => [s, getStatusEmojiMinimal(s)])),
+      default: Object.fromEntries(statuses.map((s) => [s, getStatusEmoji(s)])),
+      alt: Object.fromEntries(statuses.map((s) => [s, getStatusEmojiAlt(s)])),
+      minimal: Object.fromEntries(statuses.map((s) => [s, getStatusEmojiMinimal(s)])),
     },
-    priority: Object.fromEntries(priorities.map(p => [p, getPriorityEmoji(p)])),
-    type: Object.fromEntries(types.map(t => [t, getTypeEmoji(t)])),
-    noteCategory: Object.fromEntries(noteCategories.map(n => [n, getNoteCategoryEmoji(n)])),
+    priority: Object.fromEntries(priorities.map((p) => [p, getPriorityEmoji(p)])),
+    type: Object.fromEntries(types.map((t) => [t, getTypeEmoji(t)])),
+    noteCategory: Object.fromEntries(noteCategories.map((n) => [n, getNoteCategoryEmoji(n)])),
   };
 };
 
@@ -225,13 +240,13 @@ export const formatGitHubIssueTitle = (
     includeStatus?: boolean;
     includePriority?: boolean;
     statusStyle?: EmojiStyle;
-  } = {}
+  } = {},
 ): string => {
   const {
     includeType = true,
     includeStatus = true,
     includePriority = false,
-    statusStyle = 'default'
+    statusStyle = 'default',
   } = options;
 
   let prefix = '';
@@ -258,7 +273,7 @@ export const formatEnhancedGitHubTitle = (
   title: string,
   type: DevlogType,
   status: DevlogStatus,
-  priority: DevlogPriority
+  priority: DevlogPriority,
 ): string => {
   // Use status emoji only for active work or high priority
   const shouldShowStatus = status !== 'new' || priority === 'critical' || priority === 'high';
@@ -267,7 +282,7 @@ export const formatEnhancedGitHubTitle = (
     includeType: true,
     includeStatus: shouldShowStatus,
     includePriority: priority === 'critical',
-    statusStyle: 'default'
+    statusStyle: 'default',
   });
 };
 
@@ -281,13 +296,9 @@ export const formatGitHubComment = (
     includeEmoji?: boolean;
     includeTimestamp?: boolean;
     timestamp?: string;
-  } = {}
+  } = {},
 ): string => {
-  const {
-    includeEmoji = true,
-    includeTimestamp = false,
-    timestamp
-  } = options;
+  const { includeEmoji = true, includeTimestamp = false, timestamp } = options;
 
   let formattedContent = content;
 

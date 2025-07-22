@@ -7,16 +7,14 @@
 
 // Load environment variables from root .env file
 import { loadRootEnv } from '@devlog/core';
+
 loadRootEnv();
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import { MCPDevlogAdapter } from './mcp-adapter.js';
-import { allTools } from './tools/index.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { MCPDevlogAdapter } from '@/mcp-adapter';
+import { allTools } from '@/tools';
 import {
   CreateDevlogArgs,
   UpdateDevlogArgs,
@@ -31,7 +29,7 @@ import {
   GetContextForAIArgs,
   DiscoverRelatedDevlogsArgs,
   UpdateAIContextArgs,
-} from './types/tool-args.js';
+} from '@/types';
 import {
   ImportChatHistoryArgs,
   GetChatSessionArgs,
@@ -43,7 +41,7 @@ import {
   GetChatStatsArgs,
   UpdateChatSessionArgs,
   GetChatWorkspacesArgs,
-} from './tools/chat-tools.js';
+} from '@/tools/chat-tools';
 import {
   handleImportChatHistory,
   handleGetChatSession,
@@ -55,7 +53,7 @@ import {
   handleGetChatStats,
   handleUpdateChatSession,
   handleGetChatWorkspaces,
-} from './tools/chat-tools.js';
+} from './tools/chat-tools';
 
 const server = new Server(
   {
@@ -131,34 +129,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // Chat tools
       case 'import_chat_history':
-        return await handleImportChatHistory(adapter.manager, args as unknown as ImportChatHistoryArgs);
+        return await handleImportChatHistory(
+          adapter.manager,
+          args as unknown as ImportChatHistoryArgs,
+        );
 
       case 'get_chat_session':
         return await handleGetChatSession(adapter.manager, args as unknown as GetChatSessionArgs);
 
       case 'list_chat_sessions':
-        return await handleListChatSessions(adapter.manager, args as unknown as ListChatSessionsArgs);
+        return await handleListChatSessions(
+          adapter.manager,
+          args as unknown as ListChatSessionsArgs,
+        );
 
       case 'search_chat_content':
-        return await handleSearchChatContent(adapter.manager, args as unknown as SearchChatContentArgs);
+        return await handleSearchChatContent(
+          adapter.manager,
+          args as unknown as SearchChatContentArgs,
+        );
 
       case 'link_chat_to_devlog':
-        return await handleLinkChatToDevlog(adapter.manager, args as unknown as LinkChatToDevlogArgs);
+        return await handleLinkChatToDevlog(
+          adapter.manager,
+          args as unknown as LinkChatToDevlogArgs,
+        );
 
       case 'unlink_chat_from_devlog':
-        return await handleUnlinkChatFromDevlog(adapter.manager, args as unknown as UnlinkChatFromDevlogArgs);
+        return await handleUnlinkChatFromDevlog(
+          adapter.manager,
+          args as unknown as UnlinkChatFromDevlogArgs,
+        );
 
       case 'suggest_chat_devlog_links':
-        return await handleSuggestChatDevlogLinks(adapter.manager, args as unknown as SuggestChatDevlogLinksArgs);
+        return await handleSuggestChatDevlogLinks(
+          adapter.manager,
+          args as unknown as SuggestChatDevlogLinksArgs,
+        );
 
       case 'get_chat_stats':
         return await handleGetChatStats(adapter.manager, args as unknown as GetChatStatsArgs);
 
       case 'update_chat_session':
-        return await handleUpdateChatSession(adapter.manager, args as unknown as UpdateChatSessionArgs);
+        return await handleUpdateChatSession(
+          adapter.manager,
+          args as unknown as UpdateChatSessionArgs,
+        );
 
       case 'get_chat_workspaces':
-        return await handleGetChatWorkspaces(adapter.manager, args as unknown as GetChatWorkspacesArgs);
+        return await handleGetChatWorkspaces(
+          adapter.manager,
+          args as unknown as GetChatWorkspacesArgs,
+        );
 
       default:
         throw new Error(`Unknown tool: ${name}`);

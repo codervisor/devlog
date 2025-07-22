@@ -3,32 +3,33 @@
  */
 
 import {
-  StorageProvider,
   DevlogEntry,
-  DevlogNote,
-  NoteCategory,
-  DevlogId,
   DevlogFilter,
+  DevlogId,
+  DevlogNote,
   DevlogStats,
   GitHubStorageConfig,
+  NoteCategory,
   PaginatedResult,
+  StorageProvider,
   TimeSeriesRequest,
-  TimeSeriesDataPoint,
   TimeSeriesStats,
-} from '../../types/index.js';
-import { GitHubAPIClient, GitHubIssue, GitHubComment } from '../github/github-api.js';
-import { RateLimiter } from '../github/rate-limiter.js';
-import { LRUCache } from '../github/lru-cache.js';
-import { DevlogGitHubMapper } from '../github/github-mapper.js';
-import { GitHubLabelManager } from '../github/github-labels.js';
-import { createPaginatedResult } from '../../utils/common.js';
+} from '@/types';
 import {
-  mapDevlogTypeToGitHubType,
+  calculateDevlogStats,
+  calculateTimeSeriesStats,
+  DevlogGitHubMapper,
+  formatGitHubComment,
+  GitHubAPIClient,
+  GitHubComment,
+  GitHubIssue,
+  GitHubLabelManager,
+  LRUCache,
   mapDevlogTypeToGitHubLabel,
-} from '../github/github-type-mapper.js';
-import { calculateDevlogStats } from '../shared/storage.js';
-import { calculateTimeSeriesStats } from '../shared/time-series.js';
-import { formatGitHubComment } from '../github/emoji-mappings.js';
+  mapDevlogTypeToGitHubType,
+  RateLimiter,
+} from '@/storage';
+import { createPaginatedResult } from '@/utils';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;
@@ -124,7 +125,7 @@ export class GitHubStorageProvider implements StorageProvider {
       const updateData: any = {
         title: issueData.title,
         body: issueData.body,
-        labels: issueData.labels
+        labels: issueData.labels,
       };
 
       // Add state fields only if this is an UpdateIssueRequest
@@ -150,7 +151,7 @@ export class GitHubStorageProvider implements StorageProvider {
       const createData: any = {
         title: issueData.title,
         body: issueData.body,
-        labels: issueData.labels
+        labels: issueData.labels,
       };
 
       // Ensure required fields are present
@@ -372,9 +373,7 @@ export class GitHubStorageProvider implements StorageProvider {
     const markerLabel = this.config.markerLabel || 'devlog';
 
     // Check if issue has the marker label
-    const hasMarkerLabel = issue.labels.some((label: any) =>
-      label.name === markerLabel
-    );
+    const hasMarkerLabel = issue.labels.some((label: any) => label.name === markerLabel);
 
     // Check for new base64 metadata format (primary detection method)
     const hasDevlogMetadata = issue.body?.includes('<!-- DEVLOG_METADATA:') ?? false;
@@ -419,7 +418,7 @@ export class GitHubStorageProvider implements StorageProvider {
     } catch (error: any) {
       throw new Error(
         `GitHub API access verification failed: ${error.message}. ` +
-        `Please check your token permissions and repository access.`,
+          `Please check your token permissions and repository access.`,
       );
     }
   }
@@ -509,7 +508,7 @@ export class GitHubStorageProvider implements StorageProvider {
    * Convert GitHub comments to DevlogNotes
    */
   private commentsToNotes(comments: GitHubComment[]): DevlogNote[] {
-    return comments.map(comment => ({
+    return comments.map((comment) => ({
       id: comment.id.toString(),
       content: this.parseNoteFromComment(comment.body),
       timestamp: comment.created_at,
@@ -527,7 +526,7 @@ export class GitHubStorageProvider implements StorageProvider {
     const formattedContent = formatGitHubComment(note.content, note.category, {
       includeEmoji: this.config.enableEmojiTitles, // Use same config as title emojis
       includeTimestamp: true,
-      timestamp: note.timestamp
+      timestamp: note.timestamp,
     });
 
     // Add metadata markers
@@ -548,7 +547,7 @@ export class GitHubStorageProvider implements StorageProvider {
     // Add files and code changes to the visible content if present
     let additionalInfo = '';
     if (note.files && note.files.length > 0) {
-      additionalInfo += `\n\n📁 **Files:** ${note.files.map(f => `\`${f}\``).join(', ')}`;
+      additionalInfo += `\n\n📁 **Files:** ${note.files.map((f) => `\`${f}\``).join(', ')}`;
     }
 
     if (note.codeChanges) {
@@ -565,9 +564,7 @@ export class GitHubStorageProvider implements StorageProvider {
    */
   private parseNoteFromComment(commentBody: string): string {
     // Remove metadata comments
-    return commentBody
-      .replace(/<!-- devlog-note-\w+: [^>]+ -->\n?/g, '')
-      .trim();
+    return commentBody.replace(/<!-- devlog-note-\w+: [^>]+ -->\n?/g, '').trim();
   }
 
   /**
@@ -578,8 +575,17 @@ export class GitHubStorageProvider implements StorageProvider {
     const category = match ? match[1] : 'progress';
 
     // Validate that it's a valid NoteCategory
-    const validCategories: NoteCategory[] = ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'];
-    return validCategories.includes(category as NoteCategory) ? category as NoteCategory : 'progress';
+    const validCategories: NoteCategory[] = [
+      'progress',
+      'issue',
+      'solution',
+      'idea',
+      'reminder',
+      'feedback',
+    ];
+    return validCategories.includes(category as NoteCategory)
+      ? (category as NoteCategory)
+      : 'progress';
   }
 
   /**
@@ -595,7 +601,7 @@ export class GitHubStorageProvider implements StorageProvider {
    */
   private extractFilesFromComment(commentBody: string): string[] {
     const match = commentBody.match(/<!-- devlog-note-files: ([^>]+) -->/);
-    return match ? match[1].split(',').map(f => f.trim()) : [];
+    return match ? match[1].split(',').map((f) => f.trim()) : [];
   }
 
   /**

@@ -2,7 +2,7 @@
  * Rate limiter for GitHub API requests
  */
 
-import { GitHubStorageConfig } from '../../types/index.js';
+import { GitHubStorageConfig } from '@/types';
 
 export class RateLimiter {
   private requestsPerHour: number;
@@ -45,7 +45,7 @@ export class RateLimiter {
     const oneHourAgo = now - 60 * 60 * 1000;
 
     // Remove old requests
-    this.requestTimes = this.requestTimes.filter(time => time > oneHourAgo);
+    this.requestTimes = this.requestTimes.filter((time) => time > oneHourAgo);
 
     if (this.requestTimes.length >= this.requestsPerHour) {
       const oldestRequest = Math.min(...this.requestTimes);
@@ -61,7 +61,7 @@ export class RateLimiter {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private isRateLimitError(error: any): boolean {

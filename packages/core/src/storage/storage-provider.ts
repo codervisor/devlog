@@ -2,9 +2,13 @@
  * Abstract storage interface that supports different storage backends
  */
 
-import { StorageConfig, StorageProvider } from '../types/index.js';
-import { TypeORMStorageProvider } from './providers/typeorm-storage.js';
-import { TypeORMStorageOptions } from './typeorm/typeorm-config.js';
+import { StorageConfig, StorageProvider } from '@/types';
+import {
+  TypeORMStorageProvider,
+  TypeORMStorageOptions,
+  GitHubStorageProvider,
+  JsonStorageProvider,
+} from '@/storage';
 
 /**
  * Factory for creating storage providers based on configuration
@@ -17,7 +21,6 @@ export class StorageProviderFactory {
         if (!config?.github) {
           throw new Error('GitHub configuration is required for github storage type');
         }
-        const { GitHubStorageProvider } = await import('./providers/github-storage.js');
         return new GitHubStorageProvider(config.github);
 
       case 'sqlite':
@@ -82,7 +85,6 @@ export class StorageProviderFactory {
 
       case 'json':
       default:
-        const { JsonStorageProvider } = await import('./providers/json-storage.js');
         return new JsonStorageProvider(config?.json || {});
     }
   }

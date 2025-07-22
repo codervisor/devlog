@@ -2,7 +2,7 @@
  * Exporters module
  */
 
-export { JSONExporter } from './json.js';
-export { MarkdownExporter } from './markdown.js';
-export type { JSONExportOptions } from './json.js';
-export type { MarkdownExportData } from './markdown.js';
+export { JSONExporter } from './json';
+export { MarkdownExporter } from './markdown';
+export type { JSONExportOptions } from './json';
+export type { MarkdownExportData } from './markdown';

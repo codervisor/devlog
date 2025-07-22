@@ -21,9 +21,9 @@ import type {
   DevlogStatus,
   DevlogType,
   ExternalReference,
-} from '../types/core.js';
-import type { StorageType } from '../types';
-import { loadRootEnv } from '../utils/env-loader.js';
+  StorageType,
+} from '@/types';
+import { loadRootEnv } from '@/utils';
 
 loadRootEnv();
 

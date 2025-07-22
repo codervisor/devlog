@@ -1,6 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
-import { DevlogManager } from '../managers/devlog/devlog-manager.js';
-import { ConfigurationManager } from '../managers/configuration/configuration-manager.js';
+import { DevlogManager } from '../managers';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -15,41 +14,40 @@ describe('DevlogManager', () => {
     // Store original working directory and environment
     originalCwd = process.cwd();
     originalEnv = { ...process.env };
-    
+
     // Create a unique temporary directory for each test
     testTmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'devlog-test-'));
-    
+
     // Set up environment variables for testing instead of config file
     process.env.DEVLOG_JSON_DIRECTORY = '.devlog-test';
     process.env.DEVLOG_JSON_GLOBAL = 'false';
     process.env.DEVLOG_JSON_MIN_PADDING = '3';
-    
+
     // Change to the test directory BEFORE creating DevlogManager
     // This ensures getWorkspaceRoot() finds our test directory
     process.chdir(testTmpDir);
 
-    // Create package.json to make it look like a project root  
+    // Create package.json to make it look like a project root
     await fs.writeFile(
-      path.join(testTmpDir, 'package.json'), 
-      JSON.stringify({ name: 'test-project' }, null, 2)
+      path.join(testTmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-project' }, null, 2),
     );
 
     // Create isolated DevlogManager instance - this will now find our test config
     devlogManager = new DevlogManager();
-    
+
     // Initialize the manager (this will load config from environment and create storage)
     // This ensures ConfigurationManager.initialize() captures the correct workspace root
     await devlogManager.initialize();
-    
   });
 
   afterEach(async () => {
     // Restore original environment
     process.env = originalEnv;
-    
+
     // Ensure we're back in original directory
     process.chdir(originalCwd);
-    
+
     // Clean up the temporary directory after each test
     if (testTmpDir) {
       await fs.rm(testTmpDir, { recursive: true, force: true });
@@ -244,8 +242,8 @@ describe('DevlogManager', () => {
       expect(cancelledResults.items[0].title).toBe('Closable Task');
 
       // All entries (including cancelled) should be accessible when explicitly requested
-      const allResults = await devlogManager.listDevlogs({ 
-        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'] 
+      const allResults = await devlogManager.listDevlogs({
+        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
       });
       expect(allResults.items).toHaveLength(2);
     });
@@ -296,7 +294,9 @@ describe('DevlogManager', () => {
       expect(defaultResults[0].title).toBe('Active Search Test');
 
       // Search with explicit cancelled filter should show cancelled entries
-      const cancelledResults = await devlogManager.searchDevlogs('search', { status: ['cancelled'] });
+      const cancelledResults = await devlogManager.searchDevlogs('search', {
+        status: ['cancelled'],
+      });
       expect(cancelledResults).toHaveLength(1);
       expect(cancelledResults[0].title).toBe('Cancelled Search Test');
     });
@@ -443,11 +443,11 @@ describe('DevlogManager', () => {
 
       // All entries should be included (cancelled should not be excluded from stats)
       expect(stats.totalEntries).toBe(3);
-      expect(stats.byStatus.new).toBe(1);      // activeEntry
+      expect(stats.byStatus.new).toBe(1); // activeEntry
       expect(stats.byStatus.cancelled).toBe(1); // cancelledEntry
-      expect(stats.byStatus.done).toBe(1);     // completedEntry
-      expect(stats.openEntries).toBe(1);       // activeEntry only
-      expect(stats.closedEntries).toBe(2);     // cancelled + done
+      expect(stats.byStatus.done).toBe(1); // completedEntry
+      expect(stats.openEntries).toBe(1); // activeEntry only
+      expect(stats.closedEntries).toBe(2); // cancelled + done
     });
 
     it('should exclude archived entries from statistics', async () => {
@@ -471,8 +471,8 @@ describe('DevlogManager', () => {
 
       // Only non-archived entries should be included
       expect(stats.totalEntries).toBe(1);
-      expect(stats.byStatus.new).toBe(1);      // activeEntry only
-      expect(stats.byType.task).toBe(1);       // activeEntry only
+      expect(stats.byStatus.new).toBe(1); // activeEntry only
+      expect(stats.byType.task).toBe(1); // activeEntry only
       expect(stats.byType.feature).toBeUndefined(); // archivedEntry excluded
     });
   });

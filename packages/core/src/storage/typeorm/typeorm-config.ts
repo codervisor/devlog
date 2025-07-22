@@ -4,7 +4,7 @@
 
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { DevlogEntryEntity } from '../../entities/devlog-entry.entity.js';
+import { DevlogEntryEntity } from '@/entities';
 
 /**
  * Configuration options for TypeORM storage
@@ -47,8 +47,8 @@ function createCacheKey(options: TypeORMStorageOptions): string {
  * Uses caching to prevent duplicate connections in development
  */
 export function createDataSource(
-  options: TypeORMStorageOptions, 
-  entities?: Function[]
+  options: TypeORMStorageOptions,
+  entities?: Function[],
 ): DataSource {
   const cacheKey = createCacheKey(options) + (entities ? `-entities-${entities.length}` : '');
 

@@ -2,19 +2,26 @@
  * Storage configuration and provider types
  */
 
-import { DevlogEntry, DevlogFilter, DevlogId, DevlogStats, DevlogStatus, DevlogType, DevlogPriority, PaginatedResult, TimeSeriesRequest, TimeSeriesStats } from './core.js';
 import {
-  ChatSession,
-  ChatMessage,
-  ChatFilter,
-  ChatStats,
-  ChatSessionId,
-  ChatMessageId,
-  ChatSearchResult,
+  DevlogEntry,
+  DevlogFilter,
+  DevlogId,
+  DevlogStats,
+  PaginatedResult,
+  TimeSeriesRequest,
+  TimeSeriesStats,
+} from './core';
+import {
   ChatDevlogLink,
-  ChatWorkspace
-} from './chat.js';
-import { DevlogEvent } from '../events/devlog-events.js';
+  ChatFilter,
+  ChatMessage,
+  ChatSearchResult,
+  ChatSession,
+  ChatSessionId,
+  ChatStats,
+  ChatWorkspace,
+} from './chat';
+import { DevlogEvent } from '@/events';
 
 // Storage Configuration Types
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
@@ -51,36 +58,37 @@ export interface JsonConfig {
 }
 
 export interface GitHubStorageConfig {
-  owner: string;           // Repository owner (user/org)
-  repo: string;            // Repository name  
-  token: string;           // GitHub Personal Access Token
-  apiUrl?: string;         // For GitHub Enterprise (default: api.github.com)
-  branch?: string;         // For repository-specific operations
-  labelsPrefix?: string;   // Prefix for devlog labels (default: 'devlog') - DEPRECATED: use markerLabel instead
-  markerLabel?: string;    // Marker label to identify devlog-managed issues (default: 'devlog')
+  owner: string; // Repository owner (user/org)
+  repo: string; // Repository name
+  token: string; // GitHub Personal Access Token
+  apiUrl?: string; // For GitHub Enterprise (default: api.github.com)
+  branch?: string; // For repository-specific operations
+  labelsPrefix?: string; // Prefix for devlog labels (default: 'devlog') - DEPRECATED: use markerLabel instead
+  markerLabel?: string; // Marker label to identify devlog-managed issues (default: 'devlog')
   enableEmojiTitles?: boolean; // Add emoji icons to issue titles (default: true)
 
   // Strategy for mapping devlog fields to GitHub features
   mapping?: {
-    useNativeType?: boolean;      // Use GitHub's native 'type' field instead of labels (default: true)
-    useNativeLabels?: boolean;    // Prefer GitHub's default labels over custom prefixes (default: true)
-    useStateReason?: boolean;     // Use GitHub's state_reason for nuanced status (default: true)
-    projectId?: number;           // GitHub Projects v2 ID for organizing devlog entries
-    projectFieldMappings?: {      // Map devlog fields to project custom fields
-      priority?: string;          // Project field name for priority
-      status?: string;            // Project field name for status
-      type?: string;              // Project field name for type (if not using native)
+    useNativeType?: boolean; // Use GitHub's native 'type' field instead of labels (default: true)
+    useNativeLabels?: boolean; // Prefer GitHub's default labels over custom prefixes (default: true)
+    useStateReason?: boolean; // Use GitHub's state_reason for nuanced status (default: true)
+    projectId?: number; // GitHub Projects v2 ID for organizing devlog entries
+    projectFieldMappings?: {
+      // Map devlog fields to project custom fields
+      priority?: string; // Project field name for priority
+      status?: string; // Project field name for status
+      type?: string; // Project field name for type (if not using native)
     };
   };
 
   rateLimit?: {
-    requestsPerHour?: number;  // Default: 5000 (GitHub's limit)
-    retryDelay?: number;       // Default: 1000ms
-    maxRetries?: number;       // Default: 3
+    requestsPerHour?: number; // Default: 5000 (GitHub's limit)
+    retryDelay?: number; // Default: 1000ms
+    maxRetries?: number; // Default: 3
   };
   cache?: {
-    enabled?: boolean;       // Default: true
-    ttl?: number;           // Cache TTL in ms (default: 300000 = 5min)
+    enabled?: boolean; // Default: true
+    ttl?: number; // Cache TTL in ms (default: 300000 = 5min)
   };
 }
 
@@ -196,12 +204,20 @@ export interface StorageProvider {
   /**
    * Get messages for a chat session
    */
-  getChatMessages(sessionId: ChatSessionId, offset?: number, limit?: number): Promise<ChatMessage[]>;
+  getChatMessages(
+    sessionId: ChatSessionId,
+    offset?: number,
+    limit?: number,
+  ): Promise<ChatMessage[]>;
 
   /**
    * Search chat content
    */
-  searchChatContent(query: string, filter?: ChatFilter, limit?: number): Promise<ChatSearchResult[]>;
+  searchChatContent(
+    query: string,
+    filter?: ChatFilter,
+    limit?: number,
+  ): Promise<ChatSearchResult[]>;
 
   /**
    * Get chat statistics

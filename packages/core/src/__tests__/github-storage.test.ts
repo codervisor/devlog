@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { GitHubStorageProvider } from '../storage/providers/github-storage.js';
-import { GitHubStorageConfig, DevlogEntry } from '../types/index.js';
+import { GitHubStorageProvider } from '../storage';
+import { GitHubStorageConfig, DevlogEntry } from '../types';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -11,7 +11,7 @@ describe('GitHubStorageProvider', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockConfig = {
       owner: 'testorg',
       repo: 'testrepo',
@@ -54,9 +54,9 @@ describe('GitHubStorageProvider', () => {
     });
 
     it('should build query with date filters', () => {
-      const query = provider['buildSearchQuery']({ 
+      const query = provider['buildSearchQuery']({
         fromDate: '2025-01-01',
-        toDate: '2025-12-31'
+        toDate: '2025-12-31',
       });
       expect(query).toContain('created:>=2025-01-01');
       expect(query).toContain('created:<=2025-12-31');
@@ -109,7 +109,7 @@ describe('GitHubStorageProvider', () => {
       expect(issueData.title).toBe('Test Feature');
       expect(issueData.labels).toContain('enhancement');
       // Priority labels are not added when useNativeType is true
-      expect(issueData.type).toBe('feature'); // Native type field is used instead
+      expect((issueData as any)?.type).toBe('feature'); // Native type field is used instead
     });
   });
 

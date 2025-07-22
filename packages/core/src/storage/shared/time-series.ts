@@ -3,13 +3,8 @@
  * Eliminates code duplication across JSON, SQLite, PostgreSQL, MySQL, and GitHub storage
  */
 
-import {
-  DevlogEntry,
-  TimeSeriesDataPoint,
-  TimeSeriesRequest,
-  TimeSeriesStats,
-} from '../../types/core.js';
-import { generateDateRangeToDates } from '../typeorm/sql-time-series.js';
+import { DevlogEntry, TimeSeriesDataPoint, TimeSeriesRequest, TimeSeriesStats } from '@/types';
+import { generateDateRangeToDates } from '@/storage';
 
 /**
  * Calculate time series statistics from a collection of devlog entries

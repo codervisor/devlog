@@ -1,5 +1,5 @@
 // Managers
-export * from './managers/index.js';
+export * from './managers';
 
 // Event System
 export {
@@ -7,32 +7,32 @@ export {
   devlogEvents,
   type DevlogEvent,
   type DevlogEventHandler,
-} from './events/devlog-events.js';
+} from './events/devlog-events';
 
 // Services
-export * from './services/index.js';
+export * from './services';
 
 // Storage Providers
-export { StorageProviderFactory } from './storage/storage-provider.js';
-export { JsonStorageProvider } from './storage/providers/json-storage.js';
-export { GitHubStorageProvider } from './storage/providers/github-storage.js';
-export { TypeORMStorageProvider } from './storage/providers/typeorm-storage.js';
-export { EnterpriseSync } from './integrations/enterprise-sync.js';
+export { StorageProviderFactory } from './storage/storage-provider';
+export { JsonStorageProvider } from './storage/providers/json-storage';
+export { GitHubStorageProvider } from './storage/providers/github-storage';
+export { TypeORMStorageProvider } from './storage/providers/typeorm-storage';
+export { EnterpriseSync } from './integrations/enterprise-sync';
 
 // TypeORM Support
 export {
   createDataSource,
   parseTypeORMConfig,
   type TypeORMStorageOptions,
-} from './storage/typeorm/typeorm-config.js';
-export { DevlogEntryEntity } from './entities/devlog-entry.entity.js';
-export { WorkspaceEntity } from './entities/workspace.entity.js';
+} from './storage/typeorm/typeorm-config';
+export { DevlogEntryEntity } from './entities/devlog-entry.entity';
+export { WorkspaceEntity } from './entities/workspace.entity';
 
 // Re-export types for convenience
-export * from './types/index.js';
+export * from './types';
 
 // Utilities
-export * from './utils/index.js';
+export * from './utils';
 
 // Re-export emoji utilities for public API
 export {
@@ -47,8 +47,8 @@ export {
   getNoteCategoryDisplayWithEmoji,
   formatEnhancedGitHubTitle,
   formatGitHubComment,
-  type EmojiStyle
-} from './storage/github/emoji-mappings.js';
+  type EmojiStyle,
+} from './storage/github/emoji-mappings';
 
 // Environment Configuration
-export { loadRootEnv, getMonorepoRoot, initializeEnv } from './utils/env-loader.js';
+export { loadRootEnv, getMonorepoRoot, initializeEnv } from './utils/env-loader';

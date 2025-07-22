@@ -3,4 +3,5 @@
  */
 
 // Re-export request/response types
-export * from './requests.js';
+export * from './requests';
+export * from './tool-args';

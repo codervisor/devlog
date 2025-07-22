@@ -2,7 +2,7 @@
  * GitHub API client for devlog storage operations
  */
 
-import { GitHubStorageConfig } from '../../types/index.js';
+import { GitHubStorageConfig } from '@/types';
 
 export interface GitHubIssue {
   number: number;
@@ -107,13 +107,17 @@ export class GitHubAPIClient {
     return this.request(`/issues/${issueNumber}`, 'PATCH', issueData);
   }
 
-  async listIssues(state: 'open' | 'closed' | 'all' = 'all', per_page = 100, page = 1): Promise<GitHubIssue[]> {
+  async listIssues(
+    state: 'open' | 'closed' | 'all' = 'all',
+    per_page = 100,
+    page = 1,
+  ): Promise<GitHubIssue[]> {
     const params = new URLSearchParams({
       state,
       per_page: per_page.toString(),
       page: page.toString(),
       sort: 'updated',
-      direction: 'desc'
+      direction: 'desc',
     });
     return this.request(`/issues?${params}`);
   }
@@ -160,11 +164,17 @@ export class GitHubAPIClient {
     return this.request(`/issues/${issueNumber}/comments`);
   }
 
-  async createIssueComment(issueNumber: number, commentData: CreateCommentRequest): Promise<GitHubComment> {
+  async createIssueComment(
+    issueNumber: number,
+    commentData: CreateCommentRequest,
+  ): Promise<GitHubComment> {
     return this.request(`/issues/${issueNumber}/comments`, 'POST', commentData);
   }
 
-  async updateIssueComment(commentId: number, commentData: UpdateCommentRequest): Promise<GitHubComment> {
+  async updateIssueComment(
+    commentId: number,
+    commentData: UpdateCommentRequest,
+  ): Promise<GitHubComment> {
     return this.request(`/issues/comments/${commentId}`, 'PATCH', commentData);
   }
 

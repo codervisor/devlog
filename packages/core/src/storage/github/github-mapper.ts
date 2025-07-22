@@ -11,17 +11,19 @@
  */
 
 import {
-  Decision,
   DevlogEntry,
   DevlogPriority,
   DevlogStatus,
   DevlogType,
   GitHubStorageConfig,
-} from '../../types/index.js';
-import { CreateIssueRequest, GitHubIssue, UpdateIssueRequest } from './github-api.js';
-
-import { mapGitHubTypeToDevlogType, mapNativeLabelsToDevlogType } from './github-type-mapper.js';
-import { formatEnhancedGitHubTitle } from './emoji-mappings.js';
+} from '@/types';
+import {
+  CreateIssueRequest,
+  formatEnhancedGitHubTitle,
+  GitHubIssue,
+  mapGitHubTypeToDevlogType,
+  UpdateIssueRequest,
+} from '@/storage';
 
 // Metadata structure for HTML comments
 interface DevlogMetadata {
@@ -211,11 +213,13 @@ export class DevlogGitHubMapper {
 
     // Check if this is a devlog-managed issue by looking for marker label
     const markerLabel = this.config.markerLabel || 'devlog';
-    const isDevlogManaged = issue.labels.some(l => l.name === markerLabel);
+    const isDevlogManaged = issue.labels.some((l) => l.name === markerLabel);
 
     if (!isDevlogManaged) {
       // This might not be a devlog-managed issue, but try to parse anyway
-      console.warn(`Issue ${issue.number} does not have marker label '${markerLabel}' - may not be devlog-managed`);
+      console.warn(
+        `Issue ${issue.number} does not have marker label '${markerLabel}' - may not be devlog-managed`,
+      );
     }
 
     // Determine type - use native type field or fall back to labels
@@ -225,7 +229,7 @@ export class DevlogGitHubMapper {
     } else {
       // Look for native GitHub type labels
       const typeLabel = issue.labels.find((l) =>
-        ['bug', 'enhancement', 'documentation', 'refactor', 'task'].includes(l.name)
+        ['bug', 'enhancement', 'documentation', 'refactor', 'task'].includes(l.name),
       );
       if (typeLabel) {
         type = mapGitHubTypeToDevlogType(typeLabel.name);

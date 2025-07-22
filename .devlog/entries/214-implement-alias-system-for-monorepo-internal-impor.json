@@ -1,0 +1,63 @@
+{
+  "key": "implement-alias-system-for-monorepo-internal-impor",
+  "title": "Implement @ Alias System for Monorepo Internal Imports",
+  "type": "refactor",
+  "description": "Implement comprehensive @ alias system to replace relative imports within monorepo packages. This will improve maintainability by reducing import path fragility when files move and make code more readable. Focus on internal imports within packages while preserving existing cross-package @devlog/* aliases.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-22T06:59:26.676Z",
+  "updatedAt": "2025-07-22T07:01:13.447Z",
+  "notes": [
+    {
+      "id": "2f08a089-f73e-4d50-93b6-8b5d0c62e152",
+      "timestamp": "2025-07-22T06:59:50.054Z",
+      "category": "progress",
+      "content": "**Analysis Complete - Starting Implementation Plan:**\n\n**Current State Analysis:**\n- ✅ Root tsconfig.json has @devlog/* for cross-package imports (working well)\n- ✅ packages/web already has @/* alias for app/* directory (good pattern)\n- ✅ packages/core has specific @devlog/ai alias pointing to ../ai/build\n- ⚠️ Complex relative imports in core package: ../../types/, ../../../storage/\n- ⚠️ MCP package has simpler structure but still uses ./tools/, ./types/ patterns\n\n**Implementation Strategy:**\n1. **Phase 1**: Configure package-specific aliases in tsconfig.json files\n   - @core/* for packages/core/src/* \n   - @mcp/* for packages/mcp/src/*\n   - @ai/* for packages/ai/src/*\n   - Enhance @/* for packages/web (already partially done)\n\n2. **Phase 2**: Replace internal relative imports with aliases\n   - Focus on core package first (most complex imports)\n   - Update MCP package imports\n   - Update AI package imports\n   - Preserve cross-package @devlog/* imports unchanged\n\n3. **Phase 3**: Update build configurations\n   - Ensure Next.js supports new aliases\n   - Verify turbo build system compatibility\n   - Update any bundler configs if needed\n\n**Benefits Expected:**\n- More stable imports when files move (recent core reorganization would be easier)\n- Clearer code navigation and understanding\n- Consistent alias patterns across monorepo"
+    },
+    {
+      "id": "d755809d-ee2e-4b6c-b2dd-8b0fd4f8acc1",
+      "timestamp": "2025-07-22T07:01:13.447Z",
+      "category": "progress",
+      "content": "**✅ Phase 1 Complete - TypeScript Alias Configuration:**\n\n**Successfully updated all package tsconfig.json files:**\n- ✅ packages/core: Added @core/* alias (baseUrl: ./src)\n- ✅ packages/mcp: Added @mcp/* alias (baseUrl: ./src)  \n- ✅ packages/ai: Added @ai/* alias (baseUrl: ./src)\n- ✅ packages/web: Enhanced aliases (@web/*, @components/*, @lib/*)\n\n**Build Verification:**\n- ✅ @devlog/core builds successfully\n- ✅ @devlog/mcp builds successfully  \n- ✅ @devlog/ai builds successfully\n- ✅ All TypeScript compilation passes\n\n**Starting Phase 2 - Import Replacement:**\nNext step is to identify and replace complex relative imports with new aliases, focusing on core package first where imports like '../../types/index.js' and '../../../storage/' can be replaced with '@core/types/' and '@core/storage/'."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Complex relative import paths like '../../types/index.js' and '../../../storage/providers/' make the codebase harder to maintain and refactor. When files are reorganized, many import statements break. The @ alias system will make imports more stable and readable, reducing developer cognitive load and making future reorganizations easier.",
+    "technicalContext": "Current monorepo has packages (core, mcp, ai, web) with complex relative imports within each package. Root tsconfig.json already has @devlog/* for cross-package imports. Need to implement package-specific @ aliases for internal imports like @core/*, @mcp/*, @ai/*, @web/* while maintaining backward compatibility and build system support.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "@ aliases configured in all package tsconfig.json files",
+      "Internal relative imports replaced with @ aliases where beneficial",
+      "Cross-package @devlog/* imports preserved unchanged",
+      "All TypeScript compilation succeeds",
+      "Build system (turbo/pnpm) works correctly",
+      "Next.js configuration supports @ aliases",
+      "Test files updated to use new aliases",
+      "Documentation updated with alias conventions"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Root tsconfig.json already has @devlog/* for cross-package imports",
+      "packages/web already has @/* alias for app/* directory",
+      "packages/core has @devlog/ai alias pointing to ../ai/build",
+      "Most complex relative imports are in core package managers and storage",
+      "MCP package imports are relatively simple, mainly tools/* and types/*"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "Monorepo tsconfig.json inheritance pattern from root",
+      "Next.js @ alias configuration in web package",
+      "Package-specific outDir/rootDir configuration"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-22T06:59:26.676Z",
+    "contextVersion": 1
+  },
+  "id": 214
+}

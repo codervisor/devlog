@@ -3,19 +3,8 @@
  */
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { DevlogManager } from '@devlog/core';
-import { 
-  ImportChatHistoryRequest,
-  GetChatSessionRequest,
-  ListChatSessionsRequest,
-  SearchChatContentRequest,
-  LinkChatToDevlogRequest,
-  UnlinkChatFromDevlogRequest,
-  GetChatStatsRequest,
-  UpdateChatSessionRequest,
-  SuggestChatDevlogLinksRequest
-} from '@devlog/core';
-import { createErrorResponse, createSuccessResponse, wrapToolExecution, extractErrorMessage } from '../utils/common.js';
+import { DevlogManager, ImportChatHistoryRequest } from '@devlog/core';
+import { createErrorResponse } from '@/utils';
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {
@@ -118,29 +107,29 @@ export const importChatHistoryTool: Tool = {
         type: 'string',
         enum: ['codehist', 'vs-code'],
         default: 'codehist',
-        description: 'Source to import chat history from'
+        description: 'Source to import chat history from',
       },
       autoLink: {
         type: 'boolean',
         default: true,
-        description: 'Whether to automatically link chat sessions to devlog entries'
+        description: 'Whether to automatically link chat sessions to devlog entries',
       },
       autoLinkThreshold: {
         type: 'number',
         default: 0.8,
         minimum: 0,
         maximum: 1,
-        description: 'Confidence threshold for automatic linking (0-1)'
+        description: 'Confidence threshold for automatic linking (0-1)',
       },
       includeArchived: {
         type: 'boolean',
         default: false,
-        description: 'Whether to import archived chat sessions'
+        description: 'Whether to import archived chat sessions',
       },
       overwriteExisting: {
         type: 'boolean',
         default: false,
-        description: 'Whether to overwrite existing chat sessions'
+        description: 'Whether to overwrite existing chat sessions',
       },
       dateRange: {
         type: 'object',
@@ -148,24 +137,24 @@ export const importChatHistoryTool: Tool = {
           from: {
             type: 'string',
             format: 'date-time',
-            description: 'Start date for import (ISO string)'
+            description: 'Start date for import (ISO string)',
           },
           to: {
             type: 'string',
             format: 'date-time',
-            description: 'End date for import (ISO string)'
-          }
+            description: 'End date for import (ISO string)',
+          },
         },
-        description: 'Optional date range filter for import'
+        description: 'Optional date range filter for import',
       },
       background: {
         type: 'boolean',
         default: true,
-        description: 'Whether to run import in background'
-      }
+        description: 'Whether to run import in background',
+      },
     },
-    required: []
-  }
+    required: [],
+  },
 };
 
 export const getChatSessionTool: Tool = {
@@ -176,23 +165,23 @@ export const getChatSessionTool: Tool = {
     properties: {
       sessionId: {
         type: 'string',
-        description: 'ID of the chat session to retrieve'
+        description: 'ID of the chat session to retrieve',
       },
       includeMessages: {
         type: 'boolean',
         default: true,
-        description: 'Whether to include chat messages in the response'
+        description: 'Whether to include chat messages in the response',
       },
       messageLimit: {
         type: 'number',
         default: 100,
         minimum: 1,
         maximum: 1000,
-        description: 'Maximum number of messages to retrieve'
-      }
+        description: 'Maximum number of messages to retrieve',
+      },
     },
-    required: ['sessionId']
-  }
+    required: ['sessionId'],
+  },
 };
 
 export const listChatSessionsTool: Tool = {
@@ -205,66 +194,66 @@ export const listChatSessionsTool: Tool = {
         type: 'array',
         items: {
           type: 'string',
-          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other']
+          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other'],
         },
-        description: 'Filter by AI agent type'
+        description: 'Filter by AI agent type',
       },
       status: {
         type: 'array',
         items: {
           type: 'string',
-          enum: ['imported', 'linked', 'archived', 'processed']
+          enum: ['imported', 'linked', 'archived', 'processed'],
         },
-        description: 'Filter by chat session status'
+        description: 'Filter by chat session status',
       },
       workspace: {
         type: 'array',
         items: {
-          type: 'string'
+          type: 'string',
         },
-        description: 'Filter by workspace names'
+        description: 'Filter by workspace names',
       },
       linkedDevlog: {
         type: 'number',
-        description: 'Filter sessions linked to specific devlog ID'
+        description: 'Filter sessions linked to specific devlog ID',
       },
       fromDate: {
         type: 'string',
         format: 'date-time',
-        description: 'Filter sessions from this date'
+        description: 'Filter sessions from this date',
       },
       toDate: {
         type: 'string',
         format: 'date-time',
-        description: 'Filter sessions until this date'
+        description: 'Filter sessions until this date',
       },
       includeArchived: {
         type: 'boolean',
         default: false,
-        description: 'Include archived sessions'
+        description: 'Include archived sessions',
       },
       minMessages: {
         type: 'number',
         minimum: 1,
-        description: 'Minimum number of messages in session'
+        description: 'Minimum number of messages in session',
       },
       maxMessages: {
         type: 'number',
         minimum: 1,
-        description: 'Maximum number of messages in session'
+        description: 'Maximum number of messages in session',
       },
       offset: {
         type: 'number',
         default: 0,
         minimum: 0,
-        description: 'Pagination offset'
+        description: 'Pagination offset',
       },
       limit: {
         type: 'number',
         default: 20,
         minimum: 1,
         maximum: 100,
-        description: 'Maximum number of sessions to return'
+        description: 'Maximum number of sessions to return',
       },
       sort: {
         type: 'object',
@@ -272,19 +261,19 @@ export const listChatSessionsTool: Tool = {
           field: {
             type: 'string',
             enum: ['timestamp', 'messageCount', 'duration', 'updatedAt'],
-            default: 'timestamp'
+            default: 'timestamp',
           },
           direction: {
             type: 'string',
             enum: ['asc', 'desc'],
-            default: 'desc'
-          }
+            default: 'desc',
+          },
         },
-        description: 'Sort criteria'
-      }
+        description: 'Sort criteria',
+      },
     },
-    required: []
-  }
+    required: [],
+  },
 };
 
 export const searchChatContentTool: Tool = {
@@ -295,49 +284,49 @@ export const searchChatContentTool: Tool = {
     properties: {
       query: {
         type: 'string',
-        description: 'Search query for chat content'
+        description: 'Search query for chat content',
       },
       searchType: {
         type: 'string',
         enum: ['exact', 'fuzzy', 'semantic'],
         default: 'exact',
-        description: 'Type of search to perform'
+        description: 'Type of search to perform',
       },
       caseSensitive: {
         type: 'boolean',
         default: false,
-        description: 'Whether search should be case sensitive'
+        description: 'Whether search should be case sensitive',
       },
       includeArchived: {
         type: 'boolean',
         default: false,
-        description: 'Include archived sessions in search'
+        description: 'Include archived sessions in search',
       },
       agent: {
         type: 'array',
         items: {
           type: 'string',
-          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other']
+          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other'],
         },
-        description: 'Filter by AI agent type'
+        description: 'Filter by AI agent type',
       },
       workspace: {
         type: 'array',
         items: {
-          type: 'string'
+          type: 'string',
         },
-        description: 'Filter by workspace names'
+        description: 'Filter by workspace names',
       },
       limit: {
         type: 'number',
         default: 50,
         minimum: 1,
         maximum: 200,
-        description: 'Maximum number of results to return'
-      }
+        description: 'Maximum number of results to return',
+      },
     },
-    required: ['query']
-  }
+    required: ['query'],
+  },
 };
 
 export const linkChatToDevlogTool: Tool = {
@@ -348,24 +337,24 @@ export const linkChatToDevlogTool: Tool = {
     properties: {
       sessionId: {
         type: 'string',
-        description: 'ID of the chat session to link'
+        description: 'ID of the chat session to link',
       },
       devlogId: {
         type: 'number',
-        description: 'ID of the devlog entry to link to'
+        description: 'ID of the devlog entry to link to',
       },
       manual: {
         type: 'boolean',
         default: true,
-        description: 'Whether this is a manual link (true) or system suggestion (false)'
+        description: 'Whether this is a manual link (true) or system suggestion (false)',
       },
       notes: {
         type: 'string',
-        description: 'Optional notes about why this link was created'
-      }
+        description: 'Optional notes about why this link was created',
+      },
     },
-    required: ['sessionId', 'devlogId']
-  }
+    required: ['sessionId', 'devlogId'],
+  },
 };
 
 export const unlinkChatFromDevlogTool: Tool = {
@@ -376,15 +365,15 @@ export const unlinkChatFromDevlogTool: Tool = {
     properties: {
       sessionId: {
         type: 'string',
-        description: 'ID of the chat session to unlink'
+        description: 'ID of the chat session to unlink',
       },
       devlogId: {
         type: 'number',
-        description: 'ID of the devlog entry to unlink from'
-      }
+        description: 'ID of the devlog entry to unlink from',
+      },
     },
-    required: ['sessionId', 'devlogId']
-  }
+    required: ['sessionId', 'devlogId'],
+  },
 };
 
 export const suggestChatDevlogLinksTool: Tool = {
@@ -395,29 +384,29 @@ export const suggestChatDevlogLinksTool: Tool = {
     properties: {
       sessionId: {
         type: 'string',
-        description: 'Specific session ID to find suggestions for (optional)'
+        description: 'Specific session ID to find suggestions for (optional)',
       },
       devlogId: {
         type: 'number',
-        description: 'Specific devlog ID to find suggestions for (optional)'
+        description: 'Specific devlog ID to find suggestions for (optional)',
       },
       minConfidence: {
         type: 'number',
         default: 0.5,
         minimum: 0,
         maximum: 1,
-        description: 'Minimum confidence threshold for suggestions'
+        description: 'Minimum confidence threshold for suggestions',
       },
       limit: {
         type: 'number',
         default: 10,
         minimum: 1,
         maximum: 50,
-        description: 'Maximum number of suggestions to return'
-      }
+        description: 'Maximum number of suggestions to return',
+      },
     },
-    required: []
-  }
+    required: [],
+  },
 };
 
 export const getChatStatsTool: Tool = {
@@ -430,40 +419,40 @@ export const getChatStatsTool: Tool = {
         type: 'array',
         items: {
           type: 'string',
-          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other']
+          enum: ['GitHub Copilot', 'Cursor', 'Windsurf', 'Claude', 'ChatGPT', 'Other'],
         },
-        description: 'Filter statistics by AI agent type'
+        description: 'Filter statistics by AI agent type',
       },
       workspace: {
         type: 'array',
         items: {
-          type: 'string'
+          type: 'string',
         },
-        description: 'Filter statistics by workspace'
+        description: 'Filter statistics by workspace',
       },
       fromDate: {
         type: 'string',
         format: 'date-time',
-        description: 'Include sessions from this date'
+        description: 'Include sessions from this date',
       },
       toDate: {
         type: 'string',
         format: 'date-time',
-        description: 'Include sessions until this date'
+        description: 'Include sessions until this date',
       },
       includeWorkspaceDetails: {
         type: 'boolean',
         default: true,
-        description: 'Include detailed workspace breakdown'
+        description: 'Include detailed workspace breakdown',
       },
       includeTemporalAnalysis: {
         type: 'boolean',
         default: false,
-        description: 'Include temporal usage patterns'
-      }
+        description: 'Include temporal usage patterns',
+      },
     },
-    required: []
-  }
+    required: [],
+  },
 };
 
 export const updateChatSessionTool: Tool = {
@@ -474,35 +463,35 @@ export const updateChatSessionTool: Tool = {
     properties: {
       sessionId: {
         type: 'string',
-        description: 'ID of the chat session to update'
+        description: 'ID of the chat session to update',
       },
       title: {
         type: 'string',
-        description: 'New title for the session'
+        description: 'New title for the session',
       },
       status: {
         type: 'string',
         enum: ['imported', 'linked', 'archived', 'processed'],
-        description: 'New status for the session'
+        description: 'New status for the session',
       },
       tags: {
         type: 'array',
         items: {
-          type: 'string'
+          type: 'string',
         },
-        description: 'Tags to associate with the session'
+        description: 'Tags to associate with the session',
       },
       archived: {
         type: 'boolean',
-        description: 'Whether to archive the session'
+        description: 'Whether to archive the session',
       },
       workspace: {
         type: 'string',
-        description: 'Update workspace association'
-      }
+        description: 'Update workspace association',
+      },
     },
-    required: ['sessionId']
-  }
+    required: ['sessionId'],
+  },
 };
 
 export const getChatWorkspacesTool: Tool = {
@@ -514,17 +503,17 @@ export const getChatWorkspacesTool: Tool = {
       includeInactive: {
         type: 'boolean',
         default: false,
-        description: 'Include workspaces with no recent activity'
+        description: 'Include workspaces with no recent activity',
       },
       minSessions: {
         type: 'number',
         default: 1,
         minimum: 0,
-        description: 'Minimum session count threshold'
-      }
+        description: 'Minimum session count threshold',
+      },
     },
-    required: []
-  }
+    required: [],
+  },
 };
 
 // Tool implementations
@@ -533,16 +522,17 @@ export async function handleImportChatHistory(manager: DevlogManager, args: Impo
     const config: ImportChatHistoryRequest['config'] = {
       source: args.source || 'codehist',
       sourceConfig: {
-        background: args.background !== false
+        background: args.background !== false,
       },
       autoLink: args.autoLink !== false,
       autoLinkThreshold: args.autoLinkThreshold || 0.8,
       includeArchived: args.includeArchived || false,
-      dateRange: args.dateRange && args.dateRange.from && args.dateRange.to 
-        ? { from: args.dateRange.from, to: args.dateRange.to }
-        : undefined,
+      dateRange:
+        args.dateRange && args.dateRange.from && args.dateRange.to
+          ? { from: args.dateRange.from, to: args.dateRange.to }
+          : undefined,
       workspaceFilter: args.workspaceFilter,
-      overwriteExisting: args.overwriteExisting || false
+      overwriteExisting: args.overwriteExisting || false,
     };
 
     // Get the chat import service
@@ -561,9 +551,9 @@ Source: ${progress.source}
 Background: ${config.sourceConfig.background}
 Auto-linking: ${config.autoLink} (threshold: ${config.autoLinkThreshold})
 
-The import is running in the background. Use the import ID to check progress.`
-        }
-      ]
+The import is running in the background. Use the import ID to check progress.`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('importing chat history', error);
@@ -580,10 +570,10 @@ export async function handleGetChatSession(manager: DevlogManager, args: GetChat
         content: [
           {
             type: 'text',
-            text: `Chat session not found: ${sessionId}`
-          }
+            text: `Chat session not found: ${sessionId}`,
+          },
         ],
-        isError: true
+        isError: true,
       };
     }
 
@@ -606,11 +596,18 @@ export async function handleGetChatSession(manager: DevlogManager, args: GetChat
 **Linked Devlogs:** ${session.linkedDevlogs.length}
 **Tags:** ${session.tags.join(', ') || 'None'}
 
-${messages.length > 0 ? `\n### Messages (${messages.length}):\n\n${messages.map((msg: any, i: number) => 
-  `**${i + 1}. ${msg.role.toUpperCase()}** (${msg.timestamp}):\n${msg.content}\n`
-).join('\n')}` : ''}`
-        }
-      ]
+${
+  messages.length > 0
+    ? `\n### Messages (${messages.length}):\n\n${messages
+        .map(
+          (msg: any, i: number) =>
+            `**${i + 1}. ${msg.role.toUpperCase()}** (${msg.timestamp}):\n${msg.content}\n`,
+        )
+        .join('\n')}`
+    : ''
+}`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('getting chat session', error);
@@ -628,28 +625,26 @@ export async function handleListChatSessions(manager: DevlogManager, args: ListC
       toDate: args.toDate,
       includeArchived: args.includeArchived || false,
       minMessages: args.minMessages,
-      maxMessages: args.maxMessages
+      maxMessages: args.maxMessages,
     };
 
-    const sessions = await manager.listChatSessions(
-      filter, 
-      args.offset || 0, 
-      args.limit || 20
-    );
+    const sessions = await manager.listChatSessions(filter, args.offset || 0, args.limit || 20);
 
     if (sessions.length === 0) {
       return {
         content: [
           {
             type: 'text',
-            text: 'No chat sessions found matching the specified criteria.'
-          }
-        ]
+            text: 'No chat sessions found matching the specified criteria.',
+          },
+        ],
       };
     }
 
-    const sessionsText = sessions.map((session, i) => 
-      `**${i + 1}. ${session.title || session.id}**
+    const sessionsText = sessions
+      .map(
+        (session, i) =>
+          `**${i + 1}. ${session.title || session.id}**
 Agent: ${session.agent}
 Workspace: ${session.workspace || 'Unknown'}
 Messages: ${session.messageCount}
@@ -657,8 +652,9 @@ Status: ${session.status}
 Timestamp: ${session.timestamp}
 Linked Devlogs: ${session.linkedDevlogs.length}
 ${session.archived ? '📁 *Archived*' : ''}
-`
-    ).join('\n');
+`,
+      )
+      .join('\n');
 
     return {
       content: [
@@ -668,9 +664,9 @@ ${session.archived ? '📁 *Archived*' : ''}
 
 ${sessionsText}
 
-*Showing ${args.offset || 0 + 1}-${Math.min((args.offset || 0) + sessions.length, (args.offset || 0) + (args.limit || 20))} of available sessions*`
-        }
-      ]
+*Showing ${args.offset || 0 + 1}-${Math.min((args.offset || 0) + sessions.length, (args.offset || 0) + (args.limit || 20))} of available sessions*`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('listing chat sessions', error);
@@ -683,7 +679,7 @@ export async function handleSearchChatContent(manager: DevlogManager, args: Sear
     const filter = {
       agent: args.agent,
       workspace: args.workspace,
-      includeArchived: args.includeArchived || false
+      includeArchived: args.includeArchived || false,
     };
 
     const results = await manager.searchChatContent(query, filter, args.limit || 50);
@@ -693,26 +689,28 @@ export async function handleSearchChatContent(manager: DevlogManager, args: Sear
         content: [
           {
             type: 'text',
-            text: `No chat content found matching "${query}".`
-          }
-        ]
+            text: `No chat content found matching "${query}".`,
+          },
+        ],
       };
     }
 
-    const resultsText = results.map((result, i) => {
-      const session = result.session;
-      const messageMatches = result.messages.map(msgResult => 
-        `    • **${msgResult.message.role}**: ${msgResult.context}`
-      ).join('\n');
+    const resultsText = results
+      .map((result, i) => {
+        const session = result.session;
+        const messageMatches = result.messages
+          .map((msgResult: any) => `    • **${msgResult.message.role}**: ${msgResult.context}`)
+          .join('\n');
 
-      return `**${i + 1}. ${session.title || session.id}** (Score: ${result.relevance.toFixed(2)})
+        return `**${i + 1}. ${session.title || session.id}** (Score: ${result.relevance.toFixed(2)})
 Workspace: ${session.workspace || 'Unknown'}
 Agent: ${session.agent}
 Matches: ${result.messages.length}
 
 ${messageMatches}
 `;
-    }).join('\n');
+      })
+      .join('\n');
 
     return {
       content: [
@@ -722,9 +720,9 @@ ${messageMatches}
 
 Found ${results.length} sessions with matching content:
 
-${resultsText}`
-        }
-      ]
+${resultsText}`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('searching chat content', error);
@@ -743,10 +741,10 @@ export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkC
         content: [
           {
             type: 'text',
-            text: `Chat session not found: ${sessionId}`
-          }
+            text: `Chat session not found: ${sessionId}`,
+          },
         ],
-        isError: true
+        isError: true,
       };
     }
 
@@ -756,10 +754,10 @@ export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkC
         content: [
           {
             type: 'text',
-            text: `Devlog entry not found: ${devlogId}`
-          }
+            text: `Devlog entry not found: ${devlogId}`,
+          },
         ],
-        isError: true
+        isError: true,
       };
     }
 
@@ -771,12 +769,12 @@ export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkC
       reason: 'manual' as const,
       evidence: {
         manual: {
-          notes: args.notes || 'Manually linked by user'
-        }
+          notes: args.notes || 'Manually linked by user',
+        },
       },
       confirmed: true,
       createdAt: new Date().toISOString(),
-      createdBy: 'user'
+      createdBy: 'user',
     };
 
     await manager.saveChatDevlogLink(link);
@@ -792,16 +790,19 @@ export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkC
 **Workspace:** ${session.workspace || 'Unknown'}
 **Notes:** ${args.notes || 'Manually linked by user'}
 
-The link has been confirmed and saved.`
-        }
-      ]
+The link has been confirmed and saved.`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('linking chat to devlog', error);
   }
 }
 
-export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: UnlinkChatFromDevlogArgs) {
+export async function handleUnlinkChatFromDevlog(
+  manager: DevlogManager,
+  args: UnlinkChatFromDevlogArgs,
+) {
   try {
     await manager.removeChatDevlogLink(args.sessionId, args.devlogId);
 
@@ -809,21 +810,24 @@ export async function handleUnlinkChatFromDevlog(manager: DevlogManager, args: U
       content: [
         {
           type: 'text',
-          text: `✅ Successfully removed link between chat session ${args.sessionId} and devlog entry #${args.devlogId}.`
-        }
-      ]
+          text: `✅ Successfully removed link between chat session ${args.sessionId} and devlog entry #${args.devlogId}.`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('unlinking chat from devlog', error);
   }
 }
 
-export async function handleSuggestChatDevlogLinks(manager: DevlogManager, args: SuggestChatDevlogLinksArgs) {
+export async function handleSuggestChatDevlogLinks(
+  manager: DevlogManager,
+  args: SuggestChatDevlogLinksArgs,
+) {
   try {
     const chatService = manager.getChatImportService();
     const suggestions = await chatService.suggestChatDevlogLinks(
       args.sessionId,
-      args.minConfidence || 0.5
+      args.minConfidence || 0.5,
     );
 
     if (suggestions.length === 0) {
@@ -831,22 +835,24 @@ export async function handleSuggestChatDevlogLinks(manager: DevlogManager, args:
         content: [
           {
             type: 'text',
-            text: `No link suggestions found with confidence >= ${args.minConfidence || 0.5}.`
-          }
-        ]
+            text: `No link suggestions found with confidence >= ${args.minConfidence || 0.5}.`,
+          },
+        ],
       };
     }
 
     const limited = suggestions.slice(0, args.limit || 10);
-    const suggestionsText = limited.map((suggestion: any, i: number) => {
-      const confidence = (suggestion.confidence * 100).toFixed(1);
-      return `**${i + 1}. Session ${suggestion.sessionId} ↔ Devlog #${suggestion.devlogId}**
+    const suggestionsText = limited
+      .map((suggestion: any, i: number) => {
+        const confidence = (suggestion.confidence * 100).toFixed(1);
+        return `**${i + 1}. Session ${suggestion.sessionId} ↔ Devlog #${suggestion.devlogId}**
 Confidence: ${confidence}%
 Reason: ${suggestion.reason}
 Created: ${suggestion.createdAt}
 Confirmed: ${suggestion.confirmed ? '✅' : '❓'}
 `;
-    }).join('\n');
+      })
+      .join('\n');
 
     return {
       content: [
@@ -858,9 +864,9 @@ Found ${suggestions.length} potential links (showing top ${limited.length}):
 
 ${suggestionsText}
 
-Use \`link_chat_to_devlog\` to confirm any of these suggestions.`
-        }
-      ]
+Use \`link_chat_to_devlog\` to confirm any of these suggestions.`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('getting link suggestions', error);
@@ -873,7 +879,7 @@ export async function handleGetChatStats(manager: DevlogManager, args: GetChatSt
       agent: args.agent,
       workspace: args.workspace,
       fromDate: args.fromDate,
-      toDate: args.toDate
+      toDate: args.toDate,
     };
 
     const stats = await manager.getChatStats(filter);
@@ -890,7 +896,10 @@ export async function handleGetChatStats(manager: DevlogManager, args: GetChatSt
 
     const workspaceStats = Object.entries(stats.byWorkspace)
       .slice(0, 10) // Top 10 workspaces
-      .map(([workspace, data]) => `  • ${workspace}: ${data.sessions} sessions, ${data.messages} messages`)
+      .map(
+        ([workspace, data]) =>
+          `  • ${workspace}: ${data.sessions} sessions, ${data.messages} messages`,
+      )
       .join('\n');
 
     return {
@@ -916,9 +925,9 @@ ${statusStats || '  No status data available'}
 • **Multi-linked Sessions:** ${stats.linkageStats.multiLinked}
 
 ### Top Workspaces
-${workspaceStats || '  No workspace data available'}`
-        }
-      ]
+${workspaceStats || '  No workspace data available'}`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('getting chat statistics', error);
@@ -932,7 +941,7 @@ export async function handleUpdateChatSession(manager: DevlogManager, args: Upda
       status: args.status,
       tags: args.tags,
       archived: args.archived,
-      workspace: args.workspace
+      workspace: args.workspace,
     };
 
     await manager.updateChatSession(args.sessionId, updates);
@@ -948,9 +957,9 @@ export async function handleUpdateChatSession(manager: DevlogManager, args: Upda
           type: 'text',
           text: `✅ Successfully updated chat session ${args.sessionId}:
 
-${updatesList}`
-        }
-      ]
+${updatesList}`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('updating chat session', error);
@@ -963,7 +972,7 @@ export async function handleGetChatWorkspaces(manager: DevlogManager, args: GetC
 
     let filtered = workspaces;
     if (args.minSessions && args.minSessions > 0) {
-      filtered = workspaces.filter(w => w.sessionCount >= (args.minSessions || 0));
+      filtered = workspaces.filter((w) => w.sessionCount >= (args.minSessions || 0));
     }
 
     if (filtered.length === 0) {
@@ -971,22 +980,25 @@ export async function handleGetChatWorkspaces(manager: DevlogManager, args: GetC
         content: [
           {
             type: 'text',
-            text: 'No chat workspaces found matching the criteria.'
-          }
-        ]
+            text: 'No chat workspaces found matching the criteria.',
+          },
+        ],
       };
     }
 
-    const workspacesText = filtered.map((workspace, i) => 
-      `**${i + 1}. ${workspace.name}**
+    const workspacesText = filtered
+      .map(
+        (workspace, i) =>
+          `**${i + 1}. ${workspace.name}**
 Path: ${workspace.path || 'Unknown'}
 Source: ${workspace.source}
 Sessions: ${workspace.sessionCount}
 First Seen: ${workspace.firstSeen}
 Last Seen: ${workspace.lastSeen}
 Devlog Workspace: ${workspace.devlogWorkspace || 'Not mapped'}
-`
-    ).join('\n');
+`,
+      )
+      .join('\n');
 
     return {
       content: [
@@ -994,9 +1006,9 @@ Devlog Workspace: ${workspace.devlogWorkspace || 'Not mapped'}
           type: 'text',
           text: `## Chat Workspaces (${filtered.length} found)
 
-${workspacesText}`
-        }
-      ]
+${workspacesText}`,
+        },
+      ],
     };
   } catch (error: unknown) {
     return createErrorResponse('getting chat workspaces', error);
@@ -1014,5 +1026,5 @@ export const chatTools = [
   suggestChatDevlogLinksTool,
   getChatStatsTool,
   updateChatSessionTool,
-  getChatWorkspacesTool
+  getChatWorkspacesTool,
 ];

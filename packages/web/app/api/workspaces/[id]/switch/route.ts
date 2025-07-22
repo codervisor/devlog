@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getWorkspaceManager } from '../../../../../lib/workspace-manager';
+import { getWorkspaceManager } from '../../../../lib/workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

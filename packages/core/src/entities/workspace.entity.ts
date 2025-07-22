@@ -1,10 +1,9 @@
 /**
- * TypeORM Entity for workspace metadata persistence
  * Used for cloud deployments where file-based storage isn't viable
  */
 
-import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import type { WorkspaceMetadata, StorageConfig } from '../types/index.js';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+import type { StorageConfig, WorkspaceMetadata } from '@/types';
 
 @Entity('devlog_workspaces')
 export class WorkspaceEntity {
@@ -48,7 +47,7 @@ export class WorkspaceEntity {
    */
   static fromWorkspaceData(
     workspace: Omit<WorkspaceMetadata, 'createdAt' | 'lastAccessedAt'>,
-    storage: StorageConfig
+    storage: StorageConfig,
   ): WorkspaceEntity {
     const entity = new WorkspaceEntity();
     entity.id = workspace.id;

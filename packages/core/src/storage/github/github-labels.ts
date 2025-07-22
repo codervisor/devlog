@@ -2,8 +2,8 @@
  * GitHub label management for devlog storage
  */
 
-import { GitHubStorageConfig } from '../../types/index.js';
-import { GitHubAPIClient } from './github-api.js';
+import { GitHubStorageConfig } from '@/types';
+import { GitHubAPIClient } from '@/storage';
 
 export interface DevlogLabel {
   name: string;
@@ -90,14 +90,18 @@ export class GitHubLabelManager {
     labels.push({
       name: markerLabel,
       color: '1D4ED8',
-      description: 'Managed by devlog system'
+      description: 'Managed by devlog system',
     });
 
     // Standard GitHub native type labels
     const typeLabels = [
-      { name: 'bug', color: 'E53E3E', description: 'Something isn\'t working' },
+      { name: 'bug', color: 'E53E3E', description: "Something isn't working" },
       { name: 'enhancement', color: '0052CC', description: 'New feature or request' },
-      { name: 'documentation', color: '36B37E', description: 'Improvements or additions to documentation' },
+      {
+        name: 'documentation',
+        color: '36B37E',
+        description: 'Improvements or additions to documentation',
+      },
       { name: 'refactor', color: 'FFC107', description: 'Code refactoring or restructuring' },
       { name: 'task', color: '744C9E', description: 'General task or maintenance work' },
     ];
@@ -132,7 +136,7 @@ export class GitHubLabelManager {
   private async getExistingLabels(): Promise<Set<string>> {
     try {
       const labels = await this.apiClient.getLabels();
-      return new Set(labels.map(label => label.name));
+      return new Set(labels.map((label) => label.name));
     } catch (error) {
       console.warn('Failed to fetch existing labels:', error);
       return new Set();

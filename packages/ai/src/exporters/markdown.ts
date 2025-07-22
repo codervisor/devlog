@@ -1,12 +1,12 @@
 /**
  * Simple Markdown exporter for CodeHist chat data
- * 
+ *
  * TypeScript implementation without complex configuration.
  */
 
 import { writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
-import { SearchResult, ChatStatistics } from '../parsers/index.js';
+import { SearchResult, ChatStatistics } from '@/parsers';
 
 export interface MarkdownExportData {
   statistics?: ChatStatistics;
@@ -38,7 +38,9 @@ export class MarkdownExporter {
       sections.push(`- **Total Messages:** ${stats.total_messages}`);
 
       if (stats.date_range?.earliest) {
-        sections.push(`- **Date Range:** ${stats.date_range.earliest} to ${stats.date_range.latest}`);
+        sections.push(
+          `- **Date Range:** ${stats.date_range.earliest} to ${stats.date_range.latest}`,
+        );
       }
 
       // Session types
@@ -71,35 +73,36 @@ export class MarkdownExporter {
       const sessionsToShow = Math.min(10, chatData.chat_sessions.length);
       for (let i = 0; i < sessionsToShow; i++) {
         const session = chatData.chat_sessions[i];
-        
+
         const sessionId = (session.session_id || 'Unknown').slice(0, 8); // Truncate for readability
         sections.push(`### Session ${i + 1}: ${sessionId}`);
         sections.push('');
         sections.push(`- **Agent:** ${session.agent || 'Unknown'}`);
         sections.push(`- **Timestamp:** ${session.timestamp || 'Unknown'}`);
-        
+
         if (session.workspace) {
           sections.push(`- **Workspace:** ${session.workspace}`);
         }
-        
+
         sections.push(`- **Messages:** ${(session.messages || []).length}`);
         sections.push('');
 
         // Messages (limit to first few)
         const messages = session.messages || [];
         const messagesToShow = Math.min(3, messages.length);
-        
+
         for (let j = 0; j < messagesToShow; j++) {
           const msg = messages[j];
-          const role = (msg.role || 'Unknown').charAt(0).toUpperCase() + (msg.role || 'Unknown').slice(1);
+          const role =
+            (msg.role || 'Unknown').charAt(0).toUpperCase() + (msg.role || 'Unknown').slice(1);
           sections.push(`#### Message ${j + 1} (${role})`);
           sections.push('');
-          
+
           let content = msg.content || '';
           if (content.length > 500) {
             content = content.slice(0, 500) + '... [TRUNCATED]';
           }
-          
+
           sections.push('```');
           sections.push(content);
           sections.push('```');
@@ -127,7 +130,7 @@ export class MarkdownExporter {
       const resultsToShow = Math.min(20, searchResults.length);
       for (let i = 0; i < resultsToShow; i++) {
         const result = searchResults[i];
-        
+
         sections.push(`### Match ${i + 1}`);
         sections.push('');
         sections.push(`- **Session:** ${(result.session_id || 'Unknown').slice(0, 8)}`);

@@ -6,22 +6,22 @@
  */
 
 // Core devlog types and interfaces
-export * from './core.js';
+export * from './core';
 
 // API request and response types
-export * from './requests.js';
+export * from './requests';
 
 // Storage configuration and provider types
-export * from './storage.js';
+export * from './storage';
 
 // Storage provider-specific option types
-export * from './storage-options.js';
+export * from './storage-options';
 
 // Workspace isolation and management types
-export * from './workspace.js';
+export * from './workspace';
 
 // Integration service and enterprise types
-export * from './integration.js';
+export * from './integration';
 
 // Chat history types and interfaces
-export * from './chat.js';
+export * from './chat';

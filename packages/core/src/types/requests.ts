@@ -2,28 +2,15 @@
  * API request and response types
  */
 
-import {
-  DevlogType,
-  DevlogPriority,
-  DevlogId,
-  DevlogStatus,
-  DevlogEntry,
-} from './core.js';
+import { DevlogEntry, DevlogId, DevlogPriority, DevlogStatus, DevlogType } from './core';
 
 import {
-  ChatSessionId,
-  ChatMessageId,
-  ChatSession,
-  ChatMessage,
   ChatFilter,
-  ChatStats,
-  ChatSearchResult,
-  ChatDevlogLink,
-  ChatImportProgress,
   ChatImportConfig,
-  AgentType,
+  ChatImportProgress,
+  ChatSessionId,
   ChatStatus,
-} from './chat.js';
+} from './chat';
 
 export interface CreateDevlogRequest {
   title: string;
@@ -118,7 +105,7 @@ export interface BatchOperationResult<T = any> {
 export interface ImportChatHistoryRequest {
   /** Import configuration */
   config: ChatImportConfig;
-  
+
   /** Whether to run import in background */
   background?: boolean;
 }
@@ -126,7 +113,7 @@ export interface ImportChatHistoryRequest {
 export interface ImportChatHistoryResponse {
   /** Import operation ID for tracking progress */
   importId: string;
-  
+
   /** Initial progress state */
   progress: ChatImportProgress;
 }
@@ -139,13 +126,13 @@ export interface GetChatImportProgressRequest {
 export interface ListChatSessionsRequest {
   /** Filtering criteria */
   filter?: ChatFilter;
-  
+
   /** Pagination offset */
   offset?: number;
-  
+
   /** Maximum number of results */
   limit?: number;
-  
+
   /** Sort criteria */
   sort?: {
     field: 'timestamp' | 'messageCount' | 'duration' | 'updatedAt';
@@ -156,10 +143,10 @@ export interface ListChatSessionsRequest {
 export interface GetChatSessionRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Whether to include messages */
   includeMessages?: boolean;
-  
+
   /** Message pagination */
   messageOffset?: number;
   messageLimit?: number;
@@ -168,13 +155,13 @@ export interface GetChatSessionRequest {
 export interface GetChatMessagesRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Pagination offset */
   offset?: number;
-  
+
   /** Maximum number of messages */
   limit?: number;
-  
+
   /** Sort direction */
   sort?: 'asc' | 'desc';
 }
@@ -182,21 +169,21 @@ export interface GetChatMessagesRequest {
 export interface SearchChatContentRequest {
   /** Search query */
   query: string;
-  
+
   /** Search options */
   options?: {
     /** Search type */
     type?: 'exact' | 'fuzzy' | 'semantic';
-    
+
     /** Case sensitive search */
     caseSensitive?: boolean;
-    
+
     /** Include archived sessions */
     includeArchived?: boolean;
-    
+
     /** Filter criteria */
     filter?: ChatFilter;
-    
+
     /** Maximum results */
     limit?: number;
   };
@@ -205,13 +192,13 @@ export interface SearchChatContentRequest {
 export interface LinkChatToDevlogRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Devlog entry ID */
   devlogId: DevlogId;
-  
+
   /** Manual link (true) or system suggestion (false) */
   manual?: boolean;
-  
+
   /** Additional notes about the link */
   notes?: string;
 }
@@ -219,7 +206,7 @@ export interface LinkChatToDevlogRequest {
 export interface UnlinkChatFromDevlogRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Devlog entry ID */
   devlogId: DevlogId;
 }
@@ -227,10 +214,10 @@ export interface UnlinkChatFromDevlogRequest {
 export interface GetChatDevlogLinksRequest {
   /** Optional session ID filter */
   sessionId?: ChatSessionId;
-  
+
   /** Optional devlog ID filter */
   devlogId?: DevlogId;
-  
+
   /** Include unconfirmed links */
   includeUnconfirmed?: boolean;
 }
@@ -238,13 +225,13 @@ export interface GetChatDevlogLinksRequest {
 export interface SuggestChatDevlogLinksRequest {
   /** Session ID to find suggestions for */
   sessionId?: ChatSessionId;
-  
+
   /** Devlog ID to find suggestions for */
   devlogId?: DevlogId;
-  
+
   /** Minimum confidence threshold */
   minConfidence?: number;
-  
+
   /** Maximum number of suggestions */
   limit?: number;
 }
@@ -252,7 +239,7 @@ export interface SuggestChatDevlogLinksRequest {
 export interface UpdateChatSessionRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Updates to apply */
   updates: {
     title?: string;
@@ -266,7 +253,7 @@ export interface UpdateChatSessionRequest {
 export interface DeleteChatSessionRequest {
   /** Chat session ID */
   sessionId: ChatSessionId;
-  
+
   /** Whether to delete associated messages */
   deleteMessages?: boolean;
 }
@@ -274,10 +261,10 @@ export interface DeleteChatSessionRequest {
 export interface GetChatStatsRequest {
   /** Optional filter to apply to stats calculation */
   filter?: ChatFilter;
-  
+
   /** Include detailed workspace breakdown */
   includeWorkspaceDetails?: boolean;
-  
+
   /** Include temporal analysis */
   includeTemporalAnalysis?: boolean;
 }
@@ -285,7 +272,7 @@ export interface GetChatStatsRequest {
 export interface GetChatWorkspacesRequest {
   /** Include inactive workspaces */
   includeInactive?: boolean;
-  
+
   /** Minimum session count threshold */
   minSessions?: number;
 }
@@ -293,7 +280,7 @@ export interface GetChatWorkspacesRequest {
 export interface ArchiveChatSessionsRequest {
   /** Session IDs to archive */
   sessionIds: ChatSessionId[];
-  
+
   /** Reason for archiving */
   reason?: string;
 }

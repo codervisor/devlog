@@ -2,4 +2,4 @@
  * MCP package utility functions
  */
 
-export * from './common.js';
+export * from './common';
