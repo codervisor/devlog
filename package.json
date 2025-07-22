@@ -42,7 +42,7 @@
     "node": ">=18",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0"

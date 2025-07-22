@@ -4,7 +4,6 @@
  */
 
 import * as crypto from 'crypto';
-import { getOpenStatuses } from './utils/filter-mapping.js';
 import type {
   BatchDeleteRequest,
   BatchNoteRequest,
