@@ -9,6 +9,7 @@ import {
   PlusOutlined,
   RightOutlined,
   WifiOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -49,6 +50,7 @@ export function NavigationSidebar({
     if (pathname === '/') return 'dashboard';
     if (pathname === '/devlogs') return 'list';
     if (pathname === '/devlogs/create') return 'create';
+    if (pathname === '/workspaces') return 'workspaces';
     if (pathname.startsWith('/devlogs/')) return 'list'; // For individual devlog pages
     return 'dashboard';
   };
@@ -69,6 +71,11 @@ export function NavigationSidebar({
       label: 'New Devlog',
       icon: <PlusOutlined />,
     },
+    {
+      key: 'workspaces',
+      label: 'Workspaces',
+      icon: <SettingOutlined />,
+    },
   ];
 
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -83,6 +90,9 @@ export function NavigationSidebar({
         break;
       case 'create':
         router.push('/devlogs/create');
+        break;
+      case 'workspaces':
+        router.push('/workspaces');
         break;
     }
   };
@@ -192,10 +202,10 @@ export function NavigationSidebar({
             </Tooltip>
 
             {(stats || statsLoading) && (
-              <OverviewStats 
-                stats={stats || null} 
+              <OverviewStats
+                stats={stats || null}
                 loading={statsLoading}
-                variant="icon" 
+                variant="icon"
               />
             )}
           </div>

@@ -1,0 +1,122 @@
+/* Workspace Management Page Styles */
+.workspace-management-page {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 32px;
+}
+
+.page-header .ant-typography-title {
+    margin-bottom: 8px;
+}
+
+.page-header .ant-typography-paragraph {
+    margin-bottom: 16px;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 16px;
+}
+
+.current-workspace-section {
+    margin-bottom: 24px;
+}
+
+.current-workspace-section .ant-card {
+    border: 2px solid #52c41a;
+    background: #f6ffed;
+}
+
+.workspaces-list-section .ant-list-item {
+    padding: 16px 24px;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.workspaces-list-section .ant-list-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: #1890ff;
+}
+
+.workspaces-list-section .ant-list-item-meta-title {
+    margin-bottom: 8px;
+}
+
+.workspace-switcher {
+    padding: 8px 0;
+}
+
+.workspace-switcher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.workspace-switcher-compact .ant-select {
+    border-radius: 6px;
+}
+
+/* Storage type indicators */
+.storage-type-json {
+    color: #1890ff;
+}
+
+.storage-type-github {
+    color: #722ed1;
+}
+
+.storage-type-postgres {
+    color: #52c41a;
+}
+
+.storage-type-mysql {
+    color: #fa8c16;
+}
+
+.storage-type-sqlite {
+    color: #13c2c2;
+}
+
+/* Connection status badges */
+.ant-badge-status-success .ant-badge-status-dot {
+    background-color: #52c41a;
+}
+
+.ant-badge-status-error .ant-badge-status-dot {
+    background-color: #ff4d4f;
+}
+
+.ant-badge-status-processing .ant-badge-status-dot {
+    background-color: #1890ff;
+}
+
+/* Modal styles */
+.ant-modal .ant-form-item-label>label {
+    font-weight: 500;
+}
+
+.ant-modal .ant-form-item-explain,
+.ant-modal .ant-form-item-extra {
+    font-size: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .workspace-management-page {
+        padding: 16px;
+    }
+
+    .workspaces-list-section .ant-list-item-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .workspaces-list-section .ant-list-item-actions>li {
+        margin: 0;
+    }
+}

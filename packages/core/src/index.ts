@@ -1,5 +1,7 @@
 export { DevlogManager } from './devlog-manager.js';
 export { ConfigurationManager } from './configuration-manager.js';
+export { WorkspaceDevlogManager } from './workspace-devlog-manager.js';
+export { FileWorkspaceManager } from './workspace-manager.js';
 
 // Event System
 export {
