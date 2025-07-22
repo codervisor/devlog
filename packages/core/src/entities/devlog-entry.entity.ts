@@ -22,7 +22,7 @@ import type {
   DevlogType,
   ExternalReference,
   StorageType,
-} from '@/types';
+} from '../types/index.js';
 import { loadRootEnv } from '../utils/env-loader.js';
 
 loadRootEnv();

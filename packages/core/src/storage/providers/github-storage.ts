@@ -14,7 +14,7 @@ import {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '@/types';
+} from '../../types/index.js';
 import { calculateDevlogStats, calculateTimeSeriesStats } from '../shared/index.js';
 import {
   DevlogGitHubMapper,

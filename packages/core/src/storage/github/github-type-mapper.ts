@@ -3,7 +3,7 @@
  * Consolidates duplicated type mapping logic from github-storage.ts and github-mapper.ts
  */
 
-import { DevlogType } from '@/types';
+import type { DevlogType } from '../../types/index.js';
 
 /**
  * Map devlog type to GitHub native type

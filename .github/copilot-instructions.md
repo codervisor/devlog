@@ -30,6 +30,26 @@
 - **Rapid iteration**: Make bold changes to improve codebase structure
 - **Breaking changes acceptable**: Not bound by API compatibility during this phase
 
+## 🔧 TypeScript ESM Requirements
+
+### Import System Rules
+- **File extensions**: Always add `.js` to import paths for runtime imports
+- **Internal imports**: Use relative paths (`./`, `../`) within packages
+- **Cross-package imports**: Use `@devlog/*` aliases for inter-package references
+- **Avoid self-reference aliases**: Don't use `@/` for intra-package imports (ambiguous)
+
+### Examples
+```typescript
+// ✅ Correct patterns
+import { DevlogManager } from './managers/devlog-manager.js';     // Internal
+import { ChatParser } from '@devlog/ai';                        // Cross-package
+import type { DevlogEntry } from '../types/index.js';           // Type-only can omit .js
+
+// ❌ Avoid these patterns
+import { DevlogEntry } from '@/types';                          // Ambiguous self-reference
+import { StorageProvider } from '../storage/providers';         // Missing .js extension
+```
+
 ## Essential SOPs
 
 ### Temporary Files and Scripts

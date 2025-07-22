@@ -26,7 +26,7 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
   UpdateDevlogRequest,
-} from '@/types';
+} from '../../types/index.js';
 import { DevlogNotFoundError } from '../../utils/index.js';
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
 import { devlogEvents } from '../../events/devlog-events.js';

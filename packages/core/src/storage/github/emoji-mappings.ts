@@ -5,7 +5,7 @@
  * Supports multiple emoji styles for different contexts and user preferences.
  */
 
-import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '@/types';
+import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../../types/index.js';
 
 /**
  * Gets the appropriate emoji for a devlog status

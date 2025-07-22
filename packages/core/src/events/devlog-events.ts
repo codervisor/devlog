@@ -2,7 +2,7 @@
  * Event system for devlog operations
  * Allows different parts of the application to react to devlog changes
  */
-import { DevlogEvent, DevlogEventHandler } from '@/types';
+import { DevlogEvent, DevlogEventHandler } from '../types/index.js';
 
 /**
  * Simple event emitter for devlog operations

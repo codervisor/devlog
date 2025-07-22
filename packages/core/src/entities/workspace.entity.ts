@@ -3,7 +3,7 @@
  */
 
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
-import type { StorageConfig, WorkspaceMetadata } from '@/types';
+import type { StorageConfig, WorkspaceMetadata } from '../types/index.js';
 
 @Entity('devlog_workspaces')
 export class WorkspaceEntity {

@@ -7,7 +7,7 @@ import {
   ExternalReference,
   GitHubConfig,
   JiraConfig,
-} from '@/types';
+} from '../types/index.js';
 
 export class EnterpriseSync {
   private integrations?: EnterpriseIntegration;

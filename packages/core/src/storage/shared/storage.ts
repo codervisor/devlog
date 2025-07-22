@@ -1,7 +1,13 @@
 import path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
-import type { DevlogEntry, DevlogPriority, DevlogStats, DevlogStatus, DevlogType } from '@/types';
+import type {
+  DevlogEntry,
+  DevlogPriority,
+  DevlogStats,
+  DevlogStatus,
+  DevlogType,
+} from '../../types/index.js';
 import { parseBoolean } from '../../utils/common.js';
 
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {

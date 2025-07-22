@@ -3,7 +3,7 @@
  * Automatically selects appropriate storage backend for deployment environment
  */
 
-import { AutoWorkspaceManager } from '@devlog/core/index';
+import { AutoWorkspaceManager } from '@devlog/core';
 import { join } from 'path';
 import { homedir } from 'os';
 

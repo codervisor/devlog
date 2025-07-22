@@ -13,7 +13,7 @@ import type {
   StorageProvider,
   WorkspaceContext,
   WorkspaceMetadata,
-} from '@/types';
+} from '../../types/index.js';
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
 import { ConfigurationManager } from '../configuration/configuration-manager.js';
 import { FileWorkspaceManager, type WorkspaceManagerOptions } from '../workspace/index.js';

@@ -3,7 +3,7 @@
  * Eliminates code duplication between SQLite, MySQL, and PostgreSQL implementations
  */
 
-import { TimeSeriesDataPoint, TimeSeriesRequest } from '@/types';
+import { TimeSeriesDataPoint, TimeSeriesRequest } from '../../types/index.js';
 
 /**
  * Generate the common SQL query structure for time series statistics

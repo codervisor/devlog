@@ -7,17 +7,17 @@
 
 import { CopilotParser } from '@devlog/ai';
 import type {
-  ChatSession,
-  ChatMessage,
+  AgentType,
+  ChatDevlogLink,
   ChatImportConfig,
   ChatImportProgress,
-  ChatDevlogLink,
-  StorageProvider,
-  DevlogEntry,
-  AgentType,
-  ChatStatus,
+  ChatMessage,
+  ChatSession,
   ChatSessionId,
-} from '@/types';
+  ChatStatus,
+  DevlogEntry,
+  StorageProvider,
+} from '../types/index.js';
 
 export interface ChatImportService {
   /**

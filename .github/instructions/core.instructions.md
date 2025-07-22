@@ -52,6 +52,45 @@ src/
 - **Type Exports**: Always export types alongside implementations
 - **Barrel Exports**: Use index.ts files for clean import paths
 
+## 📦 Import System Guidelines
+
+### ESM Import Requirements
+- **ALWAYS add .js extensions** for internal and external imports
+- **Use relative imports** for intra-package references
+- **Reserve @/ aliases** for cross-package imports only
+- **Avoid self-referencing aliases** within the same package
+
+### Correct Import Patterns
+```typescript
+// ✅ Internal package imports (same package)
+import { DevlogManager } from './devlog-manager.js';
+import { StorageProvider } from '../storage/index.js';
+import type { DevlogEntry } from '../../types/index.js';
+
+// ✅ Cross-package imports
+import { ChatParser } from '@devlog/ai';
+import type { AIModel } from '@devlog/ai/models';
+
+// ✅ External module imports
+import { Database } from 'better-sqlite3';
+import type { Request } from 'express';
+
+// ❌ AVOID: Self-referencing aliases (ambiguous)
+import { DevlogEntry } from '@/types'; // Which @? Root or package?
+```
+
+### TypeScript ESM Rules
+- **Runtime imports**: Must include .js extensions for Node.js compatibility
+- **Type-only imports**: Can omit .js extensions (TypeScript compilation only)
+- **Relative paths**: Provide explicit, unambiguous module resolution
+- **Cross-package boundaries**: Use @devlog/* aliases for clean separation
+
+### Why These Rules Matter
+- **Node.js ESM**: Requires explicit file extensions for module resolution
+- **Build stability**: Relative imports don't break when files move within package
+- **Clarity**: Explicit paths eliminate ambiguity about which module is imported
+- **Tooling support**: Better IDE navigation and refactoring capabilities
+
 ## 🔧 Implementation Standards
 
 ### Class Design Patterns

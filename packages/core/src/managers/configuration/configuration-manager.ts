@@ -8,13 +8,13 @@ import { loadRootEnv } from '../../utils/env-loader.js';
 
 import type {
   DevlogConfig,
+  JsonStorageOptions,
+  MySQLStorageOptions,
+  PostgreSQLStorageOptions,
+  SQLiteStorageOptions,
   StorageConfig,
   StorageType,
-  PostgreSQLStorageOptions,
-  MySQLStorageOptions,
-  SQLiteStorageOptions,
-  JsonStorageOptions,
-} from '@/types';
+} from '../../types/index.js';
 import { getWorkspaceRoot } from '../../storage/shared/storage.js';
 
 export class ConfigurationManager {

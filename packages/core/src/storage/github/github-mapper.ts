@@ -16,7 +16,7 @@ import {
   DevlogStatus,
   DevlogType,
   GitHubStorageConfig,
-} from '@/types';
+} from '../../types/index.js';
 import { CreateIssueRequest, GitHubIssue, UpdateIssueRequest } from './github-api.js';
 import { formatEnhancedGitHubTitle } from './emoji-mappings.js';
 import { mapGitHubTypeToDevlogType } from './github-type-mapper.js';

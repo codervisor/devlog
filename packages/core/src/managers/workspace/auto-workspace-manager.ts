@@ -11,7 +11,7 @@ import type {
   WorkspaceContext,
   WorkspaceManager,
   WorkspaceMetadata,
-} from '@/types';
+} from '../../types/index.js';
 import {
   DatabaseWorkspaceManager,
   type DatabaseWorkspaceManagerOptions,

@@ -4,6 +4,40 @@ applyTo: 'packages/web/**/*.{ts,tsx,js,jsx}'
 
 # Web Application Development Guidelines
 
+## 📦 Import System for Next.js
+
+### Next.js Import Patterns
+- **App directory imports**: Use `@/` aliases for app/* directory structure
+- **Component imports**: Use relative paths for component organization
+- **Cross-package imports**: Use `@devlog/*` for core/mcp/ai packages
+- **External libraries**: Standard npm package imports
+
+### Web-Specific Import Examples
+```typescript
+// ✅ Next.js app directory (@ aliases work here)
+import { DevlogCard } from '@/components/devlog/devlog-card';
+import { Button } from '@/components/ui/button';
+import { getDevlogs } from '@/lib/api';
+
+// ✅ Relative component imports
+import { DevlogList } from './devlog-list';
+import { StatusBadge } from '../ui/status-badge';
+
+// ✅ Cross-package imports (no .js needed in Next.js)
+import { DevlogManager } from '@devlog/core';
+import { ChatParser } from '@devlog/ai';
+
+// ✅ External libraries
+import { clsx } from 'clsx';
+import Link from 'next/link';
+```
+
+### Why Different Rules for Web Package
+- **Next.js bundler**: Handles module resolution differently than Node.js
+- **Webpack compatibility**: No .js extensions needed for internal imports
+- **App directory**: @ aliases are properly configured for app/* structure
+- **Build process**: Next.js handles TypeScript compilation and bundling
+
 ## ⚛️ Next.js App Router Architecture
 
 ### Directory Structure Standards

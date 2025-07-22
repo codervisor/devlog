@@ -4,7 +4,32 @@ applyTo: 'packages/mcp/src/**/*.ts'
 
 # MCP Server Development Guidelines
 
-## 🔌 MCP Architecture Requirements
+## � Import System Requirements
+
+### Node.js ESM Compatibility
+- **ALWAYS use .js extensions** for all import statements
+- **Use relative imports** for internal MCP package modules
+- **Use @devlog/* aliases** for core package dependencies
+- **Follow strict ESM patterns** for Node.js compatibility
+
+### MCP-Specific Import Patterns
+```typescript
+// ✅ Correct MCP imports
+import { Tool, CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { DevlogManager } from '@devlog/core';
+
+// ✅ Internal MCP imports  
+import { MCPAdapter } from './mcp-adapter.js';
+import { validateToolInput } from '../utils/validation.js';
+import type { ToolDefinition } from '../types/index.js';
+
+// ❌ Avoid: Missing extensions or ambiguous imports
+import { MCPAdapter } from './mcp-adapter';      // Missing .js
+import { ToolDefinition } from '@/types';        // Ambiguous self-reference
+```
+
+## �🔌 MCP Architecture Requirements
 
 ### Server Implementation Patterns
 - **Use ModelContextProtocol SDK** for all server functionality

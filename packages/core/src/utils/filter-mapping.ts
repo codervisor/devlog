@@ -6,7 +6,7 @@
  * throughout the codebase.
  */
 
-import type { DevlogStatus, FilterType } from '@/types';
+import type { DevlogStatus, FilterType } from '../types/index.js';
 
 /**
  * Mapping of filter types to their corresponding status arrays

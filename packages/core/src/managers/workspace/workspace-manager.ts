@@ -9,12 +9,12 @@ import { promises as fs } from 'fs';
 import { dirname } from 'path';
 import type {
   StorageConfig,
-  WorkspaceMetadata,
   WorkspaceConfiguration,
-  WorkspacesConfig,
   WorkspaceContext,
   WorkspaceManager,
-} from '@/types';
+  WorkspaceMetadata,
+  WorkspacesConfig,
+} from '../../types/index.js';
 
 export interface WorkspaceManagerOptions {
   /** Path to the workspaces configuration file */

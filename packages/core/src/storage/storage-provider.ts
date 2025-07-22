@@ -2,7 +2,7 @@
  * Abstract storage interface that supports different storage backends
  */
 
-import { StorageConfig, StorageProvider } from '@/types';
+import { StorageConfig, StorageProvider } from '../types/index.js';
 import {
   GitHubStorageProvider,
   JsonStorageProvider,

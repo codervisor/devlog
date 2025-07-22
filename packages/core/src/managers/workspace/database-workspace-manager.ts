@@ -10,7 +10,7 @@ import type {
   WorkspaceContext,
   WorkspaceManager,
   WorkspaceMetadata,
-} from '@/types';
+} from '../../types/index.js';
 import { WorkspaceEntity } from '../../entities/workspace.entity.js';
 import {
   createDataSource,

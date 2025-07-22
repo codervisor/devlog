@@ -3,7 +3,12 @@
  * Eliminates code duplication across JSON, SQLite, PostgreSQL, MySQL, and GitHub storage
  */
 
-import { DevlogEntry, TimeSeriesDataPoint, TimeSeriesRequest, TimeSeriesStats } from '@/types';
+import {
+  DevlogEntry,
+  TimeSeriesDataPoint,
+  TimeSeriesRequest,
+  TimeSeriesStats,
+} from '../../types/index.js';
 import { generateDateRangeToDates } from '../typeorm/index.js';
 
 /**
