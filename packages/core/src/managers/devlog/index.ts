@@ -1,2 +1,2 @@
-export { DevlogManager } from './devlog-manager';
-export { WorkspaceDevlogManager } from './workspace-devlog-manager';
+export * from './devlog-manager';
+export * from './workspace-devlog-manager';

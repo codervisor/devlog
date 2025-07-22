@@ -15,9 +15,8 @@ import {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '@/types';
+import { calculateDevlogStats, calculateTimeSeriesStats } from '../shared';
 import {
-  calculateDevlogStats,
-  calculateTimeSeriesStats,
   DevlogGitHubMapper,
   formatGitHubComment,
   GitHubAPIClient,
@@ -28,7 +27,7 @@ import {
   mapDevlogTypeToGitHubLabel,
   mapDevlogTypeToGitHubType,
   RateLimiter,
-} from '@/storage';
+} from '../github';
 import { createPaginatedResult } from '@/utils';
 
 export class GitHubStorageProvider implements StorageProvider {

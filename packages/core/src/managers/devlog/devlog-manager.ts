@@ -19,17 +19,18 @@ import type {
   DiscoverDevlogsRequest,
   DiscoveredDevlogEntry,
   DiscoveryResult,
-  PaginatedResult,
   NoteCategory,
+  PaginatedResult,
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
   UpdateDevlogRequest,
 } from '@/types';
 import { StorageProviderFactory } from '@/storage';
-import { ConfigurationManager } from '@/managers';
 import { DevlogNotFoundError } from '@/utils';
-import { devlogEvents, DevlogEvent } from '@/events';
+import { DevlogEvent, devlogEvents } from '@/events';
+import { DefaultChatImportService } from '@/services';
+import { ConfigurationManager } from '@/managers';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
@@ -838,7 +839,6 @@ export class DevlogManager {
    * Get chat import service
    */
   getChatImportService() {
-    const { DefaultChatImportService } = require('./services/chat-import-service');
     return new DefaultChatImportService(this.storageProvider);
   }
 

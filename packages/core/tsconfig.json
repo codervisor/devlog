@@ -1,19 +1,22 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./build",
+    "baseUrl": ".",
     "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": false,
-    "incremental": false,
+    "outDir": "./build",
+    "composite": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@devlog/ai": ["../ai/build"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@devlog/ai": [
+        "../ai/src"
+      ],
+      "@devlog/ai/*": [
+        "../ai/src/*"
+      ]
     }
   },
   "include": [
@@ -24,5 +27,10 @@
     "build",
     "**/*.test.ts",
     "**/*.spec.ts"
+  ],
+  "references": [
+    {
+      "path": "../ai"
+    }
   ]
 }

@@ -1,1 +1,1 @@
-export { ConfigurationManager } from './configuration-manager';
+export * from './configuration-manager';

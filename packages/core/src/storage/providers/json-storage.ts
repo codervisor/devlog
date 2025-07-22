@@ -8,7 +8,7 @@ import * as fs from 'fs/promises';
 import { FSWatcher, watch } from 'fs';
 import os from 'os';
 import type { DevlogEvent } from '@/events';
-import { calculateDevlogStats, calculateTimeSeriesStats, getWorkspaceRoot } from '@/storage';
+import { calculateDevlogStats, calculateTimeSeriesStats, getWorkspaceRoot } from '../shared';
 import {
   DevlogEntry,
   DevlogFilter,

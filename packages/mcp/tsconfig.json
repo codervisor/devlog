@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "./src",
+    "outDir": "./build",
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "node",
@@ -10,17 +13,17 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./build",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": false,
-    "incremental": false,
-    "baseUrl": ".",
+    "composite": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@devlog/core/*": ["../core/*"],
+      "@/*": [
+        "./src/*"
+      ],
+      "@devlog/core": [
+        "../core/src"
+      ],
+      "@devlog/core/*": [
+        "../core/src/*"
+      ]
     }
   },
   "include": [
@@ -31,5 +34,10 @@
     "build",
     "src/**/*.test.ts",
     "src/__tests__"
+  ],
+  "references": [
+    {
+      "path": "../core"
+    }
   ]
 }

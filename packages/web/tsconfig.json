@@ -20,6 +20,8 @@
     "noEmit": true,
     "jsx": "preserve",
     "incremental": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "plugins": [
       {
         "name": "next"
@@ -27,9 +29,12 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/*"],
-      "@devlog/ai/*": ["../ai/src/*"],
-      "@devlog/core/*": ["../core/src/*"],
+      "@/*": [
+        "./app/*"
+      ],
+      "@devlog/core": [
+        "../core/src"
+      ]
     }
   },
   "include": [

@@ -18,9 +18,8 @@ import {
 import type { DevlogEvent } from '@/events';
 import { createPaginatedResult } from '@/utils';
 import { DevlogEntryEntity } from '@/entities';
+import { calculateDevlogStats, calculateTimeSeriesStats } from '../shared';
 import {
-  calculateDevlogStats,
-  calculateTimeSeriesStats,
   createDataSource,
   generateDateRange,
   generateTimeSeriesParams,

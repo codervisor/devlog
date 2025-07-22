@@ -23,7 +23,7 @@ import {
   GitHubIssue,
   mapGitHubTypeToDevlogType,
   UpdateIssueRequest,
-} from '@/storage';
+} from '.';
 
 // Metadata structure for HTML comments
 interface DevlogMetadata {

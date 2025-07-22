@@ -1,38 +1,47 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "module": "ESNext",
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@devlog/ai": ["./packages/ai/src"],
-      "@devlog/core": ["./packages/core/src"],
-      "@devlog/mcp": ["./packages/mcp/src"],
-      "@devlog/web": ["./packages/web/src"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
-    "declaration": true,
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleDetection": "force",
-    "composite": false,
-    "incremental": false,
-    "declarationMap": true,
     "skipLibCheck": true
   },
   "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/mcp" },
-    { "path": "./packages/ai" },
-    { "path": "./packages/web" }
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/mcp"
+    },
+    {
+      "path": "./packages/ai"
+    },
+    {
+      "path": "./packages/web"
+    }
   ],
   "files": [],
-  "exclude": ["node_modules", "**/build", "**/dist"]
+  "exclude": [
+    "node_modules",
+    "**/build",
+    "**/dist"
+  ]
 }

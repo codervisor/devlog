@@ -3,12 +3,8 @@
  * and seamless switching between different storage backends
  */
 
-import {
-  ConfigurationManager,
-  FileWorkspaceManager,
-  type WorkspaceManagerOptions,
-} from '@/managers';
-import { StorageProviderFactory } from '@/storage';
+import { join } from 'path';
+import { homedir } from 'os';
 import type {
   DevlogEntry,
   DevlogFilter,
@@ -18,8 +14,12 @@ import type {
   WorkspaceContext,
   WorkspaceMetadata,
 } from '@/types';
-import { join } from 'path';
-import { homedir } from 'os';
+import { StorageProviderFactory } from '@/storage';
+import {
+  ConfigurationManager,
+  FileWorkspaceManager,
+  type WorkspaceManagerOptions,
+} from '@/managers';
 
 export interface WorkspaceDevlogManagerOptions {
   /** Path to workspace configuration file */
