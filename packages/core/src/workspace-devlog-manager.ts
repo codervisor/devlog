@@ -110,9 +110,10 @@ export class WorkspaceDevlogManager {
         }
 
         // Initialize storage provider for this workspace if not already done
+        // Skip expensive initialization for fast switching - will be done lazily
         if (!this.storageProviders.has(workspaceId)) {
             const provider = await StorageProviderFactory.create(workspaceConfig.storage);
-            await provider.initialize();
+            // Skip provider.initialize() for fast switching
             this.storageProviders.set(workspaceId, provider);
         }
 
@@ -203,7 +204,7 @@ export class WorkspaceDevlogManager {
     /**
      * Get the current storage provider
      */
-    private getCurrentStorageProvider(): StorageProvider {
+    private async getCurrentStorageProvider(): Promise<StorageProvider> {
         if (!this.currentWorkspaceId) {
             throw new Error('No workspace selected');
         }
@@ -211,6 +212,11 @@ export class WorkspaceDevlogManager {
         const provider = this.storageProviders.get(this.currentWorkspaceId);
         if (!provider) {
             throw new Error(`Storage provider not initialized for workspace: ${this.currentWorkspaceId}`);
+        }
+
+        // Perform lazy initialization if not already done
+        if (!(provider as any).initialized) {
+            await provider.initialize();
         }
 
         return provider;
@@ -240,18 +246,18 @@ export class WorkspaceDevlogManager {
     // Delegate all DevlogManager methods to current storage provider
 
     async listDevlogs(filter?: DevlogFilter, options?: any): Promise<PaginatedResult<DevlogEntry>> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         return provider.list(filter);
     }
 
     async getDevlog(id: string | number): Promise<DevlogEntry | null> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
         return provider.get(numericId);
     }
 
     async createDevlog(data: any): Promise<DevlogEntry> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         const id = await provider.getNextId();
         const entry: DevlogEntry = {
             id,
@@ -264,7 +270,7 @@ export class WorkspaceDevlogManager {
     }
 
     async updateDevlog(id: string | number, data: any): Promise<DevlogEntry> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
         const existing = await provider.get(numericId);
         if (!existing) {
@@ -281,13 +287,13 @@ export class WorkspaceDevlogManager {
     }
 
     async deleteDevlog(id: string | number): Promise<void> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
         return provider.delete(numericId);
     }
 
     async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-        const provider = this.getCurrentStorageProvider();
+        const provider = await this.getCurrentStorageProvider();
         return provider.search(query);
     }
 

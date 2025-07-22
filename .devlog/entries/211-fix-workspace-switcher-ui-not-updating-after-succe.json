@@ -1,0 +1,60 @@
+{
+  "key": "fix-workspace-switcher-ui-not-updating-after-succe",
+  "title": "Fix: Workspace Switcher UI Not Updating After Successful API Call",
+  "type": "bugfix",
+  "description": "After successfully switching workspaces via PUT /api/workspaces/{id}/switch (which returns 200 OK), the workspace switcher UI still displays the original workspace name instead of updating to show the newly selected workspace. The API call works correctly but the frontend UI does not reflect the workspace change.",
+  "status": "new",
+  "priority": "high",
+  "createdAt": "2025-07-22T06:07:25.883Z",
+  "updatedAt": "2025-07-22T06:19:45.054Z",
+  "notes": [
+    {
+      "id": "32326b53-f271-4d06-bd00-699fdfbec80d",
+      "timestamp": "2025-07-22T06:09:09.713Z",
+      "category": "progress",
+      "content": "User correctly pointed out that PUT /api/workspaces/{id} should be for config updates, not switching. Need to restore /switch endpoint and fix the actual issue with the response structure."
+    },
+    {
+      "id": "bf3595ba-7d12-43e5-8342-7a83c204f337",
+      "timestamp": "2025-07-22T06:11:38.147Z",
+      "category": "issue",
+      "content": "Found the root issue: The /switch API endpoint is hanging/timing out when called. The workspaces API works fine and shows both workspaces, but PUT /api/workspaces/devlog-github/switch hangs indefinitely. Need to debug the switch endpoint implementation."
+    },
+    {
+      "id": "165e1bff-f6ff-49bc-b6fa-457f06e97caa",
+      "timestamp": "2025-07-22T06:13:47.120Z",
+      "category": "solution",
+      "content": "User correctly identified the root cause: workspace switching hangs because it synchronously verifies GitHub API access and ensures required labels during switchToWorkspace(). Need to make switching fast by skipping verification and moving it to background operations."
+    },
+    {
+      "id": "fdd0d52d-3aba-4498-893e-4a295cb7544a",
+      "timestamp": "2025-07-22T06:19:45.054Z",
+      "category": "progress",
+      "content": "Implemented lazy initialization fix for workspace switching. Modified WorkspaceDevlogManager to skip expensive storage provider initialization during switchToWorkspace() and instead perform it lazily in getCurrentStorageProvider(). However, testing shows the web server is still experiencing performance issues. Need to further investigate the root cause."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users expect immediate visual feedback when switching workspaces. The current behavior creates confusion as users cannot tell if the workspace switch was successful or not, leading to a poor user experience.",
+    "technicalContext": "The issue appears to be in the frontend workspace switcher component logic. The API endpoint works correctly, but there may be issues with state management, response handling, or UI updates after the API call completes.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Workspace switcher UI immediately shows the newly selected workspace name after switching",
+      "Current workspace state is properly updated in the frontend",
+      "Users receive clear visual confirmation of successful workspace switching"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-22T06:07:25.883Z",
+    "contextVersion": 1
+  },
+  "id": 211
+}

@@ -58,7 +58,7 @@ export async function GET(
     }
 }
 
-// PUT /api/workspaces/[id]/switch - Switch to workspace
+// PUT /api/workspaces/[id] - Update workspace configuration
 export async function PUT(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -66,16 +66,17 @@ export async function PUT(
     try {
         const manager = await getWorkspaceManager();
         const workspaceId = params.id;
+        const body = await request.json();
 
-        const context = await manager.switchToWorkspace(workspaceId);
-
-        return NextResponse.json({
-            message: `Switched to workspace: ${context.workspace.name}`,
-            workspace: context,
-        });
+        // TODO: Implement workspace configuration update
+        // This should update workspace metadata like name, description, settings, etc.
+        
+        return NextResponse.json({ 
+            error: 'Workspace configuration update not yet implemented' 
+        }, { status: 501 });
     } catch (error) {
-        console.error('Error switching workspace:', error);
-        const message = error instanceof Error ? error.message : 'Failed to switch workspace';
+        console.error('Error updating workspace:', error);
+        const message = error instanceof Error ? error.message : 'Failed to update workspace';
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }

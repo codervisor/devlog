@@ -5,8 +5,6 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
-    "dev:server": "next dev --port 3000",
-    "dev:client": "next dev --port 3001",
     "build": "NEXT_BUILD_MODE=standalone next build",
     "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",
     "start": "pnpm run build && next start --port 3010",

@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Dropdown, message, Select, Tooltip, Typography } from 'antd';
+import { Avatar, Button, Dropdown, message, Tooltip, Typography } from 'antd';
 import {
-  CheckCircleOutlined,
   CloudOutlined,
   DatabaseOutlined,
   DisconnectOutlined,
@@ -265,11 +264,6 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
                   </Text>
                   <div className={styles.workspaceItemStatus}>
                     {renderConnectionStatus(workspace.id)}
-                    {isCurrentWorkspace && (
-                      <CheckCircleOutlined
-                        style={{ color: '#52c41a', fontSize: '14px', marginLeft: '4px' }}
-                      />
-                    )}
                   </div>
                 </div>
                 <Text type="secondary" style={{ fontSize: '12px' }}>

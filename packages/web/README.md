@@ -21,16 +21,6 @@ pnpm install
 # Start development server (both client and server)
 pnpm dev
 
-# Start only the client (with proxy to API)
-pnpm dev:client
-
-# Start only the server
-pnpm dev:server
-```
-
-The client will be available at http://localhost:3000 and will proxy API requests to the server
-at http://localhost:3001.
-
 ### Production
 
 ```bash
