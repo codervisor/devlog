@@ -7,9 +7,9 @@ import path from 'path';
 import * as fs from 'fs/promises';
 import { FSWatcher, watch } from 'fs';
 import os from 'os';
-import type { DevlogEvent } from '../events/devlog-events.js';
-import { calculateDevlogStats, getWorkspaceRoot } from '../utils/storage.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
+import type { DevlogEvent } from '../../events/devlog-events.js';
+import { calculateDevlogStats, getWorkspaceRoot } from '../shared/storage.js';
+import { calculateTimeSeriesStats } from '../shared/time-series.js';
 import {
   DevlogEntry,
   DevlogFilter,
@@ -21,7 +21,7 @@ import {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '../types/index.js';
+} from '../../types/index.js';
 
 export const DEFAULT_DEVLOG_DIR_NAME = '.devlog';
 

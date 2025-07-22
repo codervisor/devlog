@@ -3,8 +3,8 @@
  */
 
 import { StorageConfig, StorageProvider } from '../types/index.js';
-import { TypeORMStorageProvider } from './typeorm-storage.js';
-import { TypeORMStorageOptions } from './typeorm-config.js';
+import { TypeORMStorageProvider } from './providers/typeorm-storage.js';
+import { TypeORMStorageOptions } from './typeorm/typeorm-config.js';
 
 /**
  * Factory for creating storage providers based on configuration
@@ -17,7 +17,7 @@ export class StorageProviderFactory {
         if (!config?.github) {
           throw new Error('GitHub configuration is required for github storage type');
         }
-        const { GitHubStorageProvider } = await import('./github-storage.js');
+        const { GitHubStorageProvider } = await import('./providers/github-storage.js');
         return new GitHubStorageProvider(config.github);
 
       case 'sqlite':
@@ -49,7 +49,7 @@ export class StorageProviderFactory {
       case 'mysql':
         // Use TypeORM for MySQL
         let mysqlOptions: TypeORMStorageOptions;
-        
+
         if (config.connectionString) {
           // Parse MySQL connection string
           const url = new URL(config.connectionString);
@@ -82,7 +82,7 @@ export class StorageProviderFactory {
 
       case 'json':
       default:
-        const { JsonStorageProvider } = await import('./json-storage.js');
+        const { JsonStorageProvider } = await import('./providers/json-storage.js');
         return new JsonStorageProvider(config?.json || {});
     }
   }

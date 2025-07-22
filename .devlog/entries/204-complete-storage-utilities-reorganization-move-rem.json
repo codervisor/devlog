@@ -1,0 +1,47 @@
+{
+  "key": "complete-storage-utilities-reorganization-move-rem",
+  "title": "Complete Storage Utilities Reorganization - Move Remaining Provider-Specific Files",
+  "type": "refactor",
+  "description": "Complete the storage directory reorganization by moving remaining provider-specific utilities from the utils/ folder to their appropriate storage subdirectories. This includes moving GitHub-specific utilities (emoji-mappings, rate-limiter, lru-cache), database-specific utilities (sql-time-series), and creating a shared/ folder for cross-provider utilities.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-22T02:17:11.955Z",
+  "updatedAt": "2025-07-22T02:23:58.587Z",
+  "notes": [
+    {
+      "id": "646d4fd4-6fcc-440c-8b6d-5942cb6f3ad0",
+      "timestamp": "2025-07-22T02:23:58.587Z",
+      "category": "progress",
+      "content": "Completed: Successfully completed the storage utilities reorganization by moving all provider-specific files from the utils/ folder to their appropriate storage subdirectories. GitHub utilities (emoji-mappings, rate-limiter, lru-cache) moved to storage/github/, database utilities (sql-time-series) moved to storage/typeorm/, and shared storage utilities (storage, time-series) moved to storage/shared/. Updated all import paths, maintained public API exports, and verified all packages build successfully. The codebase now has much better organization with logical groupings that eliminate cross-concerns and improve developer experience."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The previous storage refactoring left several provider-specific utilities in the general utils/ folder, making the codebase organization inconsistent. Moving these files to their proper locations will improve code discovery, reduce coupling, and make the architecture more intuitive for developers.",
+    "technicalContext": "Files to move: emoji-mappings.ts, rate-limiter.ts, lru-cache.ts (to storage/github/), sql-time-series.ts (to storage/typeorm/), and storage.ts, time-series.ts (to storage/shared/). Need to update all import paths and maintain exports.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Move GitHub utilities to storage/github/",
+      "Move database utilities to storage/typeorm/",
+      "Create storage/shared/ for cross-provider utilities",
+      "Update all import paths",
+      "Maintain public API exports",
+      "All builds pass",
+      "No TypeScript errors"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-22T02:17:11.955Z",
+    "contextVersion": 1
+  },
+  "id": 204,
+  "closedAt": "2025-07-22T02:23:58.585Z"
+}

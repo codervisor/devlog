@@ -2,7 +2,7 @@
  * GitHub API client for devlog storage operations
  */
 
-import { GitHubStorageConfig } from '../types/index.js';
+import { GitHubStorageConfig } from '../../types/index.js';
 
 export interface GitHubIssue {
   number: number;

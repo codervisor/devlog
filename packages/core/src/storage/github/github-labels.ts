@@ -2,7 +2,7 @@
  * GitHub label management for devlog storage
  */
 
-import { GitHubStorageConfig } from '../types/index.js';
+import { GitHubStorageConfig } from '../../types/index.js';
 import { GitHubAPIClient } from './github-api.js';
 
 export interface DevlogLabel {

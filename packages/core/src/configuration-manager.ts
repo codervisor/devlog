@@ -15,7 +15,7 @@ import type {
   SQLiteStorageOptions,
   JsonStorageOptions,
 } from './types/index.js';
-import { getWorkspaceRoot } from './utils/storage.js';
+import { getWorkspaceRoot } from './storage/shared/storage.js';
 
 export class ConfigurationManager {
   private workspaceRoot: string | null = null;

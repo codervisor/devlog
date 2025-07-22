@@ -1,0 +1,66 @@
+{
+  "key": "refactor-reorganize-storage-directory-structure-an",
+  "title": "Refactor: Reorganize Storage Directory Structure and Consolidate GitHub Utilities",
+  "type": "refactor",
+  "description": "Reorganize the packages/core/src/storage directory from flat files into grouped folders to improve code organization and developer experience. Additionally, consolidate GitHub-related utilities scattered across the utils folder into the appropriate storage provider groupings.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-22T01:56:18.236Z",
+  "updatedAt": "2025-07-22T02:03:50.319Z",
+  "notes": [
+    {
+      "id": "b3753930-e72a-42d4-bed8-6856d24a10bd",
+      "timestamp": "2025-07-22T01:56:42.028Z",
+      "category": "progress",
+      "content": "Starting implementation of storage directory reorganization. Plan identified:\n\n1. Create provider-specific folders (providers/, github/, json/, typeorm/)\n2. Move GitHub utilities from utils/ to storage/github/\n3. Update import paths and maintain API exports\n4. Test builds after changes\n\nCurrent structure analysis complete - ready to start implementation."
+    },
+    {
+      "id": "3f64ef7c-e850-4275-9afc-15e0a348068c",
+      "timestamp": "2025-07-22T02:03:34.254Z",
+      "category": "solution",
+      "content": "✅ Successfully reorganized storage directory structure!\n\n**Changes implemented:**\n1. **Created provider-specific folders**: \n   - `storage/providers/` - Main storage implementations (github-storage.ts, json-storage.ts, typeorm-storage.ts)\n   - `storage/github/` - GitHub utilities (github-api.ts, github-labels.ts, github-mapper.ts, github-type-mapper.ts)\n   - `storage/typeorm/` - Database configs (typeorm-config.ts, chat-schema.ts)\n\n2. **Updated import paths**: All import statements throughout the codebase updated to use new structure\n3. **Created index.ts files**: Added proper exports for each module group\n4. **Removed duplicates**: Deleted original GitHub utility files from utils/ folder\n5. **Maintained API compatibility**: All public exports still work from core package\n\n**Verification:**\n- ✅ Core package builds successfully \n- ✅ All packages build without errors\n- ✅ TypeScript types resolve correctly\n- ✅ Import paths all working\n\nThe storage directory is now much better organized with logical groupings that make it easier to navigate and maintain.",
+      "files": [
+        "packages/core/src/storage/providers/",
+        "packages/core/src/storage/github/",
+        "packages/core/src/storage/typeorm/",
+        "packages/core/src/index.ts",
+        "packages/core/src/utils/index.ts"
+      ]
+    },
+    {
+      "id": "f70b6e34-21bd-4bf4-9ece-46c11d954250",
+      "timestamp": "2025-07-22T02:03:50.319Z",
+      "category": "progress",
+      "content": "Completed: Successfully reorganized the packages/core/src/storage directory structure from flat files into logical, provider-specific folders. Moved GitHub utilities from utils/ to storage/github/, created proper index.ts exports, and updated all import paths throughout the codebase. All packages build successfully and the public API remains intact. The new structure significantly improves code organization and developer experience by grouping related functionality together."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The current flat storage directory structure makes it difficult to navigate and understand relationships between storage provider files. GitHub-related utilities are scattered across the utils folder instead of being logically grouped with the GitHub storage provider. This refactoring will improve code maintainability, reduce cognitive load for developers, and create a more intuitive project structure.",
+    "technicalContext": "Current structure has all storage providers as flat files in packages/core/src/storage, with GitHub utilities (github-api.ts, github-labels.ts, github-mapper.ts, github-type-mapper.ts) in packages/core/src/utils. The refactoring will create provider-specific folders and group related files together while maintaining the existing public API through proper index.ts exports.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Create provider-specific folders under packages/core/src/storage",
+      "Move GitHub utilities from utils/ to storage/github/",
+      "Maintain existing public API exports",
+      "Update all import paths to use the new structure",
+      "Ensure all builds pass after refactoring",
+      "Verify TypeScript type checking succeeds",
+      "Update documentation to reflect new structure"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-22T01:56:18.236Z",
+    "contextVersion": 1
+  },
+  "id": 203,
+  "closedAt": "2025-07-22T02:03:50.318Z"
+}

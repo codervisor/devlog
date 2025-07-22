@@ -15,20 +15,20 @@ import {
   TimeSeriesRequest,
   TimeSeriesDataPoint,
   TimeSeriesStats,
-} from '../types/index.js';
-import { GitHubAPIClient, GitHubIssue, GitHubComment } from '../utils/github-api.js';
-import { RateLimiter } from '../utils/rate-limiter.js';
-import { LRUCache } from '../utils/lru-cache.js';
-import { DevlogGitHubMapper } from '../utils/github-mapper.js';
-import { GitHubLabelManager } from '../utils/github-labels.js';
-import { createPaginatedResult } from '../utils/common.js';
+} from '../../types/index.js';
+import { GitHubAPIClient, GitHubIssue, GitHubComment } from '../github/github-api.js';
+import { RateLimiter } from '../github/rate-limiter.js';
+import { LRUCache } from '../github/lru-cache.js';
+import { DevlogGitHubMapper } from '../github/github-mapper.js';
+import { GitHubLabelManager } from '../github/github-labels.js';
+import { createPaginatedResult } from '../../utils/common.js';
 import {
   mapDevlogTypeToGitHubType,
   mapDevlogTypeToGitHubLabel,
-} from '../utils/github-type-mapper.js';
-import { calculateDevlogStats } from '../utils/storage.js';
-import { calculateTimeSeriesStats } from '../utils/time-series.js';
-import { formatGitHubComment } from '../utils/emoji-mappings.js';
+} from '../github/github-type-mapper.js';
+import { calculateDevlogStats } from '../shared/storage.js';
+import { calculateTimeSeriesStats } from '../shared/time-series.js';
+import { formatGitHubComment } from '../github/emoji-mappings.js';
 
 export class GitHubStorageProvider implements StorageProvider {
   private config: Required<GitHubStorageConfig>;

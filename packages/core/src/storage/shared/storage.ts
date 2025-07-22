@@ -7,8 +7,8 @@ import {
   DevlogStats,
   DevlogStatus,
   DevlogType,
-} from '../types/index.js';
-import { parseBoolean } from './common.js';
+} from '../../types/index.js';
+import { parseBoolean } from '../../utils/common.js';
 
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {
   if (process.env.NODE_ENV === 'production') {

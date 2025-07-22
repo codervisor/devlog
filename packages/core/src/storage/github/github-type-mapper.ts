@@ -3,7 +3,7 @@
  * Consolidates duplicated type mapping logic from github-storage.ts and github-mapper.ts
  */
 
-import { DevlogType } from '../types/core.js';
+import { DevlogType } from '../../types/core.js';
 
 /**
  * Map devlog type to GitHub native type
@@ -52,7 +52,7 @@ export function mapGitHubTypeToDevlogType(githubType: string | { name: string })
   // Handle both string and object inputs
   const typeString = typeof githubType === 'string' ? githubType : githubType.name;
   const normalizedType = typeString.toLowerCase();
-  
+
   switch (normalizedType) {
     case 'bug':
       return 'bugfix';

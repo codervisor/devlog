@@ -8,8 +8,8 @@ import {
   TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '../types/core.js';
-import { generateDateRangeToDates } from './sql-time-series.js';
+} from '../../types/core.js';
+import { generateDateRangeToDates } from '../typeorm/sql-time-series.js';
 
 /**
  * Calculate time series statistics from a collection of devlog entries

@@ -5,7 +5,7 @@
  * Supports multiple emoji styles for different contexts and user preferences.
  */
 
-import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../types/index.js';
+import { DevlogPriority, DevlogStatus, DevlogType, NoteCategory } from '../../types/index.js';
 
 /**
  * Gets the appropriate emoji for a devlog status
@@ -235,15 +235,15 @@ export const formatGitHubIssueTitle = (
   } = options;
 
   let prefix = '';
-  
+
   if (includeStatus) {
     prefix += getStatusEmojiByStyle(status, statusStyle);
   }
-  
+
   if (includeType) {
     prefix += (prefix ? ' ' : '') + getTypeEmoji(type);
   }
-  
+
   if (includePriority && priority !== 'medium') {
     prefix += (prefix ? ' ' : '') + getPriorityEmoji(priority);
   }
@@ -262,7 +262,7 @@ export const formatEnhancedGitHubTitle = (
 ): string => {
   // Use status emoji only for active work or high priority
   const shouldShowStatus = status !== 'new' || priority === 'critical' || priority === 'high';
-  
+
   return formatGitHubIssueTitle(title, type, status, priority, {
     includeType: true,
     includeStatus: shouldShowStatus,
@@ -290,17 +290,17 @@ export const formatGitHubComment = (
   } = options;
 
   let formattedContent = content;
-  
+
   if (includeEmoji) {
     const emoji = getNoteCategoryEmoji(category);
     const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
     formattedContent = `${emoji} **${categoryLabel}**\n\n${content}`;
   }
-  
+
   if (includeTimestamp && timestamp) {
     const date = new Date(timestamp).toLocaleString();
     formattedContent += `\n\n*Posted: ${date}*`;
   }
-  
+
   return formattedContent;
 };

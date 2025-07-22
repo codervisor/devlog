@@ -2,7 +2,7 @@
  * Rate limiter for GitHub API requests
  */
 
-import { GitHubStorageConfig } from '../types/index.js';
+import { GitHubStorageConfig } from '../../types/index.js';
 
 export class RateLimiter {
   private requestsPerHour: number;
@@ -18,7 +18,7 @@ export class RateLimiter {
 
   async executeWithRateLimit<T>(fn: () => Promise<T>): Promise<T> {
     await this.waitIfNeeded();
-    
+
     let attempts = 0;
     while (attempts < this.maxRetries) {
       try {
@@ -36,17 +36,17 @@ export class RateLimiter {
         }
       }
     }
-    
+
     throw new Error('Max retries exceeded');
   }
 
   private async waitIfNeeded(): Promise<void> {
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
-    
+
     // Remove old requests
     this.requestTimes = this.requestTimes.filter(time => time > oneHourAgo);
-    
+
     if (this.requestTimes.length >= this.requestsPerHour) {
       const oldestRequest = Math.min(...this.requestTimes);
       const waitTime = oldestRequest + 60 * 60 * 1000 - now;
@@ -66,7 +66,7 @@ export class RateLimiter {
 
   private isRateLimitError(error: any): boolean {
     return (
-      error.status === 403 && 
+      error.status === 403 &&
       (error.message.includes('rate limit') || error.message.includes('API rate limit'))
     );
   }
