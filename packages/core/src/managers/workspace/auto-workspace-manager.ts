@@ -11,10 +11,10 @@ import type {
   WorkspaceConfiguration,
   WorkspaceContext,
   StorageConfig,
-} from './types/index.js';
+} from '../../types/index.js';
 import { FileWorkspaceManager, type WorkspaceManagerOptions } from './workspace-manager.js';
 import { DatabaseWorkspaceManager, type DatabaseWorkspaceManagerOptions } from './database-workspace-manager.js';
-import { parseTypeORMConfig } from './storage/typeorm/typeorm-config.js';
+import { parseTypeORMConfig } from '../../storage/typeorm/typeorm-config.js';
 
 export interface AutoWorkspaceManagerOptions {
   /** Preferred storage type: 'file' | 'database' | 'auto' */

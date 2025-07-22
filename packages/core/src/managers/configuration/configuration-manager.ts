@@ -4,7 +4,7 @@
  */
 
 // Load environment variables from root .env file
-import { loadRootEnv } from './utils/env-loader.js';
+import { loadRootEnv } from '../../utils/env-loader.js';
 
 import type {
   DevlogConfig,
@@ -14,8 +14,8 @@ import type {
   MySQLStorageOptions,
   SQLiteStorageOptions,
   JsonStorageOptions,
-} from './types/index.js';
-import { getWorkspaceRoot } from './storage/shared/storage.js';
+} from '../../types/index.js';
+import { getWorkspaceRoot } from '../../storage/shared/storage.js';
 
 export class ConfigurationManager {
   private workspaceRoot: string | null = null;

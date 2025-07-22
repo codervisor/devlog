@@ -2,7 +2,7 @@
  * Integration service that handles synchronization between local storage and external systems
  */
 
-import { DevlogEntry, ConflictData, SyncStatus } from './types/index.js';
+import { DevlogEntry, ConflictData, SyncStatus } from '../types/index.js';
 
 export class IntegrationService {
   private backgroundSyncTimer?: NodeJS.Timeout;

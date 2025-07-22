@@ -1,9 +1,5 @@
-export { DevlogManager } from './devlog-manager.js';
-export { ConfigurationManager } from './configuration-manager.js';
-export { WorkspaceDevlogManager } from './workspace-devlog-manager.js';
-export { FileWorkspaceManager } from './workspace-manager.js';
-export { DatabaseWorkspaceManager } from './database-workspace-manager.js';
-export { AutoWorkspaceManager } from './auto-workspace-manager.js';
+// Managers
+export * from './managers/index.js';
 
 // Event System
 export {
@@ -13,14 +9,8 @@ export {
   type DevlogEventHandler,
 } from './events/devlog-events.js';
 
-// Integration Service
-export { IntegrationService } from './integration-service.js';
-
-// Chat Import Service
-export {
-  DefaultChatImportService,
-  type ChatImportService,
-} from './services/chat-import-service.js';
+// Services
+export * from './services/index.js';
 
 // Storage Providers
 export { StorageProviderFactory } from './storage/storage-provider.js';

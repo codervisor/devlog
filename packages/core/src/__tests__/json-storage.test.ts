@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { JsonStorageProvider } from '../storage/json-storage.js';
+import { JsonStorageProvider } from '../storage/providers/json-storage.js';
 import type { DevlogEntry } from '../types/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';

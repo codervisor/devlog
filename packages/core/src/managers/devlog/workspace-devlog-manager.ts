@@ -4,9 +4,9 @@
  */
 
 import { DevlogManager } from './devlog-manager.js';
-import { FileWorkspaceManager, type WorkspaceManagerOptions } from './workspace-manager.js';
-import { StorageProviderFactory } from './storage/storage-provider.js';
-import { ConfigurationManager } from './configuration-manager.js';
+import { FileWorkspaceManager, type WorkspaceManagerOptions } from '../workspace/workspace-manager.js';
+import { StorageProviderFactory } from '../../storage/storage-provider.js';
+import { ConfigurationManager } from '../configuration/configuration-manager.js';
 import type {
     StorageProvider,
     WorkspaceMetadata,
@@ -16,7 +16,7 @@ import type {
     PaginatedResult,
     DevlogEntry,
     StorageConfig,
-} from './types/index.js';
+} from '../../types/index.js';
 import { join } from 'path';
 import { homedir } from 'os';
 

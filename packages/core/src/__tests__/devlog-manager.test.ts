@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
-import { DevlogManager } from '../devlog-manager.js';
-import { ConfigurationManager } from '../configuration-manager.js';
+import { DevlogManager } from '../managers/devlog/devlog-manager.js';
+import { ConfigurationManager } from '../managers/configuration/configuration-manager.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

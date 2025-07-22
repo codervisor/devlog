@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { GitHubStorageProvider } from '../storage/github-storage.js';
+import { GitHubStorageProvider } from '../storage/providers/github-storage.js';
 import { GitHubStorageConfig, DevlogEntry } from '../types/index.js';
 
 // Mock fetch globally

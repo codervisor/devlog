@@ -14,7 +14,7 @@ import {
     WorkspacesConfig,
     WorkspaceContext,
     WorkspaceManager
- } from './types/index.js';
+ } from '../../types/index.js';
 
 export interface WorkspaceManagerOptions {
   /** Path to the workspaces configuration file */

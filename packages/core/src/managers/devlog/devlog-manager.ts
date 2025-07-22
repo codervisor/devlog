@@ -25,11 +25,11 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
   UpdateDevlogRequest,
-} from './types/index.js';
-import { StorageProviderFactory } from './storage/storage-provider.js';
-import { ConfigurationManager } from './configuration-manager.js';
-import { DevlogNotFoundError } from './utils/errors.js';
-import { devlogEvents, DevlogEvent } from './events/devlog-events.js';
+} from '../../types/index.js';
+import { StorageProviderFactory } from '../../storage/storage-provider.js';
+import { ConfigurationManager } from '../configuration/configuration-manager.js';
+import { DevlogNotFoundError } from '../../utils/errors.js';
+import { devlogEvents, DevlogEvent } from '../../events/devlog-events.js';
 
 export class DevlogManager {
   private storageProvider!: StorageProvider;
