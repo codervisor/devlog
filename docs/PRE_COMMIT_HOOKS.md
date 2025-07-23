@@ -6,21 +6,14 @@ This project uses automated pre-commit validation to catch common issues before 
 
 ## Components
 
-### 1. ESLint Configuration (`eslint.config.js`)
-
-Basic TypeScript linting with:
-- **TypeScript rules**: No unused variables, explicit any warnings
-- **Code quality**: Prefer const, no var, etc.
-- **Monorepo-friendly**: Works across all packages
-
-### 2. Custom Import Validation (`scripts/validate-imports.js`)
+### 1. Custom Import Validation (`scripts/validate-imports.js`)
 
 Enforces our ESM import patterns:
 - **Required .js extensions** for relative imports
 - **No @/ self-referencing** outside of Next.js web package
 - **Cross-package validation** to prevent deep relative paths
 
-### 3. Git Hooks (Husky + lint-staged)
+### 2. Git Hooks (Husky + lint-staged)
 
 Pre-commit pipeline:
 1. **Prettier formatting** on staged files
@@ -138,7 +131,6 @@ chmod +x .husky/pre-commit
 ## Configuration Files
 
 - **`.husky/pre-commit`** - Git hook configuration
-- **`eslint.config.js`** - ESLint rules and settings
 - **`scripts/validate-imports.js`** - Custom import validation
 - **`package.json`** - lint-staged configuration
 

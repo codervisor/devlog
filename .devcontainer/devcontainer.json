@@ -23,7 +23,6 @@
 				"ms-vscode.vscode-typescript-next",
 				"bradlc.vscode-tailwindcss",
 				"esbenp.prettier-vscode",
-				"dbaeumer.vscode-eslint",
 				"ms-vscode.vscode-json",
 				"ms-playwright.playwright",
 				"vitest.explorer",
@@ -37,9 +36,6 @@
 				"typescript.updateImportsOnFileMove.enabled": "always",
 				"typescript.preferences.useAliasesForRenames": false,
 				"editor.formatOnSave": true,
-				"editor.codeActionsOnSave": {
-					"source.fixAll.eslint": "explicit"
-				},
 				"typescript.suggest.autoImports": true,
 				"javascript.suggest.autoImports": true
 			}

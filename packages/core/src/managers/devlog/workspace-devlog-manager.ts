@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
+  DevlogEvent,
   DevlogFilter,
   DevlogId,
   DevlogNote,
@@ -43,6 +44,7 @@ export class WorkspaceDevlogManager {
   private storageProviders = new Map<string, StorageProvider>();
   private currentWorkspaceId: string | null = null;
   private initialized = false;
+  private storageSubscriptions = new Map<string, () => void>(); // workspace -> unsubscribe function
 
   constructor(private options: WorkspaceDevlogManagerOptions = {}) {
     const workspaceManagerOptions: WorkspaceManagerOptions = {
@@ -88,6 +90,9 @@ export class WorkspaceDevlogManager {
     // Store fallback provider with special key
     this.storageProviders.set('__fallback__', provider);
     this.currentWorkspaceId = '__fallback__';
+
+    // Subscribe to storage events in fallback mode
+    await this.subscribeToStorageEvents('__fallback__');
   }
 
   /**
@@ -125,9 +130,21 @@ export class WorkspaceDevlogManager {
       this.storageProviders.set(workspaceId, provider);
     }
 
+    // Unsubscribe from previous workspace events if switching
+    if (this.currentWorkspaceId && this.storageSubscriptions.has(this.currentWorkspaceId)) {
+      const unsubscribe = this.storageSubscriptions.get(this.currentWorkspaceId);
+      if (unsubscribe) {
+        unsubscribe();
+        this.storageSubscriptions.delete(this.currentWorkspaceId);
+      }
+    }
+
     // Switch to workspace
     const context = await this.workspaceManager.switchToWorkspace(workspaceId);
     this.currentWorkspaceId = workspaceId;
+
+    // Subscribe to storage events for cross-process synchronization
+    await this.subscribeToStorageEvents(workspaceId);
 
     return context;
   }
@@ -153,6 +170,18 @@ export class WorkspaceDevlogManager {
    * Delete a workspace and its storage provider
    */
   async deleteWorkspace(workspaceId: string): Promise<void> {
+    // Unsubscribe from storage events
+    if (this.storageSubscriptions.has(workspaceId)) {
+      const unsubscribe = this.storageSubscriptions.get(workspaceId);
+      if (unsubscribe) {
+        unsubscribe();
+        this.storageSubscriptions.delete(workspaceId);
+        console.log(
+          `[WorkspaceDevlogManager] Unsubscribed from storage events for workspace '${workspaceId}'`,
+        );
+      }
+    }
+
     // Clean up storage provider
     const provider = this.storageProviders.get(workspaceId);
     if (provider && provider.cleanup) {
@@ -175,6 +204,63 @@ export class WorkspaceDevlogManager {
    */
   async getWorkspaceStorage(workspaceId: string): Promise<StorageConfig | null> {
     return this.workspaceManager.getWorkspaceStorage(workspaceId);
+  }
+
+  /**
+   * Subscribe to storage events for cross-process communication
+   * @private
+   */
+  private async subscribeToStorageEvents(workspaceId: string): Promise<void> {
+    const provider = this.storageProviders.get(workspaceId);
+    if (!provider || !provider.subscribe) {
+      console.log(
+        `[WorkspaceDevlogManager] Storage provider for workspace '${workspaceId}' does not support subscriptions`,
+      );
+      return;
+    }
+
+    try {
+      // Ensure provider is initialized before subscribing
+      if (!(provider as any).initialized) {
+        console.log(
+          `[WorkspaceDevlogManager] Initializing storage provider for workspace '${workspaceId}' before subscription`,
+        );
+        await provider.initialize();
+      }
+
+      console.log(
+        `[WorkspaceDevlogManager] Subscribing to storage events for workspace '${workspaceId}'`,
+      );
+      const unsubscribe = await provider.subscribe(this.handleStorageEvent.bind(this));
+      this.storageSubscriptions.set(workspaceId, unsubscribe);
+      console.log(
+        `[WorkspaceDevlogManager] Successfully subscribed to storage events for workspace '${workspaceId}'`,
+      );
+    } catch (error) {
+      console.error(
+        `[WorkspaceDevlogManager] Failed to subscribe to storage events for workspace '${workspaceId}':`,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Handle storage events and forward them to local event emitter
+   * @private
+   */
+  private async handleStorageEvent(event: DevlogEvent): Promise<void> {
+    try {
+      console.log(
+        `[WorkspaceDevlogManager] Received storage event:`,
+        event.type,
+        'for ID:',
+        event.data?.id,
+      );
+      const devlogEvents = getDevlogEvents();
+      await devlogEvents.emit(event);
+    } catch (error) {
+      console.error('[WorkspaceDevlogManager] Error handling storage event:', error);
+    }
   }
 
   /**
@@ -201,7 +287,7 @@ export class WorkspaceDevlogManager {
       }
 
       // Test if provider is responsive (try a simple operation)
-      const nextId = await provider.getNextId();
+      await provider.getNextId();
       return { connected: true };
     } catch (error) {
       return {
@@ -255,7 +341,7 @@ export class WorkspaceDevlogManager {
 
   // Delegate all DevlogManager methods to current storage provider
 
-  async listDevlogs(filter?: DevlogFilter, options?: any): Promise<PaginatedResult<DevlogEntry>> {
+  async listDevlogs(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     const provider = await this.getCurrentStorageProvider();
     return provider.list(filter);
   }
@@ -694,6 +780,23 @@ export class WorkspaceDevlogManager {
    * Cleanup all storage providers
    */
   async cleanup(): Promise<void> {
+    // Unsubscribe from all storage events
+    for (const [workspaceId, unsubscribe] of this.storageSubscriptions) {
+      try {
+        unsubscribe();
+        console.log(
+          `[WorkspaceDevlogManager] Unsubscribed from storage events for workspace '${workspaceId}'`,
+        );
+      } catch (error) {
+        console.error(
+          `Error unsubscribing from storage events for workspace ${workspaceId}:`,
+          error,
+        );
+      }
+    }
+    this.storageSubscriptions.clear();
+
+    // Cleanup storage providers
     for (const [workspaceId, provider] of this.storageProviders) {
       if (provider.cleanup) {
         try {

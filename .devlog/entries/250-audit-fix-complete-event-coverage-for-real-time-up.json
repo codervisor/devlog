@@ -1,0 +1,40 @@
+{
+  "id": 250,
+  "key": "audit-fix-complete-event-coverage-for-real-time-up",
+  "title": "Audit & Fix: Complete Event Coverage for Real-time Updates",
+  "type": "task",
+  "description": "Comprehensive audit and implementation of all devlog events to ensure complete real-time synchronization. Current implementation may be missing delete, archive, complete, close, note-addition and other events. Need to review all WorkspaceDevlogManager operations and ensure they emit appropriate events for SSE broadcasting.",
+  "status": "in-progress",
+  "priority": "high",
+  "createdAt": "2025-07-23T15:39:29.689Z",
+  "updatedAt": "2025-07-23T15:39:34.313Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Complete real-time synchronization is critical for user experience. Missing events mean users won't see updates for certain operations, creating confusion about what succeeded vs failed.",
+    "technicalContext": "The storage subscription mechanism is working for create/update events, but we need to audit all operations in WorkspaceDevlogManager to ensure comprehensive event coverage. This includes CRUD operations, state changes, batch operations, and metadata updates.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "All CRUD operations emit proper events",
+      "Archive/unarchive operations emit events",
+      "Complete/close operations emit events",
+      "Note addition emits events",
+      "Batch operations emit appropriate events",
+      "SSE Bridge handles all event types",
+      "Frontend receives all event types",
+      "No missing real-time updates for any operation"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T15:39:29.689Z",
+    "contextVersion": 1
+  }
+}

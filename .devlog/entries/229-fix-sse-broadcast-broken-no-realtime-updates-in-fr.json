@@ -4,10 +4,10 @@
   "title": "Fix: SSE broadcast broken - no realtime updates in frontend",
   "type": "bugfix",
   "description": "Recent changes have broken the SSE (Server-Sent Events) broadcast functionality, preventing realtime updates from reaching the frontend. Users are not receiving live updates for devlog changes, workspace switches, or other real-time events.",
-  "status": "new",
+  "status": "cancelled",
   "priority": "high",
   "createdAt": "2025-07-23T13:59:21.028Z",
-  "updatedAt": "2025-07-23T15:08:23.858Z",
+  "updatedAt": "2025-07-23T15:38:19.731Z",
   "notes": [
     {
       "id": "ae600382-5814-4dc8-8e3f-7be19e447367",
