@@ -30,30 +30,36 @@ import type {
   UpdateAIContextArgs,
 } from './types';
 import { allTools } from './tools/index.js';
-import type {
-  ImportChatHistoryArgs,
-  GetChatSessionArgs,
-  ListChatSessionsArgs,
-  SearchChatContentArgs,
-  LinkChatToDevlogArgs,
-  UnlinkChatFromDevlogArgs,
-  SuggestChatDevlogLinksArgs,
-  GetChatStatsArgs,
-  UpdateChatSessionArgs,
-  GetChatWorkspacesArgs,
-} from './tools/chat-tools';
 import {
-  handleImportChatHistory,
-  handleGetChatSession,
-  handleListChatSessions,
-  handleSearchChatContent,
-  handleLinkChatToDevlog,
-  handleUnlinkChatFromDevlog,
-  handleSuggestChatDevlogLinks,
-  handleGetChatStats,
-  handleUpdateChatSession,
-  handleGetChatWorkspaces,
-} from './tools/chat-tools.js';
+  handleListWorkspaces,
+  handleGetCurrentWorkspace,
+  handleSwitchWorkspace,
+} from './tools/workspace-tools.js';
+// Chat tools disabled - not implemented yet
+// import type {
+//   ImportChatHistoryArgs,
+//   GetChatSessionArgs,
+//   ListChatSessionsArgs,
+//   SearchChatContentArgs,
+//   LinkChatToDevlogArgs,
+//   UnlinkChatFromDevlogArgs,
+//   SuggestChatDevlogLinksArgs,
+//   GetChatStatsArgs,
+//   UpdateChatSessionArgs,
+//   GetChatWorkspacesArgs,
+// } from './tools/chat-tools';
+// import {
+//   handleImportChatHistory,
+//   handleGetChatSession,
+//   handleListChatSessions,
+//   handleSearchChatContent,
+//   handleLinkChatToDevlog,
+//   handleUnlinkChatFromDevlog,
+//   handleSuggestChatDevlogLinks,
+//   handleGetChatStats,
+//   handleUpdateChatSession,
+//   handleGetChatWorkspaces,
+// } from './tools/chat-tools.js';
 
 const server = new Server(
   {
@@ -127,60 +133,70 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'update_ai_context':
         return await adapter.updateAIContext(args as unknown as UpdateAIContextArgs);
 
-      // Chat tools
-      case 'import_chat_history':
-        return await handleImportChatHistory(
-          await adapter.getManagerForChatTools(),
-          args as unknown as ImportChatHistoryArgs,
-        );
+      // Chat tools - disabled (not implemented yet)
+      // case 'import_chat_history':
+      //   return await handleImportChatHistory(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as ImportChatHistoryArgs,
+      //   );
 
-      case 'get_chat_session':
-        return await handleGetChatSession(await adapter.getManagerForChatTools(), args as unknown as GetChatSessionArgs);
+      // case 'get_chat_session':
+      //   return await handleGetChatSession(await adapter.getManagerForChatTools(), args as unknown as GetChatSessionArgs);
 
-      case 'list_chat_sessions':
-        return await handleListChatSessions(
-          await adapter.getManagerForChatTools(),
-          args as unknown as ListChatSessionsArgs,
-        );
+      // case 'list_chat_sessions':
+      //   return await handleListChatSessions(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as ListChatSessionsArgs,
+      //   );
 
-      case 'search_chat_content':
-        return await handleSearchChatContent(
-          await adapter.getManagerForChatTools(),
-          args as unknown as SearchChatContentArgs,
-        );
+      // case 'search_chat_content':
+      //   return await handleSearchChatContent(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as SearchChatContentArgs,
+      //   );
 
-      case 'link_chat_to_devlog':
-        return await handleLinkChatToDevlog(
-          await adapter.getManagerForChatTools(),
-          args as unknown as LinkChatToDevlogArgs,
-        );
+      // case 'link_chat_to_devlog':
+      //   return await handleLinkChatToDevlog(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as LinkChatToDevlogArgs,
+      //   );
 
-      case 'unlink_chat_from_devlog':
-        return await handleUnlinkChatFromDevlog(
-          await adapter.getManagerForChatTools(),
-          args as unknown as UnlinkChatFromDevlogArgs,
-        );
+      // case 'unlink_chat_from_devlog':
+      //   return await handleUnlinkChatFromDevlog(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as UnlinkChatFromDevlogArgs,
+      //   );
 
-      case 'suggest_chat_devlog_links':
-        return await handleSuggestChatDevlogLinks(
-          await adapter.getManagerForChatTools(),
-          args as unknown as SuggestChatDevlogLinksArgs,
-        );
+      // case 'suggest_chat_devlog_links':
+      //   return await handleSuggestChatDevlogLinks(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as SuggestChatDevlogLinksArgs,
+      //   );
 
-      case 'get_chat_stats':
-        return await handleGetChatStats(await adapter.getManagerForChatTools(), args as unknown as GetChatStatsArgs);
+      // case 'get_chat_stats':
+      //   return await handleGetChatStats(await adapter.getManagerForChatTools(), args as unknown as GetChatStatsArgs);
 
-      case 'update_chat_session':
-        return await handleUpdateChatSession(
-          await adapter.getManagerForChatTools(),
-          args as unknown as UpdateChatSessionArgs,
-        );
+      // case 'update_chat_session':
+      //   return await handleUpdateChatSession(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as UpdateChatSessionArgs,
+      //   );
 
-      case 'get_chat_workspaces':
-        return await handleGetChatWorkspaces(
-          await adapter.getManagerForChatTools(),
-          args as unknown as GetChatWorkspacesArgs,
-        );
+      // case 'get_chat_workspaces':
+      //   return await handleGetChatWorkspaces(
+      //     await adapter.getManagerForChatTools(),
+      //     args as unknown as GetChatWorkspacesArgs,
+      //   );
+
+      // Workspace management tools
+      case 'list_workspaces':
+        return await handleListWorkspaces(adapter.manager);
+
+      case 'get_current_workspace':
+        return await handleGetCurrentWorkspace(adapter);
+
+      case 'switch_workspace':
+        return await handleSwitchWorkspace(adapter, args as unknown as { workspaceId: string });
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -199,9 +215,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  // Parse command line arguments for default workspace
+  const args = process.argv.slice(2);
+  const workspaceArgIndex = args.findIndex(arg => arg === '--workspace' || arg === '-w');
+  const defaultWorkspace = workspaceArgIndex !== -1 && args[workspaceArgIndex + 1] 
+    ? args[workspaceArgIndex + 1] 
+    : undefined;
+
+  // Initialize the adapter with optional default workspace
+  const adapterInstance = new MCPDevlogAdapter(defaultWorkspace);
+  
+  // Replace the global adapter variable for the request handlers
+  Object.assign(adapter, adapterInstance);
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Devlog MCP Server started with flexible storage architecture');
+  
+  const workspaceInfo = defaultWorkspace 
+    ? ` (default workspace: ${defaultWorkspace})`
+    : '';
+  console.error(`Devlog MCP Server started with flexible storage architecture${workspaceInfo}`);
 }
 
 // Cleanup on process exit

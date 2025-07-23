@@ -1,0 +1,20 @@
+{
+  "id": 219,
+  "title": "Implement Workspace-Aware API Calls in Web App",
+  "type": "feature",
+  "priority": "high",
+  "description": "The @devlog/web package is currently using non-workspace-aware API endpoints like `/api/devlogs` instead of workspace-scoped endpoints like `/api/workspaces/[id]/devlogs`. This means the web app doesn't respect the current workspace selection and shows data from the default workspace regardless of which workspace is active.\n\n**Current Issue:**\n- Web app uses `/api/devlogs` endpoint which is not workspace-aware\n- DevlogList, DevlogDetails, and other components don't respect workspace switching\n- Data shown doesn't change when user switches workspaces\n- API calls should be scoped to the current workspace\n\n**Required Changes:**\n- Update API endpoints to use workspace-scoped routes\n- Modify components to pass current workspace ID to API calls\n- Ensure all devlog operations (list, get, create, update, delete) are workspace-aware\n- Update hooks like useDevlogs to accept workspace context",
+  "businessContext": "Users expect that when they switch workspaces, the web interface immediately shows devlogs from the selected workspace. Currently the interface is misleading because it shows data from the default workspace regardless of the workspace switcher selection.",
+  "technicalContext": "The workspace system is implemented in the core with WorkspaceDevlogManager, and workspace-scoped API endpoints exist (e.g., `/api/workspaces/[id]/devlogs`), but the web components still use the old non-workspace-aware endpoints.",
+  "acceptanceCriteria": [
+    "DevlogList shows devlogs from current workspace only",
+    "DevlogDetails loads devlog from current workspace context",
+    "Create/Update/Delete operations are scoped to current workspace",
+    "All API calls include workspace ID in the endpoint",
+    "Workspace switching immediately updates displayed data",
+    "No data leakage between workspaces in the UI"
+  ],
+  "createdAt": "2025-07-23T08:16:36.160Z",
+  "updatedAt": "2025-07-23T08:21:39.019Z",
+  "status": "in-progress"
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ConfigProvider } from 'antd';
 import { AppLayout } from './AppLayout';
+import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { DevlogProvider } from './contexts/DevlogContext';
 import './globals.css';
 import './fonts.css';
@@ -18,9 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="font-inter">
         <ConfigProvider>
-          <DevlogProvider>
-            <AppLayout>{children}</AppLayout>
-          </DevlogProvider>
+          <WorkspaceProvider>
+            <DevlogProvider>
+              <AppLayout>{children}</AppLayout>
+            </DevlogProvider>
+          </WorkspaceProvider>
         </ConfigProvider>
       </body>
     </html>

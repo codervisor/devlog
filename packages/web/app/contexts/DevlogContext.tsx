@@ -13,6 +13,7 @@ import {
   TimeSeriesStats
 } from '@devlog/core';
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
+import { useWorkspace } from './WorkspaceContext';
 
 interface DevlogContextType {
   // Devlogs state
@@ -53,6 +54,9 @@ interface DevlogContextType {
 const DevlogContext = createContext<DevlogContextType | undefined>(undefined);
 
 export function DevlogProvider({ children }: { children: React.ReactNode }) {
+  // Workspace context
+  const { currentWorkspace } = useWorkspace();
+  
   // Devlogs state
   const [devlogs, setDevlogs] = useState<DevlogEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -130,9 +134,15 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   }, [filters]);
 
   const fetchDevlogs = useCallback(async () => {
+    // Don't fetch if no current workspace is available
+    if (!currentWorkspace) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const url = `/api/devlogs${queryString ? `?${queryString}` : ''}`;
+      const url = `/api/workspaces/${currentWorkspace.workspaceId}/devlogs${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch devlogs');
@@ -153,7 +163,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [queryString]);
+  }, [queryString, currentWorkspace]);
 
   const fetchStats = useCallback(async () => {
     try {

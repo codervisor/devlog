@@ -61,3 +61,26 @@ export async function GET(
         return NextResponse.json({ error: message }, { status: 500 });
     }
 }
+
+// POST /api/workspaces/[id]/devlogs - Create devlog in specific workspace
+export async function POST(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const manager = await getWorkspaceManager();
+        const workspaceId = params.id;
+        
+        // Switch to the target workspace first
+        await manager.switchToWorkspace(workspaceId);
+        
+        const body = await request.json();
+        const devlog = await manager.createDevlog(body);
+
+        return NextResponse.json(devlog);
+    } catch (error) {
+        console.error('Error creating workspace devlog:', error);
+        const message = error instanceof Error ? error.message : 'Failed to create devlog';
+        return NextResponse.json({ error: message }, { status: 500 });
+    }
+}

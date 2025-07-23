@@ -1,0 +1,31 @@
+{
+  "id": 218,
+  "acceptanceCriteria": [
+    "Web app persists current workspace ID in localStorage",
+    "Web app restores workspace state from localStorage on load",
+    "MCP server exposes list_workspaces tool",
+    "MCP server exposes get_current_workspace tool",
+    "MCP server exposes switch_workspace tool",
+    "MCP server supports default workspace via command line args",
+    "Workspace state persists across browser sessions",
+    "AI agents can programmatically manage workspaces via MCP"
+  ],
+  "businessContext": "Users need workspace state to persist across browser sessions since there's no login system. For MCP usage, AI agents need to be able to discover and switch workspaces programmatically for effective development workflow management.",
+  "description": "There is a design flaw in the workspace feature:\n\n**Web App Issue:**\n- Current workspace state is not persisted in browser localStorage\n- Without user login, the web app should store current workspace in localStorage to maintain state between browser sessions\n- Currently, workspace switching works only during a single browser session\n\n**MCP Server Issue:**\n- MCP server lacks workspace listing and switching capabilities via MCP tools\n- No way to see available workspaces or switch current workspace through MCP interface\n- Should provide MCP tools: list_workspaces, get_current_workspace, switch_workspace\n- Should support default workspace configuration via command line args\n\n**Current State:**\n- Web app: WorkspaceDevlogManager respects workspace configuration but doesn't persist current workspace selection in browser\n- MCP server: Uses WorkspaceDevlogManager but has no workspace management tools exposed via MCP interface\n- Both rely on server-side workspace configuration without client-side state management",
+  "initialInsights": [
+    "localStorage persistence is standard for clientside state without authentication",
+    "MCP tools should follow same naming convention as existing devlog tools",
+    "Command line args can be passed to MCP server for default workspace selection",
+    "Workspace switching should trigger UI updates in web app",
+    "Need to handle cases where localStorage workspace no longer exists"
+  ],
+  "priority": "high",
+  "technicalContext": "The workspace system exists at the core level with WorkspaceDevlogManager, but lacks client-side persistence in web app and MCP tool exposure in MCP server. Web app should use localStorage for current workspace, MCP server should expose workspace management tools.",
+  "title": "Fix Workspace State Persistence Design Flaw",
+  "type": "feature",
+  "createdAt": "2025-07-23T08:08:18.679Z",
+  "updatedAt": "2025-07-23T08:10:41.756Z",
+  "status": "done",
+  "nextSteps": "Continue with testing and documenting the workspace tools implementation",
+  "closedAt": "2025-07-23T08:10:41.756Z"
+}

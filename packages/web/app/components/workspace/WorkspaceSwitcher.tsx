@@ -15,6 +15,8 @@ import {
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useServerSentEvents } from '@/hooks/useServerSentEvents';
+import { useWorkspaceStorage } from '@/hooks/use-workspace-storage';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import styles from './WorkspaceSwitcher.module.css';
 
 const { Text } = Typography;
@@ -67,8 +69,6 @@ interface WorkspaceSwitcherProps {
 }
 
 export function WorkspaceSwitcher({ collapsed = false, className = '' }: WorkspaceSwitcherProps) {
-  const [workspaces, setWorkspaces] = useState<WorkspaceMetadata[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceContext | null>(null);
   const [loading, setLoading] = useState(false);
   const [connectionStatuses, setConnectionStatuses] = useState<
     Record<
@@ -81,18 +81,22 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
   >({});
   const router = useRouter();
   const { subscribe, unsubscribe } = useServerSentEvents();
+  const { saveWorkspaceId, clearWorkspaceId } = useWorkspaceStorage();
+  const { currentWorkspace, workspaces, setCurrentWorkspace: updateCurrentWorkspace, refreshWorkspaces } = useWorkspace();
 
-  // Load workspaces on component mount
+  // Load workspaces and connection statuses on component mount
   useEffect(() => {
-    loadWorkspaces();
-  }, []);
+    if (workspaces.length > 0) {
+      loadConnectionStatuses(workspaces);
+    }
+  }, [workspaces]);
 
   // Listen for workspace switch events to update UI
   useEffect(() => {
     const handleWorkspaceSwitched = (eventData: any) => {
       console.log('WorkspaceSwitcher: Received workspace-switched event', eventData);
       // Refresh workspace data to update the current workspace
-      loadWorkspaces();
+      refreshWorkspaces();
     };
 
     subscribe('workspace-switched', handleWorkspaceSwitched);
@@ -100,27 +104,7 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
     return () => {
       unsubscribe('workspace-switched');
     };
-  }, [subscribe, unsubscribe]);
-
-  const loadWorkspaces = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/workspaces');
-      if (!response.ok) {
-        throw new Error('Failed to fetch workspaces');
-      }
-      const data: WorkspacesResponse = await response.json();
-      setWorkspaces(data.workspaces);
-      setCurrentWorkspace(data.currentWorkspace);
-
-      // Load connection statuses for all workspaces
-      await loadConnectionStatuses(data.workspaces);
-    } catch (error) {
-      console.error('Error loading workspaces:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [subscribe, unsubscribe, refreshWorkspaces]);
 
   const loadConnectionStatuses = async (workspaceList: WorkspaceMetadata[]) => {
     const statuses: Record<string, { connected: boolean; error?: string }> = {};
@@ -172,19 +156,25 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
 
   const switchWorkspace = async (workspaceId: string) => {
     try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/switch`, {
-        method: 'PUT',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to switch workspace');
+      // Find the workspace by ID to get its name
+      const targetWorkspace = workspaces.find(ws => ws.id === workspaceId);
+      if (!targetWorkspace) {
+        throw new Error('Workspace not found');
       }
 
-      const data = await response.json();
-      message.success(`Switched to workspace: ${data.workspace.workspace.name}`);
+      // Save workspace to localStorage for persistence (client-side only)
+      saveWorkspaceId(workspaceId);
+      
+      // Update local state immediately
+      updateCurrentWorkspace({
+        workspaceId,
+        workspace: targetWorkspace,
+        isDefault: workspaceId === 'default'
+      });
+      
+      message.success(`Switched to workspace: ${targetWorkspace.name}`);
 
-      // Force immediate hard reload to bypass hot reload and ensure all components update
-      // Using location.href to force a hard reload that bypasses React Fast Refresh
+      // Force immediate hard reload to ensure all components refresh with new workspace context
       window.location.href = window.location.href;
     } catch (error) {
       console.error('Error switching workspace:', error);

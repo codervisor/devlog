@@ -33,12 +33,16 @@ export class MCPDevlogAdapter {
   private workspaceManager: WorkspaceDevlogManager;
   private devlogManager: DevlogManager | null = null;
   private config: DevlogConfig | null = null;
+  private currentWorkspaceId: string | null = null; // In-memory current workspace
 
-  constructor() {
+  constructor(defaultWorkspaceId?: string) {
     this.workspaceManager = new WorkspaceDevlogManager({
       fallbackToEnvConfig: true,
       createWorkspaceConfigIfMissing: true,
     });
+    
+    // Set default workspace from constructor argument or default to 'default'
+    this.currentWorkspaceId = defaultWorkspaceId || 'default';
   }
 
   /**
@@ -46,6 +50,20 @@ export class MCPDevlogAdapter {
    */
   get manager(): WorkspaceDevlogManager {
     return this.workspaceManager;
+  }
+
+  /**
+   * Get the current workspace ID (in-memory only)
+   */
+  getCurrentWorkspaceId(): string {
+    return this.currentWorkspaceId || 'default';
+  }
+
+  /**
+   * Set the current workspace ID (in-memory only)
+   */
+  setCurrentWorkspaceId(workspaceId: string): void {
+    this.currentWorkspaceId = workspaceId;
   }
 
   /**
@@ -75,6 +93,11 @@ export class MCPDevlogAdapter {
 
   async createDevlog(args: CreateDevlogRequest): Promise<CallToolResult> {
     await this.ensureInitialized();
+
+    // Switch to current workspace before creating devlog
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
 
     const entry = await this.workspaceManager.createDevlog(args);
 
@@ -143,6 +166,11 @@ export class MCPDevlogAdapter {
 
   async listDevlogs(args: ListDevlogsArgs = {}): Promise<CallToolResult> {
     await this.ensureInitialized();
+
+    // Switch to current workspace before listing devlogs
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
 
     const filter = {
       status: args.status ? [args.status] : undefined,
