@@ -5,7 +5,7 @@
  * separate from the underlying storage mechanism.
  */
 
-import { StorageConfig } from './storage';
+import { StorageConfig } from './storage.js';
 
 /**
  * Workspace metadata and settings

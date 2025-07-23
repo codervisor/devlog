@@ -52,6 +52,36 @@ import { StorageProvider } from '../storage/providers';         // Missing .js e
 
 ## Essential SOPs
 
+### Documentation Synchronization Process
+
+#### Instruction File Update Workflow
+When making significant architectural or pattern changes:
+
+1. **IMMEDIATE UPDATES**: Update instruction files as part of the same work session
+2. **PATTERN DOCUMENTATION**: Add new patterns with examples to relevant instruction files
+3. **DEPRECATION NOTES**: Mark old patterns as deprecated with migration guidance
+4. **VALIDATION**: Test AI agent behavior with updated prompts
+5. **REVIEW**: Ensure consistency across all instruction files
+
+#### When to Update Instruction Files
+- **New architectural patterns** (e.g., WorkspaceDevlogManager introduction)
+- **Import/export pattern changes** (e.g., ESM .js extension requirements)
+- **Testing methodology updates** (e.g., new test isolation patterns)
+- **Tooling changes** (e.g., new build processes, new package structures)
+- **Error pattern discoveries** (e.g., common mistakes to avoid)
+
+#### Instruction File Maintenance Checklist
+```markdown
+For every significant architectural change:
+□ Identify which instruction files need updates (.github/instructions/*.md)
+□ Update examples to reflect current patterns
+□ Add deprecation warnings for old patterns
+□ Include migration guidance for existing code
+□ Test AI agent behavior with new prompts
+□ Verify consistency across all instruction files
+□ Document the instruction update in devlog notes
+```
+
 ### Temporary Files and Scripts
 
 #### Use `tmp/` Folder for Temporary Work
@@ -92,7 +122,7 @@ import { StorageProvider } from '../storage/providers';         // Missing .js e
   - **Playwright**: Required for React error debugging, console monitoring, state analysis
   - **Simple Browser**: Basic navigation/UI testing only - NOT reliable for error detection
 - **Testing Steps**:
-  - **Start Web App**: Run `pnpm --filter @devlog/web dev` to start the web app
+  - **Start Web App**: Run `pnpm dev:web` to start the web app
   - **Verify**: Ensure the web app is running correctly before testing
   - **Run Tests**: Use Playwright to run UI tests against the web app
   - **Update Devlog**: Add test results and any fixes to the devlog entry

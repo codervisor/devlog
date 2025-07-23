@@ -15,7 +15,7 @@ import {
   isOpenStatus,
   isStatusInFilterType,
 } from '../utils';
-import type { DevlogStatus } from '../types';
+import type { DevlogStatus } from '../types/index.js';
 
 describe('Filter Mapping Utilities', () => {
   describe('FILTER_TYPE_TO_STATUSES', () => {

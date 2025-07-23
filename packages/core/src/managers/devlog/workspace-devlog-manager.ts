@@ -269,7 +269,7 @@ export class WorkspaceDevlogManager {
   async createDevlog(request: CreateDevlogRequest): Promise<DevlogEntry> {
     const provider = await this.getCurrentStorageProvider();
     const id = await provider.getNextId();
-    
+
     // Proper field mapping similar to DevlogManager.createDevlog
     const now = new Date().toISOString();
     const entry: DevlogEntry = {
@@ -304,12 +304,15 @@ export class WorkspaceDevlogManager {
         contextVersion: 1,
       },
     };
-    
+
     await provider.save(entry);
-    
+
     // Emit event for real-time updates
     console.log('[WorkspaceDevlogManager] About to emit devlog-created event for ID:', id);
-    console.log('[WorkspaceDevlogManager] Event handlers count:', devlogEvents.getHandlerCount('created'));
+    console.log(
+      '[WorkspaceDevlogManager] Event handlers count:',
+      devlogEvents.getHandlerCount('created'),
+    );
     try {
       await devlogEvents.emit({
         type: 'created',
@@ -320,7 +323,7 @@ export class WorkspaceDevlogManager {
     } catch (error) {
       console.error('[WorkspaceDevlogManager] Error emitting devlog-created event:', error);
     }
-    
+
     return entry;
   }
 
@@ -338,30 +341,35 @@ export class WorkspaceDevlogManager {
       updatedAt: new Date().toISOString(),
     };
     await provider.save(updated);
-    
+
     // Emit event for real-time updates
     await devlogEvents.emit({
       type: 'updated',
       data: updated,
       timestamp: updated.updatedAt,
     });
-    
+
     return updated;
   }
 
+  /**
+   * Delete a devlog entry (soft delete using archive)
+   * @deprecated This method now performs soft deletion via archiving.
+   * Use archiveDevlog() directly for clarity.
+   */
   async deleteDevlog(id: string | number): Promise<void> {
-    const provider = await this.getCurrentStorageProvider();
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    
-    // Get the entry before deletion for event emission
-    const existing = await provider.get(numericId);
+
+    // Get the entry before archiving for event emission
+    const existing = await this.getDevlog(numericId);
     if (!existing) {
       throw new Error(`Devlog ${id} not found`);
     }
-    
-    await provider.delete(numericId);
-    
-    // Emit event for real-time updates
+
+    // Use archive instead of hard delete
+    await this.archiveDevlog(numericId);
+
+    // Emit event for real-time updates (keeping 'deleted' for backward compatibility)
     await devlogEvents.emit({
       type: 'deleted',
       data: existing,
@@ -371,7 +379,8 @@ export class WorkspaceDevlogManager {
 
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     const provider = await this.getCurrentStorageProvider();
-    return provider.search(query);
+    // Pass the filter to the storage provider to ensure proper filtering (including archived exclusion)
+    return provider.search(query, filter);
   }
 
   /**
@@ -399,10 +408,11 @@ export class WorkspaceDevlogManager {
 
   /**
    * Get devlog statistics for current workspace
+   * @param filter Optional filter to apply when calculating statistics
    */
-  async getStats(): Promise<DevlogStats> {
+  async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
     const provider = await this.getCurrentStorageProvider();
-    return provider.getStats();
+    return provider.getStats(filter);
   }
 
   /**
@@ -447,14 +457,14 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
-    
+
     // Emit note-added event for real-time updates
     await devlogEvents.emit({
       type: 'note-added',
       data: { note, devlog: updated },
       timestamp: note.timestamp,
     });
-    
+
     return updated;
   }
 
@@ -583,7 +593,7 @@ export class WorkspaceDevlogManager {
       // Check for direct text matches in title or description
       const titleMatch = entry.title.toLowerCase().includes(workDescription);
       const descMatch = entry.description.toLowerCase().includes(workDescription);
-      
+
       if (titleMatch || descMatch) {
         relevance = 'direct-text-match';
         matchedTerms.push(workDescription);
@@ -597,7 +607,10 @@ export class WorkspaceDevlogManager {
 
       // Check for keyword matches in notes
       if (keywords.length > 0 && !relevance) {
-        const notesText = (entry.notes || []).map(note => note.content).join(' ').toLowerCase();
+        const notesText = (entry.notes || [])
+          .map((note) => note.content)
+          .join(' ')
+          .toLowerCase();
         for (const keyword of keywords) {
           if (notesText.includes(keyword.toLowerCase())) {
             relevance = 'keyword-in-notes';
@@ -632,13 +645,14 @@ export class WorkspaceDevlogManager {
       return relevanceOrder[b.relevance] - relevanceOrder[a.relevance];
     });
 
-    const activeCount = relatedEntries.filter(({ entry }) => 
-      !entry.archived && entry.status !== 'done' && entry.status !== 'cancelled'
+    const activeCount = relatedEntries.filter(
+      ({ entry }) => !entry.archived && entry.status !== 'done' && entry.status !== 'cancelled',
     ).length;
 
-    const recommendation = activeCount > 0 
-      ? `⚠️ RECOMMENDATION: Review ${activeCount} active related entries before creating new work. Consider updating existing entries or coordinating efforts.`
-      : 'No active related entries found. You can proceed with creating new work.';
+    const recommendation =
+      activeCount > 0
+        ? `⚠️ RECOMMENDATION: Review ${activeCount} active related entries before creating new work. Consider updating existing entries or coordinating efforts.`
+        : 'No active related entries found. You can proceed with creating new work.';
 
     return {
       relatedEntries,
@@ -658,15 +672,15 @@ export class WorkspaceDevlogManager {
     options?: any,
   ): Promise<DevlogEntry> {
     const updated = await this.updateDevlog(id, updates);
-    
+
     if (progressNote) {
       await this.addNote(id, progressNote, options?.category || 'progress', {
         files: options?.files,
         codeChanges: options?.codeChanges,
       });
-      
+
       // Get the latest version with the note added
-      return await this.getDevlog(id) || updated;
+      return (await this.getDevlog(id)) || updated;
     }
 
     return updated;

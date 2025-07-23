@@ -56,6 +56,19 @@ afterEach(async () => {
 - **ALWAYS restore original working directory** and environment
 - **USE environment variables** instead of config files for testing
 - **CREATE minimal package.json** to simulate project roots
+- **FOLLOW ESM import patterns** with .js extensions for all imports
+
+### Import Requirements in Tests
+```typescript
+// ✅ Correct test imports with .js extensions
+import { JsonStorageProvider } from '../storage/index.js';
+import type { DevlogEntry } from '../types/index.js';
+import { WorkspaceDevlogManager } from '../managers/index.js';
+
+// ❌ Avoid: Missing extensions (breaks ESM)
+import { JsonStorageProvider } from '../storage';  // Missing index.js
+import type { DevlogEntry } from '../types';       // Missing index.js
+```
 
 ## 📝 Test Writing Standards
 
@@ -161,6 +174,38 @@ const mockFunction = vi.fn().mockResolvedValue(expectedValue);
 - **Verify business logic** implementation
 - **Test event handling** and notifications
 - **Validate state management**
+- **Use WorkspaceDevlogManager** for new tests (preferred over DevlogManager)
+
+### Workspace-Aware Testing Patterns
+```typescript
+describe('WorkspaceDevlogManager', () => {
+  let manager: WorkspaceDevlogManager;
+  let testWorkspaceId: string;
+  
+  beforeEach(async () => {
+    testWorkspaceId = `test-workspace-${Date.now()}`;
+    manager = new WorkspaceDevlogManager({
+      defaultWorkspaceId: testWorkspaceId,
+      autoSwitchWorkspace: true
+    });
+    await manager.initialize();
+  });
+  
+  afterEach(async () => {
+    await manager.dispose();
+  });
+  
+  it('should create devlog in correct workspace', async () => {
+    const entry = await manager.createDevlog({
+      title: 'Test Entry',
+      type: 'task',
+      description: 'Test description'
+    });
+    
+    expect(entry.workspaceId).toBe(testWorkspaceId);
+  });
+});
+```
 
 ## ⚡ Performance Considerations
 

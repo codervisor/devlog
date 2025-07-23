@@ -14,10 +14,10 @@ applyTo: 'packages/ai/src/**/*.ts'
 
 ### AI-Specific Import Examples
 ```typescript
-// ✅ Internal AI package imports
+// ✅ Internal AI package imports with .js extensions
 import { AIAssistantParser } from './base/ai-assistant-parser.js';
 import { ChatStatistics } from '../models/index.js';
-import type { SearchResult } from '../../types/index.js';
+import type { SearchResult } from '../types/index.js';
 
 // ✅ Cross-package imports
 import { DevlogEntry } from '@devlog/core';
@@ -27,9 +27,10 @@ import type { StorageProvider } from '@devlog/core/storage';
 import { ChatOpenAI } from '@langchain/openai';
 import type { Message } from '@langchain/core/messages';
 
-// ❌ Avoid: Self-referencing aliases
+// ❌ Avoid: Self-referencing aliases or missing extensions
 import { ChatStatistics } from '@/models';        // Ambiguous
 import { AIAssistantParser } from './base/ai-assistant-parser';  // Missing .js
+import type { SearchResult } from '../types';     // Missing index.js
 ```
 
 ## 🤖 AI Architecture Requirements

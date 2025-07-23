@@ -40,7 +40,7 @@ export class MCPDevlogAdapter {
       fallbackToEnvConfig: true,
       createWorkspaceConfigIfMissing: true,
     });
-    
+
     // Set default workspace from constructor argument or default to 'default'
     this.currentWorkspaceId = defaultWorkspaceId || 'default';
   }
@@ -158,6 +158,7 @@ export class MCPDevlogAdapter {
       status: args.status ? [args.status] : undefined,
       type: args.type ? [args.type] : undefined,
       priority: args.priority ? [args.priority] : undefined,
+      archived: args.archived, // Pass through archived filter
       pagination:
         args.page || args.limit || args.sortBy
           ? {
@@ -217,6 +218,7 @@ export class MCPDevlogAdapter {
       status: args.status ? [args.status] : undefined,
       type: args.type ? [args.type] : undefined,
       priority: args.priority ? [args.priority] : undefined,
+      archived: args.archived, // Pass through archived filter
     };
 
     const result = await this.workspaceManager.searchDevlogs(args.query, filter);
@@ -323,7 +325,7 @@ export class MCPDevlogAdapter {
     };
   }
 
-    async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
+  async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     // Switch to current workspace before operating

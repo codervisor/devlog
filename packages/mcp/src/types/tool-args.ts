@@ -14,6 +14,7 @@ export interface DevlogFilterArgs {
   status?: DevlogStatus;
   type?: DevlogType;
   priority?: DevlogPriority;
+  archived?: boolean; // Filter for archived status
   // Pagination support (optional)
   page?: number;
   limit?: number;

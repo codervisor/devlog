@@ -1,0 +1,54 @@
+{
+  "id": 239,
+  "key": "prompt-reflection-architecture-migration-guidance-",
+  "title": "Prompt Reflection: Architecture Migration Guidance Critical Gap Analysis",
+  "type": "task",
+  "description": "Comprehensive reflection on prompt ecosystem effectiveness in preventing architecture migration issues. While recent prompt optimization (devlog #236) addressed import patterns (15% of bugs), the majority issue - incomplete architecture migrations like DevlogManager → WorkspaceDevlogManager - remains unaddressed. Need deep analysis of instruction file gaps and migration guidance framework.",
+  "status": "in-progress",
+  "priority": "critical",
+  "createdAt": "2025-07-23T14:58:46.720Z",
+  "updatedAt": "2025-07-23T14:59:00.258Z",
+  "notes": [
+    {
+      "id": "ef1806a0-ef0e-472e-a5e7-f5e201c3b437",
+      "timestamp": "2025-07-23T14:59:00.258Z",
+      "category": "progress",
+      "content": "🔍 **Step 1: Comprehensive Analysis - System Context Review**\n\n**Current Architecture Migration Coverage Assessment:**\n\n## System Level Analysis (copilot-instructions.md)\n❌ **CRITICAL GAP IDENTIFIED**: No architecture migration guidance found\n- ✅ Has individual package patterns (ESM imports, workspace architecture)\n- ❌ Missing: Cross-package migration strategies\n- ❌ Missing: Dependency mapping requirements  \n- ❌ Missing: Migration validation checklists\n- ❌ Missing: Rollback strategies for failed migrations\n\n## Recent Migration Pattern Analysis (DevlogManager → WorkspaceDevlogManager)\n**Affected Components** (from devlog #228 analysis):\n1. **MCP Adapter** (bug #220) - Not updated to use WorkspaceDevlogManager\n2. **API Endpoints** (bug #217) - Still using old manager  \n3. **Field Mapping** (bug #222) - Missing in workspace layer\n4. **Chat Tools** (bug #225) - Not integrated with workspace architecture\n5. **Compilation** (bug #221) - Breaking changes not propagated\n\n**Pattern**: AI agents updated core package successfully but failed to identify and update dependent packages."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Architecture migration issues caused 60% of high-priority bugs in recent development (per devlog #228). Current prompt ecosystem does not adequately guide AI agents through complex migrations, leading to incomplete updates across packages and runtime failures. This is the highest-impact issue affecting development velocity.",
+    "technicalContext": "Multi-tier prompt ecosystem: copilot-instructions.md (system), xxx.instructions.md (patterns), xxx.prompt.md (tasks). Current gaps in migration guidance lead to AI agents updating individual components without understanding cross-package dependencies.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Analyze current prompt ecosystem's coverage of architecture migration guidance",
+      "Identify specific gaps that allow incomplete migrations (DevlogManager → WorkspaceDevlogManager)",
+      "Create comprehensive migration guidance framework",
+      "Design systematic approach for future architecture changes",
+      "Validate improvements prevent migration-related bugs"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Recent bugs #217, #220, #221, #222, #225 all stem from incomplete WorkspaceDevlogManager migration",
+      "Current instruction files focus on individual package patterns but lack cross-package migration guidance",
+      "No systematic approach documented for architecture-wide changes",
+      "AI agents lack context about migration dependencies and ordering"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "Follow devlog #228 analysis showing 60% of bugs from architecture migration",
+      "Build on devlog #236 prompt optimization foundation",
+      "Reference successful migration patterns from recent bugfixes",
+      "Apply reflection.prompt.md systematic analysis framework"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T14:58:46.720Z",
+    "contextVersion": 1
+  }
+}

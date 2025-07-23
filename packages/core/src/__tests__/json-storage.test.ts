@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { JsonStorageProvider } from '../storage';
-import type { DevlogEntry } from '../types';
+import { JsonStorageProvider } from '../storage/index.js';
+import type { DevlogEntry } from '../types/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { tmpdir } from 'os';
@@ -176,19 +176,29 @@ describe('JsonStorageProvider', () => {
       expect(await storage.exists(999999)).toBe(false);
     });
 
-    it('should delete entries', async () => {
+    it('should archive entries when delete is called (soft delete)', async () => {
       const testEntry = createTestEntry('Test Entry');
 
       // Save and verify existence
       await storage.save(testEntry as DevlogEntry);
       expect(await storage.exists(testEntry.id!)).toBe(true);
 
-      // Delete entry
+      // Delete entry (now archives it)
       await storage.delete(testEntry.id!);
 
-      // Verify deletion
-      expect(await storage.exists(testEntry.id!)).toBe(false);
-      expect(await storage.get(testEntry.id!)).toBe(null);
+      // Verify entry still exists but is archived
+      expect(await storage.exists(testEntry.id!)).toBe(true);
+      const retrieved = await storage.get(testEntry.id!);
+      expect(retrieved).not.toBe(null);
+      expect(retrieved?.archived).toBe(true);
+
+      // Verify entry is excluded from default listing
+      const defaultList = await storage.list();
+      expect(defaultList.items.find((e) => e.id === testEntry.id!)).toBe(undefined);
+
+      // Verify entry is included when explicitly requesting archived
+      const archivedList = await storage.list({ archived: true });
+      expect(archivedList.items.find((e) => e.id === testEntry.id!)).toBeDefined();
     });
   });
 

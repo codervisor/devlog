@@ -6,6 +6,26 @@ applyTo: 'packages/core/src/**/*.ts'
 
 ## 🏗️ Architecture Requirements
 
+### Workspace Architecture Pattern
+- **Use WorkspaceDevlogManager** for all new development (preferred)
+- **DevlogManager is deprecated** - legacy support only
+- **Workspace-aware patterns** support multi-workspace configurations
+- **Single workspace context** per manager instance
+
+### Manager Selection Guidelines
+```typescript
+// ✅ Preferred: Workspace-aware manager
+import { WorkspaceDevlogManager } from '@devlog/core';
+
+const manager = new WorkspaceDevlogManager({
+  defaultWorkspaceId: 'primary',
+  autoSwitchWorkspace: true
+});
+
+// ❌ Deprecated: Legacy manager (avoid in new code)
+import { DevlogManager } from '@devlog/core';
+```
+
 ### Dependency Injection Pattern
 - **Use constructor injection** for all external dependencies
 - **Export interfaces** before implementations
@@ -55,7 +75,7 @@ src/
 ## 📦 Import System Guidelines
 
 ### ESM Import Requirements
-- **ALWAYS add .js extensions** for internal and external imports
+- **ALWAYS add .js extensions** for internal and external imports (including index.js)
 - **Use relative imports** for intra-package references
 - **Reserve @/ aliases** for cross-package imports only
 - **Avoid self-referencing aliases** within the same package
@@ -65,7 +85,7 @@ src/
 // ✅ Internal package imports (same package)
 import { DevlogManager } from './devlog-manager.js';
 import { StorageProvider } from '../storage/index.js';
-import type { DevlogEntry } from '../../types/index.js';
+import type { DevlogEntry } from '../types/index.js';  // Explicit index.js for types too
 
 // ✅ Cross-package imports
 import { ChatParser } from '@devlog/ai';
@@ -77,13 +97,17 @@ import type { Request } from 'express';
 
 // ❌ AVOID: Self-referencing aliases (ambiguous)
 import { DevlogEntry } from '@/types'; // Which @? Root or package?
+
+// ❌ AVOID: Missing .js extensions (breaks ESM)
+import { StorageProvider } from '../storage';  // Missing index.js
+import type { DevlogEvent } from './event';    // Missing .js
 ```
 
 ### TypeScript ESM Rules
 - **Runtime imports**: Must include .js extensions for Node.js compatibility
-- **Type-only imports**: Can omit .js extensions (TypeScript compilation only)
+- **Type-only imports**: Should also include .js/.js for consistency
 - **Relative paths**: Provide explicit, unambiguous module resolution
-- **Cross-package boundaries**: Use @devlog/* aliases for clean separation
+- **Cross-package boundaries**: Use @devlog/* aliases for inter-package references
 
 ### Why These Rules Matter
 - **Node.js ESM**: Requires explicit file extensions for module resolution

@@ -23,7 +23,7 @@ import type {
   ChatWorkspace,
 } from './chat';
 
-import type { DevlogEvent } from './event';
+import type { DevlogEvent } from './event.js';
 
 // Storage Configuration Types
 export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
@@ -140,6 +140,8 @@ export interface StorageProvider {
 
   /**
    * Delete a devlog entry
+   * @deprecated Use archiveDevlog() method instead for soft deletion
+   * This method will be removed in v2.0.0
    */
   delete(id: DevlogId): Promise<void>;
 
@@ -151,8 +153,10 @@ export interface StorageProvider {
 
   /**
    * Search devlog entries by text query
+   * @param query Text to search for in entries
+   * @param filter Optional filter to apply to search results
    */
-  search(query: string): Promise<PaginatedResult<DevlogEntry>>;
+  search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>>;
 
   /**
    * Get statistics about devlog entries
@@ -195,6 +199,8 @@ export interface StorageProvider {
 
   /**
    * Delete a chat session
+   * @deprecated Use archive functionality instead for soft deletion
+   * This method will be removed in v2.0.0
    */
   deleteChatSession(id: ChatSessionId): Promise<void>;
 

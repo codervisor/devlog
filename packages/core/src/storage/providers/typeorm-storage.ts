@@ -85,19 +85,33 @@ export class TypeORMStorageProvider implements StorageProvider {
     });
   }
 
+  /**
+   * Delete a devlog entry (soft delete using archive)
+   * @deprecated This method now performs soft deletion via archiving.
+   * The entry is marked as archived instead of being physically deleted.
+   */
   async delete(id: DevlogId): Promise<void> {
     if (!this.repository) throw new Error('Storage not initialized');
 
     const entry = await this.get(id);
-    await this.repository.delete(id);
-
-    if (entry) {
-      this.emitEvent({
-        type: 'deleted',
-        timestamp: new Date().toISOString(),
-        data: { id },
-      });
+    if (!entry) {
+      return; // Entry doesn't exist, nothing to delete
     }
+
+    // Mark as archived instead of deleting the record
+    const archived: DevlogEntry = {
+      ...entry,
+      archived: true,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.repository.save(archived);
+
+    this.emitEvent({
+      type: 'deleted',
+      timestamp: new Date().toISOString(),
+      data: { id },
+    });
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -143,7 +157,13 @@ export class TypeORMStorageProvider implements StorageProvider {
 
       if (filter.archived !== undefined) {
         queryBuilder.andWhere('entry.archived = :archived', { archived: filter.archived });
+      } else {
+        // Default behavior: exclude archived entries unless explicitly requested
+        queryBuilder.andWhere('entry.archived = :archived', { archived: false });
       }
+    } else {
+      // Even without filter, exclude archived entries by default
+      queryBuilder.andWhere('entry.archived = :archived', { archived: false });
     }
 
     // Apply sorting
@@ -179,16 +199,57 @@ export class TypeORMStorageProvider implements StorageProvider {
     };
   }
 
-  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
+  async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     if (!this.repository) throw new Error('Storage not initialized');
 
-    const entities = await this.repository.find({
-      where: [{ title: Like(`%${query}%`) }, { description: Like(`%${query}%`) }],
-      order: { updatedAt: 'DESC' },
+    const queryBuilder = this.repository.createQueryBuilder('entry');
+
+    // Add search conditions
+    queryBuilder.where('(entry.title ILIKE :query OR entry.description ILIKE :query)', {
+      query: `%${query}%`,
     });
 
+    // Apply archived filter (exclude archived by default)
+    if (filter?.archived !== undefined) {
+      queryBuilder.andWhere('entry.archived = :archived', { archived: filter.archived });
+    } else {
+      // Default behavior: exclude archived entries unless explicitly requested
+      queryBuilder.andWhere('entry.archived = :archived', { archived: false });
+    }
+
+    // Apply other filters if provided
+    if (filter?.status && filter.status.length > 0) {
+      queryBuilder.andWhere('entry.status IN (:...statuses)', { statuses: filter.status });
+    }
+    if (filter?.type && filter.type.length > 0) {
+      queryBuilder.andWhere('entry.type IN (:...types)', { types: filter.type });
+    }
+    if (filter?.priority && filter.priority.length > 0) {
+      queryBuilder.andWhere('entry.priority IN (:...priorities)', { priorities: filter.priority });
+    }
+
+    // Apply sorting
+    queryBuilder.orderBy('entry.updatedAt', 'DESC');
+
+    // Apply pagination
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    const offset = (pagination.page! - 1) * pagination.limit!;
+    queryBuilder.skip(offset).take(pagination.limit);
+
+    const [entities, total] = await queryBuilder.getManyAndCount();
     const entries = entities.map((entity) => this.entityToDevlogEntry(entity));
-    return createPaginatedResult(entries, { page: 1, limit: 100 });
+
+    return {
+      items: entries,
+      pagination: {
+        page: pagination.page!,
+        limit: pagination.limit!,
+        total,
+        totalPages: Math.ceil(total / pagination.limit!),
+        hasNextPage: offset + entries.length < total,
+        hasPreviousPage: pagination.page! > 1,
+      },
+    };
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {

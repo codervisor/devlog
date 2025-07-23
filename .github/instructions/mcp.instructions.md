@@ -111,25 +111,67 @@ async function handleToolCall(
 
 ## 🔧 Integration Patterns
 
+### Workspace-Aware Tool Implementation
+- **All tools must support workspace context** from WorkspaceDevlogManager
+- **Workspace switching** should be handled automatically
+- **Tool responses** should indicate which workspace was used
+- **Error handling** must account for workspace-related failures
+
+### Tool Implementation with Workspace Support
+```typescript
+async function handleCreateDevlog(arguments_: any): Promise<CallToolResult> {
+  try {
+    const params = validateCreateDevlogParams(arguments_);
+    
+    // ✅ Use workspace-aware manager method
+    const entry = await adapter.workspaceManager.createDevlog({
+      title: params.title,
+      type: params.type,
+      description: params.description,
+      // ... other fields
+    });
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Created devlog entry: ${entry.id}\nWorkspace: ${entry.workspaceId}\nTitle: ${entry.title}`,
+        },
+      ],
+    };
+  } catch (error) {
+    // Handle workspace-specific errors
+    if (error.message.includes('workspace')) {
+      throw new McpError(ErrorCode.InvalidRequest, `Workspace error: ${error.message}`);
+    }
+    throw error;
+  }
+}
+```
+
 ### Core Package Integration
 ```typescript
 export class MCPDevlogAdapter {
-  private devlogManager: DevlogManager;
+  private workspaceManager: WorkspaceDevlogManager;  // Use workspace-aware manager
   private initialized = false;
   
   constructor() {
-    this.devlogManager = new DevlogManager();
+    // ✅ Use WorkspaceDevlogManager for workspace support
+    this.workspaceManager = new WorkspaceDevlogManager({
+      defaultWorkspaceId: 'primary',
+      autoSwitchWorkspace: true
+    });
   }
   
   async initialize(): Promise<void> {
     if (this.initialized) return;
-    await this.devlogManager.initialize();
+    await this.workspaceManager.initialize();
     this.initialized = true;
   }
   
   async dispose(): Promise<void> {
     if (!this.initialized) return;
-    await this.devlogManager.dispose();
+    await this.workspaceManager.dispose();
     this.initialized = false;
   }
 }

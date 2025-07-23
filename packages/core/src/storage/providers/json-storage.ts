@@ -99,16 +99,27 @@ export class JsonStorageProvider implements StorageProvider {
     await fs.writeFile(filePath, JSON.stringify(entry, null, 2));
   }
 
+  /**
+   * Delete a devlog entry (soft delete using archive)
+   * @deprecated This method now performs soft deletion via archiving.
+   * The entry is marked as archived instead of being physically deleted.
+   */
   async delete(id: DevlogId): Promise<void> {
-    const filename = await this.findFileById(id);
-    if (filename) {
-      const filePath = path.join(this.entriesDir, filename);
-      try {
-        await fs.unlink(filePath);
-      } catch {
-        // File might not exist, continue
-      }
+    // Load the entry first
+    const entry = await this.get(id);
+    if (!entry) {
+      return; // Entry doesn't exist, nothing to delete
     }
+
+    // Mark as archived instead of deleting the file
+    const archived: DevlogEntry = {
+      ...entry,
+      archived: true,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save the archived entry
+    await this.save(archived);
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -124,8 +135,8 @@ export class JsonStorageProvider implements StorageProvider {
     return this.paginateResults(filteredEntries, pagination);
   }
 
-  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
-    const result = await this.list();
+  async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+    const result = await this.list(filter);
     const entries = result.items; // Always a PaginatedResult now
     const lowerQuery = query.toLowerCase();
 
@@ -137,8 +148,9 @@ export class JsonStorageProvider implements StorageProvider {
       );
     });
 
-    // Return paginated result for consistency
-    return this.paginateResults(filteredEntries, { page: 1, limit: 100 });
+    // Apply the same pagination from the filter if provided
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return this.paginateResults(filteredEntries, pagination);
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {

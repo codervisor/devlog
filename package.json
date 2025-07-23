@@ -20,7 +20,13 @@
     "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
     "dev:web": "scripts/dev-with-check.sh concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
     "start:web": "pnpm --filter @devlog/web start",
-    "preview:web": "pnpm --filter @devlog/web preview"
+    "preview:web": "pnpm --filter @devlog/web preview",
+    "lint": "eslint packages/**/*.{ts,tsx}",
+    "lint:fix": "eslint packages/**/*.{ts,tsx} --fix",
+    "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
+    "validate": "node scripts/validate-imports.js",
+    "pre-commit": "lint-staged && node scripts/validate-imports.js",
+    "prepare": "husky"
   },
   "keywords": [
     "monorepo",
@@ -34,7 +40,14 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "8.38.0",
+    "@typescript-eslint/parser": "8.38.0",
     "concurrently": "9.2.0",
+    "eslint": "9.31.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow": "1.2.3",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.2",
     "prettier": "3.6.1",
     "typescript": "^5.0.0"
   },
@@ -43,6 +56,14 @@
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@10.13.1",
+  "lint-staged": {
+    "packages/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "packages/**/*.{js,jsx,json,md}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0"

@@ -174,6 +174,11 @@ export class GitHubStorageProvider implements StorageProvider {
     this.cache.delete(`issue-${entry.id}`);
   }
 
+  /**
+   * Delete a devlog entry (GitHub implementation uses issue closing)
+   * Note: GitHub storage doesn't support hard deletion, so this closes the issue
+   * and removes labels to indicate deletion. This is already a soft delete pattern.
+   */
   async delete(id: DevlogId): Promise<void> {
     const issueNumber = id;
     if (isNaN(issueNumber)) {
@@ -223,15 +228,44 @@ export class GitHubStorageProvider implements StorageProvider {
     return createPaginatedResult(entries, filter?.pagination || { page: 1, limit: 100 });
   }
 
-  async search(query: string): Promise<PaginatedResult<DevlogEntry>> {
-    const searchQuery = `repo:${this.config.owner}/${this.config.repo} is:issue ${query}`;
+  async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+    // Build search query with GitHub-specific syntax and filters
+    let searchQuery = `repo:${this.config.owner}/${this.config.repo} is:issue ${query}`;
+
+    // Add filter-based constraints to GitHub search
+    if (filter?.status && filter.status.length > 0) {
+      // Map DevlogStatus to GitHub issue states
+      const hasOpen = filter.status.some((s) =>
+        ['new', 'in-progress', 'blocked', 'in-review', 'testing'].includes(s),
+      );
+      const hasClosed = filter.status.some((s) => ['done', 'cancelled'].includes(s));
+
+      if (hasOpen && !hasClosed) {
+        searchQuery += ' state:open';
+      } else if (hasClosed && !hasOpen) {
+        searchQuery += ' state:closed';
+      }
+    }
+
+    // For archived filtering in GitHub: closed issues with specific reason could be considered archived
+    // GitHub storage uses issue closing as soft delete, so we respect the archived filter differently
+    if (filter?.archived === false) {
+      // Only include issues that are not marked as "not planned" (our deletion marker)
+      searchQuery += ' -reason:not_planned';
+    } else if (filter?.archived === true) {
+      // Only include issues marked as "not planned" (archived/deleted)
+      searchQuery += ' reason:not_planned';
+    }
 
     const issues = await this.rateLimiter.executeWithRateLimit(async () => {
       return await this.apiClient.searchIssues(searchQuery);
     });
 
     const entries = issues.map((issue) => this.dataMapper.issueToDevlog(issue));
-    return createPaginatedResult(entries, { page: 1, limit: 100 });
+
+    // Apply pagination if specified in filter
+    const pagination = filter?.pagination || { page: 1, limit: 100 };
+    return createPaginatedResult(entries, pagination);
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {

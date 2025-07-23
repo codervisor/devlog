@@ -1,0 +1,56 @@
+{
+  "id": 238,
+  "key": "fix-apis-not-filtering-archived-devlogs-properly",
+  "title": "Fix: APIs not filtering archived devlogs properly",
+  "type": "bugfix",
+  "description": "Several APIs and core methods are not properly handling archived devlog filtering. The web API routes don't parse the 'archived' query parameter, and some core methods may not be passing proper filters to exclude archived entries by default.",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-23T14:51:43.574Z",
+  "updatedAt": "2025-07-23T14:57:43.668Z",
+  "notes": [
+    {
+      "id": "20640cd6-9913-42c4-8fbf-567eaf503519",
+      "timestamp": "2025-07-23T14:57:34.697Z",
+      "category": "solution",
+      "content": "Fixed all APIs and methods to properly filter archived devlogs:\n\n✅ **Web API Fixes**:\n- Updated devlogs listing API to parse and handle `archived` query parameter\n- Updated stats API to accept `archived` filter parameter\n- Both APIs now properly exclude archived entries by default unless explicitly requested\n\n✅ **Core Manager Updates**:\n- Updated `getStats()` method to accept filter parameter and pass it to storage providers\n- Updated `searchDevlogs()` method to properly pass filter to storage providers\n\n✅ **Storage Interface Enhancement**:\n- Updated `search()` method signature to accept optional filter parameter\n- All storage providers now support filtering in search operations\n\n✅ **Storage Provider Updates**:\n- **JSON Storage**: Updated search to use filter parameter and call list() with proper filtering\n- **TypeORM Storage**: Enhanced search with comprehensive query builder including archived filtering  \n- **GitHub Storage**: Added archived filtering logic using GitHub's state_reason field\n\n✅ **MCP Tool Updates**:\n- Added `archived` parameter to `DevlogFilterArgs` interface\n- Updated MCP adapter methods to pass through archived filter parameter\n- Both `listDevlogs` and `searchDevlogs` MCP tools now support archived filtering\n\n✅ **Testing**:\n- All builds pass successfully\n- JSON storage tests continue to pass with enhanced filtering\n- System maintains backward compatibility while adding proper archive support\n\nThe implementation now ensures that archived devlogs are consistently excluded from all listing, search, and statistics operations by default, while still allowing explicit inclusion when the `archived: true` parameter is provided.",
+      "files": [
+        "packages/web/app/api/workspaces/[id]/devlogs/route.ts",
+        "packages/web/app/api/workspaces/[id]/devlogs/stats/overview/route.ts",
+        "packages/core/src/managers/devlog/workspace-devlog-manager.ts",
+        "packages/core/src/types/storage.ts",
+        "packages/core/src/storage/providers/json-storage.ts",
+        "packages/core/src/storage/providers/typeorm-storage.ts",
+        "packages/core/src/storage/providers/github-storage.ts",
+        "packages/mcp/src/types/tool-args.ts",
+        "packages/mcp/src/mcp-adapter.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Users should not see archived devlogs in their normal workflows unless explicitly requesting them. This includes statistics, listings, and search results. Including archived entries in stats and listings would give incorrect information about active work.",
+    "technicalContext": "The storage providers properly filter archived entries, but the API layer isn't parsing the archived parameter from query strings, and some manager methods aren't passing the proper filters to ensure archived entries are excluded.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Web API routes properly handle archived parameter in query strings",
+      "getStats() methods exclude archived entries by default",
+      "All list/search methods consistently exclude archived entries",
+      "Add explicit archived parameter support to web APIs",
+      "Verify search functionality excludes archived entries",
+      "Update any missing filter handling in API routes"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T14:51:43.574Z",
+    "contextVersion": 1
+  }
+}
