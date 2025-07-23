@@ -1,0 +1,32 @@
+{
+  "id": 251,
+  "key": "test-complete-event-coverage-all-operations",
+  "title": "TEST: Complete Event Coverage - All Operations",
+  "type": "task",
+  "description": "Testing comprehensive event coverage including completion, closure, archiving, and unarchiving operations.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-23T15:43:01.041Z",
+  "updatedAt": "2025-07-23T15:44:37.958Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T15:43:01.041Z",
+    "contextVersion": 1
+  },
+  "archived": true
+}

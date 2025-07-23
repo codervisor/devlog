@@ -579,6 +579,15 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
+
+    // Emit completion event for real-time updates
+    const devlogEvents = getDevlogEvents();
+    await devlogEvents.emit({
+      type: 'completed',
+      data: updated,
+      timestamp: updated.updatedAt,
+    });
+
     return updated;
   }
 
@@ -603,6 +612,15 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
+
+    // Emit close event for real-time updates
+    const devlogEvents = getDevlogEvents();
+    await devlogEvents.emit({
+      type: 'closed',
+      data: updated,
+      timestamp: updated.updatedAt,
+    });
+
     return updated;
   }
 
@@ -623,6 +641,15 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
+
+    // Emit archive event for real-time updates
+    const devlogEvents = getDevlogEvents();
+    await devlogEvents.emit({
+      type: 'archived',
+      data: updated,
+      timestamp: updated.updatedAt,
+    });
+
     return updated;
   }
 
@@ -643,6 +670,15 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
+
+    // Emit unarchive event for real-time updates
+    const devlogEvents = getDevlogEvents();
+    await devlogEvents.emit({
+      type: 'unarchived',
+      data: updated,
+      timestamp: updated.updatedAt,
+    });
+
     return updated;
   }
 

@@ -1,49 +1,47 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Button,
+  Dropdown,
   Empty,
+  Input,
+  Menu,
   message,
   Modal,
   Popconfirm,
-  Select,
-  Space,
-  Spin,
-  Table,
-  Tag,
-  Typography,
-  Skeleton,
-  Dropdown,
-  Menu,
-  Input,
   Progress,
+  Select,
+  Skeleton,
+  Space,
+  Table,
+  Typography,
 } from 'antd';
 import {
+  CloseOutlined,
   DeleteOutlined,
+  EditOutlined,
   EyeOutlined,
   FilterOutlined,
-  EditOutlined,
+  LeftOutlined,
   MessageOutlined,
-  UserOutlined,
-  CheckCircleOutlined,
+  RightOutlined,
   SearchOutlined,
-  CloseOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
   DevlogEntry,
+  DevlogFilter,
   DevlogId,
   DevlogPriority,
   DevlogStatus,
   DevlogType,
-  DevlogFilter,
   PaginationMeta,
 } from '@devlog/core';
-import { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from '@/components';
+import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import { OverviewStats } from '@/components';
-import { statusOptions, priorityOptions, typeOptions } from '@/lib/devlog-options';
+import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
 import styles from './DevlogList.module.css';
 import Link from 'next/link';
 
@@ -793,31 +791,31 @@ export function DevlogList({
               {/* Page navigation */}
               {pagination && pagination.totalPages > 1 && (
                 <>
-                  <Button
-                    size="small"
+                  <LeftOutlined
                     disabled={!pagination.hasPreviousPage || loading}
                     onClick={() => onPageChange?.(pagination.page - 1)}
-                  >
-                    Previous
-                  </Button>
+                  />
+                  {/*<Button*/}
+                  {/*  size="small"*/}
+                  {/*  disabled={!pagination.hasPreviousPage || loading}*/}
+                  {/*  onClick={() => onPageChange?.(pagination.page - 1)}*/}
+                  {/*>*/}
+                  {/*  Previous*/}
+                  {/*</Button>*/}
                   <Text type="secondary" className={styles.paginationText}>
-                    {loading ? (
-                      <Skeleton.Button
-                        style={{ width: '80px', height: '20px' }}
-                        active
-                        size="small"
-                      />
-                    ) : (
-                      `Page ${pagination.page} of ${pagination.totalPages}`
-                    )}
+                    {pagination.page} / {pagination.totalPages}
                   </Text>
-                  <Button
-                    size="small"
+                  <RightOutlined
                     disabled={!pagination.hasNextPage || loading}
                     onClick={() => onPageChange?.(pagination.page + 1)}
-                  >
-                    Next
-                  </Button>
+                  />
+                  {/*<Button*/}
+                  {/*  size="small"*/}
+                  {/*  disabled={!pagination.hasNextPage || loading}*/}
+                  {/*  onClick={() => onPageChange?.(pagination.page + 1)}*/}
+                  {/*>*/}
+                  {/*  Next*/}
+                  {/*</Button>*/}
                 </>
               )}
             </Space>

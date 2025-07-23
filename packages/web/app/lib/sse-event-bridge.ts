@@ -38,6 +38,10 @@ class SSEEventBridge {
       devlogEvents.on('updated', this.handleDevlogUpdated.bind(this));
       devlogEvents.on('deleted', this.handleDevlogDeleted.bind(this));
       devlogEvents.on('note-added', this.handleNoteAdded.bind(this));
+      devlogEvents.on('completed', this.handleDevlogCompleted.bind(this));
+      devlogEvents.on('closed', this.handleDevlogClosed.bind(this));
+      devlogEvents.on('archived', this.handleDevlogArchived.bind(this));
+      devlogEvents.on('unarchived', this.handleDevlogUnarchived.bind(this));
 
       this.initialized = true;
       console.log('SSE Event Bridge initialized - devlog events will now trigger SSE updates');
@@ -46,6 +50,10 @@ class SSEEventBridge {
         updated: devlogEvents.getHandlerCount('updated'),
         deleted: devlogEvents.getHandlerCount('deleted'),
         'note-added': devlogEvents.getHandlerCount('note-added'),
+        completed: devlogEvents.getHandlerCount('completed'),
+        closed: devlogEvents.getHandlerCount('closed'),
+        archived: devlogEvents.getHandlerCount('archived'),
+        unarchived: devlogEvents.getHandlerCount('unarchived'),
         total: devlogEvents.getHandlerCount(),
       });
     } catch (error) {
@@ -93,6 +101,42 @@ class SSEEventBridge {
       broadcastUpdate('devlog-updated', event.data.devlog);
     } catch (error) {
       console.error('Error broadcasting note-added event:', error);
+    }
+  }
+
+  private async handleDevlogCompleted(event: DevlogEvent): Promise<void> {
+    try {
+      console.log('SSE Bridge: Broadcasting devlog-completed event for ID:', event.data.id);
+      broadcastUpdate('devlog-completed', event.data);
+    } catch (error) {
+      console.error('Error broadcasting devlog-completed event:', error);
+    }
+  }
+
+  private async handleDevlogClosed(event: DevlogEvent): Promise<void> {
+    try {
+      console.log('SSE Bridge: Broadcasting devlog-closed event for ID:', event.data.id);
+      broadcastUpdate('devlog-closed', event.data);
+    } catch (error) {
+      console.error('Error broadcasting devlog-closed event:', error);
+    }
+  }
+
+  private async handleDevlogArchived(event: DevlogEvent): Promise<void> {
+    try {
+      console.log('SSE Bridge: Broadcasting devlog-archived event for ID:', event.data.id);
+      broadcastUpdate('devlog-archived', event.data);
+    } catch (error) {
+      console.error('Error broadcasting devlog-archived event:', error);
+    }
+  }
+
+  private async handleDevlogUnarchived(event: DevlogEvent): Promise<void> {
+    try {
+      console.log('SSE Bridge: Broadcasting devlog-unarchived event for ID:', event.data.id);
+      broadcastUpdate('devlog-unarchived', event.data);
+    } catch (error) {
+      console.error('Error broadcasting devlog-unarchived event:', error);
     }
   }
 
