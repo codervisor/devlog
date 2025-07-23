@@ -313,6 +313,23 @@
   font-size: 12px;
 }
 
+/* Fix dropdown positioning for page size selector */
+.paginationDropdownContainer {
+  position: relative;
+  z-index: 1000;
+}
+
+/* Antd Pagination styling */
+.antdPagination {
+  margin: 0 !important;
+}
+
+/* Fix dropdown positioning issues */
+.antdPagination :global(.ant-select-dropdown) {
+  z-index: 1060 !important;
+  inset: auto auto 28px 0 !important;
+}
+
 /* Responsive table footer */
 @media (max-width: 768px) {
   .tableFooter {
@@ -340,6 +357,15 @@
   .tableFooterRight {
     order: 3;
   }
+
+  /* Make pagination more compact on mobile */
+  .antdPagination {
+    font-size: 12px;
+  }
+
+  .antdPagination :global(.ant-pagination-options-quick-jumper) {
+    display: none;
+  }
 }
 
 @media (max-width: 576px) {
@@ -351,6 +377,11 @@
   .tableFooterCenter {
     flex-wrap: wrap;
     gap: 4px;
+  }
+
+  /* Hide size changer on very small screens */
+  .antdPagination :global(.ant-pagination-options) {
+    display: none;
   }
 }
 

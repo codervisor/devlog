@@ -9,6 +9,7 @@ import {
   Menu,
   message,
   Modal,
+  Pagination,
   Popconfirm,
   Progress,
   Select,
@@ -23,9 +24,7 @@ import {
   EditOutlined,
   EyeOutlined,
   FilterOutlined,
-  LeftOutlined,
   MessageOutlined,
-  RightOutlined,
   SearchOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -770,55 +769,25 @@ export function DevlogList({
           </div>
 
           <div className={styles.tableFooterRight}>
-            {/* Page size selector and pagination info */}
-            <Space size="small">
-              <Select
-                size="small"
-                value={pagination?.limit || 20}
-                style={{ width: 70 }}
-                onChange={onPageSizeChange}
-                disabled={loading}
-                options={[
-                  { label: '10', value: 10 },
-                  { label: '20', value: 20 },
-                  { label: '50', value: 50 },
-                  { label: '100', value: 100 },
-                ]}
-              />
-              <Text type="secondary" className={styles.paginationText}>
-                per page
-              </Text>
-              {/* Page navigation */}
-              {pagination && pagination.totalPages > 1 && (
-                <>
-                  <LeftOutlined
-                    disabled={!pagination.hasPreviousPage || loading}
-                    onClick={() => onPageChange?.(pagination.page - 1)}
-                  />
-                  {/*<Button*/}
-                  {/*  size="small"*/}
-                  {/*  disabled={!pagination.hasPreviousPage || loading}*/}
-                  {/*  onClick={() => onPageChange?.(pagination.page - 1)}*/}
-                  {/*>*/}
-                  {/*  Previous*/}
-                  {/*</Button>*/}
-                  <Text type="secondary" className={styles.paginationText}>
-                    {pagination.page} / {pagination.totalPages}
-                  </Text>
-                  <RightOutlined
-                    disabled={!pagination.hasNextPage || loading}
-                    onClick={() => onPageChange?.(pagination.page + 1)}
-                  />
-                  {/*<Button*/}
-                  {/*  size="small"*/}
-                  {/*  disabled={!pagination.hasNextPage || loading}*/}
-                  {/*  onClick={() => onPageChange?.(pagination.page + 1)}*/}
-                  {/*>*/}
-                  {/*  Next*/}
-                  {/*</Button>*/}
-                </>
-              )}
-            </Space>
+            {/* Antd Pagination Component */}
+            {pagination && pagination.total > 0 && (
+              <div className={styles.paginationDropdownContainer}>
+                <Pagination
+                  current={pagination.page}
+                  total={pagination.total}
+                  pageSize={pagination.limit}
+                  onChange={onPageChange}
+                  onShowSizeChange={(current, size) => onPageSizeChange?.(size)}
+                  showSizeChanger
+                  showQuickJumper
+                  showTotal={(total, range) => `${range[0]}-${range[1]} of ${total}`}
+                  pageSizeOptions={['10', '20', '50', '100']}
+                  size="small"
+                  disabled={loading}
+                  className={styles.antdPagination}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

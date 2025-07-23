@@ -1,0 +1,40 @@
+{
+  "id": 254,
+  "key": "replace-current-pagination-ui-with-ant-design-tabl",
+  "title": "Replace Current Pagination UI with Ant Design Table-Style Pagination Component",
+  "type": "feature",
+  "description": "Replace the current custom pagination implementation in devlog list with Ant Design's Table-style pagination component for better UX and consistency with Antd design system. Currently using custom arrow buttons and simple page display - want to upgrade to full Antd pagination with page numbers, size selector, and jump functionality.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-23T16:38:02.230Z",
+  "updatedAt": "2025-07-23T16:38:02.230Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Current pagination UX is minimal with just arrow buttons and page display. Users expect a full pagination component with numbered pages, quick jump options, and page size selection similar to professional data tables. Antd provides a well-designed pagination component that matches the existing design system.",
+    "technicalContext": "Current implementation uses custom pagination in DevlogList.tsx footer with LeftOutlined/RightOutlined icons and simple page display. Need to integrate Antd's Pagination component which supports: showSizeChanger, showQuickJumper, showTotal, page numbers with ellipsis, and responsive behavior.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Replace custom arrow pagination with Antd Pagination component",
+      "Include page size selector (10, 20, 50, 100)",
+      "Show page numbers with ellipsis for large page counts",
+      "Include quick jump input",
+      "Show total results info",
+      "Maintain responsive behavior",
+      "Keep existing table footer layout structure",
+      "Preserve batch operation controls"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T16:38:02.230Z",
+    "contextVersion": 1
+  }
+}
