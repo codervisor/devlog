@@ -7,7 +7,7 @@
   "status": "new",
   "priority": "high",
   "createdAt": "2025-07-23T13:59:21.028Z",
-  "updatedAt": "2025-07-23T14:24:11.244Z",
+  "updatedAt": "2025-07-23T15:08:23.858Z",
   "notes": [
     {
       "id": "ae600382-5814-4dc8-8e3f-7be19e447367",
@@ -32,6 +32,18 @@
       "timestamp": "2025-07-23T14:24:11.244Z",
       "category": "issue",
       "content": "🎯 **ROOT CAUSE IDENTIFIED**: Event emission code works correctly, but there are 0 event handlers when emitting! The issue is that multiple instances of devlogEvents are being created - SSE Bridge has 5 handlers initially, but WorkspaceDevlogManager sees 0 handlers. This suggests separate devlogEvents instances in different module contexts. Need to ensure single shared devlogEvents instance across API routes and SSE bridge."
+    },
+    {
+      "id": "9f638b24-6b21-4d39-b551-ffd74506e2a1",
+      "timestamp": "2025-07-23T15:03:26.174Z",
+      "category": "progress",
+      "content": "✅ **SSE ISSUE CONFIRMED via Web UI Test**: Created devlog \"Test SSE Events - Created via Web UI\" through web form. SSE connection works correctly (browser console shows \"SSE connected\" and connection messages), but NO devlog-created events are broadcast. This definitively confirms the root cause: multiple devlogEvents instances exist - SSE bridge listens to one, WorkspaceDevlogManager emits to another. Need to implement single shared devlogEvents instance across all contexts."
+    },
+    {
+      "id": "95823770-17b3-426d-993f-fcf186590496",
+      "timestamp": "2025-07-23T15:08:23.858Z",
+      "category": "progress",
+      "content": "🚫 **SINGLETON FIX ATTEMPTED BUT SSE STILL BROKEN**: Implemented singleton pattern for DevlogEventEmitter using getDevlogEvents() function, built core package successfully, but SSE events are still not working. Testing results:\n\n✅ SSE connection works (browser shows \"SSE connected\" messages)\n✅ Web UI devlog creation works (form submits successfully)\n✅ MCP devlog creation works (devlog #244 created)\n❌ NO SSE broadcast events received for either web UI or MCP-created devlogs\n❌ New devlogs don't appear in real-time (total still shows 229 instead of 244+)\n\nThe singleton pattern alone is insufficient. The issue may be deeper - potentially with Next.js module bundling/context separation, or the SSE endpoint itself not properly initializing the shared instance. Next steps: investigate Next.js SSE endpoint initialization and ensure singleton is being used consistently across all contexts."
     }
   ],
   "files": [],

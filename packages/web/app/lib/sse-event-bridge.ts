@@ -27,7 +27,11 @@ class SSEEventBridge {
       this.workspaceManager = await getSharedWorkspaceManager();
 
       // Dynamically import to avoid bundling TypeORM in client-side code
-      const { devlogEvents } = await import('@devlog/core');
+      const { getDevlogEvents } = await import('@devlog/core');
+
+      // Get the singleton devlogEvents instance to ensure we listen to the same instance
+      // that WorkspaceDevlogManager emits to
+      const devlogEvents = getDevlogEvents();
 
       // Listen to local devlog events (which now include storage events via subscription)
       devlogEvents.on('created', this.handleDevlogCreated.bind(this));

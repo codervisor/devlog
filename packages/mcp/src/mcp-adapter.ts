@@ -5,11 +5,9 @@
 import * as crypto from 'crypto';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
-  AIContext,
   CreateDevlogRequest,
   DevlogConfig,
   DevlogContext,
-  DevlogEntry,
   DevlogStatus,
   DiscoveredDevlogEntry,
   NoteCategory,
@@ -187,7 +185,7 @@ export class MCPDevlogAdapter {
       };
     }
 
-    let summary = entries
+    const summary = entries
       .map(
         (entry) =>
           `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority}) - ${entry.id}`,
@@ -310,7 +308,7 @@ export class MCPDevlogAdapter {
     entry.context.decisions.push(decision);
 
     // Update the entry to trigger save
-    const updated = await this.workspaceManager.updateDevlog(args.id, {
+    await this.workspaceManager.updateDevlog(args.id, {
       // Use a field that exists in UpdateDevlogRequest to trigger save
       description: entry.description,
     });
@@ -411,7 +409,7 @@ export class MCPDevlogAdapter {
     await this.ensureInitialized();
 
     const filter = {
-      status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'] as any[],
+      status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'] as DevlogStatus[],
     };
 
     const result = await this.workspaceManager.listDevlogs(filter);
@@ -506,7 +504,13 @@ export class MCPDevlogAdapter {
       await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
     }
 
-    const contextUpdate: any = {};
+    const contextUpdate: {
+      summary?: string;
+      insights?: string[];
+      nextSteps?: string[];
+      questions?: string[];
+      patterns?: string[];
+    } = {};
     if (args.summary !== undefined) contextUpdate.summary = args.summary;
     if (args.insights !== undefined) contextUpdate.insights = args.insights;
     if (args.nextSteps !== undefined) contextUpdate.nextSteps = args.nextSteps;

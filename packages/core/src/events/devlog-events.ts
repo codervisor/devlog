@@ -17,7 +17,10 @@ export class DevlogEventEmitter {
     if (!this.handlers.has(eventType)) {
       this.handlers.set(eventType, new Set());
     }
-    this.handlers.get(eventType)!.add(handler);
+    const handlers = this.handlers.get(eventType);
+    if (handlers) {
+      handlers.add(handler);
+    }
   }
 
   /**
@@ -38,6 +41,7 @@ export class DevlogEventEmitter {
    */
   async emit(event: DevlogEvent): Promise<void> {
     const handlers = this.handlers.get(event.type);
+    console.log(`[DevlogEventEmitter] Emitting ${event.type} to ${handlers?.size || 0} handlers`);
     if (handlers) {
       // Execute all handlers in parallel
       await Promise.allSettled(
@@ -69,7 +73,35 @@ export class DevlogEventEmitter {
   clear(): void {
     this.handlers.clear();
   }
+
+  /**
+   * Get instance identifier for debugging
+   */
+  getInstanceId(): string {
+    return `DevlogEventEmitter@${this.constructor.name}_${Date.now()}`;
+  }
 }
 
-// Global event emitter instance
-export const devlogEvents = new DevlogEventEmitter();
+/**
+ * Singleton pattern for global event emitter
+ * Ensures single instance across all imports in the application
+ */
+let globalDevlogEvents: DevlogEventEmitter | null = null;
+
+/**
+ * Get the singleton instance of DevlogEventEmitter
+ * This ensures all parts of the application use the same event emitter instance
+ */
+export function getDevlogEvents(): DevlogEventEmitter {
+  if (!globalDevlogEvents) {
+    globalDevlogEvents = new DevlogEventEmitter();
+    console.log('[DevlogEvents] Created singleton instance');
+  }
+  return globalDevlogEvents;
+}
+
+/**
+ * Global event emitter instance
+ * @deprecated Use getDevlogEvents() function instead to ensure singleton behavior
+ */
+export const devlogEvents = getDevlogEvents();

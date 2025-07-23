@@ -1,4 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { WorkspaceDevlogManager } from '@devlog/core';
 
 // Workspace management tools for MCP server
 export const listWorkspacesTool: Tool = {
@@ -43,10 +44,10 @@ export const workspaceTools: Tool[] = [
 ];
 
 // Tool implementations for workspace management
-export async function handleListWorkspaces(workspaceManager: any) {
+export async function handleListWorkspaces(workspaceManager: WorkspaceDevlogManager) {
   try {
     const workspaces = await workspaceManager.listWorkspaces();
-    
+
     if (workspaces.length === 0) {
       return {
         content: [
@@ -93,7 +94,7 @@ export async function handleGetCurrentWorkspace(adapter: any) {
     const currentWorkspaceId = adapter.getCurrentWorkspaceId();
     const workspaces = await adapter.manager.listWorkspaces();
     const currentWorkspace = workspaces.find((ws: any) => ws.id === currentWorkspaceId);
-    
+
     if (!currentWorkspace) {
       return {
         content: [
@@ -140,7 +141,7 @@ export async function handleSwitchWorkspace(adapter: any, args: { workspaceId: s
     // Validate that the workspace exists
     const workspaces = await adapter.manager.listWorkspaces();
     const targetWorkspace = workspaces.find((ws: any) => ws.id === args.workspaceId);
-    
+
     if (!targetWorkspace) {
       return {
         content: [
@@ -155,7 +156,7 @@ export async function handleSwitchWorkspace(adapter: any, args: { workspaceId: s
 
     // Switch current workspace in memory only
     adapter.setCurrentWorkspaceId(args.workspaceId);
-    
+
     const switchInfo = `Successfully switched MCP server to workspace: **${targetWorkspace.name}**
 ID: ${targetWorkspace.id}
 Description: ${targetWorkspace.description || 'No description'}

@@ -26,7 +26,7 @@ import type {
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
 import { ConfigurationManager } from '../configuration/configuration-manager.js';
 import { FileWorkspaceManager, type WorkspaceManagerOptions } from '../workspace/index.js';
-import { devlogEvents } from '../../events/devlog-events.js';
+import { getDevlogEvents } from '../../events/devlog-events.js';
 
 export interface WorkspaceDevlogManagerOptions {
   /** Path to workspace configuration file */
@@ -309,6 +309,7 @@ export class WorkspaceDevlogManager {
 
     // Emit event for real-time updates
     console.log('[WorkspaceDevlogManager] About to emit devlog-created event for ID:', id);
+    const devlogEvents = getDevlogEvents();
     console.log(
       '[WorkspaceDevlogManager] Event handlers count:',
       devlogEvents.getHandlerCount('created'),
@@ -343,6 +344,7 @@ export class WorkspaceDevlogManager {
     await provider.save(updated);
 
     // Emit event for real-time updates
+    const devlogEvents = getDevlogEvents();
     await devlogEvents.emit({
       type: 'updated',
       data: updated,
@@ -370,6 +372,7 @@ export class WorkspaceDevlogManager {
     await this.archiveDevlog(numericId);
 
     // Emit event for real-time updates (keeping 'deleted' for backward compatibility)
+    const devlogEvents = getDevlogEvents();
     await devlogEvents.emit({
       type: 'deleted',
       data: existing,
@@ -459,6 +462,7 @@ export class WorkspaceDevlogManager {
     await provider.save(updated);
 
     // Emit note-added event for real-time updates
+    const devlogEvents = getDevlogEvents();
     await devlogEvents.emit({
       type: 'note-added',
       data: { note, devlog: updated },

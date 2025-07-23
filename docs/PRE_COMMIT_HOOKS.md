@@ -35,6 +35,7 @@ pnpm lint           # Run ESLint on all packages
 pnpm lint:fix       # Run ESLint with auto-fixing
 pnpm format         # Format all files with Prettier
 pnpm validate       # Run import pattern validation
+pnpm detect-migration # Automatic migration need detection
 pnpm pre-commit     # Test the full pre-commit pipeline
 
 # Development workflow
@@ -100,6 +101,23 @@ For persistent issues, check:
 1. **TypeScript compilation** - `pnpm build`
 2. **Unused variables** - Remove or prefix with `_`
 3. **any types** - Use specific types when possible
+
+### **Migration Need Detection**
+
+**Problem**: Implicit migration detection
+```bash
+# Changed a core manager class but forgot about dependent packages
+pnpm detect-migration  # ❌ Shows cross-package usage and migration needs
+```
+
+**Solution**: Automatic detection of migration triggers
+```bash
+# Before making changes to core architecture:
+pnpm detect-migration  # ✅ Proactive check for recent changes
+
+# After making core changes:
+pnpm detect-migration  # ✅ Detects cross-package impacts automatically
+```
 
 ## Setup for New Developers
 

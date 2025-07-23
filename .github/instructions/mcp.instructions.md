@@ -111,6 +111,38 @@ async function handleToolCall(
 
 ## 🔧 Integration Patterns
 
+### **⚠️ AUTOMATIC MIGRATION DETECTION**
+**When editing MCP package files, check if core dependencies changed:**
+
+#### **Cross-Package Change Indicators**
+- **Build errors after core updates** → Migration likely needed
+- **Type import errors** → Core types may have changed  
+- **Method signature mismatches** → Core interfaces updated
+- **New core features available** → Integration opportunities
+
+#### **Auto-Check Commands Before MCP Changes**
+```bash
+# Check if core package changed recently:
+git log --oneline packages/core/src/ -10
+
+# Search for your MCP component usage in other packages:
+grep -r "MCPAdapterClass" packages/ --include="*.ts"
+```
+
+### **Migration Awareness for MCP Package**
+⚠️ **When @devlog/core architecture changes:**
+1. **Always check MCP adapter** (`mcp-adapter.ts`) for compatibility
+2. **Update tool implementations** in `tools/` directory 
+3. **Verify manager integration** - ensure using current manager classes
+4. **Test cross-package integration** after core updates
+5. **Update type imports** and method signatures
+
+### **Common Migration Points:**
+- **Manager class changes** → Update adapter initialization and usage
+- **Core API changes** → Update tool implementations and error handling
+- **Type/interface changes** → Update imports and method signatures
+- **Storage provider changes** → Update storage-related tools and validation
+
 ### Workspace-Aware Tool Implementation
 - **All tools must support workspace context** from WorkspaceDevlogManager
 - **Workspace switching** should be handled automatically

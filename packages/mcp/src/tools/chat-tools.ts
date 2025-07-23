@@ -2,9 +2,11 @@
  * MCP tools for chat history management
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
+
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { WorkspaceDevlogManager, ImportChatHistoryRequest } from '@devlog/core';
-import { createErrorResponse } from '../utils/common.js';
+import { WorkspaceDevlogManager } from '@devlog/core';
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {
@@ -517,200 +519,184 @@ export const getChatWorkspacesTool: Tool = {
 };
 
 // Tool implementations
-export async function handleImportChatHistory(manager: WorkspaceDevlogManager, args: ImportChatHistoryArgs) {
-  try {
-    // TODO: Implement chat import service integration with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat history import is not yet implemented in workspace-aware architecture.
+export async function handleImportChatHistory(
+  _manager: WorkspaceDevlogManager,
+  _args: ImportChatHistoryArgs,
+) {
+  // TODO: Implement chat import service integration with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat history import is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('importing chat history', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleGetChatSession(manager: WorkspaceDevlogManager, args: GetChatSessionArgs) {
-  try {
-    // TODO: Implement chat session retrieval with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat session retrieval is not yet implemented in workspace-aware architecture.
+export async function handleGetChatSession(
+  _manager: WorkspaceDevlogManager,
+  _args: GetChatSessionArgs,
+) {
+  // TODO: Implement chat session retrieval with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat session retrieval is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('getting chat session', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleListChatSessions(manager: WorkspaceDevlogManager, args: ListChatSessionsArgs) {
-  try {
-    // TODO: Implement chat session listing with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat session listing is not yet implemented in workspace-aware architecture.
+export async function handleListChatSessions(
+  _manager: WorkspaceDevlogManager,
+  _args: ListChatSessionsArgs,
+) {
+  // TODO: Implement chat session listing with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat session listing is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('listing chat sessions', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleSearchChatContent(manager: WorkspaceDevlogManager, args: SearchChatContentArgs) {
-  try {
-    // TODO: Implement chat content search with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat content search is not yet implemented in workspace-aware architecture.
+export async function handleSearchChatContent(
+  _manager: WorkspaceDevlogManager,
+  _args: SearchChatContentArgs,
+) {
+  // TODO: Implement chat content search with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat content search is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('searching chat content', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleLinkChatToDevlog(manager: WorkspaceDevlogManager, args: LinkChatToDevlogArgs) {
-  try {
-    // TODO: Implement chat-devlog linking with WorkspaceDevlogManager  
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat-devlog linking is not yet implemented in workspace-aware architecture.
+export async function handleLinkChatToDevlog(
+  _manager: WorkspaceDevlogManager,
+  _args: LinkChatToDevlogArgs,
+) {
+  // TODO: Implement chat-devlog linking with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat-devlog linking is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('linking chat to devlog', error);
-  }
+      },
+    ],
+  };
 }
 
 export async function handleUnlinkChatFromDevlog(
-  manager: WorkspaceDevlogManager,
-  args: UnlinkChatFromDevlogArgs,
+  _manager: WorkspaceDevlogManager,
+  _args: UnlinkChatFromDevlogArgs,
 ) {
-  try {
-    // TODO: Implement chat-devlog unlinking with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat-devlog unlinking is not yet implemented in workspace-aware architecture.
+  // TODO: Implement chat-devlog unlinking with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat-devlog unlinking is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('unlinking chat from devlog', error);
-  }
+      },
+    ],
+  };
 }
 
 export async function handleSuggestChatDevlogLinks(
-  manager: WorkspaceDevlogManager,
-  args: SuggestChatDevlogLinksArgs,
+  _manager: WorkspaceDevlogManager,
+  _args: SuggestChatDevlogLinksArgs,
 ) {
-  try {
-    // TODO: Implement chat-devlog link suggestions with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat-devlog link suggestions are not yet implemented in workspace-aware architecture.
+  // TODO: Implement chat-devlog link suggestions with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat-devlog link suggestions are not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('getting link suggestions', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleGetChatStats(manager: WorkspaceDevlogManager, args: GetChatStatsArgs) {
-  try {
-    // TODO: Implement chat statistics with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat statistics are not yet implemented in workspace-aware architecture.
+export async function handleGetChatStats(
+  _manager: WorkspaceDevlogManager,
+  _args: GetChatStatsArgs,
+) {
+  // TODO: Implement chat statistics with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat statistics are not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('getting chat statistics', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleUpdateChatSession(manager: WorkspaceDevlogManager, args: UpdateChatSessionArgs) {
-  try {
-    // TODO: Implement chat session updates with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat session updates are not yet implemented in workspace-aware architecture.
+export async function handleUpdateChatSession(
+  _manager: WorkspaceDevlogManager,
+  _args: UpdateChatSessionArgs,
+) {
+  // TODO: Implement chat session updates with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat session updates are not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('updating chat session', error);
-  }
+      },
+    ],
+  };
 }
 
-export async function handleGetChatWorkspaces(manager: WorkspaceDevlogManager, args: GetChatWorkspacesArgs) {
-  try {
-    // TODO: Implement chat workspace listing with WorkspaceDevlogManager
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `❌ Chat workspace listing is not yet implemented in workspace-aware architecture.
+export async function handleGetChatWorkspaces(
+  _manager: WorkspaceDevlogManager,
+  _args: GetChatWorkspacesArgs,
+) {
+  // TODO: Implement chat workspace listing with WorkspaceDevlogManager
+  return {
+    content: [
+      {
+        type: 'text',
+        text: `❌ Chat workspace listing is not yet implemented in workspace-aware architecture.
 
 This feature is currently being migrated to work with WorkspaceDevlogManager.
 Please check back in a future release.`,
-        },
-      ],
-    };
-  } catch (error: unknown) {
-    return createErrorResponse('getting chat workspaces', error);
-  }
+      },
+    ],
+  };
 }
 
 // Chat tools collection

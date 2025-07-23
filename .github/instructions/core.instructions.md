@@ -6,6 +6,45 @@ applyTo: 'packages/core/src/**/*.ts'
 
 ## 🏗️ Architecture Requirements
 
+### **⚠️ AUTOMATIC MIGRATION DETECTION**
+**When editing these file patterns, ALWAYS check for cross-package impacts:**
+
+#### **High-Impact Files (Require Migration Analysis)**
+- `**/managers/**/*.ts` - Manager class changes affect MCP and Web packages
+- `**/types/index.ts` - Type exports used across all packages
+- `**/storage/index.ts` - Storage interfaces used by MCP and Web
+- `**/events/**/*.ts` - Event definitions affect MCP and Web integration
+- `**/services/**/*.ts` - Service classes used by MCP tools
+
+#### **Automatic Migration Triggers**
+🚨 **BEFORE making changes to:**
+- **Manager classes** → Check MCP adapter, Web contexts, API routes
+- **Storage interfaces** → Check MCP tools, Web API endpoints  
+- **Type definitions** → Search for imports across all packages
+- **Event interfaces** → Check MCP event handling, Web SSE
+- **Service classes** → Check MCP tool integration, Web services
+
+#### **Migration Detection Commands**
+```bash
+# Always run before modifying core architecture:
+grep -r "YourClassName" packages/ --include="*.ts" --include="*.tsx"
+grep -r "YourInterfaceName" packages/ --include="*.ts" --include="*.tsx"
+```
+
+### **Migration Impact Awareness**
+⚠️ **When making core architecture changes:**
+1. **Document breaking changes** clearly in devlog entries
+2. **Identify affected packages** - MCP, Web, AI dependencies
+3. **Provide migration guidance** for dependent packages
+4. **Update cross-package examples** in instruction files
+5. **Test integration points** after changes
+
+### **Core-to-Package Impact Map:**
+- **Manager class changes** → MCP adapter, Web contexts, API routes
+- **Storage interface changes** → MCP tools, Web API endpoints
+- **Type/Event changes** → All packages importing core types
+- **Service class changes** → MCP integration, Web service layer
+
 ### Workspace Architecture Pattern
 - **Use WorkspaceDevlogManager** for all new development (preferred)
 - **DevlogManager is deprecated** - legacy support only

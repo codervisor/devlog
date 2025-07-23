@@ -16,6 +16,16 @@ module.exports = [
         sourceType: 'module',
         // Remove project reference to avoid empty files issue
       },
+      globals: {
+        // Node.js globals
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'writable',
+        NodeJS: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': tseslint,

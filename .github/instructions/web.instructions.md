@@ -40,6 +40,38 @@ import Link from 'next/link';
 
 ## ⚛️ Next.js App Router Architecture
 
+### **⚠️ AUTOMATIC MIGRATION DETECTION**
+**When editing Web package files, auto-detect core dependency changes:**
+
+#### **Implicit Migration Triggers**
+- **Import errors from @devlog/core** → Core API likely changed
+- **Type errors in API routes** → Core types may have been updated
+- **Context provider errors** → Core manager interfaces changed
+- **SSE event issues** → Core event system updated
+
+#### **Auto-Check Before Web Changes**
+```bash
+# Check if core types are still compatible:
+pnpm --filter @devlog/web build:test
+
+# Search for core imports that might be affected:
+grep -r "@devlog/core" packages/web/app/ --include="*.ts" --include="*.tsx"
+```
+
+### **Migration Awareness for Web Package**
+⚠️ **When @devlog/core architecture changes:**
+1. **Update API routes** in `app/api/` directory
+2. **Update React contexts** for new manager/service patterns
+3. **Update component integration** with core types and methods
+4. **Verify SSE events** and real-time features work with changes
+5. **Test user workflows** end-to-end after core updates
+
+### **Common Migration Points:**
+- **Manager class changes** → Update contexts, API routes, service layer
+- **Core API changes** → Update data fetching and state management
+- **Type/interface changes** → Update component props and API responses
+- **Storage provider changes** → Update API endpoints and configuration
+
 ### Directory Structure Standards
 ```
 app/

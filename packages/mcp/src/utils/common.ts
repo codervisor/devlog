@@ -46,7 +46,8 @@ export function createSuccessResponse(message: string): CallToolResult {
 export async function wrapToolExecution<T>(
   operation: () => Promise<T>,
   operationName: string,
-  successFormatter: (result: T) => string
+  // eslint-disable-next-line no-unused-vars
+  successFormatter: (result: T) => string,
 ): Promise<CallToolResult> {
   try {
     const result = await operation();
@@ -62,7 +63,7 @@ export async function wrapToolExecution<T>(
 export function validateRequiredParams(
   params: Record<string, unknown>,
   requiredFields: string[],
-  toolName: string
+  toolName: string,
 ): void {
   for (const field of requiredFields) {
     if (!(field in params) || params[field] === undefined || params[field] === null) {
@@ -74,35 +75,35 @@ export function validateRequiredParams(
 /**
  * Format object for display in MCP tool responses
  */
-export function formatObjectForDisplay(obj: any, indentLevel = 0): string {
+export function formatObjectForDisplay(obj: unknown, indentLevel = 0): string {
   if (obj === null || obj === undefined) {
     return 'null';
   }
-  
+
   if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
     return String(obj);
   }
-  
+
   if (Array.isArray(obj)) {
     if (obj.length === 0) return '[]';
     const indent = '  '.repeat(indentLevel);
-    const items = obj.map(item => 
-      `${indent}  - ${formatObjectForDisplay(item, indentLevel + 1)}`
-    ).join('\n');
+    const items = obj
+      .map((item) => `${indent}  - ${formatObjectForDisplay(item, indentLevel + 1)}`)
+      .join('\n');
     return `\n${items}`;
   }
-  
+
   if (typeof obj === 'object') {
     const entries = Object.entries(obj);
     if (entries.length === 0) return '{}';
-    
+
     const indent = '  '.repeat(indentLevel);
-    const props = entries.map(([key, value]) => 
-      `${indent}  ${key}: ${formatObjectForDisplay(value, indentLevel + 1)}`
-    ).join('\n');
+    const props = entries
+      .map(([key, value]) => `${indent}  ${key}: ${formatObjectForDisplay(value, indentLevel + 1)}`)
+      .join('\n');
     return `\n${props}`;
   }
-  
+
   return String(obj);
 }
 
