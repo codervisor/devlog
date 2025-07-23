@@ -1,0 +1,17 @@
+{
+  "id": 220,
+  "title": "Fix Non-Workspace-Aware APIs in MCP Adapter",
+  "type": "bugfix",
+  "description": "Several MCP adapter methods are using the old DevlogManager instead of WorkspaceDevlogManager, making them non-workspace-aware. This affects operations like addDevlogNote, completeDevlog, closeDevlog, archiveDevlog, unarchiveDevlog, getContextForAI, updateAIContext, discoverRelatedDevlogs, and updateDevlogWithNote.",
+  "businessContext": "These non-workspace-aware operations can cause data corruption by operating on the wrong workspace, making the MCP server unreliable for multi-workspace environments.",
+  "technicalContext": "The adapter maintains both a WorkspaceDevlogManager and a separate DevlogManager, but many methods incorrectly use the non-workspace-aware DevlogManager instead of routing through the WorkspaceDevlogManager.",
+  "priority": "high",
+  "acceptanceCriteria": [
+    "All MCP adapter methods use workspace-aware operations",
+    "No direct DevlogManager usage for workspace-scoped operations",
+    "Consistent workspace switching before operations",
+    "All operations respect current workspace context"
+  ],
+  "createdAt": "2025-07-23T08:37:24.603Z",
+  "updatedAt": "2025-07-23T08:37:24.603Z"
+}

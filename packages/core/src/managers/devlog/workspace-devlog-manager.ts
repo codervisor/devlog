@@ -8,9 +8,12 @@ import { homedir } from 'os';
 import type {
   DevlogEntry,
   DevlogFilter,
+  DevlogStats,
   PaginatedResult,
   StorageConfig,
   StorageProvider,
+  TimeSeriesRequest,
+  TimeSeriesStats,
   WorkspaceContext,
   WorkspaceMetadata,
 } from '../../types/index.js';
@@ -318,6 +321,22 @@ export class WorkspaceDevlogManager {
     const provider = await this.getWorkspaceStorageProvider(workspaceId);
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
     return provider.get(numericId);
+  }
+
+  /**
+   * Get devlog statistics for current workspace
+   */
+  async getStats(): Promise<DevlogStats> {
+    const provider = await this.getCurrentStorageProvider();
+    return provider.getStats();
+  }
+
+  /**
+   * Get time series statistics for dashboard charts from current workspace
+   */
+  async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
+    const provider = await this.getCurrentStorageProvider();
+    return provider.getTimeSeriesStats(request);
   }
 
   /**

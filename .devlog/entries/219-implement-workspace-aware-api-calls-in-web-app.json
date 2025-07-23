@@ -15,6 +15,7 @@
     "No data leakage between workspaces in the UI"
   ],
   "createdAt": "2025-07-23T08:16:36.160Z",
-  "updatedAt": "2025-07-23T08:21:39.019Z",
-  "status": "in-progress"
+  "updatedAt": "2025-07-23T08:48:34.511Z",
+  "status": "done",
+  "closedAt": "2025-07-23T08:48:23.527Z"
 }

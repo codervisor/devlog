@@ -166,10 +166,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   }, [queryString, currentWorkspace]);
 
   const fetchStats = useCallback(async () => {
+    // Don't fetch if no current workspace is available
+    if (!currentWorkspace) {
+      setStatsLoading(false);
+      return;
+    }
+
     try {
       setStatsLoading(true);
       setStatsError(null);
-      const response = await fetch('/api/devlogs/stats/overview');
+      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/overview`);
       if (response.ok) {
         const statsData = await response.json();
         setStats(statsData);
@@ -183,13 +189,19 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [currentWorkspace]);
 
   const fetchTimeSeriesStats = useCallback(async () => {
+    // Don't fetch if no current workspace is available
+    if (!currentWorkspace) {
+      setTimeSeriesLoading(false);
+      return;
+    }
+
     try {
       setTimeSeriesLoading(true);
       setTimeSeriesError(null);
-      const response = await fetch('/api/devlogs/stats/timeseries?days=30');
+      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/timeseries?days=30`);
       if (response.ok) {
         const timeSeriesData = await response.json();
         setTimeSeriesStats(timeSeriesData);
@@ -203,7 +215,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setTimeSeriesLoading(false);
     }
-  }, []);
+  }, [currentWorkspace]);
 
   // Client-side filtered devlogs
   const filteredDevlogs = useMemo(() => {
@@ -257,7 +269,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
-    const response = await fetch('/api/devlogs', {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -273,7 +289,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    const response = await fetch(`/api/devlogs/${data.id}`, {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -289,7 +309,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteDevlog = async (id: DevlogId) => {
-    const response = await fetch(`/api/devlogs/${id}`, {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`, {
       method: 'DELETE',
     });
 
@@ -300,7 +324,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // Batch operations
   const batchUpdate = async (ids: DevlogId[], updates: any) => {
-    const response = await fetch('/api/devlogs/batch/update', {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -317,7 +345,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
-    const response = await fetch('/api/devlogs/batch/delete', {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -333,7 +365,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
-    const response = await fetch('/api/devlogs/batch/note', {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/note`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -396,21 +432,21 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     fetchDevlogs();
   }, [fetchDevlogs]);
 
-  // Fetch stats only once
+  // Fetch stats when workspace changes
   useEffect(() => {
-    if (!hasStatsFetched.current) {
+    if (currentWorkspace) {
       fetchStats();
       hasStatsFetched.current = true;
     }
-  }, [fetchStats]);
+  }, [fetchStats, currentWorkspace]);
 
-  // Fetch time series stats only once
+  // Fetch time series stats when workspace changes
   useEffect(() => {
-    if (!hasTimeSeriesFetched.current) {
+    if (currentWorkspace) {
       fetchTimeSeriesStats();
       hasTimeSeriesFetched.current = true;
     }
-  }, [fetchTimeSeriesStats]);
+  }, [fetchTimeSeriesStats, currentWorkspace]);
 
   // Set up real-time event listeners
   useEffect(() => {
