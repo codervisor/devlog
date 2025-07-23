@@ -31,31 +31,29 @@ pnpm build
 pnpm start
 ```
 
-## Architecture
-
-The web package consists of two main parts:
-
-### Client (React App)
-
-- Built with React 18 and TypeScript
-- Styled with Tailwind CSS
-- Bundled with Vite for fast development
-
-### Server (Express API)
-
-- RESTful API built with Express.js
-- WebSocket support for real-time updates
-- Integrates with `@devlog/core` for data management
-
 ## API Endpoints
 
-- `GET /api/devlogs` - List all devlogs
-- `POST /api/devlogs` - Create a new devlog
-- `GET /api/devlogs/:id` - Get devlog by ID
-- `PUT /api/devlogs/:id` - Update devlog
-- `DELETE /api/devlogs/:id` - Delete devlog
-- `GET /api/devlogs/stats/overview` - Get overview statistics
-- `POST /api/devlogs/:id/notes` - Add note to devlog
+### Workspace Management
+- `GET /api/workspaces` - List all workspaces
+- `GET /api/workspaces/:id` - Get workspace details
+- `PUT /api/workspaces/:id` - Update workspace configuration
+- `POST /api/workspaces/:id/switch` - Switch to workspace
+
+### Devlog Management (Workspace-Scoped)
+- `GET /api/workspaces/:id/devlogs` - List devlogs in workspace
+- `POST /api/workspaces/:id/devlogs` - Create devlog in workspace
+- `GET /api/workspaces/:id/devlogs/:devlogId` - Get devlog by ID from workspace
+- `PUT /api/workspaces/:id/devlogs/:devlogId` - Update devlog in workspace
+- `DELETE /api/workspaces/:id/devlogs/:devlogId` - Delete devlog from workspace
+
+### Statistics (Workspace-Scoped)
+- `GET /api/workspaces/:id/devlogs/stats/overview` - Get overview statistics for workspace
+- `GET /api/workspaces/:id/devlogs/stats/timeseries` - Get time series data for workspace
+
+### Batch Operations (Workspace-Scoped)
+- `POST /api/workspaces/:id/devlogs/batch/update` - Batch update devlogs in workspace
+- `POST /api/workspaces/:id/devlogs/batch/delete` - Batch delete devlogs in workspace
+- `POST /api/workspaces/:id/devlogs/batch/note` - Batch add notes to devlogs in workspace
 
 ## Server-Sent Events (SSE)
 
@@ -85,11 +83,6 @@ function MyComponent() {
   return <div>Connected: {connected}</div>;
 }
 ```
-
-## Environment Variables
-
-- `PORT` - Server port (default: 3001)
-- `NODE_ENV` - Environment (development/production)
 
 ## Development Guidelines
 

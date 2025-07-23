@@ -4,10 +4,10 @@
   "title": "Fix chat-tools.ts integration with WorkspaceDevlogManager",
   "type": "bugfix",
   "description": "Fix the chat-tools.ts integration with WorkspaceDevlogManager. The chat functionality exists in the core package but isn't properly exposed through the workspace manager layer. Need to either integrate chat methods into WorkspaceDevlogManager or create a different architecture for chat tools.",
-  "status": "in-progress",
+  "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-23T09:30:45.124Z",
-  "updatedAt": "2025-07-23T09:34:55.509Z",
+  "updatedAt": "2025-07-23T09:55:14.965Z",
   "notes": [
     {
       "id": "65aaa06d-5934-4d30-8be2-6a9f904909b8",

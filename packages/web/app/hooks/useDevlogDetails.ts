@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { DevlogEntry, DevlogId } from '@devlog/core';
 import { useServerSentEvents } from './useServerSentEvents';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface UseDevlogDetailsResult {
   devlog: DevlogEntry | null;
@@ -16,6 +17,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
+  const { currentWorkspace } = useWorkspace();
 
   const devlogId = typeof id === 'string' ? parseInt(id, 10) : id;
 
@@ -26,11 +28,17 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       return;
     }
 
+    if (!currentWorkspace) {
+      setError('No workspace selected');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/devlogs/${devlogId}`);
+      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${devlogId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -48,7 +56,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     } finally {
       setLoading(false);
     }
-  }, [devlogId]);
+  }, [devlogId, currentWorkspace]);
 
   // Set up real-time event listeners for this specific devlog
   useEffect(() => {
@@ -82,7 +90,11 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
 
   // CRUD operations for this specific devlog
   const updateDevlog = useCallback(async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    const response = await fetch(`/api/devlogs/${data.id}`, {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -97,10 +109,14 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     const updatedDevlog = await response.json();
     setDevlog(updatedDevlog);
     return updatedDevlog;
-  }, []);
+  }, [currentWorkspace]);
 
   const deleteDevlog = useCallback(async (id: DevlogId) => {
-    const response = await fetch(`/api/devlogs/${id}`, {
+    if (!currentWorkspace) {
+      throw new Error('No workspace selected');
+    }
+
+    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`, {
       method: 'DELETE',
     });
 
@@ -109,7 +125,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     }
 
     setDevlog(null);
-  }, []);
+  }, [currentWorkspace]);
 
   return {
     devlog,
