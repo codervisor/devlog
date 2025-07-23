@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { MCPDevlogAdapter } from '../mcp-adapter';
+import { MCPDevlogAdapter } from '../mcp-adapter.js';
 import { WorkspaceDevlogManager } from '@devlog/core';
+import { allTools } from '../tools/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -144,6 +145,72 @@ describe('MCP Server Integration', () => {
       expect(result.content).toBeDefined();
       expect(Array.isArray(result.content)).toBe(true);
     } finally {
+      await adapter.dispose();
+    }
+  });
+
+  it('should validate all tools are properly defined', () => {
+    expect(allTools).toBeDefined();
+    expect(Array.isArray(allTools)).toBe(true);
+    expect(allTools.length).toBeGreaterThan(0);
+
+    // Verify each tool has required properties
+    allTools.forEach((tool, index) => {
+      expect(tool.name, `Tool at index ${index} should have a name`).toBeDefined();
+      expect(tool.description, `Tool ${tool.name} should have a description`).toBeDefined();
+      expect(tool.inputSchema, `Tool ${tool.name} should have an input schema`).toBeDefined();
+      expect(tool.inputSchema.type, `Tool ${tool.name} input schema should have a type`).toBe('object');
+    });
+  });
+
+  it('should handle workspace operations', async () => {
+    const adapter = new MCPDevlogAdapter();
+
+    try {
+      // Test getting current workspace ID
+      const currentWorkspaceId = adapter.getCurrentWorkspaceId();
+      expect(currentWorkspaceId).toBeDefined();
+      expect(typeof currentWorkspaceId).toBe('string');
+
+      // Test workspace manager functionality through adapter
+      const workspacesList = await adapter.manager.listWorkspaces();
+      expect(workspacesList).toBeDefined();
+      expect(Array.isArray(workspacesList)).toBe(true);
+
+      // Test setting workspace ID
+      const testWorkspaceId = 'test-workspace';
+      adapter.setCurrentWorkspaceId(testWorkspaceId);
+      expect(adapter.getCurrentWorkspaceId()).toBe(testWorkspaceId);
+    } finally {
+      await adapter.dispose();
+    }
+  });
+
+  it('should handle search operations', async () => {
+    const adapter = new MCPDevlogAdapter();
+    const workspaceManager = new WorkspaceDevlogManager({
+      fallbackToEnvConfig: true,
+      createWorkspaceConfigIfMissing: true,
+    });
+
+    try {
+      await workspaceManager.initialize();
+
+      // Create test entries for search
+      const testEntry = await workspaceManager.createDevlog({
+        title: 'Search Test Entry',
+        type: 'task',
+        description: 'Test entry for search functionality testing',
+        businessContext: 'Search testing context',
+        technicalContext: 'Search implementation validation',
+      });
+
+      // Test search functionality through adapter
+      const searchResult = await adapter.searchDevlogs({ query: 'Search Test' });
+      expect(searchResult).toBeDefined();
+      expect(searchResult.content).toBeDefined();
+    } finally {
+      await workspaceManager.cleanup();
       await adapter.dispose();
     }
   });
