@@ -6,11 +6,11 @@
 import { broadcastUpdate } from './sse-manager';
 
 // Types only - won't be bundled at runtime
-import type { DevlogManager, DevlogEvent } from '@devlog/core';
+import type { WorkspaceDevlogManager, DevlogEvent } from '@devlog/core';
 
 class SSEEventBridge {
   private initialized = false;
-  private devlogManager?: DevlogManager;
+  private workspaceManager?: WorkspaceDevlogManager;
 
   /**
    * Initialize the bridge to start listening to devlog events
@@ -23,11 +23,14 @@ class SSEEventBridge {
 
     try {
       // Dynamically import to avoid bundling TypeORM in client-side code
-      const { DevlogManager, devlogEvents } = await import('@devlog/core');
+      const { WorkspaceDevlogManager, devlogEvents } = await import('@devlog/core');
 
-      // Create and initialize DevlogManager for the web process
-      this.devlogManager = new DevlogManager();
-      await this.devlogManager.initialize();
+      // Create and initialize WorkspaceDevlogManager for the web process
+      this.workspaceManager = new WorkspaceDevlogManager({
+        fallbackToEnvConfig: true,
+        createWorkspaceConfigIfMissing: true,
+      });
+      await this.workspaceManager.initialize();
 
       // Listen to local devlog events (which now include storage events via subscription)
       devlogEvents.on('created', this.handleDevlogCreated.bind(this));
@@ -90,10 +93,10 @@ class SSEEventBridge {
    */
   async cleanup(): Promise<void> {
     if (this.initialized) {
-      // Cleanup DevlogManager (which will unsubscribe from storage events)
-      if (this.devlogManager) {
-        await this.devlogManager.dispose();
-        this.devlogManager = undefined;
+      // Cleanup WorkspaceDevlogManager
+      if (this.workspaceManager) {
+        await this.workspaceManager.cleanup();
+        this.workspaceManager = undefined;
       }
 
       this.initialized = false;

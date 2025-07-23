@@ -3,7 +3,7 @@
  */
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { DevlogManager, ImportChatHistoryRequest } from '@devlog/core';
+import { WorkspaceDevlogManager, ImportChatHistoryRequest } from '@devlog/core';
 import { createErrorResponse } from '../utils/common.js';
 
 // Export MCP Tool argument interfaces for better type safety
@@ -517,41 +517,17 @@ export const getChatWorkspacesTool: Tool = {
 };
 
 // Tool implementations
-export async function handleImportChatHistory(manager: DevlogManager, args: ImportChatHistoryArgs) {
+export async function handleImportChatHistory(manager: WorkspaceDevlogManager, args: ImportChatHistoryArgs) {
   try {
-    const config: ImportChatHistoryRequest['config'] = {
-      source: args.source || 'codehist',
-      sourceConfig: {
-        background: args.background !== false,
-      },
-      autoLink: args.autoLink !== false,
-      autoLinkThreshold: args.autoLinkThreshold || 0.8,
-      includeArchived: args.includeArchived || false,
-      dateRange:
-        args.dateRange && args.dateRange.from && args.dateRange.to
-          ? { from: args.dateRange.from, to: args.dateRange.to }
-          : undefined,
-      workspaceFilter: args.workspaceFilter,
-      overwriteExisting: args.overwriteExisting || false,
-    };
-
-    // Get the chat import service
-    const chatService = manager.getChatImportService();
-    const progress = await chatService.importFromCodehist(config);
-
+    // TODO: Implement chat import service integration with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `Chat history import started successfully.
+          text: `❌ Chat history import is not yet implemented in workspace-aware architecture.
 
-Import ID: ${progress.importId}
-Status: ${progress.status}
-Source: ${progress.source}
-Background: ${config.sourceConfig.background}
-Auto-linking: ${config.autoLink} (threshold: ${config.autoLinkThreshold})
-
-The import is running in the background. Use the import ID to check progress.`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -560,52 +536,17 @@ The import is running in the background. Use the import ID to check progress.`,
   }
 }
 
-export async function handleGetChatSession(manager: DevlogManager, args: GetChatSessionArgs) {
+export async function handleGetChatSession(manager: WorkspaceDevlogManager, args: GetChatSessionArgs) {
   try {
-    const sessionId = args.sessionId;
-    const session = await manager.getChatSession(sessionId);
-
-    if (!session) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Chat session not found: ${sessionId}`,
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    let messages: unknown[] = [];
-    if (args.includeMessages !== false) {
-      messages = await manager.getChatMessages(sessionId, 0, args.messageLimit || 100);
-    }
-
+    // TODO: Implement chat session retrieval with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat Session: ${session.title || session.id}
+          text: `❌ Chat session retrieval is not yet implemented in workspace-aware architecture.
 
-**Agent:** ${session.agent}
-**Timestamp:** ${session.timestamp}
-**Workspace:** ${session.workspace || 'Unknown'}
-**Status:** ${session.status}
-**Message Count:** ${session.messageCount}
-**Linked Devlogs:** ${session.linkedDevlogs.length}
-**Tags:** ${session.tags.join(', ') || 'None'}
-
-${
-  messages.length > 0
-    ? `\n### Messages (${messages.length}):\n\n${messages
-        .map(
-          (msg: any, i: number) =>
-            `**${i + 1}. ${msg.role.toUpperCase()}** (${msg.timestamp}):\n${msg.content}\n`,
-        )
-        .join('\n')}`
-    : ''
-}`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -614,57 +555,17 @@ ${
   }
 }
 
-export async function handleListChatSessions(manager: DevlogManager, args: ListChatSessionsArgs) {
+export async function handleListChatSessions(manager: WorkspaceDevlogManager, args: ListChatSessionsArgs) {
   try {
-    const filter = {
-      agent: args.agent,
-      status: args.status,
-      workspace: args.workspace,
-      linkedDevlog: args.linkedDevlog,
-      fromDate: args.fromDate,
-      toDate: args.toDate,
-      includeArchived: args.includeArchived || false,
-      minMessages: args.minMessages,
-      maxMessages: args.maxMessages,
-    };
-
-    const sessions = await manager.listChatSessions(filter, args.offset || 0, args.limit || 20);
-
-    if (sessions.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'No chat sessions found matching the specified criteria.',
-          },
-        ],
-      };
-    }
-
-    const sessionsText = sessions
-      .map(
-        (session, i) =>
-          `**${i + 1}. ${session.title || session.id}**
-Agent: ${session.agent}
-Workspace: ${session.workspace || 'Unknown'}
-Messages: ${session.messageCount}
-Status: ${session.status}
-Timestamp: ${session.timestamp}
-Linked Devlogs: ${session.linkedDevlogs.length}
-${session.archived ? '📁 *Archived*' : ''}
-`,
-      )
-      .join('\n');
-
+    // TODO: Implement chat session listing with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat Sessions (${sessions.length} found)
+          text: `❌ Chat session listing is not yet implemented in workspace-aware architecture.
 
-${sessionsText}
-
-*Showing ${args.offset || 0 + 1}-${Math.min((args.offset || 0) + sessions.length, (args.offset || 0) + (args.limit || 20))} of available sessions*`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -673,54 +574,17 @@ ${sessionsText}
   }
 }
 
-export async function handleSearchChatContent(manager: DevlogManager, args: SearchChatContentArgs) {
+export async function handleSearchChatContent(manager: WorkspaceDevlogManager, args: SearchChatContentArgs) {
   try {
-    const query = args.query;
-    const filter = {
-      agent: args.agent,
-      workspace: args.workspace,
-      includeArchived: args.includeArchived || false,
-    };
-
-    const results = await manager.searchChatContent(query, filter, args.limit || 50);
-
-    if (results.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `No chat content found matching "${query}".`,
-          },
-        ],
-      };
-    }
-
-    const resultsText = results
-      .map((result, i) => {
-        const session = result.session;
-        const messageMatches = result.messages
-          .map((msgResult: any) => `    • **${msgResult.message.role}**: ${msgResult.context}`)
-          .join('\n');
-
-        return `**${i + 1}. ${session.title || session.id}** (Score: ${result.relevance.toFixed(2)})
-Workspace: ${session.workspace || 'Unknown'}
-Agent: ${session.agent}
-Matches: ${result.messages.length}
-
-${messageMatches}
-`;
-      })
-      .join('\n');
-
+    // TODO: Implement chat content search with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat Search Results for "${query}"
+          text: `❌ Chat content search is not yet implemented in workspace-aware architecture.
 
-Found ${results.length} sessions with matching content:
-
-${resultsText}`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -729,68 +593,17 @@ ${resultsText}`,
   }
 }
 
-export async function handleLinkChatToDevlog(manager: DevlogManager, args: LinkChatToDevlogArgs) {
+export async function handleLinkChatToDevlog(manager: WorkspaceDevlogManager, args: LinkChatToDevlogArgs) {
   try {
-    const sessionId = args.sessionId;
-    const devlogId = args.devlogId;
-
-    // Verify session and devlog exist
-    const session = await manager.getChatSession(sessionId);
-    if (!session) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Chat session not found: ${sessionId}`,
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    const devlog = await manager.getDevlog(devlogId);
-    if (!devlog) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Devlog entry not found: ${devlogId}`,
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    // Create the link
-    const link = {
-      sessionId,
-      devlogId,
-      confidence: 1.0, // Manual links get full confidence
-      reason: 'manual' as const,
-      evidence: {
-        manual: {
-          notes: args.notes || 'Manually linked by user',
-        },
-      },
-      confirmed: true,
-      createdAt: new Date().toISOString(),
-      createdBy: 'user',
-    };
-
-    await manager.saveChatDevlogLink(link);
-
+    // TODO: Implement chat-devlog linking with WorkspaceDevlogManager  
     return {
       content: [
         {
           type: 'text',
-          text: `✅ Successfully linked chat session to devlog entry:
+          text: `❌ Chat-devlog linking is not yet implemented in workspace-aware architecture.
 
-**Chat Session:** ${session.title || sessionId}
-**Devlog Entry:** #${devlogId} - ${devlog.title}
-**Workspace:** ${session.workspace || 'Unknown'}
-**Notes:** ${args.notes || 'Manually linked by user'}
-
-The link has been confirmed and saved.`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -800,17 +613,19 @@ The link has been confirmed and saved.`,
 }
 
 export async function handleUnlinkChatFromDevlog(
-  manager: DevlogManager,
+  manager: WorkspaceDevlogManager,
   args: UnlinkChatFromDevlogArgs,
 ) {
   try {
-    await manager.removeChatDevlogLink(args.sessionId, args.devlogId);
-
+    // TODO: Implement chat-devlog unlinking with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `✅ Successfully removed link between chat session ${args.sessionId} and devlog entry #${args.devlogId}.`,
+          text: `❌ Chat-devlog unlinking is not yet implemented in workspace-aware architecture.
+
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -820,51 +635,19 @@ export async function handleUnlinkChatFromDevlog(
 }
 
 export async function handleSuggestChatDevlogLinks(
-  manager: DevlogManager,
+  manager: WorkspaceDevlogManager,
   args: SuggestChatDevlogLinksArgs,
 ) {
   try {
-    const chatService = manager.getChatImportService();
-    const suggestions = await chatService.suggestChatDevlogLinks(
-      args.sessionId,
-      args.minConfidence || 0.5,
-    );
-
-    if (suggestions.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `No link suggestions found with confidence >= ${args.minConfidence || 0.5}.`,
-          },
-        ],
-      };
-    }
-
-    const limited = suggestions.slice(0, args.limit || 10);
-    const suggestionsText = limited
-      .map((suggestion: any, i: number) => {
-        const confidence = (suggestion.confidence * 100).toFixed(1);
-        return `**${i + 1}. Session ${suggestion.sessionId} ↔ Devlog #${suggestion.devlogId}**
-Confidence: ${confidence}%
-Reason: ${suggestion.reason}
-Created: ${suggestion.createdAt}
-Confirmed: ${suggestion.confirmed ? '✅' : '❓'}
-`;
-      })
-      .join('\n');
-
+    // TODO: Implement chat-devlog link suggestions with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat-Devlog Link Suggestions
+          text: `❌ Chat-devlog link suggestions are not yet implemented in workspace-aware architecture.
 
-Found ${suggestions.length} potential links (showing top ${limited.length}):
-
-${suggestionsText}
-
-Use \`link_chat_to_devlog\` to confirm any of these suggestions.`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -873,59 +656,17 @@ Use \`link_chat_to_devlog\` to confirm any of these suggestions.`,
   }
 }
 
-export async function handleGetChatStats(manager: DevlogManager, args: GetChatStatsArgs) {
+export async function handleGetChatStats(manager: WorkspaceDevlogManager, args: GetChatStatsArgs) {
   try {
-    const filter = {
-      agent: args.agent,
-      workspace: args.workspace,
-      fromDate: args.fromDate,
-      toDate: args.toDate,
-    };
-
-    const stats = await manager.getChatStats(filter);
-
-    const agentStats = Object.entries(stats.byAgent)
-      .filter(([_, count]) => count > 0)
-      .map(([agent, count]) => `  • ${agent}: ${count}`)
-      .join('\n');
-
-    const statusStats = Object.entries(stats.byStatus)
-      .filter(([_, count]) => count > 0)
-      .map(([status, count]) => `  • ${status}: ${count}`)
-      .join('\n');
-
-    const workspaceStats = Object.entries(stats.byWorkspace)
-      .slice(0, 10) // Top 10 workspaces
-      .map(
-        ([workspace, data]) =>
-          `  • ${workspace}: ${data.sessions} sessions, ${data.messages} messages`,
-      )
-      .join('\n');
-
+    // TODO: Implement chat statistics with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat Statistics
+          text: `❌ Chat statistics are not yet implemented in workspace-aware architecture.
 
-### Overview
-• **Total Sessions:** ${stats.totalSessions}
-• **Total Messages:** ${stats.totalMessages}
-• **Date Range:** ${stats.dateRange.earliest || 'N/A'} to ${stats.dateRange.latest || 'N/A'}
-
-### By Agent
-${agentStats || '  No agent data available'}
-
-### By Status  
-${statusStats || '  No status data available'}
-
-### Linking Statistics
-• **Linked Sessions:** ${stats.linkageStats.linked}
-• **Unlinked Sessions:** ${stats.linkageStats.unlinked}
-• **Multi-linked Sessions:** ${stats.linkageStats.multiLinked}
-
-### Top Workspaces
-${workspaceStats || '  No workspace data available'}`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -934,30 +675,17 @@ ${workspaceStats || '  No workspace data available'}`,
   }
 }
 
-export async function handleUpdateChatSession(manager: DevlogManager, args: UpdateChatSessionArgs) {
+export async function handleUpdateChatSession(manager: WorkspaceDevlogManager, args: UpdateChatSessionArgs) {
   try {
-    const updates = {
-      title: args.title,
-      status: args.status,
-      tags: args.tags,
-      archived: args.archived,
-      workspace: args.workspace,
-    };
-
-    await manager.updateChatSession(args.sessionId, updates);
-
-    const updatesList = Object.entries(updates)
-      .filter(([_, value]) => value !== undefined)
-      .map(([key, value]) => `• ${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-      .join('\n');
-
+    // TODO: Implement chat session updates with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `✅ Successfully updated chat session ${args.sessionId}:
+          text: `❌ Chat session updates are not yet implemented in workspace-aware architecture.
 
-${updatesList}`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };
@@ -966,47 +694,17 @@ ${updatesList}`,
   }
 }
 
-export async function handleGetChatWorkspaces(manager: DevlogManager, args: GetChatWorkspacesArgs) {
+export async function handleGetChatWorkspaces(manager: WorkspaceDevlogManager, args: GetChatWorkspacesArgs) {
   try {
-    const workspaces = await manager.getChatWorkspaces();
-
-    let filtered = workspaces;
-    if (args.minSessions && args.minSessions > 0) {
-      filtered = workspaces.filter((w) => w.sessionCount >= (args.minSessions || 0));
-    }
-
-    if (filtered.length === 0) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: 'No chat workspaces found matching the criteria.',
-          },
-        ],
-      };
-    }
-
-    const workspacesText = filtered
-      .map(
-        (workspace, i) =>
-          `**${i + 1}. ${workspace.name}**
-Path: ${workspace.path || 'Unknown'}
-Source: ${workspace.source}
-Sessions: ${workspace.sessionCount}
-First Seen: ${workspace.firstSeen}
-Last Seen: ${workspace.lastSeen}
-Devlog Workspace: ${workspace.devlogWorkspace || 'Not mapped'}
-`,
-      )
-      .join('\n');
-
+    // TODO: Implement chat workspace listing with WorkspaceDevlogManager
     return {
       content: [
         {
           type: 'text',
-          text: `## Chat Workspaces (${filtered.length} found)
+          text: `❌ Chat workspace listing is not yet implemented in workspace-aware architecture.
 
-${workspacesText}`,
+This feature is currently being migrated to work with WorkspaceDevlogManager.
+Please check back in a future release.`,
         },
       ],
     };

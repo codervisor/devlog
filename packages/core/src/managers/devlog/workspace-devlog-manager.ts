@@ -7,6 +7,7 @@ import { join } from 'path';
 import { homedir } from 'os';
 import * as crypto from 'crypto';
 import type {
+  CreateDevlogRequest,
   DevlogEntry,
   DevlogFilter,
   DevlogId,
@@ -264,15 +265,45 @@ export class WorkspaceDevlogManager {
     return provider.get(numericId);
   }
 
-  async createDevlog(data: any): Promise<DevlogEntry> {
+  async createDevlog(request: CreateDevlogRequest): Promise<DevlogEntry> {
     const provider = await this.getCurrentStorageProvider();
     const id = await provider.getNextId();
+    
+    // Proper field mapping similar to DevlogManager.createDevlog
+    const now = new Date().toISOString();
     const entry: DevlogEntry = {
       id,
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      key: this.generateKey(request.title),
+      title: request.title,
+      type: request.type,
+      description: request.description,
+      status: 'new',
+      priority: request.priority || 'medium',
+      createdAt: now,
+      updatedAt: now,
+      assignee: request.assignee,
+      notes: [],
+      files: [],
+      relatedDevlogs: [],
+      context: {
+        businessContext: request.businessContext || '',
+        technicalContext: request.technicalContext || '',
+        dependencies: [],
+        decisions: [],
+        acceptanceCriteria: request.acceptanceCriteria || [],
+        risks: [],
+      },
+      aiContext: {
+        currentSummary: '',
+        keyInsights: request.initialInsights || [],
+        openQuestions: [],
+        relatedPatterns: request.relatedPatterns || [],
+        suggestedNextSteps: [],
+        lastAIUpdate: now,
+        contextVersion: 1,
+      },
     };
+    
     await provider.save(entry);
     return entry;
   }
@@ -606,5 +637,16 @@ export class WorkspaceDevlogManager {
       }
     }
     this.storageProviders.clear();
+  }
+
+  /**
+   * Generate a semantic key from title
+   */
+  private generateKey(title: string): string {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 50);
   }
 }

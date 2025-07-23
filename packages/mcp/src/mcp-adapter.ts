@@ -10,7 +10,6 @@ import {
   DevlogConfig,
   DevlogContext,
   DevlogEntry,
-  DevlogManager,
   DevlogStatus,
   DiscoveredDevlogEntry,
   NoteCategory,

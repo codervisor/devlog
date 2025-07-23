@@ -170,11 +170,14 @@ See the [docs/](docs/) directory for comprehensive documentation including techn
 The `@devlog/core` package can be used directly in your applications:
 
 ```typescript
-import { DevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@devlog/core';
 
-const devlog = new DevlogManager({
-  workspaceRoot: '/path/to/your/project'
+const devlog = new WorkspaceDevlogManager({
+  fallbackToEnvConfig: true,
+  createWorkspaceConfigIfMissing: true,
 });
+
+await devlog.initialize();
 
 // Create and manage development logs programmatically
 const entry = await devlog.createDevlog({

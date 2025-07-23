@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { MCPDevlogAdapter } from '../mcp-adapter';
-import { DevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@devlog/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -82,28 +82,34 @@ describe('MCP Server Integration', () => {
     await adapter.dispose();
   });
 
-  it('should initialize DevlogManager successfully', async () => {
-    const devlogManager = new DevlogManager();
-    await devlogManager.initialize();
-    expect(devlogManager).toBeDefined();
+  it('should initialize WorkspaceDevlogManager successfully', async () => {
+    const workspaceManager = new WorkspaceDevlogManager({
+      fallbackToEnvConfig: true,
+      createWorkspaceConfigIfMissing: true,
+    });
+    await workspaceManager.initialize();
+    expect(workspaceManager).toBeDefined();
 
     // Test basic functionality
-    const result = await devlogManager.listDevlogs({});
+    const result = await workspaceManager.listDevlogs({});
     expect(result).toBeDefined();
     expect(result.items).toBeDefined();
     expect(Array.isArray(result.items)).toBe(true);
 
     // Clean up
-    await devlogManager.dispose();
+    await workspaceManager.cleanup();
   });
 
   it('should perform basic CRUD operations', async () => {
-    const devlogManager = new DevlogManager();
-    await devlogManager.initialize();
+    const workspaceManager = new WorkspaceDevlogManager({
+      fallbackToEnvConfig: true,
+      createWorkspaceConfigIfMissing: true,
+    });
+    await workspaceManager.initialize();
 
     try {
       // Create a test devlog
-      const testDevlog = await devlogManager.createDevlog({
+      const testDevlog = await workspaceManager.createDevlog({
         title: 'Integration Test Entry',
         type: 'task',
         description: 'Test entry created during integration testing',
@@ -117,15 +123,15 @@ describe('MCP Server Integration', () => {
       expect(testDevlog.id).toBeDefined();
 
       // Verify we can read it back using the id
-      const retrieved = await devlogManager.getDevlog(testDevlog.id!);
+      const retrieved = await workspaceManager.getDevlog(testDevlog.id!);
       expect(retrieved).toBeDefined();
       expect(retrieved!.title).toBe('Integration Test Entry');
 
       // Update the devlog
-      const updated = await devlogManager.updateDevlog({ id: testDevlog.id!, status: 'done' });
+      const updated = await workspaceManager.updateDevlog(testDevlog.id!, { status: 'done' });
       expect(updated.status).toBe('done');
     } finally {
-      await devlogManager.dispose();
+      await workspaceManager.cleanup();
     }
   });
 
@@ -157,14 +163,17 @@ describe('MCP Server Integration', () => {
     );
 
     const adapter = new MCPDevlogAdapter();
-    const devlogManager = new DevlogManager();
+    const workspaceManager = new WorkspaceDevlogManager({
+      fallbackToEnvConfig: true,
+      createWorkspaceConfigIfMissing: true,
+    });
 
     try {
       // Initialize everything
-      await devlogManager.initialize();
+      await workspaceManager.initialize();
 
       // Test creation and retrieval
-      const testDevlog = await devlogManager.createDevlog({
+      const testDevlog = await workspaceManager.createDevlog({
         title: 'Comprehensive Integration Test',
         type: 'task',
         description: 'Full workflow test',
@@ -181,7 +190,7 @@ describe('MCP Server Integration', () => {
       // Verify server is functional
       expect(server).toBeDefined();
     } finally {
-      await devlogManager.dispose();
+      await workspaceManager.cleanup();
       await adapter.dispose();
     }
   });

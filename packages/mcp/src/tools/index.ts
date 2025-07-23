@@ -3,7 +3,7 @@ import { coreTools } from './core-tools.js';
 import { searchTools } from './search-tools.js';
 import { progressTools } from './progress-tools.js';
 import { aiContextTools } from './ai-context-tools.js';
-// import { chatTools } from './chat-tools.js'; // Disabled - not implemented yet
+import { chatTools } from './chat-tools.js'; // Re-enabled with stub implementations
 import { workspaceTools } from './workspace-tools.js';
 
 /**
@@ -14,9 +14,9 @@ export const allTools: Tool[] = [
   ...searchTools,
   ...progressTools,
   ...aiContextTools,
-  // ...chatTools, // Disabled - not implemented yet
+  ...chatTools, // Re-enabled with stub implementations
   ...workspaceTools,
 ];
 
 // Re-export individual tool groups for specific use cases
-export { coreTools, searchTools, progressTools, aiContextTools, /* chatTools, */ workspaceTools };
+export { coreTools, searchTools, progressTools, aiContextTools, chatTools, workspaceTools };

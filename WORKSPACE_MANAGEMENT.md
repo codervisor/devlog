@@ -5,7 +5,7 @@ The workspace management system allows users to configure and switch between mul
 ## Key Features
 
 ### 🔧 **Backend Infrastructure**
-- **WorkspaceDevlogManager**: Extends DevlogManager with workspace-aware functionality
+- **WorkspaceDevlogManager**: Workspace-aware devlog management with multi-storage support
 - **Multiple Storage Providers**: JSON, GitHub Issues, PostgreSQL, MySQL, SQLite
 - **Configuration Storage**: Workspace metadata stored in `~/.devlog/workspaces.json`
 - **Fallback Support**: Graceful fallback to environment variables if no workspace config
