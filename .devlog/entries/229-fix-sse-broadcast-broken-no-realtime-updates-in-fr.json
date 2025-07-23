@@ -1,0 +1,62 @@
+{
+  "id": 229,
+  "key": "fix-sse-broadcast-broken-no-realtime-updates-in-fr",
+  "title": "Fix: SSE broadcast broken - no realtime updates in frontend",
+  "type": "bugfix",
+  "description": "Recent changes have broken the SSE (Server-Sent Events) broadcast functionality, preventing realtime updates from reaching the frontend. Users are not receiving live updates for devlog changes, workspace switches, or other real-time events.",
+  "status": "new",
+  "priority": "high",
+  "createdAt": "2025-07-23T13:59:21.028Z",
+  "updatedAt": "2025-07-23T14:24:11.244Z",
+  "notes": [
+    {
+      "id": "ae600382-5814-4dc8-8e3f-7be19e447367",
+      "timestamp": "2025-07-23T14:01:16.907Z",
+      "category": "issue",
+      "content": "🔍 **ROOT CAUSE IDENTIFIED**: WorkspaceDevlogManager is missing event emission after devlog operations. The SSE bridge depends on devlogEvents being emitted, but WorkspaceDevlogManager methods (createDevlog, updateDevlog, deleteDevlog, etc.) don't emit any events. This is why the frontend receives no realtime updates."
+    },
+    {
+      "id": "8ca642c7-1ef4-4efa-bc7c-e0fb1c240a69",
+      "timestamp": "2025-07-23T14:06:14.620Z",
+      "category": "progress",
+      "content": "✅ **PARTIAL FIX IMPLEMENTED**: Added event emission to WorkspaceDevlogManager methods (createDevlog, updateDevlog, deleteDevlog, addNote). SSE connection works (confirmed via browser console), but events from web UI operations are not being received. This suggests the SSE bridge may not be connected to the same WorkspaceDevlogManager instance that handles web API calls."
+    },
+    {
+      "id": "9a65292e-7aa6-425c-8db4-45001507dd63",
+      "timestamp": "2025-07-23T14:21:24.870Z",
+      "category": "progress",
+      "content": "✅ **SHARED MANAGER FIX WORKING**: Confirmed that shared WorkspaceDevlogManager is being used by both API routes and SSE bridge. Devlog #232 was successfully created through web UI, but SSE events are still not working. The event emission code is present in createDevlog method, but no SSE broadcasts are occurring. Need to debug event emission/handling next."
+    },
+    {
+      "id": "b77e1f42-5d12-4a73-8903-066e1bf6090c",
+      "timestamp": "2025-07-23T14:24:11.244Z",
+      "category": "issue",
+      "content": "🎯 **ROOT CAUSE IDENTIFIED**: Event emission code works correctly, but there are 0 event handlers when emitting! The issue is that multiple instances of devlogEvents are being created - SSE Bridge has 5 handlers initially, but WorkspaceDevlogManager sees 0 handlers. This suggests separate devlogEvents instances in different module contexts. Need to ensure single shared devlogEvents instance across API routes and SSE bridge."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Critical for user experience - real-time updates are essential for collaborative development tracking and immediate feedback on devlog operations.",
+    "technicalContext": "SSE implementation likely affected by recent core package changes, MCP adapter updates, or workspace-aware refactoring. Need to verify SSE endpoint functionality, event broadcasting, and frontend event handling.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "SSE endpoint responds correctly to frontend connections",
+      "Events are properly broadcast when devlog entries are created/updated",
+      "Frontend receives and displays real-time updates",
+      "No errors in browser console related to SSE",
+      "Realtime updates work across all supported operations"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T13:59:21.028Z",
+    "contextVersion": 1
+  }
+}

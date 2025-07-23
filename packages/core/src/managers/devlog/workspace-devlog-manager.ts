@@ -26,6 +26,7 @@ import type {
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
 import { ConfigurationManager } from '../configuration/configuration-manager.js';
 import { FileWorkspaceManager, type WorkspaceManagerOptions } from '../workspace/index.js';
+import { devlogEvents } from '../../events/devlog-events.js';
 
 export interface WorkspaceDevlogManagerOptions {
   /** Path to workspace configuration file */
@@ -305,6 +306,21 @@ export class WorkspaceDevlogManager {
     };
     
     await provider.save(entry);
+    
+    // Emit event for real-time updates
+    console.log('[WorkspaceDevlogManager] About to emit devlog-created event for ID:', id);
+    console.log('[WorkspaceDevlogManager] Event handlers count:', devlogEvents.getHandlerCount('created'));
+    try {
+      await devlogEvents.emit({
+        type: 'created',
+        data: entry,
+        timestamp: now,
+      });
+      console.log('[WorkspaceDevlogManager] Successfully emitted devlog-created event for ID:', id);
+    } catch (error) {
+      console.error('[WorkspaceDevlogManager] Error emitting devlog-created event:', error);
+    }
+    
     return entry;
   }
 
@@ -319,16 +335,38 @@ export class WorkspaceDevlogManager {
     const updated: DevlogEntry = {
       ...existing,
       ...data,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
     await provider.save(updated);
+    
+    // Emit event for real-time updates
+    await devlogEvents.emit({
+      type: 'updated',
+      data: updated,
+      timestamp: updated.updatedAt,
+    });
+    
     return updated;
   }
 
   async deleteDevlog(id: string | number): Promise<void> {
     const provider = await this.getCurrentStorageProvider();
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    return provider.delete(numericId);
+    
+    // Get the entry before deletion for event emission
+    const existing = await provider.get(numericId);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+    
+    await provider.delete(numericId);
+    
+    // Emit event for real-time updates
+    await devlogEvents.emit({
+      type: 'deleted',
+      data: existing,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -409,6 +447,14 @@ export class WorkspaceDevlogManager {
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
+    
+    // Emit note-added event for real-time updates
+    await devlogEvents.emit({
+      type: 'note-added',
+      data: { note, devlog: updated },
+      timestamp: note.timestamp,
+    });
+    
     return updated;
   }
 
@@ -618,6 +664,9 @@ export class WorkspaceDevlogManager {
         files: options?.files,
         codeChanges: options?.codeChanges,
       });
+      
+      // Get the latest version with the note added
+      return await this.getDevlog(id) || updated;
     }
 
     return updated;

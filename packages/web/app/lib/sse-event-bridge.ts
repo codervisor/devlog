@@ -4,6 +4,7 @@
  */
 
 import { broadcastUpdate } from './sse-manager';
+import { getSharedWorkspaceManager } from './shared-workspace-manager';
 
 // Types only - won't be bundled at runtime
 import type { WorkspaceDevlogManager, DevlogEvent } from '@devlog/core';
@@ -22,15 +23,11 @@ class SSEEventBridge {
     }
 
     try {
-      // Dynamically import to avoid bundling TypeORM in client-side code
-      const { WorkspaceDevlogManager, devlogEvents } = await import('@devlog/core');
+      // Use the shared workspace manager instance
+      this.workspaceManager = await getSharedWorkspaceManager();
 
-      // Create and initialize WorkspaceDevlogManager for the web process
-      this.workspaceManager = new WorkspaceDevlogManager({
-        fallbackToEnvConfig: true,
-        createWorkspaceConfigIfMissing: true,
-      });
-      await this.workspaceManager.initialize();
+      // Dynamically import to avoid bundling TypeORM in client-side code
+      const { devlogEvents } = await import('@devlog/core');
 
       // Listen to local devlog events (which now include storage events via subscription)
       devlogEvents.on('created', this.handleDevlogCreated.bind(this));
@@ -40,6 +37,13 @@ class SSEEventBridge {
 
       this.initialized = true;
       console.log('SSE Event Bridge initialized - devlog events will now trigger SSE updates');
+      console.log('SSE Event Bridge - Handler counts:', {
+        created: devlogEvents.getHandlerCount('created'),
+        updated: devlogEvents.getHandlerCount('updated'),
+        deleted: devlogEvents.getHandlerCount('deleted'),
+        'note-added': devlogEvents.getHandlerCount('note-added'),
+        total: devlogEvents.getHandlerCount(),
+      });
     } catch (error) {
       console.error('Failed to initialize SSE Event Bridge:', error);
       throw error;

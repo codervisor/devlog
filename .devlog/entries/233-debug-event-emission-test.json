@@ -1,0 +1,31 @@
+{
+  "id": 233,
+  "key": "debug-event-emission-test",
+  "title": "DEBUG: Event Emission Test",
+  "type": "feature",
+  "description": "Testing debugging logs for event emission and SSE broadcasting",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-23T14:23:41.589Z",
+  "updatedAt": "2025-07-23T14:23:41.589Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T14:23:41.589Z",
+    "contextVersion": 1
+  }
+}

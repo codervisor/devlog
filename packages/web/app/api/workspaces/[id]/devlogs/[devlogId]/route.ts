@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkspaceDevlogManager } from '@devlog/core';
-import { join } from 'path';
-import { homedir } from 'os';
+import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
-
-let workspaceManager: WorkspaceDevlogManager | null = null;
-
-async function getWorkspaceManager(): Promise<WorkspaceDevlogManager> {
-    if (!workspaceManager) {
-        workspaceManager = new WorkspaceDevlogManager({
-            workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
-            createWorkspaceConfigIfMissing: true,
-            fallbackToEnvConfig: true,
-        });
-        await workspaceManager.initialize();
-    }
-    return workspaceManager;
-}
 
 // GET /api/workspaces/[id]/devlogs/[devlogId] - Get devlog by ID from specific workspace
 export async function GET(
@@ -26,7 +10,7 @@ export async function GET(
     { params }: { params: { id: string; devlogId: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
         const devlogId = parseInt(params.devlogId, 10);
         
@@ -53,7 +37,7 @@ export async function PUT(
     { params }: { params: { id: string; devlogId: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
         const devlogId = parseInt(params.devlogId, 10);
         
@@ -77,7 +61,7 @@ export async function DELETE(
     { params }: { params: { id: string; devlogId: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
         const devlogId = parseInt(params.devlogId, 10);
         

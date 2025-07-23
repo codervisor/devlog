@@ -1,0 +1,31 @@
+{
+  "id": 230,
+  "key": "test-sse-event-broadcasting",
+  "title": "Test SSE Event Broadcasting",
+  "type": "task",
+  "description": "This is a test devlog to verify that SSE events are properly broadcasted when devlogs are created via MCP tools",
+  "status": "new",
+  "priority": "low",
+  "createdAt": "2025-07-23T14:04:07.999Z",
+  "updatedAt": "2025-07-23T14:04:07.999Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-23T14:04:07.999Z",
+    "contextVersion": 1
+  }
+}

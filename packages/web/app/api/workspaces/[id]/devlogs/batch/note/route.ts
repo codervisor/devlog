@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkspaceDevlogManager } from '@devlog/core';
-import { join } from 'path';
-import { homedir } from 'os';
+import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
-
-let workspaceManager: WorkspaceDevlogManager | null = null;
-
-async function getWorkspaceManager(): Promise<WorkspaceDevlogManager> {
-    if (!workspaceManager) {
-        workspaceManager = new WorkspaceDevlogManager({
-            workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
-            createWorkspaceConfigIfMissing: true,
-            fallbackToEnvConfig: true,
-        });
-        await workspaceManager.initialize();
-    }
-    return workspaceManager;
-}
 
 // POST /api/workspaces/[id]/devlogs/batch/note - Batch add notes to devlogs in specific workspace
 export async function POST(
@@ -26,7 +10,7 @@ export async function POST(
     { params }: { params: { id: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
         
         const body = await request.json();

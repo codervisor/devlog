@@ -1,32 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkspaceDevlogManager } from '@devlog/core';
-import { join } from 'path';
-import { homedir } from 'os';
+import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-let workspaceManager: WorkspaceDevlogManager | null = null;
-
-async function getWorkspaceManager(): Promise<WorkspaceDevlogManager> {
-    if (!workspaceManager) {
-        workspaceManager = new WorkspaceDevlogManager({
-            workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
-            createWorkspaceConfigIfMissing: true,
-            fallbackToEnvConfig: true,
-        });
-        await workspaceManager.initialize();
-    }
-    return workspaceManager;
-}
-
-// GET /api/workspaces/[id]/devlogs - List devlogs from specific workspace
 export async function GET(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
 
         const { searchParams } = new URL(request.url);
@@ -62,13 +45,12 @@ export async function GET(
     }
 }
 
-// POST /api/workspaces/[id]/devlogs - Create devlog in specific workspace
 export async function POST(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const manager = await getWorkspaceManager();
+        const manager = await getSharedWorkspaceManager();
         const workspaceId = params.id;
         
         // Switch to the target workspace first
