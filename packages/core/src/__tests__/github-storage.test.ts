@@ -35,7 +35,9 @@ describe('GitHubStorageProvider', () => {
   describe('buildSearchQuery', () => {
     it('should build basic search query', () => {
       const query = provider['buildSearchQuery']();
-      expect(query).toBe('repo:testorg/testrepo is:issue label:"devlog"');
+      expect(query).toBe(
+        'repo:testorg/testrepo is:issue (label:"devlog" OR "DEVLOG_METADATA:" in:body)',
+      );
     });
 
     it('should build query with status filter', () => {
@@ -73,6 +75,13 @@ describe('GitHubStorageProvider', () => {
 
   describe('data conversion', () => {
     it('should handle devlog entry without optional fields', () => {
+      // Create provider with emoji titles disabled for this test
+      const testConfig = {
+        ...mockConfig,
+        enableEmojiTitles: false,
+      };
+      const testProvider = new GitHubStorageProvider(testConfig);
+
       const entry: DevlogEntry = {
         id: 1,
         key: 'test-feature',
@@ -105,7 +114,7 @@ describe('GitHubStorageProvider', () => {
         },
       };
 
-      const issueData = provider['dataMapper'].devlogToIssue(entry);
+      const issueData = testProvider['dataMapper'].devlogToIssue(entry);
       expect(issueData.title).toBe('Test Feature');
       expect(issueData.labels).toContain('enhancement');
       // Priority labels are not added when useNativeType is true
