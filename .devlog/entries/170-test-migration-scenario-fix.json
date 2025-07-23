@@ -6,7 +6,7 @@
   "status": "done",
   "priority": "low",
   "createdAt": "2025-07-17T09:28:14.644Z",
-  "updatedAt": "2025-07-17T09:29:03.366Z",
+  "updatedAt": "2025-07-23T16:04:17.702Z",
   "notes": [
     {
       "id": "60402c2a-3e1f-4945-bc43-1c1bcb1b22ad",
@@ -34,5 +34,7 @@
     "lastAIUpdate": "2025-07-17T09:28:14.644Z",
     "contextVersion": 1
   },
-  "id": 170
+  "id": 170,
+  "closedAt": "2025-07-17T09:29:03.366Z",
+  "archived": true
 }

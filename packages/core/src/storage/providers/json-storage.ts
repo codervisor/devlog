@@ -167,7 +167,7 @@ export class JsonStorageProvider implements StorageProvider {
     await this.initialize();
 
     // Load all entries from storage for analysis (not paginated!)
-    const allDevlogs = await this.loadAllEntries();
+    const allDevlogs = await this.loadAllEntries(false);
 
     // Delegate to shared utility function
     return calculateTimeSeriesStats(allDevlogs, request);
@@ -199,7 +199,7 @@ export class JsonStorageProvider implements StorageProvider {
     return maxId + 1;
   }
 
-  private async loadAllEntries(): Promise<DevlogEntry[]> {
+  private async loadAllEntries(includeArchived = true): Promise<DevlogEntry[]> {
     try {
       const files = await fs.readdir(this.entriesDir);
       const jsonFiles = files.filter((file) => file.endsWith('.json'));
@@ -217,7 +217,10 @@ export class JsonStorageProvider implements StorageProvider {
         }
       }
 
-      return entries;
+      if (includeArchived) {
+        return entries;
+      }
+      return entries.filter((entry) => !entry.archived);
     } catch {
       return [];
     }
@@ -245,7 +248,7 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   private applyFilterAndSort(entries: DevlogEntry[], filter?: DevlogFilter): DevlogEntry[] {
-    let filtered = entries;
+    let filtered: DevlogEntry[];
 
     if (filter) {
       filtered = entries.filter((entry) => {

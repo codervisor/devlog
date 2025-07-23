@@ -13,6 +13,8 @@
     "All operations respect current workspace context"
   ],
   "createdAt": "2025-07-23T08:37:24.603Z",
-  "updatedAt": "2025-07-23T08:59:53.896Z",
-  "status": "done"
+  "updatedAt": "2025-07-23T16:20:48.391Z",
+  "status": "done",
+  "closedAt": "2025-07-23T08:59:53.896Z",
+  "archived": true
 }

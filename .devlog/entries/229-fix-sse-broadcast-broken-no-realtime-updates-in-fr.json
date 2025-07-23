@@ -7,7 +7,7 @@
   "status": "cancelled",
   "priority": "high",
   "createdAt": "2025-07-23T13:59:21.028Z",
-  "updatedAt": "2025-07-23T15:38:19.731Z",
+  "updatedAt": "2025-07-23T16:21:40.506Z",
   "notes": [
     {
       "id": "ae600382-5814-4dc8-8e3f-7be19e447367",
@@ -70,5 +70,7 @@
     "suggestedNextSteps": [],
     "lastAIUpdate": "2025-07-23T13:59:21.028Z",
     "contextVersion": 1
-  }
+  },
+  "closedAt": "2025-07-23T15:38:19.731Z",
+  "archived": true
 }

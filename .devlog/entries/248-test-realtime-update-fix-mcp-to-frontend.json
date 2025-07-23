@@ -7,7 +7,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-23T15:34:52.250Z",
-  "updatedAt": "2025-07-23T15:38:06.410Z",
+  "updatedAt": "2025-07-23T16:08:40.054Z",
   "notes": [],
   "files": [],
   "relatedDevlogs": [],
@@ -28,5 +28,6 @@
     "lastAIUpdate": "2025-07-23T15:34:52.250Z",
     "contextVersion": 1
   },
-  "archived": true
+  "archived": true,
+  "closedAt": "2025-07-23T15:38:06.410Z"
 }

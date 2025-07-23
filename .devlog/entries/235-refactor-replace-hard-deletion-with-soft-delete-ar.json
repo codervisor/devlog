@@ -7,7 +7,7 @@
   "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-23T14:39:16.246Z",
-  "updatedAt": "2025-07-23T14:46:26.906Z",
+  "updatedAt": "2025-07-23T16:02:58.682Z",
   "notes": [
     {
       "id": "05d96ce2-a452-4088-be79-7b39b5a91715",
@@ -53,5 +53,6 @@
     "lastAIUpdate": "2025-07-23T14:39:16.246Z",
     "contextVersion": 1
   },
-  "nextSteps": "Monitor usage to ensure no issues with soft delete behavior, consider implementing bulk archive operations for better performance, and add UI indicators to show when entries are archived vs active."
+  "nextSteps": "Monitor usage to ensure no issues with soft delete behavior, consider implementing bulk archive operations for better performance, and add UI indicators to show when entries are archived vs active.",
+  "closedAt": "2025-07-23T14:46:26.906Z"
 }

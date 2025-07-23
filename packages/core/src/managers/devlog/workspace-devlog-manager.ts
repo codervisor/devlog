@@ -422,11 +422,18 @@ export class WorkspaceDevlogManager {
       throw new Error(`Devlog ${id} not found`);
     }
 
+    const now = new Date().toISOString();
     const updated: DevlogEntry = {
       ...existing,
       ...data,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     };
+
+    // Ensure closedAt is set when status changes to 'done' or 'cancelled'
+    if (data.status && ['done', 'cancelled'].includes(data.status) && !updated.closedAt) {
+      updated.closedAt = now;
+    }
+
     await provider.save(updated);
 
     // Emit event for real-time updates
@@ -567,10 +574,12 @@ export class WorkspaceDevlogManager {
       throw new Error(`Devlog ${id} not found`);
     }
 
+    const now = new Date().toISOString();
     const updated: DevlogEntry = {
       ...existing,
       status: 'done',
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
+      closedAt: now,
     };
 
     if (summary) {
@@ -600,10 +609,12 @@ export class WorkspaceDevlogManager {
       throw new Error(`Devlog ${id} not found`);
     }
 
+    const now = new Date().toISOString();
     const updated: DevlogEntry = {
       ...existing,
       status: 'cancelled',
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
+      closedAt: now,
     };
 
     if (reason) {

@@ -6,7 +6,7 @@
  */
 
 // Export base classes
-export { AIAssistantParser, Logger, SimpleConsoleLogger } from './base/ai-assistant-parser';
+export { AIAssistantParser, Logger, SimpleConsoleLogger } from './base/ai-assistant-parser.js';
 
 // Export provider-specific parsers
 export { CopilotParser } from './copilot/copilot-parser.js';

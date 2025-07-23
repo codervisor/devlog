@@ -7,7 +7,7 @@
   "status": "done",
   "priority": "critical",
   "createdAt": "2025-07-23T14:58:46.720Z",
-  "updatedAt": "2025-07-23T15:01:53.355Z",
+  "updatedAt": "2025-07-23T16:02:58.678Z",
   "notes": [
     {
       "id": "ef1806a0-ef0e-472e-a5e7-f5e201c3b437",
@@ -81,5 +81,6 @@
     "suggestedNextSteps": [],
     "lastAIUpdate": "2025-07-23T14:58:46.720Z",
     "contextVersion": 1
-  }
+  },
+  "closedAt": "2025-07-23T15:01:53.355Z"
 }

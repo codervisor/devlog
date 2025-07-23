@@ -7,7 +7,7 @@
   "status": "cancelled",
   "priority": "low",
   "createdAt": "2025-07-23T09:06:28.105Z",
-  "updatedAt": "2025-07-23T09:06:47.319Z",
+  "updatedAt": "2025-07-23T16:16:00.540Z",
   "notes": [],
   "files": [],
   "relatedDevlogs": [],
@@ -31,5 +31,7 @@
     "suggestedNextSteps": [],
     "lastAIUpdate": "2025-07-23T09:06:28.105Z",
     "contextVersion": 1
-  }
+  },
+  "closedAt": "2025-07-23T09:06:47.319Z",
+  "archived": true
 }
