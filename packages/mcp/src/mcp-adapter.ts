@@ -13,6 +13,7 @@ import {
   DevlogStatus,
   NoteCategory,
   UpdateDevlogRequest,
+  WorkspaceDevlogManager,
 } from '@devlog/core';
 import {
   AddDecisionArgs,
@@ -29,17 +30,39 @@ import {
 } from './types/tool-args.js';
 
 export class MCPDevlogAdapter {
-  private devlogManager: DevlogManager;
+  private workspaceManager: WorkspaceDevlogManager;
+  private devlogManager: DevlogManager | null = null;
   private config: DevlogConfig | null = null;
 
   constructor() {
-    this.devlogManager = new DevlogManager();
+    this.workspaceManager = new WorkspaceDevlogManager({
+      fallbackToEnvConfig: true,
+      createWorkspaceConfigIfMissing: true,
+    });
   }
 
   /**
-   * Get the underlying DevlogManager for chat tools
+   * Get the underlying WorkspaceDevlogManager for workspace-aware operations
    */
-  get manager(): DevlogManager {
+  get manager(): WorkspaceDevlogManager {
+    return this.workspaceManager;
+  }
+
+  /**
+   * Get DevlogManager instance for chat tools and advanced operations
+   */
+  async getManagerForChatTools(): Promise<DevlogManager> {
+    return await this.getDevlogManager();
+  }
+
+  /**
+   * Get DevlogManager instance for advanced operations
+   */
+  private async getDevlogManager(): Promise<DevlogManager> {
+    if (!this.devlogManager) {
+      this.devlogManager = new DevlogManager();
+      await this.devlogManager.initialize();
+    }
     return this.devlogManager;
   }
 
@@ -47,14 +70,13 @@ export class MCPDevlogAdapter {
    * Initialize the adapter with appropriate storage configuration
    */
   async initialize(): Promise<void> {
-    this.devlogManager = new DevlogManager();
-    await this.devlogManager.initialize();
+    await this.workspaceManager.initialize();
   }
 
   async createDevlog(args: CreateDevlogRequest): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.createDevlog(args);
+    const entry = await this.workspaceManager.createDevlog(args);
 
     return {
       content: [
@@ -69,7 +91,7 @@ export class MCPDevlogAdapter {
   async updateDevlog(args: UpdateDevlogRequest): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.updateDevlog(args);
+    const entry = await this.workspaceManager.updateDevlog(args.id, args);
 
     // Check if AI context was updated
     const aiFieldsProvided = !!(
@@ -95,7 +117,7 @@ export class MCPDevlogAdapter {
   async getDevlog(args: GetContextForAIArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.getDevlog(args.id);
+    const entry = await this.workspaceManager.getDevlog(args.id);
 
     if (!entry) {
       return {
@@ -137,11 +159,11 @@ export class MCPDevlogAdapter {
           : undefined,
     };
 
-    const result = await this.devlogManager.listDevlogs(filter);
+    const result = await this.workspaceManager.listDevlogs(filter);
 
     // Handle both paginated and non-paginated results
-    const entries = Array.isArray(result) ? result : result.items;
-    const pagination = Array.isArray(result) ? null : result.pagination;
+    const entries = result.items;
+    const pagination = result.pagination;
 
     if (entries.length === 0) {
       return {
@@ -187,7 +209,8 @@ export class MCPDevlogAdapter {
       priority: args.priority ? [args.priority] : undefined,
     };
 
-    const entries = await this.devlogManager.searchDevlogs(args.query, filter);
+    const result = await this.workspaceManager.searchDevlogs(args.query, filter);
+    const entries = result.items;
 
     if (entries.length === 0) {
       return {
@@ -221,7 +244,8 @@ export class MCPDevlogAdapter {
     await this.ensureInitialized();
 
     const category = (args.category || 'progress') as NoteCategory;
-    const entry = await this.devlogManager.addNote(args.id, args.note, category, {
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.addNote(args.id, args.note, category, {
       files: args.files,
       codeChanges: args.codeChanges,
     });
@@ -239,7 +263,7 @@ export class MCPDevlogAdapter {
   async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.getDevlog(args.id);
+    const entry = await this.workspaceManager.getDevlog(args.id);
     if (!entry) {
       return {
         content: [
@@ -270,8 +294,7 @@ export class MCPDevlogAdapter {
     entry.context.decisions.push(decision);
 
     // Update the entry to trigger save
-    const updated = await this.devlogManager.updateDevlog({
-      id: args.id,
+    const updated = await this.workspaceManager.updateDevlog(args.id, {
       // Use a field that exists in UpdateDevlogRequest to trigger save
       description: entry.description,
     });
@@ -289,7 +312,8 @@ export class MCPDevlogAdapter {
   async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.completeDevlog(args.id, args.summary);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.completeDevlog(args.id, args.summary);
 
     return {
       content: [
@@ -304,7 +328,8 @@ export class MCPDevlogAdapter {
   async closeDevlog(args: CloseDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.closeDevlog(args.id, args.reason);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.closeDevlog(args.id, args.reason);
 
     return {
       content: [
@@ -319,7 +344,8 @@ export class MCPDevlogAdapter {
   async archiveDevlog(args: { id: number }): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.archiveDevlog(args.id);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.archiveDevlog(args.id);
 
     return {
       content: [
@@ -334,7 +360,8 @@ export class MCPDevlogAdapter {
   async unarchiveDevlog(args: { id: number }): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.unarchiveDevlog(args.id);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.unarchiveDevlog(args.id);
 
     return {
       content: [
@@ -353,7 +380,7 @@ export class MCPDevlogAdapter {
       status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'] as any[],
     };
 
-    const result = await this.devlogManager.listDevlogs(filter);
+    const result = await this.workspaceManager.listDevlogs(filter);
     const entries = result.items;
     const limited = entries.slice(0, args.limit || 10);
 
@@ -393,7 +420,8 @@ export class MCPDevlogAdapter {
   async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const entry = await this.devlogManager.getContextForAI(args.id);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.getContextForAI(args.id);
 
     if (!entry) {
       return {
@@ -446,7 +474,8 @@ export class MCPDevlogAdapter {
     contextUpdate.lastAIUpdate = new Date().toISOString();
     contextUpdate.contextVersion = (contextUpdate.contextVersion || 0) + 1;
 
-    const entry = await this.devlogManager.updateAIContext(args.id, contextUpdate);
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.updateAIContext(args.id, contextUpdate);
 
     return {
       content: [
@@ -462,6 +491,9 @@ export class MCPDevlogAdapter {
     if (this.devlogManager) {
       await this.devlogManager.dispose();
     }
+    if (this.workspaceManager) {
+      await this.workspaceManager.cleanup();
+    }
   }
 
   private async ensureInitialized(): Promise<void> {
@@ -473,7 +505,8 @@ export class MCPDevlogAdapter {
   async discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const discoveryResult = await this.devlogManager.discoverRelatedDevlogs(args);
+    const devlogManager = await this.getDevlogManager();
+    const discoveryResult = await devlogManager.discoverRelatedDevlogs(args);
 
     if (discoveryResult.relatedEntries.length === 0) {
       return {
@@ -540,7 +573,8 @@ export class MCPDevlogAdapter {
     if (args.status) updates.status = args.status;
     if (args.priority) updates.priority = args.priority;
 
-    const entry = await this.devlogManager.updateWithProgress(
+    const devlogManager = await this.getDevlogManager();
+    const entry = await devlogManager.updateWithProgress(
       args.id,
       { id: args.id, ...updates },
       args.note,
