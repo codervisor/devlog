@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Layout, Menu, Tooltip } from 'antd';
 import {
+  AppstoreOutlined,
   DashboardOutlined,
   FileTextOutlined,
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
-  SettingOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
@@ -73,7 +73,7 @@ export function NavigationSidebar({
     {
       key: 'workspaces',
       label: 'Workspaces',
-      icon: <SettingOutlined />,
+      icon: <AppstoreOutlined />,
     },
   ];
 
@@ -194,36 +194,36 @@ export function NavigationSidebar({
 
       <div className={styles.sidebarFooter}>
         <div className={styles.sidebarFooterContent}>
-          <div className={styles.sidebarFooterContentLeft}>
-            <Tooltip
-              title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-              placement="top"
-            >
-              <WifiOutlined
-                style={{
-                  color: connected ? '#52c41a' : '#ff4d4f',
-                  fontSize: '16px',
-                  cursor: 'default',
-                }}
-              />
-            </Tooltip>
+          {!collapsed && (
+            <div className={styles.sidebarFooterContentLeft}>
+              <Tooltip
+                title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
+                placement="top"
+              >
+                <WifiOutlined
+                  style={{
+                    color: connected ? '#52c41a' : '#ff4d4f',
+                    fontSize: '16px',
+                    cursor: 'default',
+                  }}
+                />
+              </Tooltip>
 
-            {(stats || statsLoading) && (
-              <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
-            )}
-          </div>
+              {(stats || statsLoading) && (
+                <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
+              )}
+            </div>
+          )}
 
           <div className={styles.sidebarFooterContentRight}>
             {onToggle && (
-              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
-                <Button
-                  type="text"
-                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                  onClick={onToggle}
-                  className={styles.sidebarToggle}
-                  size="small"
-                />
-              </Tooltip>
+              <Button
+                type="text"
+                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
+                onClick={onToggle}
+                className={styles.sidebarToggle}
+                size="small"
+              />
             )}
           </div>
         </div>

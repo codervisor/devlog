@@ -258,7 +258,7 @@
   left: 0;
   right: 0;
   padding: 12px 16px;
-  background: #fafafa;
+  background: #fff;
   border-top: 1px solid #e8e8e8;
   display: grid;
   grid-template-columns: 1fr auto 1fr;

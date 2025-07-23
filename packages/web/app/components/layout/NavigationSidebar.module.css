@@ -42,6 +42,7 @@
   border-top: 1px solid #f0f0f0;
   position: absolute;
   width: 100%;
+  height: 56px;
   bottom: 0;
   background: #fff;
   display: flex;
@@ -108,7 +109,7 @@
 }
 
 :global(.ant-layout-sider-collapsed) .sidebarFooter {
-  padding: 16px 12px 24px;
+  padding: 16px 12px;
 }
 
 :global(.ant-layout-sider-collapsed) .sidebarFooterContent {
