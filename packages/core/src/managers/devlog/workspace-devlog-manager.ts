@@ -5,10 +5,15 @@
 
 import { join } from 'path';
 import { homedir } from 'os';
+import * as crypto from 'crypto';
 import type {
   DevlogEntry,
   DevlogFilter,
+  DevlogId,
+  DevlogNote,
   DevlogStats,
+  DiscoverDevlogsRequest,
+  DiscoveryResult,
   PaginatedResult,
   StorageConfig,
   StorageProvider,
@@ -337,6 +342,254 @@ export class WorkspaceDevlogManager {
   async getTimeSeriesStats(request: TimeSeriesRequest = {}): Promise<TimeSeriesStats> {
     const provider = await this.getCurrentStorageProvider();
     return provider.getTimeSeriesStats(request);
+  }
+
+  /**
+   * Add a note to a devlog entry in current workspace
+   */
+  async addNote(
+    id: DevlogId,
+    content: string,
+    category: DevlogNote['category'] = 'progress',
+    options?: {
+      files?: string[];
+      codeChanges?: string;
+    },
+  ): Promise<DevlogEntry> {
+    const existing = await this.getDevlog(id);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+
+    const note: DevlogNote = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      category,
+      content,
+      files: options?.files,
+      codeChanges: options?.codeChanges,
+    };
+
+    const updated: DevlogEntry = {
+      ...existing,
+      notes: [...(existing.notes || []), note],
+      updatedAt: new Date().toISOString(),
+    };
+
+    const provider = await this.getCurrentStorageProvider();
+    await provider.save(updated);
+    return updated;
+  }
+
+  /**
+   * Complete a devlog entry and archive it
+   */
+  async completeDevlog(id: DevlogId, summary?: string): Promise<DevlogEntry> {
+    const existing = await this.getDevlog(id);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+
+    const updated: DevlogEntry = {
+      ...existing,
+      status: 'done',
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (summary) {
+      await this.addNote(id, `Completed: ${summary}`, 'progress');
+    }
+
+    const provider = await this.getCurrentStorageProvider();
+    await provider.save(updated);
+    return updated;
+  }
+
+  /**
+   * Close a devlog entry by setting status to cancelled
+   */
+  async closeDevlog(id: DevlogId, reason?: string): Promise<DevlogEntry> {
+    const existing = await this.getDevlog(id);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+
+    const updated: DevlogEntry = {
+      ...existing,
+      status: 'cancelled',
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (reason) {
+      await this.addNote(id, `Cancelled: ${reason}`, 'progress');
+    }
+
+    const provider = await this.getCurrentStorageProvider();
+    await provider.save(updated);
+    return updated;
+  }
+
+  /**
+   * Archive a devlog entry
+   */
+  async archiveDevlog(id: DevlogId): Promise<DevlogEntry> {
+    const existing = await this.getDevlog(id);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+
+    const updated: DevlogEntry = {
+      ...existing,
+      archived: true,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const provider = await this.getCurrentStorageProvider();
+    await provider.save(updated);
+    return updated;
+  }
+
+  /**
+   * Unarchive a devlog entry
+   */
+  async unarchiveDevlog(id: DevlogId): Promise<DevlogEntry> {
+    const existing = await this.getDevlog(id);
+    if (!existing) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+
+    const updated: DevlogEntry = {
+      ...existing,
+      archived: false,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const provider = await this.getCurrentStorageProvider();
+    await provider.save(updated);
+    return updated;
+  }
+
+  /**
+   * Get context for AI - simplified version
+   */
+  async getContextForAI(id: DevlogId): Promise<DevlogEntry> {
+    const entry = await this.getDevlog(id);
+    if (!entry) {
+      throw new Error(`Devlog ${id} not found`);
+    }
+    return entry;
+  }
+
+  /**
+   * Update AI context - simplified to just update the devlog
+   */
+  async updateAIContext(id: DevlogId, contextUpdate: any): Promise<DevlogEntry> {
+    return this.updateDevlog(id, contextUpdate);
+  }
+
+  /**
+   * Discover related devlogs - proper implementation with relevance and matched terms
+   */
+  async discoverRelatedDevlogs(request: DiscoverDevlogsRequest): Promise<DiscoveryResult> {
+    // Get all devlogs from current workspace
+    const allDevlogs = await this.listDevlogs();
+    const entries = allDevlogs.items || [];
+
+    const relatedEntries = [];
+    const keywords = request.keywords || [];
+    const workDescription = request.workDescription.toLowerCase();
+
+    for (const entry of entries) {
+      const matchedTerms: string[] = [];
+      let relevance: 'direct-text-match' | 'same-type' | 'keyword-in-notes' | null = null;
+
+      // Check for direct text matches in title or description
+      const titleMatch = entry.title.toLowerCase().includes(workDescription);
+      const descMatch = entry.description.toLowerCase().includes(workDescription);
+      
+      if (titleMatch || descMatch) {
+        relevance = 'direct-text-match';
+        matchedTerms.push(workDescription);
+      }
+
+      // Check for same type
+      if (entry.type === request.workType && !relevance) {
+        relevance = 'same-type';
+        matchedTerms.push(entry.type);
+      }
+
+      // Check for keyword matches in notes
+      if (keywords.length > 0 && !relevance) {
+        const notesText = (entry.notes || []).map(note => note.content).join(' ').toLowerCase();
+        for (const keyword of keywords) {
+          if (notesText.includes(keyword.toLowerCase())) {
+            relevance = 'keyword-in-notes';
+            matchedTerms.push(keyword);
+          }
+        }
+      }
+
+      // Check for keyword matches in title/description if no other match
+      if (keywords.length > 0 && !relevance) {
+        const entryText = `${entry.title} ${entry.description}`.toLowerCase();
+        for (const keyword of keywords) {
+          if (entryText.includes(keyword.toLowerCase())) {
+            relevance = 'direct-text-match';
+            matchedTerms.push(keyword);
+          }
+        }
+      }
+
+      if (relevance && matchedTerms.length > 0) {
+        relatedEntries.push({
+          entry,
+          relevance,
+          matchedTerms,
+        });
+      }
+    }
+
+    // Sort by relevance priority: direct-text-match > same-type > keyword-in-notes
+    relatedEntries.sort((a, b) => {
+      const relevanceOrder = { 'direct-text-match': 3, 'same-type': 2, 'keyword-in-notes': 1 };
+      return relevanceOrder[b.relevance] - relevanceOrder[a.relevance];
+    });
+
+    const activeCount = relatedEntries.filter(({ entry }) => 
+      !entry.archived && entry.status !== 'done' && entry.status !== 'cancelled'
+    ).length;
+
+    const recommendation = activeCount > 0 
+      ? `⚠️ RECOMMENDATION: Review ${activeCount} active related entries before creating new work. Consider updating existing entries or coordinating efforts.`
+      : 'No active related entries found. You can proceed with creating new work.';
+
+    return {
+      relatedEntries,
+      activeCount,
+      recommendation,
+      searchParameters: request,
+    };
+  }
+
+  /**
+   * Update devlog with progress note
+   */
+  async updateWithProgress(
+    id: DevlogId,
+    updates: any,
+    progressNote?: string,
+    options?: any,
+  ): Promise<DevlogEntry> {
+    const updated = await this.updateDevlog(id, updates);
+    
+    if (progressNote) {
+      await this.addNote(id, progressNote, options?.category || 'progress', {
+        files: options?.files,
+        codeChanges: options?.codeChanges,
+      });
+    }
+
+    return updated;
   }
 
   /**

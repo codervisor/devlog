@@ -1,0 +1,19 @@
+{
+  "id": 221,
+  "title": "Fix MCP Server Errors After Core Package Updates",
+  "type": "bugfix",
+  "description": "After updating the core package with workspace-aware stats methods and API changes, the MCP server had compilation errors and runtime issues due to:\n\n1. Missing methods in WorkspaceDevlogManager (addNote, completeDevlog, etc.)\n2. MCP adapter still using separate DevlogManager instead of workspace-aware methods\n3. Incorrect typing and structure for discoverRelatedDevlogs method\n4. Missing relevance and matchedTerms information in discovery results\n\nThe MCP server needs to be fully workspace-aware to work correctly with the updated architecture.",
+  "businessContext": "MCP server errors prevent AI agents from properly managing devlog entries, breaking the development workflow and making the system unreliable.",
+  "technicalContext": "The core package was updated with workspace-aware functionality, but the MCP adapter wasn't updated to match. This created a mismatch between expected and available methods, causing both compilation and runtime errors.",
+  "acceptanceCriteria": [
+    "MCP package builds without errors",
+    "All MCP adapter methods use workspace-aware operations",
+    "Proper typing maintained for discovery results with relevance and matchedTerms",
+    "No direct DevlogManager usage in MCP adapter",
+    "All operations respect current workspace context"
+  ],
+  "priority": "high",
+  "createdAt": "2025-07-23T08:59:39.319Z",
+  "updatedAt": "2025-07-23T08:59:45.162Z",
+  "status": "done"
+}

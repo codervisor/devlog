@@ -9,8 +9,10 @@ import {
   CreateDevlogRequest,
   DevlogConfig,
   DevlogContext,
+  DevlogEntry,
   DevlogManager,
   DevlogStatus,
+  DiscoveredDevlogEntry,
   NoteCategory,
   UpdateDevlogRequest,
   WorkspaceDevlogManager,
@@ -31,7 +33,6 @@ import {
 
 export class MCPDevlogAdapter {
   private workspaceManager: WorkspaceDevlogManager;
-  private devlogManager: DevlogManager | null = null;
   private config: DevlogConfig | null = null;
   private currentWorkspaceId: string | null = null; // In-memory current workspace
 
@@ -64,24 +65,6 @@ export class MCPDevlogAdapter {
    */
   setCurrentWorkspaceId(workspaceId: string): void {
     this.currentWorkspaceId = workspaceId;
-  }
-
-  /**
-   * Get DevlogManager instance for chat tools and advanced operations
-   */
-  async getManagerForChatTools(): Promise<DevlogManager> {
-    return await this.getDevlogManager();
-  }
-
-  /**
-   * Get DevlogManager instance for advanced operations
-   */
-  private async getDevlogManager(): Promise<DevlogManager> {
-    if (!this.devlogManager) {
-      this.devlogManager = new DevlogManager();
-      await this.devlogManager.initialize();
-    }
-    return this.devlogManager;
   }
 
   /**
@@ -271,9 +254,13 @@ export class MCPDevlogAdapter {
   async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
     const category = (args.category || 'progress') as NoteCategory;
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.addNote(args.id, args.note, category, {
+    const entry = await this.workspaceManager.addNote(args.id, args.note, category, {
       files: args.files,
       codeChanges: args.codeChanges,
     });
@@ -282,7 +269,7 @@ export class MCPDevlogAdapter {
       content: [
         {
           type: 'text',
-          text: `Added ${category} note to devlog '${entry.id}':\n${args.note}\n\nTotal notes: ${entry.notes.length}`,
+          text: `Added ${category} note to devlog '${entry.id}':\n${args.note}\n\nTotal notes: ${entry.notes?.length || 0}`,
         },
       ],
     };
@@ -337,17 +324,23 @@ export class MCPDevlogAdapter {
     };
   }
 
-  async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
+    async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.completeDevlog(args.id, args.summary);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const entry = await this.workspaceManager.completeDevlog(args.id, args.summary);
 
     return {
       content: [
         {
           type: 'text',
-          text: `Completed devlog '${entry.id}': ${entry.title}\nStatus: ${entry.status}\nCompletion summary: ${args.summary || 'None provided'}`,
+          text: `Completed devlog '${entry.title}' (ID: ${entry.id})${
+            args.summary ? ` with summary: ${args.summary}` : ''
+          }`,
         },
       ],
     };
@@ -356,8 +349,12 @@ export class MCPDevlogAdapter {
   async closeDevlog(args: CloseDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.closeDevlog(args.id, args.reason);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const entry = await this.workspaceManager.closeDevlog(args.id, args.reason);
 
     return {
       content: [
@@ -372,8 +369,12 @@ export class MCPDevlogAdapter {
   async archiveDevlog(args: { id: number }): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.archiveDevlog(args.id);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const entry = await this.workspaceManager.archiveDevlog(args.id);
 
     return {
       content: [
@@ -388,8 +389,12 @@ export class MCPDevlogAdapter {
   async unarchiveDevlog(args: { id: number }): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.unarchiveDevlog(args.id);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const entry = await this.workspaceManager.unarchiveDevlog(args.id);
 
     return {
       content: [
@@ -448,8 +453,12 @@ export class MCPDevlogAdapter {
   async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.getContextForAI(args.id);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const entry = await this.workspaceManager.getContextForAI(args.id);
 
     if (!entry) {
       return {
@@ -491,34 +500,31 @@ export class MCPDevlogAdapter {
   async updateAIContext(args: UpdateAIContextArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const contextUpdate: Partial<AIContext> = {};
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
 
-    if (args.summary) contextUpdate.currentSummary = args.summary;
-    if (args.insights) contextUpdate.keyInsights = args.insights;
-    if (args.questions) contextUpdate.openQuestions = args.questions;
-    if (args.patterns) contextUpdate.relatedPatterns = args.patterns;
-    if (args.nextSteps) contextUpdate.suggestedNextSteps = args.nextSteps;
+    const contextUpdate: any = {};
+    if (args.summary !== undefined) contextUpdate.summary = args.summary;
+    if (args.insights !== undefined) contextUpdate.insights = args.insights;
+    if (args.nextSteps !== undefined) contextUpdate.nextSteps = args.nextSteps;
+    if (args.questions !== undefined) contextUpdate.questions = args.questions;
+    if (args.patterns !== undefined) contextUpdate.patterns = args.patterns;
 
-    contextUpdate.lastAIUpdate = new Date().toISOString();
-    contextUpdate.contextVersion = (contextUpdate.contextVersion || 0) + 1;
-
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.updateAIContext(args.id, contextUpdate);
+    const entry = await this.workspaceManager.updateAIContext(args.id, contextUpdate);
 
     return {
       content: [
         {
           type: 'text',
-          text: `[DEPRECATED] Updated AI context for devlog '${entry.id}'. Use update_devlog with AI context fields instead.\n\n${JSON.stringify(contextUpdate, null, 2)}`,
+          text: `Updated AI context for devlog '${entry.title}' (ID: ${entry.id})`,
         },
       ],
     };
   }
 
   async dispose(): Promise<void> {
-    if (this.devlogManager) {
-      await this.devlogManager.dispose();
-    }
     if (this.workspaceManager) {
       await this.workspaceManager.cleanup();
     }
@@ -533,8 +539,12 @@ export class MCPDevlogAdapter {
   async discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
-    const devlogManager = await this.getDevlogManager();
-    const discoveryResult = await devlogManager.discoverRelatedDevlogs(args);
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
+    const discoveryResult = await this.workspaceManager.discoverRelatedDevlogs(args);
 
     if (discoveryResult.relatedEntries.length === 0) {
       return {
@@ -556,7 +566,7 @@ export class MCPDevlogAdapter {
     // Generate detailed analysis
     const analysis = discoveryResult.relatedEntries
       .slice(0, 10)
-      .map(({ entry, relevance, matchedTerms }) => {
+      .map(({ entry, relevance, matchedTerms }: DiscoveredDevlogEntry) => {
         const statusEmoji: Record<DevlogStatus, string> = {
           new: '🆕',
           'in-progress': '🔄',
@@ -597,12 +607,16 @@ export class MCPDevlogAdapter {
   async updateDevlogWithNote(args: UpdateDevlogWithNoteArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
+    // Switch to current workspace before operating
+    if (this.currentWorkspaceId) {
+      await this.workspaceManager.switchToWorkspace(this.currentWorkspaceId);
+    }
+
     const updates: Partial<UpdateDevlogRequest> = {};
     if (args.status) updates.status = args.status;
     if (args.priority) updates.priority = args.priority;
 
-    const devlogManager = await this.getDevlogManager();
-    const entry = await devlogManager.updateWithProgress(
+    const entry = await this.workspaceManager.updateWithProgress(
       args.id,
       { id: args.id, ...updates },
       args.note,
