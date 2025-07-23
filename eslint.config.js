@@ -62,6 +62,7 @@ module.exports = [
       'node_modules/**',
       '.next/**',
       '.next-build/**',
+      'scripts/**',
       'coverage/**',
       'tmp/**',
       '*.config.js',
