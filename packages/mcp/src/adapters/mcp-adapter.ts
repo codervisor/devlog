@@ -26,7 +26,7 @@ import {
   SearchDevlogsArgs,
   UpdateAIContextArgs,
   UpdateDevlogWithNoteArgs,
-} from './types/tool-args.js';
+} from '../types/tool-args.js';
 
 export class MCPDevlogAdapter {
   private workspaceManager: WorkspaceDevlogManager;

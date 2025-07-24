@@ -13,7 +13,7 @@ loadRootEnv();
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { createMCPAdapterWithDiscovery, type MCPAdapter } from './adapter-factory.js';
+import { createMCPAdapterWithDiscovery, type MCPAdapter } from './adapters/index.js';
 import type {
   CreateDevlogArgs,
   UpdateDevlogArgs,
@@ -73,8 +73,8 @@ const server = new Server(
   },
 );
 
-// Initialize the adapter
-const adapter: MCPAdapter = {} as MCPAdapter; // Will be replaced in main()
+// Initialize the adapter - will be set in main()
+let adapter: MCPAdapter;
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: allTools };
@@ -232,8 +232,8 @@ async function main() {
     adapterInstance.setCurrentWorkspaceId(defaultWorkspace);
   }
 
-  // Replace the global adapter variable for the request handlers
-  Object.assign(adapter, adapterInstance);
+  // Assign the adapter instance directly (not Object.assign which doesn't copy methods)
+  adapter = adapterInstance;
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

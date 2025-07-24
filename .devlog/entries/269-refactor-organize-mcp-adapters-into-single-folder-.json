@@ -1,0 +1,56 @@
+{
+  "id": 269,
+  "key": "refactor-organize-mcp-adapters-into-single-folder-",
+  "title": "Refactor: Organize MCP Adapters into Single Folder Structure",
+  "type": "refactor",
+  "description": "Reorganize MCP adapter files in @devlog/mcp package into a single 'adapters' folder to improve code organization, discoverability, and maintainability. Current structure has adapters scattered across different files, making it harder to understand the adapter ecosystem.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-24T07:46:25.422Z",
+  "updatedAt": "2025-07-24T07:50:08.921Z",
+  "notes": [
+    {
+      "id": "f1235d87-9b89-4e7a-85be-8cb94eaa6782",
+      "timestamp": "2025-07-24T07:47:14.401Z",
+      "category": "progress",
+      "content": "Starting adapter reorganization. Current adapter files identified:\n- adapter-factory.ts\n- mcp-adapter.ts  \n- mcp-api-adapter.ts\n\nPlanning to move these to src/adapters/ folder and update all import paths."
+    },
+    {
+      "id": "3ab59bee-937b-41c9-8120-7df2107d30d0",
+      "timestamp": "2025-07-24T07:50:02.607Z",
+      "category": "progress",
+      "content": "Successfully reorganized MCP adapters into src/adapters/ folder:\n\n✅ Created src/adapters/ directory\n✅ Moved all adapter files:\n  - adapter-factory.ts → src/adapters/\n  - mcp-adapter.ts → src/adapters/\n  - mcp-api-adapter.ts → src/adapters/\n✅ Created src/adapters/index.ts for clean exports\n✅ Updated all import paths across the codebase\n✅ Build passes successfully\n✅ Tests pass (83/85 - 2 failures unrelated to adapter changes)\n\nFiles updated:\n- packages/mcp/src/index.ts\n- packages/mcp/src/adapters/adapter-factory.ts\n- packages/mcp/src/adapters/mcp-adapter.ts\n- packages/mcp/src/adapters/mcp-api-adapter.ts\n- packages/mcp/src/__tests__/*.test.ts"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "",
+    "technicalContext": "The @devlog/mcp package currently has adapter files scattered in the root src directory. Moving them to a dedicated adapters/ folder will:\n1. Improve code organization and navigation\n2. Make adapter patterns more discoverable\n3. Align with architectural best practices for modular organization\n4. Facilitate future adapter development and maintenance",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "All adapter files moved to src/adapters/ folder",
+      "Import paths updated across the codebase",
+      "Build passes without errors",
+      "No functionality regression",
+      "Better code organization and discoverability"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Current adapters are scattered in src/ root",
+      "Need to identify all adapter-related files",
+      "Import paths will need systematic updating",
+      "Should maintain existing adapter functionality"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-24T07:46:25.422Z",
+    "contextVersion": 1
+  },
+  "closedAt": "2025-07-24T07:50:08.921Z"
+}

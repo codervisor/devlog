@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { MCPDevlogAdapter } from '../mcp-adapter.js';
+import { MCPDevlogAdapter } from '../adapters/mcp-adapter.js';
 import { DevlogType, DevlogStatus, DevlogPriority } from '@devlog/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -107,7 +107,9 @@ describe('MCPDevlogAdapter', () => {
       };
 
       const createResult = await adapter.createDevlog(createArgs);
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       expect(entryIdMatch).toBeTruthy();
       const entryId = parseInt(entryIdMatch![1], 10);
 
@@ -134,7 +136,9 @@ describe('MCPDevlogAdapter', () => {
       };
 
       const createResult = await adapter.createDevlog(createArgs);
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       // Retrieve the entry
@@ -203,7 +207,9 @@ describe('MCPDevlogAdapter', () => {
       };
 
       const createResult = await adapter.createDevlog(createArgs);
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       // Add a note
@@ -226,7 +232,9 @@ describe('MCPDevlogAdapter', () => {
         description: 'Entry to test decision functionality',
       });
 
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       // Add a decision
@@ -251,7 +259,9 @@ describe('MCPDevlogAdapter', () => {
         description: 'Test updating status and adding note',
       });
 
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       // Update with note
@@ -280,7 +290,9 @@ describe('MCPDevlogAdapter', () => {
         description: 'Entry to test lifecycle operations',
       });
 
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       testEntryId = parseInt(entryIdMatch![1], 10);
     });
 
@@ -348,7 +360,9 @@ describe('MCPDevlogAdapter', () => {
         description: 'Entry to test AI context retrieval',
       });
 
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       const aiContextResult = await adapter.getContextForAI({ id: entryId });
