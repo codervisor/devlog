@@ -41,7 +41,7 @@
     "ai-assistant"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "2.1.9",
