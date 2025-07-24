@@ -1,7 +1,7 @@
 /**
- * Data models for CodeHist
- * 
- * TypeScript interfaces and classes for representing chat histories 
+ * Data models for AI Chat processing
+ *
+ * TypeScript interfaces and classes for representing chat histories
  * focused on core chat functionality.
  */
 
@@ -55,7 +55,7 @@ export const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string(),
   timestamp: z.string().datetime(),
-  metadata: z.record(z.unknown()).default({})
+  metadata: z.record(z.unknown()).default({}),
 });
 
 export const ChatSessionSchema = z.object({
@@ -64,7 +64,7 @@ export const ChatSessionSchema = z.object({
   messages: z.array(MessageSchema).default([]),
   workspace: z.string().optional(),
   session_id: z.string().optional(),
-  metadata: z.record(z.unknown()).default({})
+  metadata: z.record(z.unknown()).default({}),
 });
 
 export const WorkspaceDataSchema = z.object({
@@ -72,7 +72,7 @@ export const WorkspaceDataSchema = z.object({
   version: z.string().optional(),
   workspace_path: z.string().optional(),
   chat_sessions: z.array(ChatSessionSchema).default([]),
-  metadata: z.record(z.unknown()).default({})
+  metadata: z.record(z.unknown()).default({}),
 });
 
 // TypeScript interfaces
@@ -133,12 +133,15 @@ export interface ChatStatistics {
   total_messages: number;
   message_types: Record<string, number>;
   session_types: Record<string, number>;
-  workspace_activity: Record<string, {
-    sessions: number;
-    messages: number;
-    first_seen: string;
-    last_seen: string;
-  }>;
+  workspace_activity: Record<
+    string,
+    {
+      sessions: number;
+      messages: number;
+      first_seen: string;
+      last_seen: string;
+    }
+  >;
   date_range: {
     earliest: string | null;
     latest: string | null;
@@ -168,7 +171,7 @@ export class MessageData implements Message {
       role: this.role,
       content: this.content,
       timestamp: this.timestamp.toISOString(),
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -179,7 +182,7 @@ export class MessageData implements Message {
       role: validated.role,
       content: validated.content,
       timestamp: new Date(validated.timestamp),
-      metadata: validated.metadata as MessageMetadata
+      metadata: validated.metadata as MessageMetadata,
     });
   }
 }
@@ -205,12 +208,12 @@ export class ChatSessionData implements ChatSession {
     return {
       agent: this.agent,
       timestamp: this.timestamp.toISOString(),
-      messages: this.messages.map(msg => 
-        msg instanceof MessageData ? msg.toDict() : new MessageData(msg).toDict()
+      messages: this.messages.map((msg) =>
+        msg instanceof MessageData ? msg.toDict() : new MessageData(msg).toDict(),
       ),
       workspace: this.workspace,
       session_id: this.session_id,
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -219,10 +222,12 @@ export class ChatSessionData implements ChatSession {
     return new ChatSessionData({
       agent: validated.agent,
       timestamp: new Date(validated.timestamp),
-      messages: validated.messages.map((msgData: unknown) => MessageData.fromDict(msgData as Record<string, unknown>)),
+      messages: validated.messages.map((msgData: unknown) =>
+        MessageData.fromDict(msgData as Record<string, unknown>),
+      ),
       workspace: validated.workspace,
       session_id: validated.session_id,
-      metadata: validated.metadata as ChatSessionMetadata
+      metadata: validated.metadata as ChatSessionMetadata,
     });
   }
 }
@@ -247,10 +252,12 @@ export class WorkspaceDataContainer implements WorkspaceData {
       agent: this.agent,
       version: this.version,
       workspace_path: this.workspace_path,
-      chat_sessions: this.chat_sessions.map(session => 
-        session instanceof ChatSessionData ? session.toDict() : new ChatSessionData(session).toDict()
+      chat_sessions: this.chat_sessions.map((session) =>
+        session instanceof ChatSessionData
+          ? session.toDict()
+          : new ChatSessionData(session).toDict(),
       ),
-      metadata: this.metadata
+      metadata: this.metadata,
     };
   }
 
@@ -260,8 +267,10 @@ export class WorkspaceDataContainer implements WorkspaceData {
       agent: validated.agent,
       version: validated.version,
       workspace_path: validated.workspace_path,
-      chat_sessions: validated.chat_sessions.map((sessionData: unknown) => ChatSessionData.fromDict(sessionData as Record<string, unknown>)),
-      metadata: validated.metadata as WorkspaceMetadata
+      chat_sessions: validated.chat_sessions.map((sessionData: unknown) =>
+        ChatSessionData.fromDict(sessionData as Record<string, unknown>),
+      ),
+      metadata: validated.metadata as WorkspaceMetadata,
     });
   }
 }

@@ -4,10 +4,10 @@
   "title": "Fix: Chat System Build Errors and Integration Issues",
   "type": "bugfix",
   "description": "Multiple compilation errors and integration issues in the chat system implementation affecting core package build, TypeORM entity definitions, API endpoints, and MCP tool integration. Build failures are blocking development and testing of the chat feature.",
-  "status": "new",
+  "status": "cancelled",
   "priority": "high",
   "createdAt": "2025-07-24T13:52:08.420Z",
-  "updatedAt": "2025-07-24T13:52:08.420Z",
+  "updatedAt": "2025-07-24T14:26:52.365Z",
   "notes": [],
   "files": [],
   "relatedDevlogs": [],
@@ -36,5 +36,6 @@
     "suggestedNextSteps": [],
     "lastAIUpdate": "2025-07-24T13:52:08.420Z",
     "contextVersion": 1
-  }
+  },
+  "closedAt": "2025-07-24T14:26:52.365Z"
 }
