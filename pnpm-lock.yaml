@@ -36,6 +36,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@devlog/core':
+        specifier: workspace:*
+        version: link:../core
       chalk:
         specifier: ^5.3.0
         version: 5.4.1
