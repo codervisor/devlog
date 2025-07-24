@@ -24,7 +24,7 @@ import type {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '@/types/index.js';
+} from '../../types/index.js';
 
 export const DEFAULT_DEVLOG_DIR_NAME = '.devlog';
 
