@@ -1,2 +1,2 @@
 export { IntegrationService } from './integration-service.js';
-export { DefaultChatImportService, type ChatImportService } from './chat-import-service.js';
+// Note: ChatImportService has been moved to @devlog/ai package for proper dependency direction

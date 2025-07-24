@@ -1,0 +1,36 @@
+{
+  "id": 262,
+  "key": "docker-development-fix-build-folder-permission-iss",
+  "title": "Docker Development: Fix Build Folder Permission Issues",
+  "type": "task",
+  "description": "The devlog-web-dev container in docker-compose.dev.yml creates build folders with root permissions by default, causing permission issues when trying to clean or rebuild packages on the host system. This affects development workflow when switching between containerized and host-based builds.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-24T06:18:56.658Z",
+  "updatedAt": "2025-07-24T06:18:56.658Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "This permission issue disrupts the development workflow and creates friction when developers need to clean build artifacts or switch between containerized and host builds. It's particularly problematic during package migrations and architectural changes.",
+    "technicalContext": "The Docker container runs as root by default, so any files created by build processes (like TypeScript compilation) are owned by root:root. This prevents the host user from modifying or removing these files without sudo privileges.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Container build processes create files with correct user permissions",
+      "Host user can clean build artifacts without sudo",
+      "Build processes work seamlessly in both container and host environments",
+      "No permission conflicts during development workflow"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-24T06:18:56.658Z",
+    "contextVersion": 1
+  }
+}

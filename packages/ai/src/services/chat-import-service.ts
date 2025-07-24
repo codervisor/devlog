@@ -5,7 +5,7 @@
  * into the devlog storage system with proper workspace mapping and linking.
  */
 
-import { CopilotParser } from '@devlog/ai';
+import { CopilotParser } from '../parsers/index.js';
 import type {
   AgentType,
   ChatDevlogLink,
@@ -17,7 +17,7 @@ import type {
   ChatStatus,
   DevlogEntry,
   StorageProvider,
-} from '../types/index.js';
+} from '@devlog/core';
 
 export interface ChatImportService {
   /**
