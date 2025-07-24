@@ -629,17 +629,24 @@ export class WorkspaceDevlogManager {
       throw new Error(`Devlog ${id} not found`);
     }
 
+    // Add completion note first if summary is provided
+    if (summary) {
+      await this.addNote(id, `Completed: ${summary}`, 'progress');
+    }
+
+    // Get the updated entry (with note if added) and mark as completed
+    const entryWithNote = await this.getDevlog(id);
+    if (!entryWithNote) {
+      throw new Error(`Devlog ${id} not found after adding note`);
+    }
+
     const now = new Date().toISOString();
     const updated: DevlogEntry = {
-      ...existing,
+      ...entryWithNote,
       status: 'done',
       updatedAt: now,
       closedAt: now,
     };
-
-    if (summary) {
-      await this.addNote(id, `Completed: ${summary}`, 'progress');
-    }
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);

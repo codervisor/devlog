@@ -232,7 +232,7 @@ async function main() {
     adapterInstance.setCurrentWorkspaceId(defaultWorkspace);
   }
 
-  // Assign the adapter instance directly (not Object.assign which doesn't copy methods)
+  // Assign the adapter instance directly
   adapter = adapterInstance;
 
   const transport = new StdioServerTransport();
