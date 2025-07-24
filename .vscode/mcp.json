@@ -13,7 +13,10 @@
             ],
             "cwd": ".",
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "development",
+                // "MCP_MODE": "direct",
+                "MCP_MODE": "api",
+                "MCP_WEB_API_URL": "http://localhost:3200"
             }
         },
         "playwright": {

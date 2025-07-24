@@ -423,11 +423,66 @@ export class WorkspaceDevlogManager {
     }
 
     const now = new Date().toISOString();
+
+    // Separate context fields from AI context fields from direct fields
+    const {
+      // Context fields (should go into context object)
+      businessContext,
+      technicalContext,
+      acceptanceCriteria,
+      initialInsights,
+      relatedPatterns,
+      // AI context fields (should go into aiContext object)
+      currentSummary,
+      keyInsights,
+      openQuestions,
+      suggestedNextSteps,
+      // All other fields are direct updates
+      ...directFields
+    } = data;
+
+    // Build the updated entry with proper field mapping
     const updated: DevlogEntry = {
       ...existing,
-      ...data,
+      ...directFields,
       updatedAt: now,
     };
+
+    // Update context object if any context fields are provided
+    if (
+      businessContext !== undefined ||
+      technicalContext !== undefined ||
+      acceptanceCriteria !== undefined ||
+      initialInsights !== undefined ||
+      relatedPatterns !== undefined
+    ) {
+      updated.context = {
+        ...existing.context,
+        ...(businessContext !== undefined && { businessContext }),
+        ...(technicalContext !== undefined && { technicalContext }),
+        ...(acceptanceCriteria !== undefined && { acceptanceCriteria }),
+        ...(initialInsights !== undefined && { initialInsights }),
+        ...(relatedPatterns !== undefined && { relatedPatterns }),
+      };
+    }
+
+    // Update aiContext object if any AI context fields are provided
+    if (
+      currentSummary !== undefined ||
+      keyInsights !== undefined ||
+      openQuestions !== undefined ||
+      suggestedNextSteps !== undefined
+    ) {
+      updated.aiContext = {
+        ...existing.aiContext,
+        ...(currentSummary !== undefined && { currentSummary }),
+        ...(keyInsights !== undefined && { keyInsights }),
+        ...(openQuestions !== undefined && { openQuestions }),
+        ...(suggestedNextSteps !== undefined && { suggestedNextSteps }),
+        lastAIUpdate: now,
+        contextVersion: (existing.aiContext?.contextVersion || 0) + 1,
+      };
+    }
 
     // Ensure closedAt is set when status changes to 'done' or 'cancelled'
     if (data.status && ['done', 'cancelled'].includes(data.status) && !updated.closedAt) {
