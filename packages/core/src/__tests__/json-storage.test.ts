@@ -194,11 +194,11 @@ describe('JsonStorageProvider', () => {
 
       // Verify entry is excluded from default listing
       const defaultList = await storage.list();
-      expect(defaultList.items.find((e) => e.id === testEntry.id!)).toBe(undefined);
+      expect(defaultList.items.find((e: DevlogEntry) => e.id === testEntry.id!)).toBe(undefined);
 
       // Verify entry is included when explicitly requesting archived
       const archivedList = await storage.list({ archived: true });
-      expect(archivedList.items.find((e) => e.id === testEntry.id!)).toBeDefined();
+      expect(archivedList.items.find((e: DevlogEntry) => e.id === testEntry.id!)).toBeDefined();
     });
   });
 
@@ -229,7 +229,7 @@ describe('JsonStorageProvider', () => {
       const entries = await storage.list();
       expect(entries.items).toHaveLength(3);
 
-      const titles = entries.items.map((e) => e.title).sort();
+      const titles = entries.items.map((e: DevlogEntry) => e.title).sort();
       expect(titles).toEqual(['Bug Fix B', 'Feature A', 'Task C']);
     });
 
@@ -475,7 +475,7 @@ describe('JsonStorageProvider', () => {
       const savedEntries = await storage.list();
       expect(savedEntries.items).toHaveLength(5);
 
-      const ids = savedEntries.items.map((e) => e.id);
+      const ids = savedEntries.items.map((e: DevlogEntry) => e.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(5); // All IDs should be unique
     });

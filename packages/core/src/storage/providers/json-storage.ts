@@ -12,7 +12,7 @@ import {
   calculateTimeSeriesStats,
   getWorkspaceRoot,
 } from '../shared/index.js';
-import {
+import type {
   DevlogEntry,
   DevlogEvent,
   DevlogFilter,
@@ -24,7 +24,7 @@ import {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
-} from '@/types';
+} from '@/types/index.js';
 
 export const DEFAULT_DEVLOG_DIR_NAME = '.devlog';
 
@@ -65,6 +65,7 @@ export class JsonStorageProvider implements StorageProvider {
   }
 
   async exists(id: DevlogId): Promise<boolean> {
+    console.log(id);
     const filename = await this.findFileById(id);
     return filename !== null;
   }
