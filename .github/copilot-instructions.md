@@ -216,9 +216,10 @@ For every significant architectural change:
 - **Hot reloading preserved**: Volume mounts ensure code changes trigger hot reloads
 - **Port management**: Docker handles port allocation and prevents conflicts
 - **Environment isolation**: Development dependencies are containerized
+- **⚠️ IMPORTANT**: Keep development container running during development sessions - do NOT stop unless explicitly requested
 - **Commands**:
   - Start: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
-  - Stop: `docker compose -f docker-compose.dev.yml down`
+  - Stop: `docker compose -f docker-compose.dev.yml down` (only when explicitly requested)
   - Logs: `docker compose logs web-dev -f`
 
 #### UI-Related Development Tasks
@@ -227,11 +228,11 @@ For every significant architectural change:
   - **Playwright**: Required for React error debugging, console monitoring, state analysis
   - **Simple Browser**: Basic navigation/UI testing only - NOT reliable for error detection
 - **Testing Steps**:
-  - **Start Web App**: Run `docker compose -f docker-compose.dev.yml up web-dev -d --wait` to start the containerized web app
+  - **Start Web App**: Run `docker compose -f docker-compose.dev.yml up web-dev -d --wait` to start the containerized web app (if not already running)
   - **Verify**: Ensure the web app is running correctly before testing (check http://localhost:3200)
   - **Run Tests**: Use Playwright to run UI tests against the web app
   - **Update Devlog**: Add test results and any fixes to the devlog entry
-  - **Stop Web App**: After testing, stop with `docker compose -f docker-compose.dev.yml down`
+  - **Keep Running**: Leave the web app running for continued development (do NOT stop unless explicitly requested)
 
 #### React Debugging Verification Protocol
 - **MANDATORY for React Issues**: Use Playwright console monitoring before concluding any fix

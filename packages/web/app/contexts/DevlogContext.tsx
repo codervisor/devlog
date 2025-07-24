@@ -1,16 +1,24 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { 
-  DevlogEntry, 
-  DevlogId, 
-  DevlogFilter, 
-  PaginatedResult, 
-  PaginationMeta, 
-  DevlogStatus, 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from 'react';
+import {
+  DevlogEntry,
+  DevlogId,
+  DevlogFilter,
+  PaginatedResult,
+  PaginationMeta,
+  DevlogStatus,
   FilterType,
   DevlogStats,
-  TimeSeriesStats
+  TimeSeriesStats,
 } from '@devlog/core';
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
 import { useWorkspace } from './WorkspaceContext';
@@ -24,17 +32,17 @@ interface DevlogContextType {
   filters: DevlogFilter;
   filteredDevlogs: DevlogEntry[];
   connected: boolean;
-  
+
   // Stats state
   stats: DevlogStats | null;
   statsLoading: boolean;
   statsError: string | null;
-  
+
   // Time series stats state
   timeSeriesStats: TimeSeriesStats | null;
   timeSeriesLoading: boolean;
   timeSeriesError: string | null;
-  
+
   // Actions
   setFilters: (filters: DevlogFilter | ((prev: DevlogFilter) => DevlogFilter)) => void;
   fetchDevlogs: () => Promise<void>;
@@ -56,7 +64,7 @@ const DevlogContext = createContext<DevlogContextType | undefined>(undefined);
 export function DevlogProvider({ children }: { children: React.ReactNode }) {
   // Workspace context
   const { currentWorkspace } = useWorkspace();
-  
+
   // Devlogs state
   const [devlogs, setDevlogs] = useState<DevlogEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -175,7 +183,9 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setStatsLoading(true);
       setStatsError(null);
-      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/overview`);
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/overview`,
+      );
       if (response.ok) {
         const statsData = await response.json();
         setStats(statsData);
@@ -201,12 +211,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setTimeSeriesLoading(true);
       setTimeSeriesError(null);
-      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/timeseries?days=30`);
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/stats/timeseries?days=30`,
+      );
       if (response.ok) {
         const timeSeriesData = await response.json();
         setTimeSeriesStats(timeSeriesData);
       } else {
-        throw new Error(`Failed to fetch time series stats: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch time series stats: ${response.status} ${response.statusText}`,
+        );
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time series stats';
@@ -293,13 +307,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No workspace selected');
     }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       },
-      body: JSON.stringify(data),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to update devlog');
@@ -313,12 +330,27 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No workspace selected');
     }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`, {
-      method: 'DELETE',
-    });
+    // Optimistically remove from state immediately to prevent race conditions
+    // This ensures the UI updates immediately, even if SSE events are delayed
+    setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
-    if (!response.ok) {
-      throw new Error('Failed to delete devlog');
+    try {
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`,
+        {
+          method: 'DELETE',
+        },
+      );
+
+      if (!response.ok) {
+        // If the API call fails, restore the item to state
+        await fetchDevlogs();
+        throw new Error('Failed to delete devlog');
+      }
+    } catch (error) {
+      // If there's an error, refresh the list to restore correct state
+      await fetchDevlogs();
+      throw error;
     }
   };
 
@@ -328,13 +360,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No workspace selected');
     }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/update`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/update`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids, updates }),
       },
-      body: JSON.stringify({ ids, updates }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to batch update devlogs');
@@ -349,13 +384,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No workspace selected');
     }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/delete`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/delete`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
       },
-      body: JSON.stringify({ ids }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to batch delete devlogs');
@@ -369,13 +407,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No workspace selected');
     }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/note`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/batch/note`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids, content, category }),
       },
-      body: JSON.stringify({ ids, content, category }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to batch add notes');
@@ -408,24 +449,21 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Filter handling functions
-  const handleStatusFilter = useCallback(
-    (filterValue: FilterType | DevlogStatus) => {
-      if (['total', 'open', 'closed'].includes(filterValue)) {
-        setFilters((prev) => ({
-          ...prev,
-          filterType: filterValue,
-          status: undefined,
-        }));
-      } else {
-        setFilters((prev) => ({
-          ...prev,
-          filterType: undefined,
-          status: [filterValue as DevlogStatus],
-        }));
-      }
-    },
-    []
-  );
+  const handleStatusFilter = useCallback((filterValue: FilterType | DevlogStatus) => {
+    if (['total', 'open', 'closed'].includes(filterValue)) {
+      setFilters((prev) => ({
+        ...prev,
+        filterType: filterValue,
+        status: undefined,
+      }));
+    } else {
+      setFilters((prev) => ({
+        ...prev,
+        filterType: undefined,
+        status: [filterValue as DevlogStatus],
+      }));
+    }
+  }, []);
 
   // Fetch data on mount and filter changes
   useEffect(() => {
@@ -511,11 +549,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     handleStatusFilter,
   };
 
-  return (
-    <DevlogContext.Provider value={value}>
-      {children}
-    </DevlogContext.Provider>
-  );
+  return <DevlogContext.Provider value={value}>{children}</DevlogContext.Provider>;
 }
 
 export function useDevlogContext() {
