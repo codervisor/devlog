@@ -42,7 +42,10 @@
     "development-notes",
     "ai-assistant"
   ],
-  "author": "",
+  "author": {
+    "name": "Marvin Zhang",
+    "email": "tikazyq@163.com"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "@devlog/core": "workspace:*",
