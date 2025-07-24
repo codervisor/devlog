@@ -671,17 +671,24 @@ export class WorkspaceDevlogManager {
       throw new Error(`Devlog ${id} not found`);
     }
 
+    // Add closure note first if reason is provided
+    if (reason) {
+      await this.addNote(id, `Cancelled: ${reason}`, 'progress');
+    }
+
+    // Get the updated entry (with note if added) and mark as cancelled
+    const entryWithNote = await this.getDevlog(id);
+    if (!entryWithNote) {
+      throw new Error(`Devlog ${id} not found after adding note`);
+    }
+
     const now = new Date().toISOString();
     const updated: DevlogEntry = {
-      ...existing,
+      ...entryWithNote,
       status: 'cancelled',
       updatedAt: now,
       closedAt: now,
     };
-
-    if (reason) {
-      await this.addNote(id, `Cancelled: ${reason}`, 'progress');
-    }
 
     const provider = await this.getCurrentStorageProvider();
     await provider.save(updated);
