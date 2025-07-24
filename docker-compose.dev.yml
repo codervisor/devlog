@@ -20,13 +20,3 @@ services:
       - './.devlog:/app/.devlog'
     env_file:
       - .env
-
-  # SQLite for local development (alternative to postgres)
-  sqlite-dev:
-    image: alpine:latest
-    container_name: devlog-sqlite-dev
-    volumes:
-      - ./data:/data
-    command: tail -f /dev/null  # Keep container running
-    profiles:
-      - sqlite-dev

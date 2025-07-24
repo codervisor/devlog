@@ -1,0 +1,79 @@
+{
+  "id": 260,
+  "key": "integrate-docker-based-automated-github-copilot-te",
+  "title": "Integrate Docker-based Automated GitHub Copilot Testing into @devlog/ai",
+  "type": "feature",
+  "description": "Integrate Docker-based automated GitHub Copilot solution into the @devlog/ai package to enable automated code generation testing with VS Code Insiders. This will extend the current chat history parsing capabilities with active Copilot interaction automation using containerized VS Code instances.",
+  "status": "done",
+  "priority": "medium",
+  "createdAt": "2025-07-24T05:46:39.938Z",
+  "updatedAt": "2025-07-24T06:06:24.008Z",
+  "notes": [
+    {
+      "id": "9b6254d8-4381-4820-8874-801a8356cde7",
+      "timestamp": "2025-07-24T05:46:45.529Z",
+      "category": "progress",
+      "content": "Starting architecture analysis and solution design. The Docker-based Copilot automation should integrate seamlessly with the existing @devlog/ai architecture without disrupting current parsing capabilities."
+    },
+    {
+      "id": "bfc2dfb9-be88-4851-b6b1-69b05192ec2c",
+      "timestamp": "2025-07-24T06:02:21.426Z",
+      "category": "progress",
+      "content": "Successfully implemented the core Docker-based automation architecture. Created comprehensive automation layer with VSCodeContainer, DockerCopilotAutomation orchestrator, RealTimeCaptureParser, test scenarios system, and result exporters. Updated CLI to include automation commands and integrated with existing package structure.",
+      "files": [
+        "packages/ai/src/automation/",
+        "packages/ai/src/cli/automation.ts",
+        "packages/ai/src/cli/index.ts",
+        "packages/ai/src/index.ts",
+        "packages/ai/package.json"
+      ]
+    },
+    {
+      "id": "9062695b-2eb5-479c-83af-5e1d49ab9b9a",
+      "timestamp": "2025-07-24T06:06:16.627Z",
+      "category": "solution",
+      "content": "Completed the integration with comprehensive documentation, usage examples, and Docker setup testing. The automation system now provides full CLI support with commands for running tests, listing scenarios, testing setup, and programmatic API for custom automation workflows. Added troubleshooting guide and multiple usage examples covering basic automation, custom scenarios, language-specific testing, performance testing, and batch testing.",
+      "files": [
+        "packages/ai/README.md",
+        "packages/ai/examples/automation-examples.ts",
+        "packages/ai/scripts/test-docker-setup.sh"
+      ],
+      "codeChanges": "Added comprehensive Docker-based automation system with CLI commands, examples, and documentation"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "The @devlog/ai package currently focuses on parsing historical chat data from AI assistants. Adding Docker-based automated Copilot testing would enable the package to actively generate and test code suggestions, expanding its capabilities from passive analysis to active AI interaction. This would be valuable for automated testing of AI-generated code quality, consistency testing across different prompts, and research into AI coding assistant behavior patterns.",
+    "technicalContext": "The @devlog/ai package uses a modular architecture with parsers, models, and exporters. The Docker integration would add a new automation layer that can spin up containerized VS Code Insiders instances with GitHub Copilot, execute test scenarios, and capture the results. This would require extending the existing parser architecture to handle real-time data capture rather than just historical parsing, and adding Docker orchestration capabilities to the package.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Docker-based VS Code Insiders automation integrated into @devlog/ai package",
+      "New automation classes that can launch containerized VS Code instances",
+      "Automated test scenario execution with Copilot interaction",
+      "Real-time capture and parsing of Copilot suggestions",
+      "Export capabilities for automation test results",
+      "Documentation and examples for using the automation features",
+      "Integration with existing parser architecture",
+      "Support for multiple test scenarios and languages"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "The current @devlog/ai architecture with base parser classes can be extended to support real-time automation",
+      "Docker integration will require new dependencies and tooling in the package",
+      "Need to bridge the gap between historical parsing and real-time automation",
+      "The existing export formats (JSON, Markdown) can be reused for automation results",
+      "VS Code Insiders automation requires careful handling of extensions and authentication"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-24T05:46:39.938Z",
+    "contextVersion": 1
+  },
+  "closedAt": "2025-07-24T06:06:24.008Z"
+}

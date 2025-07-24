@@ -1,12 +1,13 @@
 {
   "name": "@devlog/ai",
   "version": "0.1.0",
-  "description": "AI Chat History Extractor - TypeScript implementation for GitHub Copilot and other AI coding assistants",
+  "description": "AI Chat History Extractor & Docker-based Automation - TypeScript implementation for GitHub Copilot and other AI coding assistants with automated testing capabilities",
   "type": "module",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
   "bin": {
-    "ai": "./build/cli/index.js"
+    "ai": "./build/cli/index.js",
+    "ai-automation": "./build/cli/automation.js"
   },
   "scripts": {
     "build": "tsc",
@@ -25,7 +26,12 @@
     "chat-history",
     "vscode",
     "ai-assistant",
-    "devlog"
+    "devlog",
+    "docker-automation",
+    "copilot-testing",
+    "automated-testing",
+    "code-generation",
+    "ai-evaluation"
   ],
   "author": "Devlog Contributors",
   "license": "MIT",

@@ -50,8 +50,27 @@ const program = new Command();
 
 program
   .name('ai-chat')
-  .description('Extract and analyze AI assistant chat history')
+  .description('Extract and analyze AI assistant chat history with automation capabilities')
   .version('0.1.0');
+
+// Automation command - delegate to dedicated automation CLI
+program
+  .command('automation')
+  .description('Docker-based GitHub Copilot automation testing')
+  .action(async () => {
+    try {
+      // Dynamically import and run the automation CLI
+      const { runAutomationCLI } = await import('./automation.js');
+      await runAutomationCLI();
+    } catch (error) {
+      console.error(
+        chalk.red('Automation feature not available:'),
+        error instanceof Error ? error.message : String(error),
+      );
+      console.log(chalk.gray('Make sure Docker is installed and running for automation features.'));
+      process.exit(1);
+    }
+  });
 
 // Chat command
 program
