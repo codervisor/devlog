@@ -2,6 +2,10 @@
   padding: 8px 16px;
 }
 
+.markdownRenderer.noPadding {
+  padding: 0 !important;
+}
+
 .markdownRenderer p {
   margin-bottom: 8px;
   font-size: 14px;

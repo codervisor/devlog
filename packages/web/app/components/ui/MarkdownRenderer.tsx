@@ -4,7 +4,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { defaultSchema } from 'rehype-sanitize';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { Typography } from 'antd';
 import styles from './MarkdownRenderer.module.css';
 import { StickyHeadings } from './StickyHeadings';
@@ -60,6 +60,7 @@ interface MarkdownRendererProps {
   maxHeight?: number | boolean; // Optional max height for the content
   enableStickyHeadings?: boolean; // Enable sticky headings feature
   stickyHeadingsTopOffset?: number; // Top offset for sticky headings
+  noPadding?: boolean; // If true, disables padding around the content
 }
 
 export function MarkdownRenderer({
@@ -69,6 +70,7 @@ export function MarkdownRenderer({
   maxHeight = 480, // Default max height
   enableStickyHeadings = false,
   stickyHeadingsTopOffset = 48,
+  noPadding = false,
 }: MarkdownRendererProps) {
   if (!content || content.trim() === '') {
     return null;
@@ -76,7 +78,8 @@ export function MarkdownRenderer({
 
   // Preprocess content to handle single line breaks
   const processedContent = preserveLineBreaks ? preprocessContent(content) : content;
-  const combinedClassName = `${styles.markdownRenderer} ${className || ''}`.trim();
+  const combinedClassName =
+    `${styles.markdownRenderer} ${noPadding ? styles.noPadding : ''} ${className || ''}`.trim();
   const wrapperClassName = maxHeight
     ? `${combinedClassName} ${styles.markdownRendererScrollable} thin-scrollbar-vertical`
     : combinedClassName;
@@ -85,11 +88,7 @@ export function MarkdownRenderer({
     <div className={wrapperClassName}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[
-          rehypeHighlight,
-          // Temporarily removing sanitization to test
-          // [rehypeSanitize, sanitizeSchema]
-        ]}
+        rehypePlugins={[rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
         components={{
           // Use simple div and let CSS handle styling
           p: ({ children }) => <p>{children}</p>,
