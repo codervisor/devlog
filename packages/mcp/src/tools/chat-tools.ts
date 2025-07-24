@@ -7,6 +7,21 @@
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { WorkspaceDevlogManager } from '@devlog/core';
+import { DevlogApiClient } from '../api/devlog-api-client.js';
+
+// Global API client instance
+let apiClient: DevlogApiClient | null = null;
+
+/**
+ * Get or create API client instance
+ */
+function getApiClient(): DevlogApiClient {
+  if (!apiClient) {
+    const baseUrl = process.env.DEVLOG_API_BASE_URL || 'http://localhost:3200';
+    apiClient = new DevlogApiClient({ baseUrl });
+  }
+  return apiClient;
+}
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {
@@ -520,111 +535,417 @@ export const getChatWorkspacesTool: Tool = {
 
 // Tool implementations
 export async function handleImportChatHistory(
-  _manager: WorkspaceDevlogManager,
-  _args: ImportChatHistoryArgs,
+  manager: WorkspaceDevlogManager,
+  args: ImportChatHistoryArgs,
 ) {
-  // TODO: Implement chat import service integration with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat history import is not yet implemented in workspace-aware architecture.
+  try {
+    // Get API client for HTTP communication
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
+    console.log(`[ChatTools] Starting chat import for workspace: ${workspaceId}`);
+
+    // Start import via API
+    const progress = await apiClient.importChatHistory(
+      {
+        source: args.source,
+        autoLink: args.autoLink,
+        autoLinkThreshold: args.autoLinkThreshold,
+        includeArchived: args.includeArchived,
+        overwriteExisting: args.overwriteExisting,
+        background: args.background,
+        dateRange: args.dateRange,
       },
-    ],
-  };
+      workspaceId,
+    );
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `✅ Chat import started successfully!
+
+**Import Details:**
+- Import ID: ${progress.importId}
+- Status: ${progress.status}
+- Source: ${args.source}
+- Auto-linking: ${args.autoLink ? 'enabled' : 'disabled'}
+- Background: ${args.background ? 'yes' : 'no'}
+
+**Progress:**
+- Total sessions: ${progress.progress?.totalSessions || 0}
+- Total messages: ${progress.progress?.totalMessages || 0}
+- Processed: ${progress.progress?.processedSessions || 0} sessions
+- Percentage: ${progress.progress?.percentage || 0}%
+
+You can check progress with: get_chat_session with importId=${progress.importId}`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] Import error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to start chat import: ${error.message}
+
+Please check:
+- Web API server is running
+- Workspace exists and is accessible
+- VS Code Copilot data is available
+- Sufficient permissions for file access`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleGetChatSession(
-  _manager: WorkspaceDevlogManager,
-  _args: GetChatSessionArgs,
+  manager: WorkspaceDevlogManager,
+  args: GetChatSessionArgs,
 ) {
-  // TODO: Implement chat session retrieval with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat session retrieval is not yet implemented in workspace-aware architecture.
+  try {
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
+    // Get chat session details
+    const result = await apiClient.getChatSession(
+      args.sessionId,
+      {
+        includeMessages: args.includeMessages,
+        messageLimit: args.messageLimit,
       },
-    ],
-  };
+      workspaceId,
+    );
+
+    const session = result.session;
+    const messages = result.messages || [];
+    const links = result.links || [];
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `📱 **Chat Session: ${session.id}**
+
+**Details:**
+- Agent: ${session.agent}
+- Timestamp: ${session.timestamp}
+- Workspace: ${session.workspace || 'Unknown'}
+- Title: ${session.title || 'Untitled'}
+- Status: ${session.status}
+- Message Count: ${session.messageCount}
+- Duration: ${session.duration ? `${Math.round(session.duration / 1000)}s` : 'Unknown'}
+
+**Linked Devlogs:**
+${
+  links.length > 0
+    ? links
+        .map(
+          (link) =>
+            `- Devlog #${link.devlogId} (confidence: ${Math.round(link.confidence * 100)}%)`,
+        )
+        .join('\n')
+    : '- No linked devlogs'
+}
+
+**Messages:** ${messages.length > 0 ? `\n${messages.map((msg, i) => `${i + 1}. [${msg.role}] ${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}`).join('\n')}` : 'Not included (use includeMessages=true)'}`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] Get session error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to get chat session: ${error.message}`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleListChatSessions(
-  _manager: WorkspaceDevlogManager,
-  _args: ListChatSessionsArgs,
+  manager: WorkspaceDevlogManager,
+  args: ListChatSessionsArgs,
 ) {
-  // TODO: Implement chat session listing with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat session listing is not yet implemented in workspace-aware architecture.
+  try {
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
+    // Build filter
+    const filter: any = {};
+    if (args.agent && args.agent.length > 0) {
+      filter.agent = args.agent;
+    }
+    if (args.status && args.status.length > 0) {
+      filter.status = args.status;
+    }
+    if (args.workspace && args.workspace.length > 0) {
+      filter.workspace = args.workspace;
+    }
+    if (args.includeArchived !== undefined) {
+      filter.includeArchived = args.includeArchived;
+    }
+    if (args.fromDate) {
+      filter.fromDate = args.fromDate;
+    }
+    if (args.toDate) {
+      filter.toDate = args.toDate;
+    }
+    if (args.minMessages) {
+      filter.minMessages = args.minMessages;
+    }
+    if (args.maxMessages) {
+      filter.maxMessages = args.maxMessages;
+    }
+
+    // Get sessions
+    const result = await apiClient.listChatSessions(
+      filter,
+      {
+        limit: args.limit,
+        offset: args.offset,
       },
-    ],
-  };
+      workspaceId,
+    );
+
+    const sessions = result.sessions;
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `📋 **Chat Sessions (${sessions.length} found)**
+
+${
+  sessions.length === 0
+    ? 'No chat sessions found matching the criteria.'
+    : sessions
+        .map(
+          (session, i) => `${i + 1}. **${session.id}**
+   - Agent: ${session.agent}
+   - Time: ${new Date(session.timestamp).toLocaleString()}
+   - Workspace: ${session.workspace || 'Unknown'}
+   - Messages: ${session.messageCount}
+   - Status: ${session.status}
+   - Title: ${session.title?.substring(0, 60)}${session.title && session.title.length > 60 ? '...' : ''}
+`,
+        )
+        .join('\n')
+}
+
+**Filters Applied:**
+${
+  Object.keys(filter).length > 0
+    ? Object.entries(filter)
+        .map(([key, value]) => `- ${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+        .join('\n')
+    : '- None (showing all sessions)'
+}`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] List sessions error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to list chat sessions: ${error.message}`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleSearchChatContent(
-  _manager: WorkspaceDevlogManager,
-  _args: SearchChatContentArgs,
+  manager: WorkspaceDevlogManager,
+  args: SearchChatContentArgs,
 ) {
-  // TODO: Implement chat content search with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat content search is not yet implemented in workspace-aware architecture.
+  try {
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
-      },
-    ],
-  };
+    // Build filter
+    const filter: any = {};
+    if (args.agent && args.agent.length > 0) {
+      filter.agent = args.agent;
+    }
+    if (args.workspace && args.workspace.length > 0) {
+      filter.workspace = args.workspace;
+    }
+    if (args.includeArchived !== undefined) {
+      filter.includeArchived = args.includeArchived;
+    }
+
+    // Search chat content
+    const result = await apiClient.searchChatContent(args.query, filter, args.limit, workspaceId);
+
+    const searchResults = result.results;
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `🔍 **Chat Search Results for: "${args.query}"**
+
+**Found:** ${result.resultCount} matches
+
+${
+  searchResults.length === 0
+    ? 'No matching chat content found.'
+    : searchResults
+        .map(
+          (result, i) => `${i + 1}. **Session: ${result.session.id}**
+   - Agent: ${result.session.agent}
+   - Time: ${new Date(result.session.timestamp).toLocaleString()}
+   - Workspace: ${result.session.workspace || 'Unknown'}
+   - Matches: ${result.messages.length} messages
+   - Relevance: ${Math.round(result.relevance * 100)}%
+   
+   **Sample matches:**
+${result.messages
+  .slice(0, 2)
+  .map((match) => `   • [${match.message.role}] ${match.context}`)
+  .join('\n')}
+`,
+        )
+        .join('\n')
+}
+
+**Search Info:**
+- Query: "${result.query}"
+- Results: ${result.resultCount}
+- Search type: ${args.searchType || 'exact'}`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] Search error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to search chat content: ${error.message}`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleLinkChatToDevlog(
-  _manager: WorkspaceDevlogManager,
-  _args: LinkChatToDevlogArgs,
+  manager: WorkspaceDevlogManager,
+  args: LinkChatToDevlogArgs,
 ) {
-  // TODO: Implement chat-devlog linking with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat-devlog linking is not yet implemented in workspace-aware architecture.
+  try {
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
+    // Create the link
+    const result = await apiClient.createChatDevlogLink(
+      args.sessionId,
+      args.devlogId,
+      {
+        confidence: 1.0, // Manual links get full confidence
+        reason: 'manual',
+        evidence: { notes: args.notes || '' },
+        confirmed: true,
+        createdBy: 'user',
       },
-    ],
-  };
+      workspaceId,
+    );
+
+    const link = result.link;
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `✅ **Chat-Devlog Link Created Successfully!**
+
+**Link Details:**
+- Session ID: ${link.sessionId}
+- Devlog ID: ${link.devlogId}
+- Confidence: ${Math.round(link.confidence * 100)}%
+- Reason: ${link.reason}
+- Created by: ${link.createdBy}
+- Created at: ${new Date(link.createdAt).toLocaleString()}
+
+**Status:** ${link.confirmed ? 'Confirmed' : 'Pending confirmation'}
+
+This chat session is now linked to the devlog entry and will appear in related searches and context queries.`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] Link creation error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to create chat-devlog link: ${error.message}
+
+Please check:
+- Session ID exists and is valid
+- Devlog ID exists and is accessible
+- You have permission to create links
+- Web API server is running`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleUnlinkChatFromDevlog(
-  _manager: WorkspaceDevlogManager,
-  _args: UnlinkChatFromDevlogArgs,
+  manager: WorkspaceDevlogManager,
+  args: UnlinkChatFromDevlogArgs,
 ) {
-  // TODO: Implement chat-devlog unlinking with WorkspaceDevlogManager
-  return {
-    content: [
-      {
-        type: 'text',
-        text: `❌ Chat-devlog unlinking is not yet implemented in workspace-aware architecture.
+  try {
+    const apiClient = getApiClient();
+    const currentWorkspace = await manager.getCurrentWorkspace();
+    const workspaceId = currentWorkspace?.workspace.id || 'default';
 
-This feature is currently being migrated to work with WorkspaceDevlogManager.
-Please check back in a future release.`,
-      },
-    ],
-  };
+    // Remove the link
+    await apiClient.removeChatDevlogLink(args.sessionId, args.devlogId, workspaceId);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `✅ **Chat-Devlog Link Removed Successfully!**
+
+**Removed Link:**
+- Session ID: ${args.sessionId}
+- Devlog ID: ${args.devlogId}
+
+The chat session is no longer linked to the devlog entry.`,
+        },
+      ],
+    };
+  } catch (error: any) {
+    console.error('[ChatTools] Unlink error:', error);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `❌ Failed to remove chat-devlog link: ${error.message}
+
+Please check:
+- Link exists between the specified session and devlog
+- You have permission to modify links
+- Web API server is running`,
+        },
+      ],
+    };
+  }
 }
 
 export async function handleSuggestChatDevlogLinks(

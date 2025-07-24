@@ -4,7 +4,12 @@
 
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { DevlogEntryEntity } from '../../entities/devlog-entry.entity.js';
+import {
+  DevlogEntryEntity,
+  ChatSessionEntity,
+  ChatMessageEntity,
+  ChatDevlogLinkEntity,
+} from '../../entities/index.js';
 
 /**
  * Configuration options for TypeORM storage
@@ -59,7 +64,12 @@ export function createDataSource(
   }
 
   const baseConfig: Partial<DataSourceOptions> = {
-    entities: entities || [DevlogEntryEntity],
+    entities: entities || [
+      DevlogEntryEntity,
+      ChatSessionEntity,
+      ChatMessageEntity,
+      ChatDevlogLinkEntity,
+    ],
     synchronize: options.synchronize ?? false, // Default to false for production safety
     logging: options.logging ?? false,
   };
