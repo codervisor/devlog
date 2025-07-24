@@ -13,7 +13,7 @@ loadRootEnv();
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { MCPDevlogAdapter } from './mcp-adapter.js';
+import { createMCPAdapterWithDiscovery, type MCPAdapter } from './adapter-factory.js';
 import type {
   CreateDevlogArgs,
   UpdateDevlogArgs,
@@ -74,7 +74,7 @@ const server = new Server(
 );
 
 // Initialize the adapter
-const adapter = new MCPDevlogAdapter();
+const adapter: MCPAdapter = {} as MCPAdapter; // Will be replaced in main()
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: allTools };
@@ -218,23 +218,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   // Parse command line arguments for default workspace
   const args = process.argv.slice(2);
-  const workspaceArgIndex = args.findIndex(arg => arg === '--workspace' || arg === '-w');
-  const defaultWorkspace = workspaceArgIndex !== -1 && args[workspaceArgIndex + 1] 
-    ? args[workspaceArgIndex + 1] 
-    : undefined;
+  const workspaceArgIndex = args.findIndex((arg) => arg === '--workspace' || arg === '-w');
+  const defaultWorkspace =
+    workspaceArgIndex !== -1 && args[workspaceArgIndex + 1]
+      ? args[workspaceArgIndex + 1]
+      : undefined;
 
-  // Initialize the adapter with optional default workspace
-  const adapterInstance = new MCPDevlogAdapter(defaultWorkspace);
-  
+  // Create adapter using factory with discovery
+  const adapterInstance = await createMCPAdapterWithDiscovery();
+
+  // If default workspace was specified, set it
+  if (defaultWorkspace) {
+    adapterInstance.setCurrentWorkspaceId(defaultWorkspace);
+  }
+
   // Replace the global adapter variable for the request handlers
   Object.assign(adapter, adapterInstance);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
-  const workspaceInfo = defaultWorkspace 
-    ? ` (default workspace: ${defaultWorkspace})`
-    : '';
+
+  const workspaceInfo = defaultWorkspace ? ` (default workspace: ${defaultWorkspace})` : '';
   console.error(`Devlog MCP Server started with flexible storage architecture${workspaceInfo}`);
 }
 

@@ -15,18 +15,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/devlog-monorepo.git",
+    "url": "https://github.com/codervisor/devlog.git",
     "directory": "packages/mcp"
   },
-  "homepage": "https://github.com/your-username/devlog-monorepo#readme",
+  "homepage": "https://github.com/codervisor/devlog#readme",
   "bugs": {
-    "url": "https://github.com/your-username/devlog-monorepo/issues"
+    "url": "https://github.com/codervisor/devlog/issues"
   },
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsx src/index.ts",
-    "dev:watch": "tsx watch --clear-screen=false src/index.ts",
     "dev:nodemon": "nodemon",
     "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
     "test": "vitest run",

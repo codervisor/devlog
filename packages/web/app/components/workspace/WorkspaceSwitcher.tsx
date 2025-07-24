@@ -14,7 +14,6 @@ import {
   WifiOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { useServerSentEvents } from '@/hooks/useServerSentEvents';
 import { useWorkspaceStorage } from '@/hooks/use-workspace-storage';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import styles from './WorkspaceSwitcher.module.css';
@@ -80,9 +79,13 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
     >
   >({});
   const router = useRouter();
-  const { subscribe, unsubscribe } = useServerSentEvents();
   const { saveWorkspaceId, clearWorkspaceId } = useWorkspaceStorage();
-  const { currentWorkspace, workspaces, setCurrentWorkspace: updateCurrentWorkspace, refreshWorkspaces } = useWorkspace();
+  const {
+    currentWorkspace,
+    workspaces,
+    setCurrentWorkspace: updateCurrentWorkspace,
+    refreshWorkspaces,
+  } = useWorkspace();
 
   // Load workspaces and connection statuses on component mount
   useEffect(() => {
@@ -90,21 +93,6 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
       loadConnectionStatuses(workspaces);
     }
   }, [workspaces]);
-
-  // Listen for workspace switch events to update UI
-  useEffect(() => {
-    const handleWorkspaceSwitched = (eventData: any) => {
-      console.log('WorkspaceSwitcher: Received workspace-switched event', eventData);
-      // Refresh workspace data to update the current workspace
-      refreshWorkspaces();
-    };
-
-    subscribe('workspace-switched', handleWorkspaceSwitched);
-
-    return () => {
-      unsubscribe('workspace-switched');
-    };
-  }, [subscribe, unsubscribe, refreshWorkspaces]);
 
   const loadConnectionStatuses = async (workspaceList: WorkspaceMetadata[]) => {
     const statuses: Record<string, { connected: boolean; error?: string }> = {};
@@ -157,21 +145,21 @@ export function WorkspaceSwitcher({ collapsed = false, className = '' }: Workspa
   const switchWorkspace = async (workspaceId: string) => {
     try {
       // Find the workspace by ID to get its name
-      const targetWorkspace = workspaces.find(ws => ws.id === workspaceId);
+      const targetWorkspace = workspaces.find((ws) => ws.id === workspaceId);
       if (!targetWorkspace) {
         throw new Error('Workspace not found');
       }
 
       // Save workspace to localStorage for persistence (client-side only)
       saveWorkspaceId(workspaceId);
-      
+
       // Update local state immediately
       updateCurrentWorkspace({
         workspaceId,
         workspace: targetWorkspace,
-        isDefault: workspaceId === 'default'
+        isDefault: workspaceId === 'default',
       });
-      
+
       message.success(`Switched to workspace: ${targetWorkspace.name}`);
 
       // Force immediate hard reload to ensure all components refresh with new workspace context
