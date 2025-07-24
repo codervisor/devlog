@@ -42,6 +42,7 @@ export interface CreateDevlogArgs {
 
 export interface UpdateDevlogArgs extends BaseDevlogArgs {
   status?: DevlogStatus;
+  priority?: DevlogPriority;
   blockers?: string;
   nextSteps?: string;
   files?: string[];

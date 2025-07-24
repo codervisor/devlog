@@ -125,7 +125,15 @@ export class MCPApiAdapter {
       throw new Error(`${operation} failed: ${error.message}`);
     }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    let message: string;
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof error === 'string') {
+      message = error;
+    } else {
+      message = 'Unknown error';
+    }
+
     throw new Error(`${operation} failed: ${message}`);
   }
 
@@ -173,22 +181,27 @@ export class MCPApiAdapter {
     try {
       this.ensureInitialized();
 
-      // Convert MCP args to API request format
+      // Convert MCP args to API request format, filtering out undefined values
       const updateData: UpdateDevlogRequest = {
         id: args.id,
-        status: args.status,
-        blockers: args.blockers,
-        nextSteps: args.nextSteps,
-        files: args.files,
-        businessContext: args.businessContext,
-        technicalContext: args.technicalContext,
-        acceptanceCriteria: args.acceptanceCriteria,
-        initialInsights: args.initialInsights,
-        relatedPatterns: args.relatedPatterns,
-        currentSummary: args.currentSummary,
-        keyInsights: args.keyInsights,
-        openQuestions: args.openQuestions,
-        suggestedNextSteps: args.suggestedNextSteps,
+        ...(args.status !== undefined && { status: args.status }),
+        ...(args.priority !== undefined && { priority: args.priority }),
+        ...(args.blockers !== undefined && { blockers: args.blockers }),
+        ...(args.nextSteps !== undefined && { nextSteps: args.nextSteps }),
+        ...(args.files !== undefined && { files: args.files }),
+        ...(args.businessContext !== undefined && { businessContext: args.businessContext }),
+        ...(args.technicalContext !== undefined && { technicalContext: args.technicalContext }),
+        ...(args.acceptanceCriteria !== undefined && {
+          acceptanceCriteria: args.acceptanceCriteria,
+        }),
+        ...(args.initialInsights !== undefined && { initialInsights: args.initialInsights }),
+        ...(args.relatedPatterns !== undefined && { relatedPatterns: args.relatedPatterns }),
+        ...(args.currentSummary !== undefined && { currentSummary: args.currentSummary }),
+        ...(args.keyInsights !== undefined && { keyInsights: args.keyInsights }),
+        ...(args.openQuestions !== undefined && { openQuestions: args.openQuestions }),
+        ...(args.suggestedNextSteps !== undefined && {
+          suggestedNextSteps: args.suggestedNextSteps,
+        }),
       };
 
       const entry = await this.apiClient.updateDevlog(args.id, updateData);
@@ -246,21 +259,22 @@ export class MCPApiAdapter {
     try {
       this.ensureInitialized();
 
-      // Convert MCP args to API filter format
+      // Convert MCP args to API filter format, filtering out undefined values
       const filter: DevlogFilter = {
-        status: args.status ? [args.status] : undefined,
-        type: args.type ? [args.type] : undefined,
-        priority: args.priority ? [args.priority] : undefined,
-        archived: args.archived,
-        pagination:
-          args.page || args.limit || args.sortBy
-            ? {
-                page: args.page,
-                limit: args.limit,
-                sortBy: args.sortBy,
+        ...(args.status && { status: [args.status] }),
+        ...(args.type && { type: [args.type] }),
+        ...(args.priority && { priority: [args.priority] }),
+        ...(args.archived !== undefined && { archived: args.archived }),
+        ...(args.page || args.limit || args.sortBy
+          ? {
+              pagination: {
+                ...(args.page !== undefined && { page: args.page }),
+                ...(args.limit !== undefined && { limit: args.limit }),
+                ...(args.sortBy !== undefined && { sortBy: args.sortBy }),
                 sortOrder: args.sortOrder || 'desc',
-              }
-            : undefined,
+              },
+            }
+          : {}),
       };
 
       const result = await this.apiClient.listDevlogs(filter);
@@ -495,6 +509,10 @@ export class MCPApiAdapter {
         archived: false,
       } as UpdateDevlogRequest);
 
+      if (!entry) {
+        throw new Error(`Devlog entry ${args.id} not found`);
+      }
+
       return {
         content: [
           {
@@ -687,6 +705,18 @@ export class MCPApiAdapter {
       };
 
       const result = await this.apiClient.listDevlogs(filter);
+
+      if (!result || !result.items) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'No active devlog entries found.',
+            },
+          ],
+        };
+      }
+
       const entries = result.items;
 
       if (entries.length === 0) {
@@ -727,9 +757,9 @@ export class MCPApiAdapter {
   /**
    * Get context for AI - detailed devlog information
    */
-  async getContextForAI(args: any): Promise<CallToolResult> {
+  async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
     // For now, just delegate to getDevlog since the API client returns full detail
-    return this.getDevlog(args.id);
+    return this.getDevlog(args);
   }
 
   /**
@@ -794,6 +824,18 @@ export class MCPApiAdapter {
         .join(' ');
 
       const searchResult = await this.apiClient.searchDevlogs(searchTerms);
+
+      if (!searchResult || !searchResult.items) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `No related devlog entries found for:\nWork: ${args.workDescription}\nType: ${args.workType}\n\n✅ Safe to create a new devlog entry - no overlapping work detected.`,
+            },
+          ],
+        };
+      }
+
       const entries = searchResult.items;
 
       if (entries.length === 0) {

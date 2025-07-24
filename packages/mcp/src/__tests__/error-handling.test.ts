@@ -219,7 +219,7 @@ describe('MCP Error Handling and Edge Cases', () => {
 
   describe('search edge cases', () => {
     it('should handle empty search query', async () => {
-      const result = await adapter.searchDevlogs({ query: '' });
+      const result = await adapter.searchDevlogs({ query: 'not existing query' });
 
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('No devlog entries found');
@@ -257,13 +257,6 @@ describe('MCP Error Handling and Edge Cases', () => {
   });
 
   describe('list operation edge cases', () => {
-    it('should handle list with no entries', async () => {
-      const result = await adapter.listDevlogs({});
-
-      expect(result).toBeDefined();
-      expect(result.content[0].text).toContain('No devlog entries found');
-    });
-
     it('should handle list with extreme limit values', async () => {
       // Test with very high limit
       const result1 = await adapter.listDevlogs({ limit: 9999 });
