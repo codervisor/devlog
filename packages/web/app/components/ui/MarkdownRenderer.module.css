@@ -1,3 +1,7 @@
+.markdownRenderer {
+  padding: 8px 16px;
+}
+
 .markdownRenderer p {
   margin-bottom: 8px;
   font-size: 14px;
@@ -13,7 +17,6 @@
   max-height: 480px;
   overflow-y: auto;
 }
-
 
 .markdownRenderer h1,
 .markdownRenderer h2 {

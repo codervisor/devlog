@@ -2,96 +2,19 @@
 
 .markdownEditor {
   width: 100%;
-  min-height: 48px;
-  padding: 8px 16px;
-  border: 1px solid transparent;
   border-radius: 6px;
   overflow: hidden;
   background-color: #ffffff;
-  transition:
-    border-color 0.3s ease,
-    height 0.2s ease;
 }
 
-.markdownEditor .monaco-editor {
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-}
-
-.markdownEditor .monaco-editor .margin {
+.markdownEditor :global(.w-tc-editor),
+.markdownEditor :global(.w-tc-editor .w-tc-editor-text) {
+  padding: 8px 16px !important;
   background-color: transparent !important;
+  font-size: 14px;
 }
 
-.markdownEditor .monaco-editor-background {
-  background-color: #ffffff !important;
-}
-
-/* Ensure proper padding inside the editor to match MarkdownRenderer */
-.markdownEditor .view-lines {
-  padding: 12px !important;
-}
-
-/* Match MarkdownRenderer typography */
-.markdownEditor .monaco-editor .view-line {
-  font-size: 16px !important;
-  line-height: 24px !important;
-}
-
-/* Hide Monaco Editor's minimap and other unwanted features */
-.markdownEditor .minimap {
-  display: none !important;
-}
-
-.markdownEditor .overflow-guard {
-  border-radius: 6px;
-}
-
-/* Custom scrollbar styling */
-.markdownEditor .monaco-scrollable-element > .scrollbar > .slider {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-}
-
-.markdownEditor .monaco-scrollable-element > .scrollbar > .slider:hover {
-  background-color: rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Enhanced markdown syntax highlighting to match MarkdownRenderer colors */
-.markdownEditor .mtk1 {
-  color: #24292f; /* default text - matches MarkdownRenderer p color */
-}
-
-.markdownEditor .mtk12 {
-  color: #0969da;
-  font-weight: 600; /* headers - matches MarkdownRenderer headings */
-}
-
-.markdownEditor .mtk13 {
-  color: #cf222e;
-  font-style: italic; /* emphasis */
-}
-
-.markdownEditor .mtk14 {
-  color: #8250df;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
-  font-size: 14px; /* code - matches MarkdownRenderer code */
-}
-
-.markdownEditor .mtk22 {
-  color: #1890ff; /* links - matches MarkdownRenderer links */
-  text-decoration: underline;
-}
-
-.markdownEditor .mtk6 {
-  color: #6a737d; /* comments/blockquotes - matches MarkdownRenderer blockquote */
-  font-style: italic;
-}
-
-/* Match list styling from MarkdownRenderer */
-.markdownEditor .monaco-editor .view-line[data-line-number] {
-  padding-left: 0 !important;
-}
-
-/* Ensure consistent spacing between lines to match MarkdownRenderer paragraph spacing */
-.markdownEditor .monaco-editor .view-line {
-  margin-bottom: 0 !important;
+.markdownEditor :global(.w-tc-editor .w-tc-editor-preview) {
+  padding: 0 !important;
+  font-size: 14px;
 }
