@@ -5,6 +5,7 @@ import { Alert, Button, message, Popconfirm, Space } from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons';
 import { DevlogDetails, PageLayout } from '@/components';
 import { useDevlogDetails } from '@/hooks/useDevlogDetails';
+import { useDevlogs } from '@/hooks/useDevlogs';
 import { useRouter } from 'next/navigation';
 
 interface DevlogDetailsPageProps {
@@ -12,7 +13,14 @@ interface DevlogDetailsPageProps {
 }
 
 export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
-  const { devlog, loading, error: fetchError, updateDevlog, deleteDevlog } = useDevlogDetails(id);
+  const {
+    devlog,
+    loading,
+    error: fetchError,
+    updateDevlog,
+    deleteDevlog: deleteDevlogFromDetails,
+  } = useDevlogDetails(id);
+  const { deleteDevlog: deleteDevlogFromList } = useDevlogs();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
@@ -46,10 +54,25 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
 
   const handleDelete = async () => {
     try {
-      await deleteDevlog(parseInt(id));
+      const numericId = parseInt(id);
+
+      // Call both delete functions to ensure proper state synchronization:
+      // 1. Delete from details hook (updates local state immediately)
+      await deleteDevlogFromDetails(numericId);
+
+      // 2. Delete from list context (ensures list state is updated even if SSE is delayed)
+      // Note: This is a safety measure in case there are timing issues with real-time events
+      try {
+        await deleteDevlogFromList(numericId);
+      } catch (error) {
+        // This might fail if the item is already deleted, which is fine
+        console.debug('List deletion failed (likely already removed by SSE):', error);
+      }
+
       router.push('/devlogs');
     } catch (error) {
       console.error('Failed to delete devlog:', error);
+      message.error('Failed to delete devlog');
     }
   };
 
