@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { MCPDevlogAdapter } from '../mcp-adapter.js';
+import { MCPDevlogAdapter } from '../adapters/mcp-adapter.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -66,7 +66,7 @@ describe('MCP Error Handling and Edge Cases', () => {
         title: 'Incomplete Entry',
         description: 'Missing type field',
       } as any);
-      
+
       // Verify that some result is returned (the behavior may vary)
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
@@ -79,7 +79,7 @@ describe('MCP Error Handling and Edge Cases', () => {
           type: 'invalid-type' as any,
           description: 'Entry with invalid type',
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -95,7 +95,7 @@ describe('MCP Error Handling and Edge Cases', () => {
           description: 'Entry with invalid priority',
           priority: 'super-critical' as any,
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -110,7 +110,7 @@ describe('MCP Error Handling and Edge Cases', () => {
           type: 'task',
           description: '',
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -122,7 +122,7 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('non-existent resource handling', () => {
     it('should handle non-existent devlog ID in getDevlog', async () => {
       const result = await adapter.getDevlog({ id: 99999 });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('not found');
     });
@@ -164,46 +164,46 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('edge case values', () => {
     it('should handle extremely long strings', async () => {
       const longString = 'a'.repeat(10000);
-      
+
       const result = await adapter.createDevlog({
         title: longString,
         type: 'task',
         description: longString,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('Created devlog entry');
     });
 
     it('should handle special characters in strings', async () => {
-      const specialChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
-      
+      const specialChars = '!@#$%^&*()_+-=[]{}|;\':",./<>?`~';
+
       const result = await adapter.createDevlog({
         title: `Special ${specialChars} Characters`,
         type: 'task',
         description: `Testing special characters: ${specialChars}`,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('Created devlog entry');
     });
 
     it('should handle unicode characters', async () => {
       const unicode = '测试中文字符 🚀 émojis and àccénts';
-      
+
       const result = await adapter.createDevlog({
         title: unicode,
         type: 'task',
         description: `Unicode test: ${unicode}`,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('Created devlog entry');
     });
 
     it('should handle large array inputs', async () => {
       const largeArray = Array.from({ length: 100 }, (_, i) => `Item ${i}`);
-      
+
       const result = await adapter.createDevlog({
         title: 'Large Array Test',
         type: 'task',
@@ -211,7 +211,7 @@ describe('MCP Error Handling and Edge Cases', () => {
         acceptanceCriteria: largeArray,
         initialInsights: largeArray,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('Created devlog entry');
     });
@@ -220,14 +220,14 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('search edge cases', () => {
     it('should handle empty search query', async () => {
       const result = await adapter.searchDevlogs({ query: '' });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('No devlog entries found');
     });
 
     it('should handle search with only whitespace', async () => {
       const result = await adapter.searchDevlogs({ query: '   \t\n   ' });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('No devlog entries found');
     });
@@ -241,16 +241,16 @@ describe('MCP Error Handling and Edge Cases', () => {
       });
 
       const result = await adapter.searchDevlogs({ query: '[Test]' });
-      
+
       expect(result).toBeDefined();
       // Should either find the entry or handle regex gracefully
     });
 
     it('should handle very long search queries', async () => {
       const longQuery = 'search '.repeat(1000);
-      
+
       const result = await adapter.searchDevlogs({ query: longQuery });
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('No devlog entries found');
     });
@@ -259,7 +259,7 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('list operation edge cases', () => {
     it('should handle list with no entries', async () => {
       const result = await adapter.listDevlogs({});
-      
+
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('No devlog entries found');
     });
@@ -296,7 +296,7 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('workspace edge cases', () => {
     it('should handle invalid workspace ID', async () => {
       const invalidId = 'non-existent-workspace-12345';
-      
+
       // This should not throw, just update the in-memory ID
       adapter.setCurrentWorkspaceId(invalidId);
       expect(adapter.getCurrentWorkspaceId()).toBe(invalidId);
@@ -304,7 +304,7 @@ describe('MCP Error Handling and Edge Cases', () => {
 
     it('should handle special characters in workspace ID', async () => {
       const specialId = 'workspace-with-special@chars#123';
-      
+
       adapter.setCurrentWorkspaceId(specialId);
       expect(adapter.getCurrentWorkspaceId()).toBe(specialId);
     });
@@ -319,7 +319,7 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('concurrent operations', () => {
     it('should handle multiple simultaneous operations', async () => {
       const promises: Promise<any>[] = [];
-      
+
       // Create multiple entries simultaneously
       for (let i = 0; i < 5; i++) {
         promises.push(
@@ -327,12 +327,12 @@ describe('MCP Error Handling and Edge Cases', () => {
             title: `Concurrent Entry ${i}`,
             type: 'task',
             description: `Entry created concurrently ${i}`,
-          })
+          }),
         );
       }
-      
+
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(5);
       results.forEach((result, index) => {
         expect(result).toBeDefined();
@@ -347,8 +347,10 @@ describe('MCP Error Handling and Edge Cases', () => {
         type: 'task',
         description: 'Base entry',
       });
-      
-      const entryIdMatch = (createResult.content[0] as any).text.match(/Created devlog entry: (\d+)/);
+
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
       const entryId = parseInt(entryIdMatch![1], 10);
 
       // Now perform multiple operations simultaneously
@@ -359,11 +361,11 @@ describe('MCP Error Handling and Edge Cases', () => {
         adapter.addDevlogNote({ id: entryId, note: 'Concurrent note' }),
         adapter.getActiveContext({}),
       ];
-      
+
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(5);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeDefined();
         expect(result.content).toBeDefined();
       });
@@ -373,7 +375,7 @@ describe('MCP Error Handling and Edge Cases', () => {
   describe('resource cleanup', () => {
     it('should handle disposal when not initialized', async () => {
       const uninitializedAdapter = new MCPDevlogAdapter();
-      
+
       // Should not throw
       await expect(uninitializedAdapter.dispose()).resolves.toBeUndefined();
     });
@@ -381,7 +383,7 @@ describe('MCP Error Handling and Edge Cases', () => {
     it('should handle multiple dispose calls', async () => {
       // First disposal
       await adapter.dispose();
-      
+
       // Second disposal should not throw
       await expect(adapter.dispose()).resolves.toBeUndefined();
     });

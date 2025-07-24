@@ -8,7 +8,7 @@ import {
   DevlogApiClient,
   DevlogApiClientError,
   type DevlogApiClientConfig,
-} from './api/devlog-api-client.js';
+} from '../api/devlog-api-client.js';
 import type {
   DevlogEntry,
   WorkspaceMetadata,
@@ -18,6 +18,21 @@ import type {
   DevlogFilter,
   PaginatedResult,
 } from '@devlog/core';
+import type {
+  CreateDevlogArgs,
+  UpdateDevlogArgs,
+  ListDevlogsArgs,
+  SearchDevlogsArgs,
+  AddDevlogNoteArgs,
+  UpdateDevlogWithNoteArgs,
+  AddDecisionArgs,
+  CompleteDevlogArgs,
+  CloseDevlogArgs,
+  GetActiveContextArgs,
+  GetContextForAIArgs,
+  DiscoverRelatedDevlogsArgs,
+  UpdateAIContextArgs,
+} from '../types/index.js';
 
 export interface MCPApiAdapterConfig {
   /** Configuration for the underlying API client */
@@ -119,9 +134,22 @@ export class MCPApiAdapter {
   /**
    * Create a new devlog entry
    */
-  async createDevlog(request: CreateDevlogRequest): Promise<CallToolResult> {
+  async createDevlog(args: CreateDevlogArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
+
+      // Convert MCP args to API request format
+      const request: CreateDevlogRequest = {
+        title: args.title,
+        type: args.type,
+        description: args.description,
+        priority: args.priority,
+        businessContext: args.businessContext,
+        technicalContext: args.technicalContext,
+        acceptanceCriteria: args.acceptanceCriteria,
+        initialInsights: args.initialInsights,
+        relatedPatterns: args.relatedPatterns,
+      };
 
       const entry = await this.apiClient.createDevlog(request);
 
@@ -139,29 +167,31 @@ export class MCPApiAdapter {
   }
 
   /**
-   * Update an existing devlog entry - supports both individual args and single request object
+   * Update an existing devlog entry
    */
-  async updateDevlog(
-    idOrArgs: string | number | UpdateDevlogRequest,
-    data?: UpdateDevlogRequest,
-  ): Promise<CallToolResult> {
+  async updateDevlog(args: UpdateDevlogArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
-      let id: string | number;
-      let updateData: UpdateDevlogRequest;
+      // Convert MCP args to API request format
+      const updateData: UpdateDevlogRequest = {
+        id: args.id,
+        status: args.status,
+        blockers: args.blockers,
+        nextSteps: args.nextSteps,
+        files: args.files,
+        businessContext: args.businessContext,
+        technicalContext: args.technicalContext,
+        acceptanceCriteria: args.acceptanceCriteria,
+        initialInsights: args.initialInsights,
+        relatedPatterns: args.relatedPatterns,
+        currentSummary: args.currentSummary,
+        keyInsights: args.keyInsights,
+        openQuestions: args.openQuestions,
+        suggestedNextSteps: args.suggestedNextSteps,
+      };
 
-      if (typeof idOrArgs === 'object') {
-        // Single argument version - args is a complete UpdateDevlogRequest
-        id = idOrArgs.id;
-        updateData = idOrArgs;
-      } else {
-        // Two argument version - id and data
-        id = idOrArgs;
-        updateData = data!;
-      }
-
-      const entry = await this.apiClient.updateDevlog(id, updateData);
+      const entry = await this.apiClient.updateDevlog(args.id, updateData);
 
       return {
         content: [
@@ -177,21 +207,20 @@ export class MCPApiAdapter {
   }
 
   /**
-   * Get a devlog entry by ID - supports both direct ID and args object
+   * Get a devlog entry by ID
    */
-  async getDevlog(idOrArgs: string | number | { id: string | number }): Promise<CallToolResult> {
+  async getDevlog(args: GetContextForAIArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
-      const id = typeof idOrArgs === 'object' ? idOrArgs.id : idOrArgs;
-      const entry = await this.apiClient.getDevlog(id);
+      const entry = await this.apiClient.getDevlog(args.id);
 
       if (!entry) {
         return {
           content: [
             {
               type: 'text',
-              text: `Devlog entry ${id} not found`,
+              text: `Devlog entry ${args.id} not found`,
             },
           ],
         };
@@ -213,37 +242,26 @@ export class MCPApiAdapter {
   /**
    * List devlog entries with optional filtering - supports both direct filter and args object
    */
-  async listDevlogs(filterOrArgs?: DevlogFilter | any): Promise<CallToolResult> {
+  async listDevlogs(args: ListDevlogsArgs = {}): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
-      // Convert args format to filter format if needed
-      let filter: DevlogFilter | undefined;
-      if (filterOrArgs) {
-        // If it has properties like 'status', 'type', etc., treat as filter directly
-        if (filterOrArgs.status !== undefined || filterOrArgs.type !== undefined) {
-          // Convert single values to arrays if needed
-          filter = {
-            ...filterOrArgs,
-            status: filterOrArgs.status ? [filterOrArgs.status].flat() : undefined,
-            type: filterOrArgs.type ? [filterOrArgs.type].flat() : undefined,
-            priority: filterOrArgs.priority ? [filterOrArgs.priority].flat() : undefined,
-          };
-
-          // Handle pagination args
-          if (filterOrArgs.page || filterOrArgs.limit || filterOrArgs.sortBy) {
-            if (!filter) filter = {};
-            filter.pagination = {
-              page: filterOrArgs.page,
-              limit: filterOrArgs.limit,
-              sortBy: filterOrArgs.sortBy,
-              sortOrder: filterOrArgs.sortOrder || 'desc',
-            };
-          }
-        } else {
-          filter = filterOrArgs;
-        }
-      }
+      // Convert MCP args to API filter format
+      const filter: DevlogFilter = {
+        status: args.status ? [args.status] : undefined,
+        type: args.type ? [args.type] : undefined,
+        priority: args.priority ? [args.priority] : undefined,
+        archived: args.archived,
+        pagination:
+          args.page || args.limit || args.sortBy
+            ? {
+                page: args.page,
+                limit: args.limit,
+                sortBy: args.sortBy,
+                sortOrder: args.sortOrder || 'desc',
+              }
+            : undefined,
+      };
 
       const result = await this.apiClient.listDevlogs(filter);
 
@@ -263,29 +281,19 @@ export class MCPApiAdapter {
   /**
    * Search devlog entries - supports both separate args and args object
    */
-  async searchDevlogs(queryOrArgs: string | any, filter?: DevlogFilter): Promise<CallToolResult> {
+  async searchDevlogs(args: SearchDevlogsArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
-      let query: string;
-      let searchFilter: DevlogFilter | undefined;
+      // Convert MCP args to API call format
+      const searchFilter: DevlogFilter = {
+        status: args.status ? [args.status] : undefined,
+        type: args.type ? [args.type] : undefined,
+        priority: args.priority ? [args.priority] : undefined,
+        archived: args.archived,
+      };
 
-      if (typeof queryOrArgs === 'string') {
-        // Two argument version
-        query = queryOrArgs;
-        searchFilter = filter;
-      } else {
-        // Single argument version with args object
-        query = queryOrArgs.query;
-        searchFilter = {
-          status: queryOrArgs.status ? [queryOrArgs.status].flat() : undefined,
-          type: queryOrArgs.type ? [queryOrArgs.type].flat() : undefined,
-          priority: queryOrArgs.priority ? [queryOrArgs.priority].flat() : undefined,
-          archived: queryOrArgs.archived,
-        };
-      }
-
-      const result = await this.apiClient.searchDevlogs(query, searchFilter);
+      const result = await this.apiClient.searchDevlogs(args.query, searchFilter);
 
       return {
         content: [
@@ -442,45 +450,17 @@ export class MCPApiAdapter {
   /**
    * Add note to a devlog entry - supports both separate args and args object
    */
-  async addDevlogNote(
-    idOrArgs: string | number | any,
-    note?: string,
-    category = 'progress',
-    codeChanges?: string,
-    files?: string[],
-  ): Promise<CallToolResult> {
+  async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
-      let id: string | number;
-      let noteText: string;
-      let noteCategory: string;
-      let noteCodeChanges: string | undefined;
-      let noteFiles: string[] | undefined;
-
-      if (typeof idOrArgs === 'object') {
-        // Single argument version with args object
-        id = idOrArgs.id;
-        noteText = idOrArgs.note;
-        noteCategory = idOrArgs.category || 'progress';
-        noteCodeChanges = idOrArgs.codeChanges;
-        noteFiles = idOrArgs.files;
-      } else {
-        // Multiple argument version
-        id = idOrArgs;
-        noteText = note!;
-        noteCategory = category;
-        noteCodeChanges = codeChanges;
-        noteFiles = files;
-      }
-
       const result = await this.apiClient.batchAddNotes([
         {
-          id,
-          note: noteText,
-          category: noteCategory,
-          codeChanges: noteCodeChanges,
-          files: noteFiles,
+          id: args.id,
+          note: args.note,
+          category: args.category || 'progress',
+          codeChanges: args.codeChanges,
+          files: args.files,
         },
       ]);
 
@@ -490,7 +470,7 @@ export class MCPApiAdapter {
         content: [
           {
             type: 'text',
-            text: `Added note to devlog ${entry.id}:\n"${noteText}"\nTotal notes: ${entry.notes?.length || 0}`,
+            text: `Added note to devlog ${entry?.id}:\n"${args.note}"\nTotal notes: ${entry?.notes?.length || 0}`,
           },
         ],
       };
@@ -531,7 +511,7 @@ export class MCPApiAdapter {
   /**
    * Update devlog with note in one operation
    */
-  async updateDevlogWithNote(args: any): Promise<CallToolResult> {
+  async updateDevlogWithNote(args: UpdateDevlogWithNoteArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -573,7 +553,7 @@ export class MCPApiAdapter {
   /**
    * Add a decision to a devlog entry
    */
-  async addDecision(args: any): Promise<CallToolResult> {
+  async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -625,7 +605,7 @@ export class MCPApiAdapter {
   /**
    * Complete a devlog entry
    */
-  async completeDevlog(args: any): Promise<CallToolResult> {
+  async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -661,7 +641,7 @@ export class MCPApiAdapter {
   /**
    * Close a devlog entry (set to cancelled)
    */
-  async closeDevlog(args: any): Promise<CallToolResult> {
+  async closeDevlog(args: CloseDevlogArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -695,7 +675,7 @@ export class MCPApiAdapter {
   /**
    * Get active context - list of active devlog entries
    */
-  async getActiveContext(args: any = {}): Promise<CallToolResult> {
+  async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -755,7 +735,7 @@ export class MCPApiAdapter {
   /**
    * Update AI context for a devlog entry
    */
-  async updateAIContext(args: any): Promise<CallToolResult> {
+  async updateAIContext(args: UpdateAIContextArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 
@@ -804,7 +784,7 @@ export class MCPApiAdapter {
   /**
    * Discover related devlog entries
    */
-  async discoverRelatedDevlogs(args: any): Promise<CallToolResult> {
+  async discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs): Promise<CallToolResult> {
     try {
       this.ensureInitialized();
 

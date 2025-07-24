@@ -10,7 +10,7 @@ import {
   validateMCPConfig,
   printConfigSummary,
   type MCPServerConfig,
-} from './config/mcp-config.js';
+} from '../config/mcp-config.js';
 
 export type MCPAdapter = MCPDevlogAdapter | MCPApiAdapter;
 

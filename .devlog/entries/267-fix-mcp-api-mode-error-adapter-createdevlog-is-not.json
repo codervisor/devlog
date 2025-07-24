@@ -1,0 +1,102 @@
+{
+  "id": 267,
+  "key": "fix-mcp-api-mode-error-adapter-createdevlog-is-not",
+  "title": "Fix MCP API mode error: adapter.createDevlog is not a function",
+  "type": "bugfix",
+  "description": "Fix MCP server API mode where adapter.createDevlog and other methods are not functions due to incorrect adapter assignment using Object.assign instead of direct reference",
+  "status": "done",
+  "priority": "high",
+  "createdAt": "2025-07-24T07:22:03.731Z",
+  "updatedAt": "2025-07-24T07:42:59.967Z",
+  "notes": [
+    {
+      "id": "c1b4293a-7547-4dde-adad-69bf1b086f9f",
+      "timestamp": "2025-07-24T07:33:50.415Z",
+      "category": "issue",
+      "content": "📊 **METHOD SIGNATURE ANALYSIS COMPLETE**\n\nFound major inconsistencies between mcp-adapter.ts (direct) and mcp-api-adapter.ts (API):\n\n**✅ Direct Adapter (mcp-adapter.ts)** - Uses proper typed interfaces:\n- `createDevlog(args: CreateDevlogRequest)`\n- `updateDevlog(args: UpdateDevlogRequest)`\n- `listDevlogs(args: ListDevlogsArgs = {})`\n- `searchDevlogs(args: SearchDevlogsArgs)`\n- `addDevlogNote(args: AddDevlogNoteArgs)`\n- All methods use proper typed Args interfaces\n\n**❌ API Adapter (mcp-api-adapter.ts)** - Has major type issues:\n- `createDevlog(args: CreateDevlogArgs)` ✅ (Fixed)\n- `updateDevlog(args: UpdateDevlogArgs)` ✅ (Fixed)\n- `listDevlogs(filterOrArgs?: DevlogFilter | any)` ❌ Wrong signature\n- `searchDevlogs(queryOrArgs: string | any, filter?: DevlogFilter)` ❌ Wrong signature\n- Many methods use `any` type: `addDecision(args: any)`, `completeDevlog(args: any)`, etc.\n\n**Root Issue**: API adapter was trying to support multiple calling patterns instead of using consistent MCP Args interfaces.",
+      "files": [
+        "packages/mcp/src/mcp-adapter.ts",
+        "packages/mcp/src/mcp-api-adapter.ts"
+      ]
+    },
+    {
+      "id": "29649298-a507-4efd-86fc-34b7bf1bb586",
+      "timestamp": "2025-07-24T07:34:06.806Z",
+      "category": "solution",
+      "content": "✅ **PARTIAL FIX IMPLEMENTED**\n\n**Phase 1 Complete**: Object.assign Issue\n- ✅ Fixed: `let adapter: MCPAdapter` instead of `const adapter = {} as MCPAdapter`\n- ✅ Fixed: `adapter = adapterInstance` instead of `Object.assign(adapter, adapterInstance)`\n- ✅ Result: MCP API mode now starts without \"adapter.createDevlog is not a function\" errors\n\n**Phase 2 Complete**: Basic Type Safety\n- ✅ Fixed: `createDevlog(args: CreateDevlogArgs)` with proper type conversion\n- ✅ Fixed: `updateDevlog(args: UpdateDevlogArgs)` with proper type conversion  \n- ✅ Fixed: `getDevlog(args: GetContextForAIArgs)` parameter handling\n\n**Testing Results**:\n- ✅ MCP server starts successfully in API mode\n- ✅ tools/list returns all tool definitions\n- ✅ create_devlog tool works (created test entry #268)\n- ✅ No runtime \"not a function\" errors",
+      "files": [
+        "packages/mcp/src/index.ts",
+        "packages/mcp/src/mcp-api-adapter.ts"
+      ],
+      "codeChanges": "Fixed Object.assign issue in index.ts and improved createDevlog/updateDevlog type safety in API adapter"
+    },
+    {
+      "id": "6ff81396-1d90-4a85-93d9-894044b3f5e3",
+      "timestamp": "2025-07-24T07:34:20.246Z",
+      "category": "reminder",
+      "content": "⚠️ **REMAINING WORK FOR COMPLETE API MODE COMPATIBILITY**\n\n**Phase 3 Needed**: Fix remaining method signature mismatches in API adapter:\n\n**High Priority**:\n- `listDevlogs`: Should be `(args: ListDevlogsArgs = {})` not `(filterOrArgs?: DevlogFilter | any)`\n- `searchDevlogs`: Should be `(args: SearchDevlogsArgs)` not `(queryOrArgs: string | any, filter?: DevlogFilter)`\n- `addDevlogNote`: Missing entirely from API adapter\n\n**Medium Priority** (fix `any` types):\n- `addDecision(args: any)` → `addDecision(args: AddDecisionArgs)`\n- `completeDevlog(args: any)` → `completeDevlog(args: CompleteDevlogArgs)`\n- `closeDevlog(args: any)` → `closeDevlog(args: CloseDevlogArgs)`\n- `getActiveContext(args: any = {})` → `getActiveContext(args: GetActiveContextArgs = {})`\n\n**Current Status**: Basic MCP API mode works, but some tools may fail due to signature mismatches."
+    },
+    {
+      "id": "68bb3c22-016f-4cc8-8bd6-be296c758706",
+      "timestamp": "2025-07-24T07:34:36.101Z",
+      "category": "progress",
+      "content": "🎯 **CURRENT STATUS SUMMARY**\n\n**✅ FIXED**: Core issue that prevented MCP API mode from working\n- Object.assign not copying class methods → Direct assignment  \n- Basic type safety for create/update/get operations\n\n**✅ VERIFIED**: Direct mode continues to work perfectly (switched back for this update)\n\n**🔄 NEXT**: Complete API adapter method signature standardization to match direct adapter\n\n**📊 IMPACT**: \n- **Before**: MCP API mode completely broken (\"adapter.createDevlog is not a function\")  \n- **After**: MCP API mode starts and basic tools work\n- **Goal**: All MCP tools work identically in both direct and API modes"
+    },
+    {
+      "id": "ba65c63e-0993-4031-9566-f3813090e3c3",
+      "timestamp": "2025-07-24T07:35:30.697Z",
+      "category": "progress",
+      "content": "🚀 **PHASE 3 STARTED**: Fixing remaining method signature mismatches in API adapter to achieve full compatibility with direct adapter"
+    },
+    {
+      "id": "b5bf48a3-52a2-4d5c-9ffe-de93d196db4d",
+      "timestamp": "2025-07-24T07:42:45.393Z",
+      "category": "solution",
+      "content": "✅ **PHASE 3 COMPLETE: Method Signature Standardization**\n\n**Fixed High Priority Issues**:\n- ✅ `listDevlogs(args: ListDevlogsArgs = {})` - Proper MCP args format\n- ✅ `searchDevlogs(args: SearchDevlogsArgs)` - Single args object instead of dual parameters  \n- ✅ `addDevlogNote(args: AddDevlogNoteArgs)` - Consistent with direct adapter\n\n**Fixed Type Safety Issues**:\n- ✅ `addDecision(args: AddDecisionArgs)` - No more `any` type\n- ✅ `completeDevlog(args: CompleteDevlogArgs)` - Proper typing\n- ✅ `closeDevlog(args: CloseDevlogArgs)` - Proper typing\n- ✅ `getActiveContext(args: GetActiveContextArgs = {})` - Proper typing\n- ✅ `updateDevlogWithNote(args: UpdateDevlogWithNoteArgs)` - Proper typing\n- ✅ `updateAIContext(args: UpdateAIContextArgs)` - Proper typing  \n- ✅ `discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs)` - Proper typing\n\n**Build Status**: ✅ Compiles successfully  \n**Runtime Test**: ✅ MCP API mode starts without errors",
+      "files": [
+        "packages/mcp/src/mcp-api-adapter.ts"
+      ],
+      "codeChanges": "Fixed all method signatures in mcp-api-adapter.ts to match mcp-adapter.ts patterns"
+    }
+  ],
+  "files": [
+    "packages/mcp/src/index.ts"
+  ],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "MCP server API mode is completely broken - all MCP tools fail with 'adapter.{method} is not a function' errors. This blocks AI agents from using the devlog system when MCP is configured for API mode.",
+    "technicalContext": "Root cause: Object.assign only copies enumerable properties, but class methods are not enumerable. The adapter is initialized as empty object {} then Object.assign is used to copy the real adapter instance, but methods don't get copied.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "MCP server starts successfully in API mode",
+      "adapter.createDevlog function works correctly",
+      "adapter.dispose function works correctly",
+      "All MCP tools work in API mode",
+      "Process cleanup handles SIGINT properly",
+      "No regression in direct mode functionality"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "🚨 FOUND MAJOR METHOD SIGNATURE MISMATCHES between mcp-adapter.ts and mcp-api-adapter.ts! Many methods in API adapter use `any` types instead of proper typed arguments, and some have completely different signatures.",
+    "keyInsights": [
+      "Major method signature inconsistencies between direct and API adapters",
+      "API adapter uses `any` types for many methods instead of proper Args interfaces",
+      "listDevlogs has different signature: args vs filterOrArgs",
+      "searchDevlogs has different signature: separate query vs args object",
+      "addDevlogNote missing from API adapter comparison",
+      "Many API adapter methods marked as 'Missing Methods' use `any` type"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [
+      "Monitor MCP API mode in production",
+      "Add unit tests for adapter initialization patterns",
+      "Document the correct adapter assignment approach for future reference"
+    ],
+    "lastAIUpdate": "2025-07-24T07:30:19.902Z",
+    "contextVersion": 6
+  },
+  "closedAt": "2025-07-24T07:42:59.967Z"
+}
