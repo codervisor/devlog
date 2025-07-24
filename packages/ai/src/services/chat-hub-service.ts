@@ -1,7 +1,7 @@
 /**
  * Chat import service for importing chat history from various sources
  *
- * This service handles importing chat data from sources like codehist (GitHub Copilot)
+ * This service handles importing chat data through ChatHub (GitHub Copilot, etc.)
  * into the devlog storage system with proper workspace mapping and linking.
  */
 
@@ -14,16 +14,17 @@ import type {
   ChatMessage,
   ChatSession,
   ChatSessionId,
+  ChatSource,
   ChatStatus,
   DevlogEntry,
   StorageProvider,
 } from '@devlog/core';
 
-export interface ChatImportService {
+export interface IChatHubService {
   /**
-   * Import chat history from codehist parser
+   * Import chat history from GitHub Copilot
    */
-  importFromCodehist(config: ChatImportConfig): Promise<ChatImportProgress>;
+  importFromGitHubCopilot(config: ChatImportConfig): Promise<ChatImportProgress>;
 
   /**
    * Get import progress by ID
@@ -44,7 +45,7 @@ export interface ChatImportService {
   autoLinkSessions(sessionIds: ChatSessionId[], threshold?: number): Promise<ChatDevlogLink[]>;
 }
 
-export class DefaultChatImportService implements ChatImportService {
+export class ChatHubService implements IChatHubService {
   private storageProvider: StorageProvider;
   private activeImports = new Map<string, ChatImportProgress>();
 
@@ -52,12 +53,12 @@ export class DefaultChatImportService implements ChatImportService {
     this.storageProvider = storageProvider;
   }
 
-  async importFromCodehist(config: ChatImportConfig): Promise<ChatImportProgress> {
+  async importFromGitHubCopilot(config: ChatImportConfig): Promise<ChatImportProgress> {
     const importId = this.generateImportId();
     const progress: ChatImportProgress = {
       importId,
       status: 'pending',
-      source: 'codehist',
+      source: 'github-copilot',
       progress: {
         totalSessions: 0,
         processedSessions: 0,
@@ -178,9 +179,9 @@ export class DefaultChatImportService implements ChatImportService {
     progress.status = 'running';
 
     try {
-      console.log(`[ChatImportService] Starting import ${importId} from ${config.source}`);
+      console.log(`[ChatHubService] Starting import ${importId} from ${config.source}`);
 
-      // Initialize codehist parser
+      // Initialize GitHub Copilot parser
       const parser = new CopilotParser();
       const workspaceData = await parser.discoverVSCodeCopilotData();
 

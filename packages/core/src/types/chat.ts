@@ -2,7 +2,7 @@
  * Chat history types and interfaces for devlog integration
  *
  * These types support importing and managing AI chat histories from various sources
- * (primarily GitHub Copilot via codehist) and linking them to devlog entries.
+ * (GitHub Copilot, Cursor, Claude Code, etc.) and linking them to devlog entries.
  */
 
 import type { DevlogId } from './core.js';
@@ -302,7 +302,7 @@ export interface ChatImportProgress {
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
   /** Source being imported from */
-  source: string;
+  source: ChatSource;
 
   /** Progress information */
   progress: {
@@ -336,11 +336,16 @@ export interface ChatImportProgress {
 }
 
 /**
- * Configuration for chat import operations
+ * Chat import source types
+ */
+export type ChatSource = 'github-copilot' | 'cursor' | 'claude-code' | 'windsurf' | 'manual';
+
+/**
+ * Configuration for importing chat history from various sources
  */
 export interface ChatImportConfig {
   /** Source type */
-  source: 'codehist' | 'vs-code' | 'cursor' | 'manual';
+  source: ChatSource;
 
   /** Source-specific configuration */
   sourceConfig: Record<string, any>;
