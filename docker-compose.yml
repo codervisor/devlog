@@ -35,27 +35,13 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - PORT=3000
     ports:
-      - "3000:3000"
+      - "3100:3000"
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - devlog-network
-
-  # Redis for caching (optional)
-  redis:
-    image: redis:7-alpine
-    container_name: devlog-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - devlog-network
-    profiles:
-      - with-cache
 
 networks:
   devlog-network:

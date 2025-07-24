@@ -200,22 +200,26 @@ For every significant architectural change:
 
 #### Build vs Dev Server Conflicts
 - **Use `pnpm build:test` for AI testing**: When AI agents need to test builds, always use `pnpm build:test` instead of `pnpm build`
-- **Why this matters**: `pnpm build` overwrites `.next/` directory and breaks active `dev:web` servers
+- **Why this matters**: `pnpm build` overwrites `.next/` directory and breaks active development servers
 - **Solution implemented**: 
   - `pnpm build:test` uses `.next-build/` directory (separate from dev server's `.next/`)
   - Dev servers can run concurrently with build testing
   - No workflow disruption when testing build success
 - **Commands available**:
-  - `pnpm dev:web` - Runs dev server using `.next/` directory
+  - `docker compose -f docker-compose.dev.yml up web-dev` - Runs containerized dev server
   - `pnpm build:test` - Tests build using `.next-build/` directory  
   - `pnpm build` - Production build (still uses `.next/` by default)
 
-#### Single Dev Server Policy
-- **One server at a time**: `pnpm dev:web` uses fixed port 3000 and will fail if port is occupied
-- **Clear feedback**: Shows existing servers before attempting to start new one
-- **Preserve hot reload**: Don't kill existing servers - let developers use the running one
-- **Error handling**: Next.js EADDRINUSE error clearly indicates when port 3000 is busy
-- **Check existing servers**: The dev command shows what's running on ports 3000-3002 before starting
+#### Docker-Based Development Policy
+- **Use Docker Compose for development**: The development environment now runs in containers for consistency
+- **Configurable storage**: Storage type determined by `.env` file configuration (PostgreSQL, SQLite, JSON, or GitHub)
+- **Hot reloading preserved**: Volume mounts ensure code changes trigger hot reloads
+- **Port management**: Docker handles port allocation and prevents conflicts
+- **Environment isolation**: Development dependencies are containerized
+- **Commands**:
+  - Start: `docker compose -f docker-compose.dev.yml up web-dev`
+  - Stop: `docker compose -f docker-compose.dev.yml down`
+  - Logs: `docker compose logs web-dev -f`
 
 #### UI-Related Development Tasks
 - **ALWAYS use Playwright**: Use Playwright MCP tools for UI validation and debugging
@@ -223,11 +227,11 @@ For every significant architectural change:
   - **Playwright**: Required for React error debugging, console monitoring, state analysis
   - **Simple Browser**: Basic navigation/UI testing only - NOT reliable for error detection
 - **Testing Steps**:
-  - **Start Web App**: Run `pnpm dev:web` to start the web app
-  - **Verify**: Ensure the web app is running correctly before testing
+  - **Start Web App**: Run `docker compose -f docker-compose.dev.yml up web-dev` to start the containerized web app
+  - **Verify**: Ensure the web app is running correctly before testing (check http://localhost:3200)
   - **Run Tests**: Use Playwright to run UI tests against the web app
   - **Update Devlog**: Add test results and any fixes to the devlog entry
-  - **Stop Web App**: After testing, stop the web app with `Ctrl+C` in the terminal
+  - **Stop Web App**: After testing, stop with `docker compose -f docker-compose.dev.yml down`
 
 #### React Debugging Verification Protocol
 - **MANDATORY for React Issues**: Use Playwright console monitoring before concluding any fix
