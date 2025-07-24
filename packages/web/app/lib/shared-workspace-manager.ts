@@ -15,13 +15,26 @@ let sharedWorkspaceManager: WorkspaceDevlogManager | null = null;
  */
 export async function getSharedWorkspaceManager(): Promise<WorkspaceDevlogManager> {
   if (!sharedWorkspaceManager) {
+    console.log('[Shared Workspace Manager] Creating new WorkspaceDevlogManager instance...');
+    const startTime = Date.now();
+
     sharedWorkspaceManager = new WorkspaceDevlogManager({
       workspaceConfigPath: join(homedir(), '.devlog', 'workspaces.json'),
       createWorkspaceConfigIfMissing: true,
       fallbackToEnvConfig: true,
     });
+
+    console.log('[Shared Workspace Manager] Initializing manager...');
+    const initStartTime = Date.now();
     await sharedWorkspaceManager.initialize();
-    console.log('Shared WorkspaceDevlogManager initialized');
+    const initDuration = Date.now() - initStartTime;
+
+    const totalDuration = Date.now() - startTime;
+    console.log(
+      `[Shared Workspace Manager] Initialized successfully (init: ${initDuration}ms, total: ${totalDuration}ms)`,
+    );
+  } else {
+    console.log('[Shared Workspace Manager] Reusing existing WorkspaceDevlogManager instance');
   }
   return sharedWorkspaceManager;
 }

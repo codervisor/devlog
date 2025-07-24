@@ -206,7 +206,7 @@ For every significant architectural change:
   - Dev servers can run concurrently with build testing
   - No workflow disruption when testing build success
 - **Commands available**:
-  - `docker compose -f docker-compose.dev.yml up web-dev` - Runs containerized dev server
+  - `docker compose -f docker-compose.dev.yml up web-dev -d --wait` - Runs containerized dev server in detached mode with health check wait
   - `pnpm build:test` - Tests build using `.next-build/` directory  
   - `pnpm build` - Production build (still uses `.next/` by default)
 
@@ -217,7 +217,7 @@ For every significant architectural change:
 - **Port management**: Docker handles port allocation and prevents conflicts
 - **Environment isolation**: Development dependencies are containerized
 - **Commands**:
-  - Start: `docker compose -f docker-compose.dev.yml up web-dev`
+  - Start: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
   - Stop: `docker compose -f docker-compose.dev.yml down`
   - Logs: `docker compose logs web-dev -f`
 
@@ -227,7 +227,7 @@ For every significant architectural change:
   - **Playwright**: Required for React error debugging, console monitoring, state analysis
   - **Simple Browser**: Basic navigation/UI testing only - NOT reliable for error detection
 - **Testing Steps**:
-  - **Start Web App**: Run `docker compose -f docker-compose.dev.yml up web-dev` to start the containerized web app
+  - **Start Web App**: Run `docker compose -f docker-compose.dev.yml up web-dev -d --wait` to start the containerized web app
   - **Verify**: Ensure the web app is running correctly before testing (check http://localhost:3200)
   - **Run Tests**: Use Playwright to run UI tests against the web app
   - **Update Devlog**: Add test results and any fixes to the devlog entry

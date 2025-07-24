@@ -17,16 +17,28 @@ class SSEEventBridge {
    * Initialize the bridge to start listening to devlog events
    */
   async initialize(): Promise<void> {
+    console.log('[SSE Event Bridge] Initialize called, current state:', {
+      initialized: this.initialized,
+    });
+
     if (this.initialized) {
-      console.log('SSE Event Bridge already initialized');
+      console.log('SSE Event Bridge already initialized - skipping');
       return;
     }
 
+    console.log('[SSE Event Bridge] Starting initialization...');
+    const startTime = Date.now();
+
     try {
       // Use the shared workspace manager instance
+      console.log('[SSE Event Bridge] Getting shared workspace manager...');
+      const managerStartTime = Date.now();
       this.workspaceManager = await getSharedWorkspaceManager();
+      const managerDuration = Date.now() - managerStartTime;
+      console.log(`[SSE Event Bridge] Workspace manager ready in ${managerDuration}ms`);
 
       // Dynamically import to avoid bundling TypeORM in client-side code
+      console.log('[SSE Event Bridge] Importing devlog events...');
       const { getDevlogEvents } = await import('@devlog/core');
 
       // Get the singleton devlogEvents instance to ensure we listen to the same instance
@@ -44,6 +56,8 @@ class SSEEventBridge {
       devlogEvents.on('unarchived', this.handleDevlogUnarchived.bind(this));
 
       this.initialized = true;
+      const totalDuration = Date.now() - startTime;
+      console.log(`[SSE Event Bridge] Initialization completed in ${totalDuration}ms`);
       console.log('SSE Event Bridge initialized - devlog events will now trigger SSE updates');
       console.log('SSE Event Bridge - Handler counts:', {
         created: devlogEvents.getHandlerCount('created'),
