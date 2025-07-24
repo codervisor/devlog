@@ -28,6 +28,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 COPY packages ./packages
 COPY tsconfig.json ./
 
+# Copy scripts directory for development utilities
+COPY scripts ./scripts
+
 # Development environment
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1

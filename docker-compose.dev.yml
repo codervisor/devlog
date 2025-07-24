@@ -10,21 +10,16 @@ services:
     container_name: devlog-web-dev
     command: pnpm dev:web
     ports:
-      - "3000:3000"
+      - "3200:3000"
     volumes:
       - .:/app
       - /app/node_modules
       - /app/packages/web/.next
       - /app/packages/web/.next-build
-    environment:
-      - NODE_ENV=development
-      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/devlog
-      - DEVLOG_STORAGE_TYPE=postgres
-      - POSTGRES_SSL=false
-      - NEXT_TELEMETRY_DISABLED=1
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - './scripts:/app/scripts'
+      - './.devlog:/app/.devlog'
+    env_file:
+      - .env
 
   # SQLite for local development (alternative to postgres)
   sqlite-dev:
