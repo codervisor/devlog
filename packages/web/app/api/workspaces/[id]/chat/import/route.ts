@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
 import { ChatHubService } from '@devlog/ai';
-import { ChatImportConfig } from '@devlog/core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -9,62 +8,53 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/workspaces/[id]/chat/import
  *
- * Import chat history from various sources (GitHub Copilot, etc.)
+ * Receive and process chat history data from external clients
  */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const manager = await getSharedWorkspaceManager();
     const workspaceId = params.id;
 
-    // Parse request body
+    // Parse request body - expecting chat data from clients
     const body = await request.json();
-    const {
-      source = 'github-copilot',
-      autoLink = true,
-      autoLinkThreshold = 0.8,
-      includeArchived = false,
-      overwriteExisting = false,
-      background = true,
-      dateRange,
-    } = body;
+    const { sessions = [], messages = [], source = 'github-copilot', workspaceInfo } = body;
+
+    // Validate required data
+    if (!Array.isArray(sessions) || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: 'Invalid data format: sessions and messages must be arrays' },
+        { status: 400 },
+      );
+    }
 
     // Get storage provider for this workspace
     const storageProvider = await manager.getWorkspaceStorageProvider(workspaceId);
 
-    // Create chat import service
-    const importService = new ChatHubService(storageProvider);
-
-    // Configure import
-    const importConfig: ChatImportConfig = {
-      source,
-      autoLink,
-      autoLinkThreshold,
-      sourceConfig: {
-        background,
-        dateRange,
-      },
-      includeArchived,
-      overwriteExisting,
-    };
+    // Create ChatHub service
+    const chatHub = new ChatHubService(storageProvider);
 
     console.log(
-      `[ChatAPI] Starting import for workspace ${workspaceId} with config:`,
-      importConfig,
+      `[ChatAPI] Receiving chat data for workspace ${workspaceId}: ${sessions.length} sessions, ${messages.length} messages from ${source}`,
     );
 
-    // Start import
-    const progress = await importService.importFromGitHubCopilot(importConfig);
+    // Process the incoming chat data
+    const progress = await chatHub.processBulkChatData({
+      sessions,
+      messages,
+      source,
+      workspaceInfo,
+    });
 
     return NextResponse.json({
       success: true,
       importId: progress.importId,
       status: progress.status,
       progress: progress.progress,
-      message: `Chat import started for workspace ${workspaceId}`,
+      message: `Chat data processed for workspace ${workspaceId}`,
     });
   } catch (error) {
     console.error('[ChatAPI] Import error:', error);
-    const message = error instanceof Error ? error.message : 'Failed to start chat import';
+    const message = error instanceof Error ? error.message : 'Failed to process chat data';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -89,11 +79,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Get storage provider for this workspace
     const storageProvider = await manager.getWorkspaceStorageProvider(workspaceId);
 
-    // Create chat import service
-    const importService = new ChatHubService(storageProvider);
+    // Create ChatHub service
+    const chatHub = new ChatHubService(storageProvider);
 
     // Get import progress
-    const progress = await importService.getImportProgress(importId);
+    const progress = await chatHub.getImportProgress(importId);
 
     if (!progress) {
       return NextResponse.json({ error: `Import '${importId}' not found` }, { status: 404 });

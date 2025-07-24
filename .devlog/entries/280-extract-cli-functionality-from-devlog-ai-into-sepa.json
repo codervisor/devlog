@@ -1,0 +1,47 @@
+{
+  "id": 280,
+  "key": "extract-cli-functionality-from-devlog-ai-into-sepa",
+  "title": "Extract CLI functionality from @devlog/ai into separate @devlog/cli package",
+  "type": "refactor",
+  "description": "Extract the CLI functionality currently embedded in @devlog/ai package into a dedicated @devlog/cli package for better organization and management. The new CLI package should handle chat history extraction from various local sources (VS Code, Cursor, Claude Code, etc.) and stream the data to the ChatHub API endpoints instead of processing locally.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-24T14:17:07.399Z",
+  "updatedAt": "2025-07-24T14:17:19.583Z",
+  "notes": [
+    {
+      "id": "70109f21-ca4c-4c52-b85a-0cc0516eec83",
+      "timestamp": "2025-07-24T14:17:19.583Z",
+      "category": "idea",
+      "content": "**Package Architecture Vision**:\n\n**Current State**: \n- CLI buried in `@devlog/ai/src/cli/`\n- Local processing and file export\n- Mixed concerns in AI package\n\n**Target State**:\n- Dedicated `@devlog/cli` package\n- Client-server architecture: CLI extracts → ChatHub API receives\n- Clean separation: `@devlog/ai` = processing logic, `@devlog/cli` = user interface + local extraction\n- Better discoverability and installation experience\n\n**CLI Commands Evolution**:\n- `devlog chat stats` → stream stats to API and display\n- `devlog chat import` → extract and upload to ChatHub API  \n- `devlog chat search` → search via API endpoints"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Having a dedicated CLI package improves discoverability and makes it easier for users to install and use devlog's command-line tools. It also separates concerns better - the AI package focuses on core chat processing logic while the CLI package handles user interaction and local data extraction.",
+    "technicalContext": "Currently @devlog/ai contains CLI commands for chat extraction embedded in src/cli/. The new architecture calls for clients to stream data to server APIs rather than processing locally. The CLI should become a client that extracts chat data from local sources and sends it to ChatHub API endpoints.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Create new @devlog/cli package structure",
+      "Move CLI functionality from @devlog/ai/src/cli to @devlog/cli/src",
+      "Update CLI to stream data to ChatHub API instead of local processing",
+      "Add @devlog/cli to monorepo workspace configuration",
+      "Update build scripts and CI to include new package",
+      "CLI maintains same user interface but changes backend behavior",
+      "Remove CLI code from @devlog/ai package",
+      "Update documentation to reference new package structure"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-24T14:17:07.399Z",
+    "contextVersion": 1
+  }
+}
