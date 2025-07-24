@@ -20,13 +20,15 @@ updating, querying, and management of development logs.
 Devlog entries use a well-defined status system to track work progression:
 
 **Open Statuses (Active Work):**
+
 - `new` - Work ready to start
 - `in-progress` - Actively being developed
 - `blocked` - Temporarily stopped due to dependencies
-- `in-review` - Awaiting review/approval  
+- `in-review` - Awaiting review/approval
 - `testing` - Being validated through testing
 
 **Closed Statuses (Completed Work):**
+
 - `done` - Successfully completed
 - `cancelled` - Abandoned/deprioritized
 
@@ -62,21 +64,21 @@ const entry = await devlog.createDevlog({
   acceptanceCriteria: [
     'Users can register with email/password',
     'Users can login and receive JWT token',
-    'Protected routes require valid token'
-  ]
+    'Protected routes require valid token',
+  ],
 });
 
 // Update the devlog
 await devlog.updateDevlog({
   id: entry.id,
   status: 'in-progress',
-  progress: 'Completed user registration endpoint'
+  progress: 'Completed user registration endpoint',
 });
 
 // Add a note
 await devlog.addNote(entry.id, {
   category: 'progress',
-  content: 'Fixed validation issues with email format'
+  content: 'Fixed validation issues with email format',
 });
 
 // List all devlogs
@@ -85,7 +87,7 @@ const allDevlogs = await devlog.listDevlogs();
 // Filter devlogs
 const inProgressTasks = await devlog.listDevlogs({
   status: ['in-progress'],
-  type: ['feature', 'bugfix']
+  type: ['feature', 'bugfix'],
 });
 
 // Search devlogs
@@ -150,4 +152,4 @@ This core package is designed to be used by:
 
 ## License
 
-MIT
+Apache 2.0
