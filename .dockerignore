@@ -1,0 +1,74 @@
+# Git and version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Development files
+.env*
+.vscode/
+.idea/
+*.log
+tmp/
+
+# Dependencies (will be installed in container)
+node_modules/
+.pnpm-store/
+
+# Build outputs (will be created in container)
+.next/
+.next-build/
+build/
+dist/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Package manager files
+.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime files
+*.pid
+
+# Database files (for local development)
+*.db
+*.sqlite
+*.sqlite3
+.devlog/
+
+# Docker files (not needed in container)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Vercel specific
+.vercel/
+
+# MCP package (not needed for web-only build)
+packages/mcp/

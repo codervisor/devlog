@@ -1,0 +1,70 @@
+services:
+  # PostgreSQL database for production-like environment
+  postgres:
+    image: postgres:16-alpine
+    container_name: devlog-postgres
+    environment:
+      POSTGRES_DB: devlog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d devlog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devlog-network
+
+  # Web application (Next.js)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: devlog-web
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/devlog
+      - DEVLOG_STORAGE_TYPE=postgres
+      - POSTGRES_SSL=false
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - devlog-network
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: devlog-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - devlog-network
+    profiles:
+      - with-cache
+
+networks:
+  devlog-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+

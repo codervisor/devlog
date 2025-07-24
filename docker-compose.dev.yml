@@ -1,0 +1,37 @@
+# Development-specific services and overrides
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # Development web service
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: devlog-web-dev
+    command: pnpm dev:web
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/web/.next
+      - /app/packages/web/.next-build
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/devlog
+      - DEVLOG_STORAGE_TYPE=postgres
+      - POSTGRES_SSL=false
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # SQLite for local development (alternative to postgres)
+  sqlite-dev:
+    image: alpine:latest
+    container_name: devlog-sqlite-dev
+    volumes:
+      - ./data:/data
+    command: tail -f /dev/null  # Keep container running
+    profiles:
+      - sqlite-dev
