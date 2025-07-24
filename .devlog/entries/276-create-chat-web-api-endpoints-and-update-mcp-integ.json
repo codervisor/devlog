@@ -4,10 +4,10 @@
   "title": "Create Chat Web API Endpoints and Update MCP Integration",
   "type": "task",
   "description": "Create comprehensive web API endpoints for chat functionality and update MCP tools to use HTTP communication instead of stub implementations. This includes REST endpoints for all chat operations, real-time progress tracking, and proper integration with the existing web application architecture.",
-  "status": "done",
+  "status": "in-progress",
   "priority": "medium",
   "createdAt": "2025-07-24T13:18:14.933Z",
-  "updatedAt": "2025-07-24T13:49:08.443Z",
+  "updatedAt": "2025-07-24T14:31:24.263Z",
   "notes": [
     {
       "id": "964373b8-36db-4c5e-9358-1675fc56a6f1",
@@ -41,13 +41,19 @@
       "timestamp": "2025-07-24T13:49:08.441Z",
       "category": "progress",
       "content": "Completed: Successfully implemented complete chat Web API endpoints and MCP integration. All 5 core chat API endpoints created with workspace awareness, comprehensive filtering, and proper error handling. All MCP tools updated to use HTTP API instead of stubs. Ready for integration testing and UI development."
+    },
+    {
+      "id": "8b970038-0982-4baa-b482-be3078b012fd",
+      "timestamp": "2025-07-24T14:31:24.263Z",
+      "category": "progress",
+      "content": "✅ **API Compatibility Assessment** (Post-Devlog #279):\n\n### 🎯 **Most APIs Still Valid**:\nThe majority of the implemented API endpoints are **still compatible** with the new ChatHub architecture:\n\n**✅ UNCHANGED (Still Work)**:\n- `GET /api/workspaces/[id]/chat/sessions` - List sessions \n- `GET /api/workspaces/[id]/chat/sessions/[sessionId]` - Get session details\n- `GET /api/workspaces/[id]/chat/search` - Search chat content  \n- `GET/POST/DELETE /api/workspaces/[id]/chat/links` - Manage devlog links\n\n### 🔄 **UPDATED API**:\n- `POST /api/workspaces/[id]/chat/import` - **NOW RECEIVES CHAT DATA**\n  - **Before**: `{source, autoLink, threshold, background, dateRange}`\n  - **After**: `{sessions: [], messages: [], source, workspaceInfo: {}}`\n  - **Updated in #279**: Already implemented as data receiver!\n\n### 📊 **MCP Tools Status**:\n- **4/5 Tools**: Still compatible (list, get, search, link operations)\n- **1/5 Tool**: `import_chat_history` needs update to work with @devlog/cli\n- **New workflow**: MCP tools for viewing data, CLI tools for uploading data\n\n### 🎯 **Minimal Update Needed**:\nMost of the work is still valid! Just need to:\n1. Verify the updated import endpoint works correctly\n2. Update MCP import tool to work with new client-server flow\n3. Test the data receiver functionality\n\n**Result**: ~90% of implementation remains valid with new architecture!"
     }
   ],
   "files": [],
   "relatedDevlogs": [],
   "context": {
     "businessContext": "Web API endpoints enable the MCP tools and web UI to access chat functionality. This follows the architectural pattern of MCP communicating through HTTP APIs rather than direct storage access, ensuring proper separation of concerns and enabling future scalability.",
-    "technicalContext": "Must create Next.js API routes in packages/web/app/api/ following existing patterns. MCP tools in packages/mcp/src/tools/chat-tools.ts need to be updated to make HTTP requests instead of returning stub responses. Need to integrate with WorkspaceDevlogManager through the web API layer. Real-time features may require WebSocket or Server-Sent Events implementation.",
+    "technicalContext": "ARCHITECTURE UPDATED: Due to devlog #279, the chat import API endpoint now receives structured chat data from external clients rather than triggering local imports. The `/api/workspaces/[id]/chat/import` endpoint expects `{sessions: [], messages: [], source: 'github-copilot', workspaceInfo: {}}` in the request body. Other endpoints (sessions, search, links) remain unchanged. MCP tools may need updates to reflect the new data ingestion flow.",
     "dependencies": [],
     "decisions": [],
     "acceptanceCriteria": [
