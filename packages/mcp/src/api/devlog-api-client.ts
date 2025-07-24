@@ -12,6 +12,12 @@ import type {
   WorkspaceMetadata,
   WorkspaceContext,
   DevlogStats,
+  ChatSession,
+  ChatMessage,
+  ChatFilter,
+  ChatSearchResult,
+  ChatImportProgress,
+  ChatDevlogLink,
 } from '@devlog/core';
 
 export interface DevlogApiClientConfig {
@@ -363,6 +369,228 @@ export class DevlogApiClient {
   async getWorkspaceStats(workspaceId?: string): Promise<DevlogStats> {
     const path = this.workspacePath('/devlogs/stats/overview', workspaceId);
     return this.request('GET', path);
+  }
+
+  // === Chat Operations ===
+
+  /**
+   * Start chat history import
+   */
+  async importChatHistory(
+    config: {
+      source?: string;
+      autoLink?: boolean;
+      autoLinkThreshold?: number;
+      includeArchived?: boolean;
+      overwriteExisting?: boolean;
+      background?: boolean;
+      dateRange?: { from?: string; to?: string };
+    },
+    workspaceId?: string,
+  ): Promise<ChatImportProgress> {
+    const path = this.workspacePath('/chat/import', workspaceId);
+    const response: any = await this.request('POST', path, config);
+    return response.progress;
+  }
+
+  /**
+   * Get chat import progress
+   */
+  async getChatImportProgress(importId: string, workspaceId?: string): Promise<ChatImportProgress> {
+    const path = this.workspacePath('/chat/import', workspaceId);
+    const response: any = await this.request('GET', `${path}?importId=${importId}`);
+    return response.progress;
+  }
+
+  /**
+   * List chat sessions
+   */
+  async listChatSessions(
+    filter?: ChatFilter,
+    pagination?: { page?: number; limit?: number; offset?: number },
+    workspaceId?: string,
+  ): Promise<{ sessions: ChatSession[]; pagination: any }> {
+    const path = this.workspacePath('/chat/sessions', workspaceId);
+    const params = new URLSearchParams();
+
+    // Add filter parameters
+    if (filter?.agent && filter.agent.length > 0) {
+      params.append('agent', filter.agent.join(','));
+    }
+    if (filter?.status && filter.status.length > 0) {
+      params.append('status', filter.status.join(','));
+    }
+    if (filter?.workspace && filter.workspace.length > 0) {
+      params.append('workspace', filter.workspace.join(','));
+    }
+    if (filter?.includeArchived !== undefined) {
+      params.append('includeArchived', filter.includeArchived.toString());
+    }
+    if (filter?.fromDate) {
+      params.append('fromDate', filter.fromDate);
+    }
+    if (filter?.toDate) {
+      params.append('toDate', filter.toDate);
+    }
+    if (filter?.minMessages) {
+      params.append('minMessages', filter.minMessages.toString());
+    }
+    if (filter?.maxMessages) {
+      params.append('maxMessages', filter.maxMessages.toString());
+    }
+    if (filter?.tags && filter.tags.length > 0) {
+      params.append('tags', filter.tags.join(','));
+    }
+    if (filter?.linkedDevlog) {
+      params.append('linkedDevlog', filter.linkedDevlog.toString());
+    }
+
+    // Add pagination parameters
+    if (pagination?.page) {
+      params.append('page', pagination.page.toString());
+    }
+    if (pagination?.limit) {
+      params.append('limit', pagination.limit.toString());
+    }
+
+    const url = params.toString() ? `${path}?${params}` : path;
+    return this.request('GET', url);
+  }
+
+  /**
+   * Get a specific chat session
+   */
+  async getChatSession(
+    sessionId: string,
+    options?: {
+      includeMessages?: boolean;
+      messageOffset?: number;
+      messageLimit?: number;
+    },
+    workspaceId?: string,
+  ): Promise<{
+    session: ChatSession;
+    messages?: ChatMessage[];
+    links: ChatDevlogLink[];
+    messageCount: number;
+  }> {
+    const path = this.workspacePath(`/chat/sessions/${sessionId}`, workspaceId);
+    const params = new URLSearchParams();
+
+    if (options?.includeMessages === false) {
+      params.append('includeMessages', 'false');
+    }
+    if (options?.messageOffset) {
+      params.append('messageOffset', options.messageOffset.toString());
+    }
+    if (options?.messageLimit) {
+      params.append('messageLimit', options.messageLimit.toString());
+    }
+
+    const url = params.toString() ? `${path}?${params}` : path;
+    return this.request('GET', url);
+  }
+
+  /**
+   * Search chat content
+   */
+  async searchChatContent(
+    query: string,
+    filter?: ChatFilter,
+    limit?: number,
+    workspaceId?: string,
+  ): Promise<{ results: ChatSearchResult[]; resultCount: number; query: string }> {
+    const path = this.workspacePath('/chat/search', workspaceId);
+    const params = new URLSearchParams();
+
+    params.append('q', query);
+
+    // Add filter parameters
+    if (filter?.agent && filter.agent.length > 0) {
+      params.append('agent', filter.agent.join(','));
+    }
+    if (filter?.status && filter.status.length > 0) {
+      params.append('status', filter.status.join(','));
+    }
+    if (filter?.workspace && filter.workspace.length > 0) {
+      params.append('workspace', filter.workspace.join(','));
+    }
+    if (filter?.includeArchived !== undefined) {
+      params.append('includeArchived', filter.includeArchived.toString());
+    }
+    if (filter?.fromDate) {
+      params.append('fromDate', filter.fromDate);
+    }
+    if (filter?.toDate) {
+      params.append('toDate', filter.toDate);
+    }
+    if (limit) {
+      params.append('limit', limit.toString());
+    }
+
+    const url = `${path}?${params}`;
+    return this.request('GET', url);
+  }
+
+  /**
+   * Get chat-devlog links
+   */
+  async getChatDevlogLinks(
+    sessionId?: string,
+    devlogId?: number,
+    workspaceId?: string,
+  ): Promise<{ links: ChatDevlogLink[] }> {
+    const path = this.workspacePath('/chat/links', workspaceId);
+    const params = new URLSearchParams();
+
+    if (sessionId) {
+      params.append('sessionId', sessionId);
+    }
+    if (devlogId) {
+      params.append('devlogId', devlogId.toString());
+    }
+
+    const url = params.toString() ? `${path}?${params}` : path;
+    return this.request('GET', url);
+  }
+
+  /**
+   * Create chat-devlog link
+   */
+  async createChatDevlogLink(
+    sessionId: string,
+    devlogId: number,
+    options?: {
+      confidence?: number;
+      reason?: string;
+      evidence?: any;
+      confirmed?: boolean;
+      createdBy?: string;
+    },
+    workspaceId?: string,
+  ): Promise<{ link: ChatDevlogLink }> {
+    const path = this.workspacePath('/chat/links', workspaceId);
+    return this.request('POST', path, {
+      sessionId,
+      devlogId,
+      ...options,
+    });
+  }
+
+  /**
+   * Remove chat-devlog link
+   */
+  async removeChatDevlogLink(
+    sessionId: string,
+    devlogId: number,
+    workspaceId?: string,
+  ): Promise<void> {
+    const path = this.workspacePath('/chat/links', workspaceId);
+    const params = new URLSearchParams();
+    params.append('sessionId', sessionId);
+    params.append('devlogId', devlogId.toString());
+
+    await this.request('DELETE', `${path}?${params}`);
   }
 
   // === Utility Methods ===

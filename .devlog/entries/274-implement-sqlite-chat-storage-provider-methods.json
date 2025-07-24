@@ -1,0 +1,87 @@
+{
+  "id": 274,
+  "key": "implement-sqlite-chat-storage-provider-methods",
+  "title": "Implement SQLite Chat Storage Provider Methods",
+  "type": "task",
+  "description": "Implement the 13 chat storage methods in SQLiteStorageProvider to enable database-backed chat functionality. This includes session management, message storage, search capabilities, and linking operations with full transaction support and error handling.",
+  "status": "in-progress",
+  "priority": "high",
+  "createdAt": "2025-07-24T13:17:35.819Z",
+  "updatedAt": "2025-07-24T13:37:30.035Z",
+  "notes": [
+    {
+      "id": "3090a240-d5bb-4feb-970a-2b38c418f29c",
+      "timestamp": "2025-07-24T13:19:54.013Z",
+      "category": "progress",
+      "content": "## Rethinking Core Chat Methods 🎯\n\n### 🤔 **Current 13 Methods Analysis**:\nLooking at the StorageProvider interface, we have:\n1. `saveChatSession` / `getChatSession` / `listChatSessions` / `deleteChatSession`\n2. `saveChatMessages` / `getChatMessages` \n3. `searchChatContent`\n4. `getChatStats`\n5. `saveChatDevlogLink` / `getChatDevlogLinks` / `removeChatDevlogLink`\n6. `getChatWorkspaces` / `saveChatWorkspace`\n\n### 💭 **What do users actually need?**\n**Core Value Operations**:\n- **Import chat history** (parse and store)\n- **Search across chats** (find past conversations)\n- **View chat sessions** (read conversation history)\n- **Link chats to devlogs** (connect context)\n\n### ❓ **Questions to clarify**:\n- Do we need individual session CRUD or just bulk import?\n- Is workspace management essential or can we simplify?  \n- Are statistics necessary for MVP or nice-to-have?\n- Can linking be simplified to just view relationships?\n\n### 🎯 **Proposed Core Set** (5-7 methods):\n1. **Import operations**: Bulk import from sources\n2. **Search operations**: Find content across all chats  \n3. **List/view operations**: Browse sessions and messages\n4. **Basic linking**: Connect sessions to devlogs\n\nThis focuses on **user value** over **technical completeness**. What specific chat operations do you think are most important?"
+    },
+    {
+      "id": "cb4baeb5-f994-4aa2-8d32-cfa0a6bc0ab3",
+      "timestamp": "2025-07-24T13:20:14.327Z",
+      "category": "idea",
+      "content": "## Current MCP Tools Analysis 📊\n\n### 🛠️ **Current 10 MCP Tools**:\n1. `import_chat_history` - Import from codehist/VS Code ✅ **CORE**\n2. `get_chat_session` - View individual conversation ✅ **CORE** \n3. `list_chat_sessions` - Browse all sessions ✅ **CORE**\n4. `search_chat_content` - Find content across chats ✅ **CORE**\n5. `link_chat_to_devlog` - Connect session to devlog ✅ **CORE**\n6. `unlink_chat_from_devlog` - Remove connection ❓ **MAYBE**\n7. `suggest_chat_devlog_links` - Auto-suggest connections ❓ **NICE-TO-HAVE**\n8. `get_chat_stats` - Analytics/statistics ❓ **NICE-TO-HAVE**\n9. `update_chat_session` - Modify session metadata ❓ **MAYBE**\n10. `get_chat_workspaces` - Workspace management ❓ **MAYBE**\n\n### 🎯 **Proposed Core Set (5 tools)**:\n**Essential User Workflows**:\n1. **`import_chat_history`** - Get data into the system\n2. **`search_chat_content`** - Find relevant conversations  \n3. **`list_chat_sessions`** - Browse available sessions\n4. **`get_chat_session`** - View conversation details\n5. **`link_chat_to_devlog`** - Connect chat to development work\n\n### 💭 **Simplified Storage Methods**:\nInstead of 13 storage methods, we need maybe **5-6**:\n- `importChatHistory()` - Bulk import with progress tracking\n- `searchChatContent()` - FTS search across all content\n- `listChatSessions()` - Paginated session browsing  \n- `getChatSession()` - Individual session with messages\n- `linkChatToDevlog()` - Create/manage connections\n\n**Benefits**: Simpler implementation, faster delivery, clearer user value focus."
+    },
+    {
+      "id": "64ddb3d9-2738-477d-9e30-3e5cbfeedae1",
+      "timestamp": "2025-07-24T13:31:54.027Z",
+      "category": "progress",
+      "content": "## Starting Implementation: Core Chat Storage Methods ✅\n\n### 🎯 **Current Analysis**:\n- **Database Schema**: Complete SQLite schema already exists (`chat-schema.ts`)\n  - 5 tables: `chat_sessions`, `chat_messages`, `chat_workspaces`, `chat_devlog_links`, `chat_import_progress`\n  - FTS5 search tables and triggers\n  - Comprehensive indexes and views\n- **TypeORM Provider**: Stub methods ready for implementation\n- **Types & Interfaces**: All chat types defined in `packages/core/src/types/chat.ts`\n\n### 🚀 **Implementation Focus** (Core 5-6 Methods):\n1. **`saveChatSession`** - Store session data\n2. **`getChatSession`** - Retrieve session with metadata\n3. **`listChatSessions`** - Browse sessions with filtering\n4. **`saveChatMessages`** - Store message arrays\n5. **`getChatMessages`** - Retrieve messages for session\n6. **`searchChatContent`** - FTS search across content\n7. **`saveChatDevlogLink`** - Basic session-devlog linking\n\n### 📋 **Next Steps**:\n1. Implement TypeORM entities for chat tables\n2. Add chat storage methods to TypeORMStorageProvider\n3. Test with SQLite database operations\n4. Validate type conversion and error handling\n\nReady to implement the core storage foundation!"
+    },
+    {
+      "id": "effb847f-9f07-486f-a9bc-52160a7572f1",
+      "timestamp": "2025-07-24T13:37:30.035Z",
+      "category": "progress",
+      "content": "## Core Chat Storage Methods Implemented ✅\n\n### 🎯 **Completed Implementation**:\n\n**1. TypeORM Entities Created**:\n- ✅ `ChatSessionEntity` - Maps to `chat_sessions` table\n- ✅ `ChatMessageEntity` - Maps to `chat_messages` table  \n- ✅ `ChatDevlogLinkEntity` - Maps to `chat_devlog_links` table\n- ✅ Updated TypeORM config to include chat entities\n\n**2. Core Storage Methods Implemented** (7/13):\n- ✅ `saveChatSession()` - Store chat session data\n- ✅ `getChatSession()` - Retrieve session by ID\n- ✅ `listChatSessions()` - Browse sessions with filtering\n- ✅ `saveChatMessages()` - Store message arrays\n- ✅ `getChatMessages()` - Retrieve messages for session\n- ✅ `searchChatContent()` - FTS search with SQLite FTS5\n- ✅ `saveChatDevlogLink()` - Create session-devlog links\n\n**3. Additional Methods Implemented**:\n- ✅ `getChatStats()` - Session statistics and analytics\n- ✅ `getChatDevlogLinks()` - Retrieve links with filtering\n- ✅ `removeChatDevlogLink()` - Remove session-devlog links\n- ✅ `getChatWorkspaces()` - List workspace data\n- ✅ `saveChatWorkspace()` - Workspace management (no-op)\n\n**4. Technical Features**:\n- ✅ Entity conversion methods (`chatSessionToEntity`, `entityToChatSession`, etc.)\n- ✅ JSON field handling for SQLite/PostgreSQL compatibility\n- ✅ Full-text search using SQLite FTS5 tables\n- ✅ Proper error handling and logging\n- ✅ Filter support (agent, workspace, status, archived)\n- ✅ Pagination support (offset/limit)\n\n### 🧪 **Next Steps**:\n1. Test storage methods with actual data\n2. Validate with import service integration\n3. Test build compilation\n4. Integration testing with MCP tools\n\n**Status**: Core implementation complete, ready for testing!",
+      "files": [
+        "packages/core/src/storage/providers/typeorm-storage.ts",
+        "packages/core/src/entities/chat-session.entity.ts",
+        "packages/core/src/entities/chat-message.entity.ts",
+        "packages/core/src/entities/chat-devlog-link.entity.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "SQLite storage is the primary target for local development and single-user deployments. This implementation provides the foundation for all chat functionality and must be robust, performant, and feature-complete to support the chat import and display system.",
+    "technicalContext": "The SQLite schema is already implemented with tables, indexes, FTS5 search, and views. Need to implement the 13 methods defined in StorageProvider interface: saveChatSession, getChatSession, listChatSessions, deleteChatSession, saveChatMessages, getChatMessages, searchChatContent, getChatStats, saveChatDevlogLink, getChatDevlogLinks, removeChatDevlogLink, getChatWorkspaces, saveChatWorkspace. Must use existing database connection and follow established patterns from devlog operations.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Core 5-6 chat storage methods implemented in SQLiteStorageProvider",
+      "importChatHistory() handles bulk import with progress tracking",
+      "searchChatContent() provides FTS search across all chat content",
+      "listChatSessions() supports pagination and basic filtering",
+      "getChatSession() returns session with all messages efficiently",
+      "saveChatDevlogLink() and getChatDevlogLinks() handle basic linking",
+      "All database operations use proper transactions and error handling",
+      "Performance is acceptable for large chat datasets (1000+ sessions)",
+      "TypeScript types match interface definitions exactly",
+      "Database schema initialization works correctly",
+      "Unit tests cover all core methods",
+      "Error messages are clear and actionable"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "SQLite schema is complete with all necessary tables and indexes",
+      "Database initialization function already exists: initializeChatTables()",
+      "FTS5 virtual tables are configured for content search",
+      "Database views provide pre-calculated statistics",
+      "Existing SQLite devlog operations can be used as implementation reference",
+      "Need to handle JSON serialization/deserialization for metadata fields"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [
+      "Existing SQLiteStorageProvider devlog methods for transaction patterns",
+      "Database row mapping patterns used in other storage providers",
+      "FTS5 search implementation examples from SQLite documentation",
+      "JSON field handling patterns from existing codebase"
+    ],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-24T13:17:35.819Z",
+    "contextVersion": 1
+  }
+}

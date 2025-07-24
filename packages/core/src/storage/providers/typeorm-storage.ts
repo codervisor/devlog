@@ -15,11 +15,25 @@ import {
   StorageProvider,
   TimeSeriesRequest,
   TimeSeriesStats,
+  ChatSession,
+  ChatMessage,
+  ChatSessionId,
+  ChatFilter,
+  ChatSearchResult,
+  ChatStats,
+  ChatDevlogLink,
+  ChatWorkspace,
 } from '@/types';
 import { createPaginatedResult } from '../../utils/common.js';
-import { DevlogEntryEntity } from '../../entities/devlog-entry.entity.js';
+import {
+  DevlogEntryEntity,
+  ChatSessionEntity,
+  ChatMessageEntity,
+  ChatDevlogLinkEntity,
+} from '../../entities/index.js';
 import { calculateDevlogStats, calculateTimeSeriesStats } from '../../storage/shared/index.js';
 import { createDataSource, TypeORMStorageOptions } from '../typeorm/typeorm-config.js';
+import { initializeChatTables } from '../typeorm/chat-schema.js';
 import {
   generateDateRange,
   generateTimeSeriesParams,
@@ -30,6 +44,9 @@ import {
 export class TypeORMStorageProvider implements StorageProvider {
   private dataSource: DataSource;
   private repository?: Repository<DevlogEntryEntity>;
+  private chatSessionRepository?: Repository<ChatSessionEntity>;
+  private chatMessageRepository?: Repository<ChatMessageEntity>;
+  private chatDevlogLinkRepository?: Repository<ChatDevlogLinkEntity>;
   private options: TypeORMStorageOptions;
 
   // Event subscription properties
@@ -50,7 +67,23 @@ export class TypeORMStorageProvider implements StorageProvider {
       } else {
         console.log('[TypeORMStorage] Database connection already exists, reusing');
       }
+
+      // Initialize repositories
       this.repository = this.dataSource.getRepository(DevlogEntryEntity);
+      this.chatSessionRepository = this.dataSource.getRepository(ChatSessionEntity);
+      this.chatMessageRepository = this.dataSource.getRepository(ChatMessageEntity);
+      this.chatDevlogLinkRepository = this.dataSource.getRepository(ChatDevlogLinkEntity);
+
+      // Initialize chat tables for SQLite (other databases use migration/synchronize)
+      if (this.options.type === 'sqlite') {
+        try {
+          initializeChatTables(this.dataSource.manager.connection.driver.database);
+          console.log('[TypeORMStorage] Chat tables initialized for SQLite');
+        } catch (error) {
+          console.warn('[TypeORMStorage] Chat table initialization warning:', error);
+          // Don't fail initialization if chat tables already exist
+        }
+      }
     } catch (error) {
       throw new Error(`Failed to initialize TypeORM storage: ${error}`);
     }
@@ -464,6 +497,77 @@ export class TypeORMStorageProvider implements StorageProvider {
     return value;
   }
 
+  // ===== Chat Entity Conversion Methods =====
+
+  private entityToChatSession(entity: ChatSessionEntity): ChatSession {
+    return {
+      id: entity.id,
+      agent: entity.agent,
+      timestamp: entity.timestamp,
+      workspace: entity.workspace,
+      workspacePath: entity.workspacePath,
+      title: entity.title,
+      status: entity.status,
+      messageCount: entity.messageCount,
+      duration: entity.duration,
+      metadata: this.parseJsonField(entity.metadata, {}),
+      tags: this.parseJsonField(entity.tags, []),
+      importedAt: entity.importedAt,
+      updatedAt: entity.updatedAt,
+      linkedDevlogs: [], // TODO: Load linked devlogs if needed
+      archived: entity.archived,
+    };
+  }
+
+  private chatSessionToEntity(session: ChatSession): ChatSessionEntity {
+    const entity = new ChatSessionEntity();
+
+    entity.id = session.id;
+    entity.agent = session.agent;
+    entity.timestamp = session.timestamp;
+    entity.workspace = session.workspace;
+    entity.workspacePath = session.workspacePath;
+    entity.title = session.title;
+    entity.status = session.status;
+    entity.messageCount = session.messageCount;
+    entity.duration = session.duration;
+    entity.metadata = this.stringifyJsonField(session.metadata);
+    entity.tags = this.stringifyJsonField(session.tags);
+    entity.importedAt = session.importedAt;
+    entity.updatedAt = session.updatedAt;
+    entity.archived = session.archived;
+
+    return entity;
+  }
+
+  private entityToChatMessage(entity: ChatMessageEntity): ChatMessage {
+    return {
+      id: entity.id,
+      sessionId: entity.sessionId,
+      role: entity.role,
+      content: entity.content,
+      timestamp: entity.timestamp,
+      sequence: entity.sequence,
+      metadata: this.parseJsonField(entity.metadata, {}),
+      searchContent: entity.searchContent,
+    };
+  }
+
+  private chatMessageToEntity(message: ChatMessage): ChatMessageEntity {
+    const entity = new ChatMessageEntity();
+
+    entity.id = message.id;
+    entity.sessionId = message.sessionId;
+    entity.role = message.role;
+    entity.content = message.content;
+    entity.timestamp = message.timestamp;
+    entity.sequence = message.sequence;
+    entity.metadata = this.stringifyJsonField(message.metadata);
+    entity.searchContent = message.searchContent;
+
+    return entity;
+  }
+
   // ===== Event Subscription Operations =====
 
   async subscribe(callback: (event: DevlogEvent) => void): Promise<() => void> {
@@ -508,57 +612,487 @@ export class TypeORMStorageProvider implements StorageProvider {
     }
   }
 
-  // ===== Chat Storage Operations (TODO: Implement) =====
+  // ===== Chat Storage Operations =====
 
-  async saveChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async saveChatSession(session: ChatSession): Promise<void> {
+    if (!this.chatSessionRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const entity = this.chatSessionToEntity(session);
+      await this.chatSessionRepository.save(entity);
+      console.log(`[TypeORMStorage] Chat session saved: ${session.id}`);
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to save chat session:', error);
+      throw new Error(`Failed to save chat session: ${error.message}`);
+    }
   }
 
-  async getChatSession(): Promise<null> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async getChatSession(id: ChatSessionId): Promise<ChatSession | null> {
+    if (!this.chatSessionRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const entity = await this.chatSessionRepository.findOne({ where: { id } });
+      if (!entity) return null;
+
+      return this.entityToChatSession(entity);
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to get chat session:', error);
+      throw new Error(`Failed to get chat session: ${error.message}`);
+    }
   }
 
-  async listChatSessions(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async listChatSessions(
+    filter?: ChatFilter,
+    offset?: number,
+    limit?: number,
+  ): Promise<ChatSession[]> {
+    if (!this.chatSessionRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const queryBuilder = this.chatSessionRepository.createQueryBuilder('session');
+
+      // Apply filters
+      if (filter?.agent && filter.agent.length > 0) {
+        queryBuilder.andWhere('session.agent IN (:...agents)', { agents: filter.agent });
+      }
+
+      if (filter?.status && filter.status.length > 0) {
+        queryBuilder.andWhere('session.status IN (:...statuses)', { statuses: filter.status });
+      }
+
+      if (filter?.workspace && filter.workspace.length > 0) {
+        queryBuilder.andWhere('session.workspace IN (:...workspaces)', {
+          workspaces: filter.workspace,
+        });
+      }
+
+      if (filter?.includeArchived !== undefined) {
+        queryBuilder.andWhere('session.archived = :archived', {
+          archived: !filter.includeArchived,
+        });
+      } else {
+        // Default: exclude archived sessions
+        queryBuilder.andWhere('session.archived = :archived', { archived: false });
+      }
+
+      if (filter?.fromDate) {
+        queryBuilder.andWhere('session.timestamp >= :fromDate', { fromDate: filter.fromDate });
+      }
+
+      if (filter?.toDate) {
+        queryBuilder.andWhere('session.timestamp <= :toDate', { toDate: filter.toDate });
+      }
+
+      // Apply ordering
+      queryBuilder.orderBy('session.timestamp', 'DESC');
+
+      // Apply pagination
+      if (offset !== undefined) {
+        queryBuilder.skip(offset);
+      }
+      if (limit !== undefined) {
+        queryBuilder.take(limit);
+      }
+
+      const entities = await queryBuilder.getMany();
+      return entities.map((entity) => this.entityToChatSession(entity));
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to list chat sessions:', error);
+      throw new Error(`Failed to list chat sessions: ${error.message}`);
+    }
   }
 
-  async deleteChatSession(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async deleteChatSession(id: ChatSessionId): Promise<void> {
+    if (!this.chatSessionRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      // Soft delete by marking as archived
+      const entity = await this.chatSessionRepository.findOne({ where: { id } });
+      if (entity) {
+        entity.archived = true;
+        entity.updatedAt = new Date().toISOString();
+        await this.chatSessionRepository.save(entity);
+        console.log(`[TypeORMStorage] Chat session archived: ${id}`);
+      }
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to delete chat session:', error);
+      throw new Error(`Failed to delete chat session: ${error.message}`);
+    }
   }
 
-  async saveChatMessages(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async saveChatMessages(messages: ChatMessage[]): Promise<void> {
+    if (!this.chatMessageRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const entities = messages.map((message) => this.chatMessageToEntity(message));
+      await this.chatMessageRepository.save(entities);
+      console.log(`[TypeORMStorage] Saved ${messages.length} chat messages`);
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to save chat messages:', error);
+      throw new Error(`Failed to save chat messages: ${error.message}`);
+    }
   }
 
-  async getChatMessages(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async getChatMessages(
+    sessionId: ChatSessionId,
+    offset?: number,
+    limit?: number,
+  ): Promise<ChatMessage[]> {
+    if (!this.chatMessageRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const queryBuilder = this.chatMessageRepository.createQueryBuilder('message');
+
+      queryBuilder.where('message.sessionId = :sessionId', { sessionId });
+      queryBuilder.orderBy('message.sequence', 'ASC');
+
+      if (offset !== undefined) {
+        queryBuilder.skip(offset);
+      }
+      if (limit !== undefined) {
+        queryBuilder.take(limit);
+      }
+
+      const entities = await queryBuilder.getMany();
+      return entities.map((entity) => this.entityToChatMessage(entity));
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to get chat messages:', error);
+      throw new Error(`Failed to get chat messages: ${error.message}`);
+    }
   }
 
-  async searchChatContent(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async searchChatContent(
+    query: string,
+    filter?: ChatFilter,
+    limit?: number,
+  ): Promise<ChatSearchResult[]> {
+    if (!this.chatMessageRepository || !this.chatSessionRepository) {
+      throw new Error('Chat storage not initialized');
+    }
+
+    try {
+      // For TypeORM with SQLite, we'll use raw SQL to access FTS
+      let searchQuery = `
+        SELECT DISTINCT 
+          m.session_id,
+          m.id as message_id,
+          m.role,
+          m.content,
+          m.timestamp as message_timestamp,
+          m.sequence,
+          m.metadata as message_metadata,
+          m.search_content,
+          s.agent,
+          s.workspace,
+          s.title,
+          s.status,
+          s.timestamp as session_timestamp,
+          s.message_count,
+          s.duration,
+          s.tags,
+          s.imported_at,
+          s.updated_at,
+          s.archived
+        FROM chat_messages_fts fts
+        JOIN chat_messages m ON fts.rowid = m.rowid
+        JOIN chat_sessions s ON m.session_id = s.id
+        WHERE chat_messages_fts MATCH ?
+      `;
+
+      const params: any[] = [query];
+
+      // Apply session-level filters
+      if (filter?.agent && filter.agent.length > 0) {
+        searchQuery += ` AND s.agent IN (${filter.agent.map(() => '?').join(',')})`;
+        params.push(...filter.agent);
+      }
+
+      if (filter?.workspace && filter.workspace.length > 0) {
+        searchQuery += ` AND s.workspace IN (${filter.workspace.map(() => '?').join(',')})`;
+        params.push(...filter.workspace);
+      }
+
+      if (filter?.includeArchived !== true) {
+        searchQuery += ` AND s.archived = ?`;
+        params.push(0); // SQLite boolean as integer
+      }
+
+      searchQuery += ` ORDER BY s.timestamp DESC`;
+
+      if (limit) {
+        searchQuery += ` LIMIT ?`;
+        params.push(limit);
+      }
+
+      const rawResults = await this.dataSource.query(searchQuery, params);
+
+      // Group results by session
+      const sessionMap = new Map<string, { session: ChatSession; messages: ChatMessage[] }>();
+
+      for (const row of rawResults) {
+        const sessionId = row.session_id;
+
+        if (!sessionMap.has(sessionId)) {
+          const session: ChatSession = {
+            id: sessionId,
+            agent: row.agent,
+            timestamp: row.session_timestamp,
+            workspace: row.workspace,
+            title: row.title,
+            status: row.status,
+            messageCount: row.message_count,
+            duration: row.duration,
+            metadata: this.parseJsonField(row.metadata, {}),
+            tags: this.parseJsonField(row.tags, []),
+            importedAt: row.imported_at,
+            updatedAt: row.updated_at,
+            linkedDevlogs: [],
+            archived: Boolean(row.archived),
+          };
+
+          sessionMap.set(sessionId, { session, messages: [] });
+        }
+
+        const message: ChatMessage = {
+          id: row.message_id,
+          sessionId: sessionId,
+          role: row.role,
+          content: row.content,
+          timestamp: row.message_timestamp,
+          sequence: row.sequence,
+          metadata: this.parseJsonField(row.message_metadata, {}),
+          searchContent: row.search_content,
+        };
+
+        sessionMap.get(sessionId)!.messages.push(message);
+      }
+
+      // Convert to search results
+      const results: ChatSearchResult[] = [];
+      for (const { session, messages } of sessionMap.values()) {
+        results.push({
+          session,
+          messages: messages.map((message) => ({
+            message,
+            matchPositions: [], // TODO: Calculate actual match positions
+            context: message.content.substring(0, 200), // First 200 chars as context
+            score: 1.0, // TODO: Calculate relevance score
+          })),
+          relevance: 1.0, // TODO: Calculate overall relevance
+          searchContext: {
+            query,
+            matchType: 'exact',
+            totalMatches: messages.length,
+          },
+        });
+      }
+
+      return results;
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to search chat content:', error);
+      throw new Error(`Failed to search chat content: ${error.message}`);
+    }
   }
 
-  async getChatStats(): Promise<any> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async getChatStats(filter?: ChatFilter): Promise<ChatStats> {
+    if (!this.chatSessionRepository || !this.chatMessageRepository) {
+      throw new Error('Chat storage not initialized');
+    }
+
+    try {
+      // Get session stats
+      const sessionQueryBuilder = this.chatSessionRepository.createQueryBuilder('session');
+
+      if (filter?.agent && filter.agent.length > 0) {
+        sessionQueryBuilder.andWhere('session.agent IN (:...agents)', { agents: filter.agent });
+      }
+
+      if (filter?.includeArchived !== true) {
+        sessionQueryBuilder.andWhere('session.archived = :archived', { archived: false });
+      }
+
+      const sessions = await sessionQueryBuilder.getMany();
+      const totalSessions = sessions.length;
+      const totalMessages = sessions.reduce((sum, s) => sum + s.messageCount, 0);
+
+      // Count by agent
+      const byAgent: Record<string, number> = {};
+      for (const session of sessions) {
+        byAgent[session.agent] = (byAgent[session.agent] || 0) + 1;
+      }
+
+      // Count by status
+      const byStatus: Record<string, number> = {};
+      for (const session of sessions) {
+        byStatus[session.status] = (byStatus[session.status] || 0) + 1;
+      }
+
+      // Count by workspace
+      const byWorkspace: Record<string, any> = {};
+      for (const session of sessions) {
+        if (session.workspace) {
+          if (!byWorkspace[session.workspace]) {
+            byWorkspace[session.workspace] = {
+              sessions: 0,
+              messages: 0,
+              firstSeen: session.timestamp,
+              lastSeen: session.timestamp,
+            };
+          }
+          byWorkspace[session.workspace].sessions++;
+          byWorkspace[session.workspace].messages += session.messageCount;
+
+          if (session.timestamp < byWorkspace[session.workspace].firstSeen) {
+            byWorkspace[session.workspace].firstSeen = session.timestamp;
+          }
+          if (session.timestamp > byWorkspace[session.workspace].lastSeen) {
+            byWorkspace[session.workspace].lastSeen = session.timestamp;
+          }
+        }
+      }
+
+      // Calculate date range
+      const timestamps = sessions.map((s) => s.timestamp).sort();
+      const dateRange = {
+        earliest: timestamps.length > 0 ? timestamps[0] : null,
+        latest: timestamps.length > 0 ? timestamps[timestamps.length - 1] : null,
+      };
+
+      // TODO: Calculate linkage stats by querying chat_devlog_links
+      const linkageStats = {
+        linked: 0,
+        unlinked: totalSessions,
+        multiLinked: 0,
+      };
+
+      return {
+        totalSessions,
+        totalMessages,
+        byAgent: byAgent as any,
+        byStatus: byStatus as any,
+        byWorkspace,
+        dateRange,
+        linkageStats,
+      };
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to get chat stats:', error);
+      throw new Error(`Failed to get chat stats: ${error.message}`);
+    }
   }
 
-  async saveChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async saveChatDevlogLink(link: ChatDevlogLink): Promise<void> {
+    if (!this.chatDevlogLinkRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const entity = new ChatDevlogLinkEntity();
+      entity.sessionId = link.sessionId;
+      entity.devlogId = link.devlogId;
+      entity.confidence = link.confidence;
+      entity.reason = link.reason;
+      entity.evidence = this.stringifyJsonField(link.evidence);
+      entity.confirmed = link.confirmed || false;
+      entity.createdAt = link.createdAt;
+      entity.createdBy = link.createdBy;
+
+      await this.chatDevlogLinkRepository.save(entity);
+      console.log(`[TypeORMStorage] Chat-devlog link saved: ${link.sessionId} -> ${link.devlogId}`);
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to save chat-devlog link:', error);
+      throw new Error(`Failed to save chat-devlog link: ${error.message}`);
+    }
   }
 
-  async getChatDevlogLinks(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async getChatDevlogLinks(
+    sessionId?: ChatSessionId,
+    devlogId?: DevlogId,
+  ): Promise<ChatDevlogLink[]> {
+    if (!this.chatDevlogLinkRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      const queryBuilder = this.chatDevlogLinkRepository.createQueryBuilder('link');
+
+      if (sessionId) {
+        queryBuilder.andWhere('link.sessionId = :sessionId', { sessionId });
+      }
+
+      if (devlogId) {
+        queryBuilder.andWhere('link.devlogId = :devlogId', { devlogId });
+      }
+
+      const entities = await queryBuilder.getMany();
+
+      return entities.map((entity) => ({
+        sessionId: entity.sessionId,
+        devlogId: entity.devlogId,
+        confidence: entity.confidence,
+        reason: entity.reason,
+        evidence: this.parseJsonField(entity.evidence, {}),
+        confirmed: entity.confirmed,
+        createdAt: entity.createdAt,
+        createdBy: entity.createdBy,
+      }));
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to get chat-devlog links:', error);
+      throw new Error(`Failed to get chat-devlog links: ${error.message}`);
+    }
   }
 
-  async removeChatDevlogLink(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async removeChatDevlogLink(sessionId: ChatSessionId, devlogId: DevlogId): Promise<void> {
+    if (!this.chatDevlogLinkRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      await this.chatDevlogLinkRepository.delete({ sessionId, devlogId });
+      console.log(`[TypeORMStorage] Chat-devlog link removed: ${sessionId} -> ${devlogId}`);
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to remove chat-devlog link:', error);
+      throw new Error(`Failed to remove chat-devlog link: ${error.message}`);
+    }
   }
 
-  async getChatWorkspaces(): Promise<[]> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async getChatWorkspaces(): Promise<ChatWorkspace[]> {
+    if (!this.chatSessionRepository) throw new Error('Chat storage not initialized');
+
+    try {
+      // Query unique workspaces with aggregated data
+      const rawResults = await this.dataSource.query(`
+        SELECT 
+          workspace as id,
+          workspace as name,
+          '' as path,
+          'Chat Session' as source,
+          MIN(timestamp) as first_seen,
+          MAX(timestamp) as last_seen,
+          COUNT(*) as session_count,
+          workspace as devlog_workspace,
+          '{}' as metadata
+        FROM chat_sessions 
+        WHERE workspace IS NOT NULL AND workspace != ''
+        GROUP BY workspace
+        ORDER BY session_count DESC
+      `);
+
+      return rawResults.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        path: row.path,
+        source: row.source,
+        firstSeen: row.first_seen,
+        lastSeen: row.last_seen,
+        sessionCount: row.session_count,
+        devlogWorkspace: row.devlog_workspace,
+        metadata: this.parseJsonField(row.metadata, {}),
+      }));
+    } catch (error: any) {
+      console.error('[TypeORMStorage] Failed to get chat workspaces:', error);
+      throw new Error(`Failed to get chat workspaces: ${error.message}`);
+    }
   }
 
-  async saveChatWorkspace(): Promise<void> {
-    throw new Error('Chat storage not yet implemented for TypeORM provider.');
+  async saveChatWorkspace(workspace: ChatWorkspace): Promise<void> {
+    // For TypeORM implementation, workspaces are derived from sessions
+    // This is a no-op since we don't have a separate workspaces table
+    console.log(
+      `[TypeORMStorage] Chat workspace save requested: ${workspace.name} (no-op for derived workspaces)`,
+    );
   }
 }
