@@ -18,6 +18,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.1
+      '@vitest/coverage-v8':
+        specifier: 2.1.9
+        version: 2.1.9(vitest@2.1.9)
       concurrently:
         specifier: 9.2.0
         version: 9.2.0
@@ -72,13 +75,10 @@ importers:
         version: 5.8.3
       vitest:
         specifier: ^1.2.0
-        version: 1.6.1(@types/node@20.19.1)(terser@5.43.1)
+        version: 1.6.1(@types/node@20.19.1)(@vitest/ui@2.1.9(vitest@2.1.9))(terser@5.43.1)
 
   packages/core:
     dependencies:
-      '@devlog/ai':
-        specifier: workspace:*
-        version: link:../ai
       better-sqlite3:
         specifier: ^11.0.0
         version: 11.10.0
@@ -7401,7 +7401,7 @@ snapshots:
       fsevents: 2.3.3
       terser: 5.43.1
 
-  vitest@1.6.1(@types/node@20.19.1)(terser@5.43.1):
+  vitest@1.6.1(@types/node@20.19.1)(@vitest/ui@2.1.9(vitest@2.1.9))(terser@5.43.1):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -7425,6 +7425,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.1
+      '@vitest/ui': 2.1.9(vitest@2.1.9)
     transitivePeerDependencies:
       - less
       - lightningcss

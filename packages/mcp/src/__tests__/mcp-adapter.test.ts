@@ -303,19 +303,131 @@ describe('MCPDevlogAdapter', () => {
       });
 
       expect(completeResult).toBeDefined();
-      expect(completeResult.content[0].text).toContain('Completed devlog');
-      expect(completeResult.content[0].text).toContain('Task completed successfully');
+      expect((completeResult.content[0] as any).text).toContain('Completed devlog');
+      expect((completeResult.content[0] as any).text).toContain('Task completed successfully');
+
+      // Verify the completion note was added to the entry
+      const completedEntry = await adapter.getDevlog({ id: testEntryId });
+      expect(completedEntry).toBeDefined();
+      const entryData = JSON.parse((completedEntry.content[0] as any).text);
+      expect(entryData.status).toBe('done');
+      expect(entryData.closedAt).toBeDefined();
+      expect(entryData.notes).toBeDefined();
+      expect(entryData.notes.length).toBeGreaterThan(0);
+
+      // Find the completion note
+      const completionNote = entryData.notes.find((note: any) =>
+        note.content.includes('Completed: Task completed successfully'),
+      );
+      expect(completionNote).toBeDefined();
+      expect(completionNote.category).toBe('progress');
+    });
+
+    it('should complete devlog entry without summary', async () => {
+      // Create a new entry for this test
+      const createResult = await adapter.createDevlog({
+        title: 'Test Entry for Completion Without Summary',
+        type: 'task',
+        description: 'Test completion without summary',
+      });
+
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
+      const noSummaryEntryId = parseInt(entryIdMatch![1], 10);
+
+      const completeResult = await adapter.completeDevlog({
+        id: noSummaryEntryId,
+      });
+
+      expect(completeResult).toBeDefined();
+      expect((completeResult.content[0] as any).text).toContain('Completed devlog');
+      expect((completeResult.content[0] as any).text).not.toContain('with summary');
+
+      // Verify the entry is completed but no completion note was added
+      const completedEntry = await adapter.getDevlog({ id: noSummaryEntryId });
+      expect(completedEntry).toBeDefined();
+      const entryData = JSON.parse((completedEntry.content[0] as any).text);
+      expect(entryData.status).toBe('done');
+      expect(entryData.closedAt).toBeDefined();
+
+      // Should not have any completion notes (no summary provided)
+      const completionNote = entryData.notes.find((note: any) =>
+        note.content.includes('Completed:'),
+      );
+      expect(completionNote).toBeUndefined();
     });
 
     it('should close devlog entry', async () => {
+      // Create a new entry for this test since the previous tests modified testEntryId
+      const createResult = await adapter.createDevlog({
+        title: 'Test Entry for Closure',
+        type: 'task',
+        description: 'Test closure with reason',
+      });
+
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
+      const closeEntryId = parseInt(entryIdMatch![1], 10);
+
       const closeResult = await adapter.closeDevlog({
-        id: testEntryId,
+        id: closeEntryId,
         reason: 'No longer needed',
       });
 
       expect(closeResult).toBeDefined();
-      expect(closeResult.content[0].text).toContain('Closed devlog');
-      expect(closeResult.content[0].text).toContain('No longer needed');
+      expect((closeResult.content[0] as any).text).toContain('Closed devlog');
+      expect((closeResult.content[0] as any).text).toContain('No longer needed');
+
+      // Verify the closure note was added to the entry
+      const closedEntry = await adapter.getDevlog({ id: closeEntryId });
+      expect(closedEntry).toBeDefined();
+      const entryData = JSON.parse((closedEntry.content[0] as any).text);
+      expect(entryData.status).toBe('cancelled');
+      expect(entryData.closedAt).toBeDefined();
+      expect(entryData.notes).toBeDefined();
+      expect(entryData.notes.length).toBeGreaterThan(0);
+
+      // Find the closure note
+      const closureNote = entryData.notes.find((note: any) =>
+        note.content.includes('Cancelled: No longer needed'),
+      );
+      expect(closureNote).toBeDefined();
+      expect(closureNote.category).toBe('progress');
+    });
+
+    it('should close devlog entry without reason', async () => {
+      // Create a new entry for this test
+      const createResult = await adapter.createDevlog({
+        title: 'Test Entry for Closure Without Reason',
+        type: 'task',
+        description: 'Test closure without reason',
+      });
+
+      const entryIdMatch = (createResult.content[0] as any).text.match(
+        /Created devlog entry: (\d+)/,
+      );
+      const noReasonEntryId = parseInt(entryIdMatch![1], 10);
+
+      const closeResult = await adapter.closeDevlog({
+        id: noReasonEntryId,
+      });
+
+      expect(closeResult).toBeDefined();
+      expect((closeResult.content[0] as any).text).toContain('Closed devlog');
+      expect((closeResult.content[0] as any).text).toContain('None provided');
+
+      // Verify the entry is closed but no closure note was added
+      const closedEntry = await adapter.getDevlog({ id: noReasonEntryId });
+      expect(closedEntry).toBeDefined();
+      const entryData = JSON.parse((closedEntry.content[0] as any).text);
+      expect(entryData.status).toBe('cancelled');
+      expect(entryData.closedAt).toBeDefined();
+
+      // Should not have any closure notes (no reason provided)
+      const closureNote = entryData.notes.find((note: any) => note.content.includes('Cancelled:'));
+      expect(closureNote).toBeUndefined();
     });
 
     it('should archive and unarchive devlog entry', async () => {

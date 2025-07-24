@@ -40,6 +40,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "2.1.9",
     "concurrently": "9.2.0",
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
