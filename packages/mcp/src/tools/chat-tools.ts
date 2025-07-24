@@ -25,7 +25,7 @@ function getApiClient(): DevlogApiClient {
 
 // Export MCP Tool argument interfaces for better type safety
 export interface ImportChatHistoryArgs {
-  source?: 'codehist' | 'vs-code';
+  source?: 'github-copilot' | 'cursor' | 'claude-code' | 'windsurf' | 'manual';
   autoLink?: boolean;
   autoLinkThreshold?: number;
   includeArchived?: boolean;
@@ -116,14 +116,15 @@ export interface GetChatWorkspacesArgs {
 
 export const importChatHistoryTool: Tool = {
   name: 'import_chat_history',
-  description: 'Import chat history from GitHub Copilot (via codehist) into devlog storage',
+  description:
+    'Import chat history from GitHub Copilot and other AI assistants into devlog storage',
   inputSchema: {
     type: 'object',
     properties: {
       source: {
         type: 'string',
-        enum: ['codehist', 'vs-code'],
-        default: 'codehist',
+        enum: ['github-copilot', 'cursor', 'claude-code', 'windsurf', 'manual'],
+        default: 'github-copilot',
         description: 'Source to import chat history from',
       },
       autoLink: {

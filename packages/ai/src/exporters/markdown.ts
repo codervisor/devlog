@@ -1,5 +1,5 @@
 /**
- * Simple Markdown exporter for CodeHist chat data
+ * Simple Markdown exporter for AI chat data
  *
  * TypeScript implementation without complex configuration.
  */

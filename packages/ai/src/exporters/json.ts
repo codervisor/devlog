@@ -1,6 +1,6 @@
 /**
- * Simple JSON exporter for CodeHist chat data
- * 
+ * Simple JSON exporter for AI chat data
+ *
  * TypeScript implementation without complex configuration.
  */
 
@@ -15,13 +15,17 @@ export interface JSONExportOptions {
 export class JSONExporter {
   private defaultOptions: JSONExportOptions = {
     indent: 2,
-    ensureAscii: false
+    ensureAscii: false,
   };
 
   /**
    * Export arbitrary data to JSON file
    */
-  async exportData(data: Record<string, any>, outputPath: string, options?: JSONExportOptions): Promise<void> {
+  async exportData(
+    data: Record<string, any>,
+    outputPath: string,
+    options?: JSONExportOptions,
+  ): Promise<void> {
     const exportOptions = { ...this.defaultOptions, ...options };
 
     // Ensure output directory exists
@@ -37,7 +41,11 @@ export class JSONExporter {
   /**
    * Export chat data specifically
    */
-  async exportChatData(data: Record<string, any>, outputPath: string, options?: JSONExportOptions): Promise<void> {
+  async exportChatData(
+    data: Record<string, any>,
+    outputPath: string,
+    options?: JSONExportOptions,
+  ): Promise<void> {
     return this.exportData(data, outputPath, options);
   }
 

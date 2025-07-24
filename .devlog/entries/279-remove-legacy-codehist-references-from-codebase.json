@@ -4,10 +4,10 @@
   "title": "Remove legacy 'codehist' references from codebase",
   "type": "refactor",
   "description": "Clean up remaining references to \"codehist\" throughout the codebase, replacing them with more appropriate terms like \"GitHub Copilot\", \"VS Code\", or generic chat import terminology. The package was renamed from @devlog/codehist → @devlog/ai-chat → @devlog/ai, but many comments, descriptions, method names, and configurations still reference the old \"codehist\" name which is confusing and outdated.",
-  "status": "in-progress",
+  "status": "done",
   "priority": "medium",
   "createdAt": "2025-07-24T13:59:47.120Z",
-  "updatedAt": "2025-07-24T14:22:20.666Z",
+  "updatedAt": "2025-07-24T14:26:09.069Z",
   "notes": [
     {
       "id": "0f7318d0-40dc-4111-bca5-5a5949cc6e46",
@@ -66,6 +66,24 @@
         "packages/ai/src/services/chat-hub-service.ts",
         "packages/web/app/api/workspaces/[id]/chat/import/route.ts"
       ]
+    },
+    {
+      "id": "5a7ba6ae-70a2-447e-9bd9-b1e69dcf12e7",
+      "timestamp": "2025-07-24T14:25:57.287Z",
+      "category": "progress",
+      "content": "🎯 **Final Cleanup Complete**:\n\n✅ **MCP Tools Updated**:\n- Updated source enum to use new ChatSource types: 'github-copilot', 'cursor', 'claude-code', 'windsurf', 'manual'\n- Updated descriptions to remove 'codehist' references\n- Default source changed to 'github-copilot'\n\n✅ **Comments Cleaned**:\n- Updated model comments: \"CodeHist\" → \"AI Chat processing\"\n- Updated exporter comments: \"CodeHist chat data\" → \"AI chat data\"\n- All legacy terminology removed from active codebase\n\n✅ **Build Verification**:\n- ✅ @devlog/ai builds successfully\n- ✅ @devlog/web builds successfully \n- ✅ @devlog/mcp builds successfully\n- ✅ All packages compile without errors\n\n**Status**: All legacy 'codehist' references removed. ChatHub architecture complete!",
+      "files": [
+        "packages/mcp/src/tools/chat-tools.ts",
+        "packages/ai/src/models/index.ts",
+        "packages/ai/src/exporters/markdown.ts",
+        "packages/ai/src/exporters/json.ts"
+      ]
+    },
+    {
+      "id": "69ad8872-d30e-4319-8782-ea2a7084b287",
+      "timestamp": "2025-07-24T14:26:09.068Z",
+      "category": "progress",
+      "content": "Completed: Successfully completed the removal of legacy 'codehist' references and transformed the architecture to use ChatHub as the central data receiver service. \n\n**Key Accomplishments**:\n- **Architectural Transformation**: Changed from local file import to client-server data streaming\n- **Service Redesign**: Created ChatHubService with data ingestion methods (ingestChatSessions, ingestChatMessages, processBulkChatData)\n- **Type Safety**: Introduced ChatSource type with proper AI assistant names\n- **API Modernization**: Updated endpoints to receive structured chat data from clients\n- **Complete Cleanup**: Removed all legacy 'codehist' references from active codebase\n- **Build Verification**: All packages compile successfully\n\n**Impact**: \n- Much cleaner client-server separation\n- Ready for @devlog/cli integration (devlog #280)\n- Scalable architecture for multiple AI assistant integrations\n- Eliminated complex cross-platform file system logic from server"
     }
   ],
   "files": [],
@@ -105,5 +123,6 @@
     ],
     "lastAIUpdate": "2025-07-24T14:04:58.728Z",
     "contextVersion": 2
-  }
+  },
+  "closedAt": "2025-07-24T14:26:09.069Z"
 }
