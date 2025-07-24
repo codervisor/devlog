@@ -53,6 +53,9 @@
     "web",
     "dashboard"
   ],
-  "author": "",
+  "author": {
+    "name": "Marvin Zhang",
+    "email": "tikazyq@163.com"
+  },
   "license": "Apache-2.0"
 }
