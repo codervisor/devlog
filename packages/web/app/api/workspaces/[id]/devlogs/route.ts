@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
+import { filterTypeToStatusFilter, type FilterType } from '@devlog/core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,18 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { searchParams } = new URL(request.url);
     const filter: any = {};
 
-    // Parse query parameters (same as main devlogs API)
+    // Parse filterType parameter first (has precedence over individual status filtering)
+    const filterType = searchParams.get('filterType') as FilterType;
+    if (filterType) {
+      const statusArray = filterTypeToStatusFilter(filterType);
+      if (statusArray) {
+        filter.status = statusArray;
+      }
+      // If filterType is 'total', statusArray will be undefined and no status filtering is applied
+    }
+
+    // Parse other query parameters (same as main devlogs API)
+    // Note: individual status parameter will override filterType if both are provided
     if (searchParams.get('status')) filter.status = searchParams.get('status')?.split(',');
     if (searchParams.get('type')) filter.type = searchParams.get('type');
     if (searchParams.get('priority')) filter.priority = searchParams.get('priority');
