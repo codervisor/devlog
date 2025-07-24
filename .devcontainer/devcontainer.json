@@ -14,7 +14,7 @@
 	"forwardPorts": [3000, 3001, 5000, 5173, 8080],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install -g pnpm@10.12.1 && pnpm install && pnpm build:types",
+	"postCreateCommand": "npm install -g pnpm@10.13.1 && pnpm install && pnpm build:types",
 
 	// Configure tool-specific properties.
 	"customizations": {

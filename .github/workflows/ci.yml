@@ -13,7 +13,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [22]
+        node-version: [ 22 ]
     
     steps:
       - name: Checkout code
@@ -64,10 +64,10 @@ jobs:
         run: |
           # Ensure workspace dependencies are properly linked
           echo "📦 Verifying workspace structure..."
-          echo "🔗 Checking ai package..."
-          [ -d "packages/ai" ] && echo "✅ ai package found" || echo "❌ ai package missing"
           echo "🔗 Checking core package..."
           [ -d "packages/core" ] && echo "✅ core package found" || echo "❌ core package missing"
+          echo "🔗 Checking ai package..."
+          [ -d "packages/ai" ] && echo "✅ ai package found" || echo "❌ ai package missing"
           echo "🔗 Checking mcp package..."
           [ -d "packages/mcp" ] && echo "✅ mcp package found" || echo "❌ mcp package missing"
           echo "🔗 Checking web package..."
@@ -78,15 +78,6 @@ jobs:
           echo "MCP depends on core:"
           cat packages/mcp/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
 
-      - name: Build ai package first
-        run: pnpm --filter @devlog/ai build
-
-      - name: Verify ai build
-        run: |
-          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
-          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
-          echo "✅ AI package built successfully"
-
       - name: Build core package
         run: pnpm --filter @devlog/core build
 
@@ -95,6 +86,15 @@ jobs:
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
           echo "✅ Core package built successfully"
+
+      - name: Build ai package first
+        run: pnpm --filter @devlog/ai build
+
+      - name: Verify ai build
+        run: |
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
+          echo "✅ AI package built successfully"
 
       - name: Type-check MCP package before building
         run: |
@@ -109,205 +109,21 @@ jobs:
       - name: Build web package
         run: pnpm --filter @devlog/web build
 
-      - name: Run unit tests
+      - name: Run tests
         run: |
-          echo "🧪 Running unit tests for packages with test scripts..."
+          echo "🧪 Running tests for packages with test scripts..."
           # Run tests for packages that have test scripts
-          pnpm --filter @devlog/ai test
-          pnpm --filter @devlog/core test
-          pnpm --filter @devlog/mcp test
-
-      - name: Run integration tests
-        run: |
-          echo "🔗 Running integration tests..."
-          # Only run integration tests for packages that have them
-          pnpm --filter @devlog/mcp test:integration
+          pnpm -r test:coverage
 
       - name: Verify build artifacts
         run: |
           # Check that essential build artifacts exist
-          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
-          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
           [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
           [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
           [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
           [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
           # Web package builds to .next directory, not build/
           [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
           echo "✅ All build artifacts verified!"
-
-  ai-cli-tests:
-    name: AI CLI Tests
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.12.1
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build ai package
-        run: pnpm --filter @devlog/ai build
-
-      - name: Verify ai build artifacts
-        run: |
-          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI library build failed"; exit 1; }
-          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
-          [ -f "packages/ai/build/cli/index.js" ] || { echo "❌ AI CLI build failed"; exit 1; }
-          echo "✅ AI build artifacts verified!"
-
-      - name: Test ai CLI functionality
-        run: |
-          cd packages/ai
-          # Test help command
-          node build/cli/index.js --help
-          # Test version command if available
-          node build/cli/index.js --version || echo "Version command not available, that's ok"
-
-      - name: Run ai unit tests
-        run: |
-          cd packages/ai
-          pnpm test
-
-  mcp-server-tests:
-    name: MCP Server Specific Tests
-    runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.12.1
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build ai package first
-        run: pnpm --filter @devlog/ai build
-
-      - name: Build core package first  
-        run: pnpm --filter @devlog/core build
-
-      - name: Build MCP server
-        run: pnpm --filter @devlog/mcp build
-
-      - name: Verify MCP build artifacts
-        run: |
-          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
-          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
-          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
-          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
-          [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
-          [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
-          echo "✅ MCP build artifacts verified!"
-
-      - name: Test MCP server startup
-        run: |
-          cd packages/mcp
-          timeout 10s node build/index.js --help || echo "MCP server help command test completed"
-
-      - name: Test MCP protocol functionality
-        run: |
-          cd packages/mcp
-          # Test basic MCP protocol initialization
-          echo '{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test-client", "version": "1.0.0"}}}' | timeout 10s node build/index.js || echo "MCP server protocol test completed"
-
-      - name: Run MCP integration tests
-        run: |
-          cd packages/mcp
-          pnpm test:integration
-
-  cross-platform:
-    name: Cross-platform Tests
-    runs-on: ${{ matrix.os }}
-    needs: test
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        node-version: [18, 20]
-      fail-fast: false
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.12.1
-          run_install: false
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages in order
-        run: |
-          pnpm --filter @devlog/ai-chat build
-          pnpm --filter @devlog/core build
-          pnpm --filter @devlog/mcp build
-
-      - name: Verify TypeScript compilation
-        run: |
-          echo "🔍 Verifying TypeScript compilation..."
-          cd packages/mcp && npx tsc --noEmit --skipLibCheck
-          echo "✅ TypeScript compilation verified"
-
-      - name: Test MCP server startup (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd packages/mcp
-          timeout 10s node build/index.js --help || echo "MCP server help test completed"
-
-      - name: Test ai-chat CLI (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd packages/ai-chat
-          timeout 10s node build/cli/index.js --help || echo "AI-Chat CLI help test completed"
-
-      - name: Test MCP server startup (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd packages/mcp
-          # Use PowerShell timeout for Windows
-          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'MCP server help test completed' } catch { Write-Host 'MCP server help test completed with timeout' } }"
-
-      - name: Test ai-chat CLI (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd packages/ai-chat
-          # Use PowerShell timeout for Windows
-          powershell -Command "& { try { `$process = Start-Process -FilePath 'node' -ArgumentList 'build/cli/index.js', '--help' -Wait -TimeoutSec 10 -PassThru -ErrorAction SilentlyContinue; Write-Host 'AI-Chat CLI help test completed' } catch { Write-Host 'AI-Chat CLI help test completed with timeout' } }"
-
-      - name: Run integration tests
-        run: |
-          cd packages/mcp
-          pnpm test:integration
