@@ -809,7 +809,7 @@ export function DevlogDetails({
                     className={noteItemClass}
                   >
                     <div>
-                      <MarkdownRenderer content={note.content} maxHeight={false} />
+                      <MarkdownRenderer content={note.content} maxHeight={false} noPadding />
                     </div>
                     <Text type="secondary" className={styles.noteTimestamp}>
                       <span title={formatTimeAgoWithTooltip(note.timestamp).fullDate}>

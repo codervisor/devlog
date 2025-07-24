@@ -10,6 +10,16 @@ import type {
 } from '../../types/index.js';
 import { parseBoolean } from '../../utils/common.js';
 
+// Cache for project root to avoid expensive repeated filesystem traversals
+let cachedProjectRoot: string | null = null;
+
+/**
+ * Clear the cached project root (useful for testing or when project structure changes)
+ */
+export function clearProjectRootCache(): void {
+  cachedProjectRoot = null;
+}
+
 export function getWorkspaceRoot(startPath: string = process.cwd()): string {
   if (process.env.NODE_ENV === 'production') {
     // Detect serverless environments where filesystem is read-only
@@ -20,11 +30,17 @@ export function getWorkspaceRoot(startPath: string = process.cwd()): string {
     // Use working directory in production
     return process.cwd();
   } else if (parseBoolean(process.env.UNIT_TEST)) {
-    // Use temporary directory in unit tests
+    // Use temporary directory in unit tests (don't cache in tests)
     return fs.mkdtempSync(path.join(os.tmpdir(), 'devlog-test'));
   } else {
-    // Use project root in development
-    return findProjectRoot(startPath);
+    // Use cached project root in development to avoid expensive repeated traversals
+    if (cachedProjectRoot === null) {
+      const startTime = Date.now();
+      cachedProjectRoot = findProjectRoot(startPath);
+      const duration = Date.now() - startTime;
+      console.log(`[Storage] Cached project root: ${cachedProjectRoot} (took ${duration}ms)`);
+    }
+    return cachedProjectRoot;
   }
 }
 
