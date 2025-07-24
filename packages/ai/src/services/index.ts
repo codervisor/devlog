@@ -1,5 +1,5 @@
 /**
- * AI Services - Chat import and other AI-related services
+ * AI Services - ChatHub and other AI-related services
  */
 
-export { DefaultChatImportService, type ChatImportService } from './chat-import-service.js';
+export { ChatHubService, type IChatHubService } from './chat-hub-service.js';

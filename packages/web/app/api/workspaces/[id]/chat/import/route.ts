@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
-import { DefaultChatImportService } from '@devlog/ai';
+import { ChatHubService } from '@devlog/ai';
+import { ChatImportConfig } from '@devlog/core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     // Parse request body
     const body = await request.json();
     const {
-      source = 'codehist',
+      source = 'github-copilot',
       autoLink = true,
       autoLinkThreshold = 0.8,
       includeArchived = false,
@@ -31,19 +32,19 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const storageProvider = await manager.getWorkspaceStorageProvider(workspaceId);
 
     // Create chat import service
-    const importService = new DefaultChatImportService(storageProvider);
+    const importService = new ChatHubService(storageProvider);
 
     // Configure import
-    const importConfig = {
+    const importConfig: ChatImportConfig = {
       source,
       autoLink,
       autoLinkThreshold,
       sourceConfig: {
-        includeArchived,
-        overwriteExisting,
         background,
         dateRange,
       },
+      includeArchived,
+      overwriteExisting,
     };
 
     console.log(
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     );
 
     // Start import
-    const progress = await importService.importFromCodehist(importConfig);
+    const progress = await importService.importFromGitHubCopilot(importConfig);
 
     return NextResponse.json({
       success: true,
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const storageProvider = await manager.getWorkspaceStorageProvider(workspaceId);
 
     // Create chat import service
-    const importService = new DefaultChatImportService(storageProvider);
+    const importService = new ChatHubService(storageProvider);
 
     // Get import progress
     const progress = await importService.getImportProgress(importId);

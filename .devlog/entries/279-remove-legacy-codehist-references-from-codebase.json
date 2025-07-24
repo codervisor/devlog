@@ -1,0 +1,81 @@
+{
+  "id": 279,
+  "key": "remove-legacy-codehist-references-from-codebase",
+  "title": "Remove legacy 'codehist' references from codebase",
+  "type": "refactor",
+  "description": "Clean up remaining references to \"codehist\" throughout the codebase, replacing them with more appropriate terms like \"GitHub Copilot\", \"VS Code\", or generic chat import terminology. The package was renamed from @devlog/codehist → @devlog/ai-chat → @devlog/ai, but many comments, descriptions, method names, and configurations still reference the old \"codehist\" name which is confusing and outdated.",
+  "status": "in-progress",
+  "priority": "medium",
+  "createdAt": "2025-07-24T13:59:47.120Z",
+  "updatedAt": "2025-07-24T14:11:12.587Z",
+  "notes": [
+    {
+      "id": "0f7318d0-40dc-4111-bca5-5a5949cc6e46",
+      "timestamp": "2025-07-24T14:02:03.781Z",
+      "category": "progress",
+      "content": "Starting implementation with \"ChatHub\" as the new catchy name for the AI chat history handling module. This will replace all \"codehist\" references with \"ChatHub\" terminology throughout the codebase."
+    },
+    {
+      "id": "7cd6abe4-816b-46af-866f-eb7404b5d727",
+      "timestamp": "2025-07-24T14:05:04.685Z",
+      "category": "idea",
+      "content": "**Architecture Redesign Decision**: Instead of having a generic chat-import-service that references ChatHub, ChatHub itself should be the primary service. This means:\n\n1. Rename `chat-import-service.ts` → `chat-hub-service.ts` \n2. `DefaultChatImportService` → `ChatHubService`\n3. Methods become source-specific: `importFromGitHubCopilot()`, `importFromCursor()`, etc.\n4. ChatHub is positioned as the central hub for all AI chat history processing\n\nThis is much cleaner architecturally and makes the naming intuitive."
+    },
+    {
+      "id": "a1ac9e15-3b6a-4b71-8f9e-4ea35d9cd823",
+      "timestamp": "2025-07-24T14:05:25.356Z",
+      "category": "progress",
+      "content": "Updated Acceptance Criteria to reflect the ChatHub-centric architecture. The plan now focuses on making ChatHub the primary service rather than just removing 'codehist' references. This includes:\n\n- File rename: chat-import-service.ts → chat-hub-service.ts\n- Class rename: DefaultChatImportService → ChatHubService  \n- Interface rename: ChatImportService → ChatHubService\n- Source-specific methods: importFromGitHubCopilot(), etc.\n- Complete package-wide refactoring to use ChatHub terminology\n\nThis gives us a much cleaner and more intuitive architecture."
+    },
+    {
+      "id": "89fc76b4-27e2-44b3-873c-5ff60630e60c",
+      "timestamp": "2025-07-24T14:11:12.587Z",
+      "category": "progress",
+      "content": "**Core refactoring completed**:\n\n✅ **Architecture Changes**:\n- Renamed `chat-import-service.ts` → `chat-hub-service.ts`\n- Created `IChatHubService` interface and `ChatHubService` implementation\n- Added typed `ChatSource` type with proper values: 'github-copilot', 'cursor', 'claude-code', 'windsurf', 'manual'\n\n✅ **Types Updated**:\n- Updated `ChatImportConfig.source` to use `ChatSource` type\n- Updated `ChatImportProgress.source` to use `ChatSource` type\n- Updated file comments to reference proper AI chat sources\n\n✅ **API Updates**:\n- Updated web API route to import and use `ChatHubService`\n- Default source changed to 'github-copilot'\n- Updated service exports in AI package\n\n**Next**: Update MCP tools and complete remaining references",
+      "files": [
+        "packages/core/src/types/chat.ts",
+        "packages/ai/src/services/chat-hub-service.ts",
+        "packages/ai/src/services/index.ts",
+        "packages/web/app/api/workspaces/[id]/chat/import/route.ts"
+      ]
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Removing outdated terminology improves code maintainability and reduces confusion for new developers. The \"codehist\" name was specific to the original Python project and doesn't clearly communicate the current functionality of GitHub Copilot chat import capabilities.",
+    "technicalContext": "Architecture decision: ChatHub should be the primary service name, not just a source reference. The current chat-import-service.ts is too generic - ChatHub itself should be the service that handles importing from various AI chat history sources (GitHub Copilot, Cursor, Claude, etc.). This requires renaming the service file and restructuring the architecture to be ChatHub-centric.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Rename chat-import-service.ts to chat-hub-service.ts",
+      "Create ChatHubService class to replace DefaultChatImportService",
+      "Update ChatImportService interface to ChatHubService interface",
+      "Method names become source-specific: importFromGitHubCopilot(), importFromCursor(), etc.",
+      "All imports across packages updated to use ChatHubService",
+      "MCP tools reference ChatHub as the primary service",
+      "API routes use ChatHubService instead of DefaultChatImportService",
+      "Comments and documentation position ChatHub as the central AI chat processing hub",
+      "Remove all legacy 'codehist' references from active code",
+      "Update type definitions and interfaces to use ChatHub terminology",
+      "Maintain backward compatibility in API responses where possible"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [
+      "Rename chat-import-service.ts to chat-hub-service.ts",
+      "Create ChatHubService class to replace DefaultChatImportService",
+      "Update method names to be source-specific (importFromGitHubCopilot)",
+      "Update all imports and references across packages",
+      "Update MCP tools to use ChatHub terminology",
+      "Update API routes to use ChatHub service"
+    ],
+    "lastAIUpdate": "2025-07-24T14:04:58.728Z",
+    "contextVersion": 2
+  }
+}
