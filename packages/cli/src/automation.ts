@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * AI Automation CLI
+ * DevLog Automation CLI
  *
- * Command-line interface for Docker-based Copilot automation
+ * Command-line interface for Docker-based AI automation testing
  */
 
 import { Command } from 'commander';
@@ -14,19 +14,19 @@ import {
   CodeGenerationScenario,
   ScenarioFactory,
   AutomationResultExporter,
-} from '../automation/index.js';
+} from '@devlog/ai';
 
 const program = new Command();
 
 program
-  .name('ai-automation')
-  .description('Docker-based GitHub Copilot automation testing')
+  .name('devlog-automation')
+  .description('Docker-based AI automation testing for DevLog')
   .version('0.1.0');
 
 // Run automation command
 program
   .command('run')
-  .description('Run automated Copilot testing scenarios')
+  .description('Run automated AI testing scenarios')
   .option('-t, --token <token>', 'GitHub token for Copilot authentication')
   .option('-l, --language <language>', 'Programming language filter')
   .option('-c, --category <category>', 'Scenario category filter')
@@ -71,7 +71,7 @@ program
       spinner.succeed('Automation session completed');
 
       // Display results
-      console.log(chalk.green('\\n✅ Automation Results:'));
+      console.log(chalk.green('\n✅ Automation Results:'));
       console.log(chalk.blue(`Session ID: ${results.sessionId}`));
       console.log(
         chalk.blue(
@@ -87,7 +87,7 @@ program
       if (options.output) {
         const exporter = new AutomationResultExporter();
         await exporter.exportDetailedReport(results, options.output);
-        console.log(chalk.green(`\\n📊 Results exported to: ${options.output}`));
+        console.log(chalk.green(`\n📊 Results exported to: ${options.output}`));
       }
     } catch (error) {
       spinner.fail('Automation failed');
@@ -108,7 +108,7 @@ program
       category: options.category,
     });
 
-    console.log(chalk.blue(`\\n📋 Available Scenarios (${scenarios.length} total):\\n`));
+    console.log(chalk.blue(`\n📋 Available Scenarios (${scenarios.length} total):\n`));
 
     scenarios.forEach((scenario, index: number) => {
       console.log(chalk.green(`${index + 1}. ${scenario.name}`));
@@ -148,7 +148,7 @@ program
 
       spinner.succeed('Docker setup test completed');
 
-      console.log(chalk.green('\\n✅ Docker Environment Test Results:'));
+      console.log(chalk.green('\n✅ Docker Environment Test Results:'));
       console.log(chalk.blue(`Container Status: ${testResults.containerInfo.status}`));
       console.log(
         chalk.blue(
@@ -169,7 +169,7 @@ program
   .action(() => {
     const categories = ScenarioFactory.getAvailableCategories();
 
-    console.log(chalk.blue('\\n📂 Available Categories:\\n'));
+    console.log(chalk.blue('\n📂 Available Categories:\n'));
     categories.forEach((category: string, index: number) => {
       const count = ScenarioFactory.getFilteredScenarios({ category }).length;
       console.log(chalk.green(`${index + 1}. ${category} (${count} scenarios)`));

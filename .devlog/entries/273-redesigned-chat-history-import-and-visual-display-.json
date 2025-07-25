@@ -7,7 +7,7 @@
   "status": "in-progress",
   "priority": "high",
   "createdAt": "2025-07-24T12:55:49.711Z",
-  "updatedAt": "2025-07-24T14:29:39.257Z",
+  "updatedAt": "2025-07-25T03:46:43.062Z",
   "notes": [
     {
       "id": "c22373c6-114b-4c5d-becf-0b84ced4b8b6",
@@ -50,6 +50,12 @@
       "timestamp": "2025-07-24T14:29:39.257Z",
       "category": "progress",
       "content": "🔄 **MAJOR ARCHITECTURE UPDATE** (Impact from Devlog #279):\n\n### 🏗️ **New ChatHub Receiver Architecture**:\n- **OLD**: Server imports from local VS Code/AI agent storage  \n- **NEW**: ChatHub receives structured chat data from external clients\n- **CHANGE**: From \"import service\" to \"data ingestion service\"\n\n### ✅ **What's Already Complete from #279**:\n1. **ChatHub Service** - Data receiver with `ingestChatSessions()`, `ingestChatMessages()`, `processBulkChatData()`\n2. **API Endpoint** - `/api/workspaces/{id}/chat/import` now receives chat data instead of triggering imports\n3. **Type System** - ChatSource enum with proper AI assistant names\n4. **Storage Layer** - Ready to process incoming structured data\n\n### 🔄 **Updated Implementation Strategy**:\n- **Devlog #274**: ✅ Complete (SQLite storage methods working)\n- **Devlog #275**: 🔄 REFACTOR NEEDED - Change from \"import service\" to \"data processing service\"  \n- **Devlog #276**: 🔄 REFACTOR NEEDED - APIs now receive data instead of triggering imports\n- **Devlog #277**: ✅ Still needed (React UI for displaying received data)\n- **Devlog #280**: 🆕 NEW - CLI client to extract and stream data to ChatHub\n\nThe core database and UI work remains valid, but the data flow architecture has fundamentally changed!"
+    },
+    {
+      "id": "a6e22281-beb5-461e-b84b-797835efe939",
+      "timestamp": "2025-07-25T03:46:43.061Z",
+      "category": "progress",
+      "content": "🎉 **Major Milestone: Devlog #280 Complete!**\n\n### ✅ **CLI Package Extraction Successful**:\n\n**Devlog #280 Status**: ✅ **COMPLETED**\n- ✅ Extracted CLI functionality from `@devlog/ai` into separate `@devlog/cli` package\n- ✅ Client-server architecture: CLI streams data to ChatHub API instead of local export\n- ✅ All commands working: `devlog chat import/stats/search`, `devlog workspace list/info`, `devlog-automation`\n- ✅ Type-safe data conversion between AI and Core package formats\n- ✅ Clean package separation with proper dependency management\n\n### 🔄 **Updated Implementation Status**:\n\n- **Devlog #274: SQLite Storage** ✅ Complete (storage methods implemented)\n- **Devlog #275: Chat Import Service** ✅ Complete (processing service ready)  \n- **Devlog #276: Web API & MCP** ✅ Complete (API endpoints and MCP tools ready)\n- **Devlog #277: React Chat UI** ❌ **REMAINING** (next priority)\n- **Devlog #280: CLI Package** ✅ **JUST COMPLETED** (client-server architecture ready)\n\n### 🎯 **Current Status**: 80% Complete!\n\n**Next Priority**: Complete devlog #277 (React Chat UI) to provide the user-facing interface for viewing and managing imported chat data.\n\n### 🏗️ **Ready Architecture**:\n- **Client**: @devlog/cli extracts and streams chat data\n- **Server**: ChatHub API receives and processes data  \n- **Storage**: SQLite/PostgreSQL stores chat sessions and messages\n- **API**: MCP tools provide programmatic access\n- **Missing**: Web UI for visualization and management\n\nThe foundation is solid - now need to build the user interface!"
     }
   ],
   "files": [],
