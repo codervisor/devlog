@@ -22,8 +22,8 @@ COPY turbo.json ./
 FROM base AS deps
 
 # Copy package.json files for proper dependency resolution
-COPY packages/ai/package.json ./packages/ai/
 COPY packages/core/package.json ./packages/core/
+COPY packages/ai/package.json ./packages/ai/
 COPY packages/web/package.json ./packages/web/
 
 # Install dependencies
@@ -36,19 +36,19 @@ FROM base AS builder
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/ai/node_modules ./packages/ai/node_modules
 COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
+COPY --from=deps /app/packages/ai/node_modules ./packages/ai/node_modules
 COPY --from=deps /app/packages/web/node_modules ./packages/web/node_modules
 
 # Copy source code (excluding MCP package)
-COPY packages/ai ./packages/ai
 COPY packages/core ./packages/core
+COPY packages/ai ./packages/ai
 COPY packages/web ./packages/web
 COPY tsconfig.json ./
 
 # Build packages in dependency order (core packages needed for web)
-RUN pnpm --filter @devlog/ai build
 RUN pnpm --filter @devlog/core build
+RUN pnpm --filter @devlog/ai build
 
 # Build web app with standalone output for production
 ENV NODE_ENV=production
