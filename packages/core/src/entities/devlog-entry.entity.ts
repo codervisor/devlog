@@ -85,11 +85,4 @@ export class DevlogEntryEntity {
 
   @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'acceptance_criteria' })
   acceptanceCriteria!: string[];
-
-  // Simple arrays that can remain as JSON columns
-  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [] })
-  files!: string[];
-
-  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'related_devlogs' })
-  relatedDevlogs!: string[];
 }

@@ -39,6 +39,14 @@ export class DevlogNoteEntity {
   @Column({ type: 'text', nullable: true, name: 'code_changes' })
   codeChanges?: string;
 
+  // Metadata for special note types (e.g., acceptance-criteria changes)
+  @JsonColumn({ nullable: true, default: null })
+  metadata?: {
+    previousCriteria?: string[];
+    newCriteria?: string[];
+    changeType?: 'added' | 'removed' | 'modified' | 'reordered';
+  };
+
   // Foreign key relationship
   @ManyToOne(() => DevlogEntryEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'devlog_id' })

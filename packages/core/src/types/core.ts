@@ -158,6 +158,13 @@ export interface DevlogNote {
   content: string;
   files?: string[];
   codeChanges?: string;
+  // Metadata for special note types (e.g., acceptance-criteria changes)
+  metadata?: {
+    // For acceptance-criteria category
+    previousCriteria?: string[];
+    newCriteria?: string[];
+    changeType?: 'added' | 'removed' | 'modified' | 'reordered';
+  };
 }
 
 export interface DevlogEntry {
@@ -174,12 +181,8 @@ export interface DevlogEntry {
   assignee?: string;
   archived?: boolean; // For long-term management and performance
 
-  // Simple arrays that remain as JSON
-  files?: string[];
-  relatedDevlogs?: string[];
+  // Flattened context fields
   acceptanceCriteria?: string[];
-
-  // Flattened context fields (simple strings)
   businessContext?: string;
   technicalContext?: string;
 

@@ -430,8 +430,6 @@ export class TypeORMStorageProvider implements StorageProvider {
       closedAt: entity.closedAt?.toISOString(),
       archived: entity.archived,
       assignee: entity.assignee,
-      files: this.parseJsonField(entity.files, []),
-      relatedDevlogs: this.parseJsonField(entity.relatedDevlogs, []),
       acceptanceCriteria: this.parseJsonField(entity.acceptanceCriteria, []),
       businessContext: entity.businessContext,
       technicalContext: entity.technicalContext,
@@ -456,8 +454,6 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (entry.closedAt) entity.closedAt = new Date(entry.closedAt);
     entity.archived = entry.archived || false;
     entity.assignee = entry.assignee;
-    entity.files = this.stringifyJsonField(entry.files || []);
-    entity.relatedDevlogs = this.stringifyJsonField(entry.relatedDevlogs || []);
     entity.acceptanceCriteria = this.stringifyJsonField(entry.acceptanceCriteria || []);
     entity.businessContext = entry.businessContext;
     entity.technicalContext = entry.technicalContext;

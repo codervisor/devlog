@@ -43,6 +43,7 @@ export interface UpdateDevlogRequest {
   businessContext?: string;
   technicalContext?: string;
   acceptanceCriteria?: string[];
+  acChangeReason?: string; // Optional reason for AC changes (creates better change notes)
   initialInsights?: string[];
   relatedPatterns?: string[];
 
