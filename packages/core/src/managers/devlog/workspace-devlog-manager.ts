@@ -6,7 +6,13 @@
 import { join } from 'path';
 import { homedir } from 'os';
 import * as crypto from 'crypto';
-import { createAcceptanceCriteriaNote } from '../../utils/acceptance-criteria.js';
+import {
+  detectFieldChanges,
+  createChangeRecord,
+  createFieldChangeNote,
+  extractChangeContext,
+  cleanUpdateRequest,
+} from '../../utils/field-change-tracking.js';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
@@ -24,6 +30,8 @@ import type {
   TimeSeriesStats,
   WorkspaceContext,
   WorkspaceMetadata,
+  TrackedUpdateRequest,
+  ChangeType,
 } from '../../types/index.js';
 import { StorageProviderFactory } from '../../storage/storage-provider.js';
 import { ConfigurationManager } from '../configuration/configuration-manager.js';
@@ -400,7 +408,7 @@ export class WorkspaceDevlogManager {
     return entry;
   }
 
-  async updateDevlog(id: string | number, data: any): Promise<DevlogEntry> {
+  async updateDevlog(id: string | number, data: TrackedUpdateRequest): Promise<DevlogEntry> {
     const provider = await this.getCurrentStorageProvider();
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
     const existing = await provider.get(numericId);
@@ -409,6 +417,10 @@ export class WorkspaceDevlogManager {
     }
 
     const now = new Date().toISOString();
+
+    // Extract change tracking context
+    const changeContext = extractChangeContext(data);
+    const cleanedData = cleanUpdateRequest(data);
 
     // Separate context fields from AI context fields from direct fields
     const {
@@ -425,7 +437,7 @@ export class WorkspaceDevlogManager {
       suggestedNextSteps,
       // All other fields are direct updates
       ...directFields
-    } = data;
+    } = cleanedData;
 
     // Build the updated entry with proper field mapping
     const updated: DevlogEntry = {
@@ -447,33 +459,58 @@ export class WorkspaceDevlogManager {
       if (technicalContext !== undefined) updated.technicalContext = technicalContext;
     }
 
-    // Handle acceptance criteria updates with automatic change tracking
+    // Handle acceptance criteria updates (now handled by comprehensive tracking)
     if (acceptanceCriteria !== undefined) {
-      const previousCriteria = existing.acceptanceCriteria || [];
       updated.acceptanceCriteria = acceptanceCriteria;
-
-      // Create automatic AC change note if criteria actually changed
-      if (JSON.stringify(previousCriteria) !== JSON.stringify(acceptanceCriteria)) {
-        const acNote = createAcceptanceCriteriaNote(
-          previousCriteria,
-          acceptanceCriteria,
-          data.acChangeReason, // Optional reason from the update request
-        );
-
-        // Add the note to the entry (will be saved with the entry)
-        if (!updated.notes) updated.notes = [];
-        updated.notes.push({
-          id: crypto.randomUUID(),
-          timestamp: now,
-          ...acNote,
-        });
-      }
     }
 
     // Ensure closedAt is set when status changes to 'done' or 'cancelled'
     if (data.status && ['done', 'cancelled'].includes(data.status) && !updated.closedAt) {
       updated.closedAt = now;
     }
+
+    // ======= NEW COMPREHENSIVE FIELD CHANGE TRACKING =======
+    if (changeContext.trackChanges) {
+      // Detect all field changes
+      const fieldChanges = detectFieldChanges(existing, updated);
+
+      if (fieldChanges.length > 0) {
+        // Determine change type based on the nature of changes
+        const changeType: ChangeType = fieldChanges.some((c) => c.fieldName === 'status')
+          ? 'status-transition'
+          : fieldChanges.length > 1
+            ? 'bulk-update'
+            : 'field-update';
+
+        // Create comprehensive change record
+        const changeRecord = createChangeRecord(
+          numericId,
+          fieldChanges,
+          changeType,
+          changeContext.source,
+          {
+            reason: changeContext.reason,
+            sourceDetails: changeContext.sourceDetails,
+            metadata: {
+              originalRequest: data,
+              timestamp: now,
+            },
+          },
+        );
+
+        // Create change tracking note
+        const changeNote = createFieldChangeNote(fieldChanges, changeRecord);
+
+        // Add the change tracking note to the entry
+        if (!updated.notes) updated.notes = [];
+        updated.notes.push({
+          id: crypto.randomUUID(),
+          timestamp: now,
+          ...changeNote,
+        });
+      }
+    }
+    // ======= END COMPREHENSIVE FIELD CHANGE TRACKING =======
 
     await provider.save(updated);
 

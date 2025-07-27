@@ -23,7 +23,7 @@ import {
   ChatStats,
   ChatDevlogLink,
   ChatWorkspace,
-} from '@/types';
+} from '../../types/index.js';
 import { createPaginatedResult } from '../../utils/common.js';
 import {
   DevlogEntryEntity,

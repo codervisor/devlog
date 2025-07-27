@@ -52,6 +52,12 @@ export interface UpdateDevlogRequest {
   keyInsights?: string[];
   openQuestions?: string[];
   suggestedNextSteps?: string[];
+
+  // Change tracking metadata (from TrackedUpdateRequest)
+  _changeSource?: 'user' | 'ai-agent' | 'system' | 'api' | 'migration' | 'batch';
+  _changeReason?: string;
+  _sourceDetails?: string;
+  _trackChanges?: boolean; // Default: true
 }
 
 export interface DiscoverDevlogsRequest {
