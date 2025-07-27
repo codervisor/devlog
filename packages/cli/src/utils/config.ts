@@ -36,8 +36,6 @@ export async function loadConfig(configPath?: string): Promise<ConfigOptions> {
   // Try to load from default locations
   const defaultPaths = [
     configPath,
-    resolve(process.cwd(), '.devlog.json'),
-    resolve(process.cwd(), 'devlog.config.json'),
     resolve(homedir(), '.devlog', 'config.json'),
     resolve(homedir(), '.config', 'devlog', 'config.json'),
   ].filter(Boolean) as string[];
