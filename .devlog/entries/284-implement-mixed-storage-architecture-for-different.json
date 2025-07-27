@@ -1,0 +1,63 @@
+{
+  "id": 284,
+  "key": "implement-mixed-storage-architecture-for-different",
+  "title": "Implement Mixed Storage Architecture for Different Data Types",
+  "type": "feature",
+  "description": "Implement support for different storage types for different data types within the same workspace. This allows:\n- Devlog entries to use JSON storage (good for versioning with repo/project)\n- Chat history to use SQLite/database storage (good for performance with large datasets)\n- Mixed storage architecture within a single workspace configuration\n\nThis improves the flexibility of storage choices, allowing users to optimize for both versioning (JSON) and performance (database) within the same workspace.",
+  "status": "cancelled",
+  "priority": "high",
+  "createdAt": "2025-07-27T14:11:50.108Z",
+  "updatedAt": "2025-07-27T14:18:58.298Z",
+  "notes": [
+    {
+      "id": "4295197f-aff3-449c-b54a-ac75a037031b",
+      "timestamp": "2025-07-27T14:11:55.498Z",
+      "category": "progress",
+      "content": "Starting implementation. First step: extend storage types to support mixed data type configuration."
+    },
+    {
+      "id": "14c06306-d670-414a-a028-ea193fcedc58",
+      "timestamp": "2025-07-27T14:13:21.931Z",
+      "category": "progress",
+      "content": "User confirmed no backward compatibility needed. Simplifying storage config design - removing unified/legacy config options."
+    },
+    {
+      "id": "9a36fedb-b423-4a10-89c8-db67a75e8a83",
+      "timestamp": "2025-07-27T14:15:25.582Z",
+      "category": "issue",
+      "content": "User identified design flaw: storing data-type-to-storage mapping per workspace creates duplication. Need to abstract storage config so it can be shared across workspaces. Redesigning approach."
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "As the system grows, different data types have different requirements:\n- Devlog entries benefit from being in JSON for version control, diffs, and project-based tracking\n- Chat history requires better query performance and can be large in volume, making database storage preferable\n- Users want flexibility to choose the best storage for each data type without managing separate workspaces",
+    "technicalContext": "Current architecture:\n- WorkspaceConfiguration has single StorageConfig per workspace\n- StorageProviderFactory creates single storage provider per workspace\n- All data (devlog + chat) uses same storage type\n- Need to extend to support per-data-type storage configuration",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "Workspace configuration can specify different storage types for devlog vs chat data",
+      "StorageProviderFactory can create multiple specialized providers",
+      "WorkspaceDevlogManager routes operations to appropriate storage provider",
+      "Backward compatibility maintained for single storage configuration",
+      "Migration path provided for existing workspaces",
+      "Documentation updated with mixed storage examples"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "Current WorkspaceConfiguration.storage field needs to be extended or replaced",
+      "Need to create composite storage provider that routes to appropriate sub-providers",
+      "Manager classes need to understand data type routing",
+      "Environment variable configuration needs to support mixed types"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-27T14:11:50.108Z",
+    "contextVersion": 1
+  },
+  "closedAt": "2025-07-27T14:18:58.298Z"
+}

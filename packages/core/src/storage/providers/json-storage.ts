@@ -145,7 +145,7 @@ export class JsonStorageProvider implements StorageProvider {
       return (
         entry.title.toLowerCase().includes(lowerQuery) ||
         entry.description.toLowerCase().includes(lowerQuery) ||
-        entry.notes.some((note) => note.content.toLowerCase().includes(lowerQuery))
+        entry.notes?.some((note) => note.content.toLowerCase().includes(lowerQuery))
       );
     });
 
