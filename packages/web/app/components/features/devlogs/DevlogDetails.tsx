@@ -197,10 +197,6 @@ export function DevlogDetails({
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
     (field: string) => {
-      if (field.startsWith('context.')) {
-        const contextField = field.substring(8) as keyof typeof originalDevlog.context;
-        return (originalDevlog.context?.[contextField] as any) || '';
-      }
       return (originalDevlog as any)[field];
     },
     [originalDevlog],
@@ -215,10 +211,6 @@ export function DevlogDetails({
       }
 
       // Otherwise, use the current devlog value (which includes real-time updates)
-      if (field.startsWith('context.')) {
-        const contextField = field.substring(8) as keyof typeof devlog.context;
-        return (devlog.context?.[contextField] as any) || '';
-      }
       return (devlog as any)[field];
     },
     [localChanges, devlog],
@@ -253,8 +245,8 @@ export function DevlogDetails({
       'status',
       'priority',
       'type',
-      'context.businessContext',
-      'context.technicalContext',
+      'businessContext',
+      'technicalContext',
     ];
 
     const actualChanges = allPossibleFields.some((checkField) => {
@@ -272,10 +264,6 @@ export function DevlogDetails({
     }
   };
 
-  const handleContextChange = (contextField: string, value: string) => {
-    handleFieldChange(`context.${contextField}`, value);
-  };
-
   const handleSave = useCallback(async () => {
     try {
       // Build update data from local changes
@@ -283,15 +271,7 @@ export function DevlogDetails({
 
       // Handle regular field changes
       Object.entries(localChanges).forEach(([field, value]) => {
-        if (field.startsWith('context.')) {
-          const contextField = field.substring(8);
-          if (!updateData.context) {
-            updateData.context = { ...devlog.context };
-          }
-          updateData.context[contextField] = value;
-        } else {
-          updateData[field] = value;
-        }
+        updateData[field] = value;
       });
 
       // Call the update function
@@ -302,7 +282,7 @@ export function DevlogDetails({
       // Let the parent handle save errors
       throw error;
     }
-  }, [localChanges, devlog.id, devlog.context, onUpdate]);
+  }, [localChanges, devlog.id, onUpdate]);
 
   const handleDiscard = useCallback(() => {
     setLocalChanges({});
@@ -409,15 +389,15 @@ export function DevlogDetails({
             </Title>
           </div>
           <EditableField
-            value={getCurrentValue('context.businessContext')}
-            onSave={(value) => handleContextChange('businessContext', value)}
+            value={getCurrentValue('businessContext')}
+            onSave={(value) => handleFieldChange('businessContext', value)}
             type="markdown"
             placeholder="Why this work matters and what problem it solves"
             emptyText="Click to add business context..."
-            className={isFieldChanged('context.businessContext') ? styles.fieldChanged : ''}
+            className={isFieldChanged('businessContext') ? styles.fieldChanged : ''}
             borderless={false}
           >
-            <MarkdownRenderer content={getCurrentValue('context.businessContext')} />
+            <MarkdownRenderer content={getCurrentValue('businessContext')} />
           </EditableField>
         </div>
 
@@ -429,19 +409,19 @@ export function DevlogDetails({
             </Title>
           </div>
           <EditableField
-            value={getCurrentValue('context.technicalContext')}
-            onSave={(value) => handleContextChange('technicalContext', value)}
+            value={getCurrentValue('technicalContext')}
+            onSave={(value) => handleFieldChange('technicalContext', value)}
             type="markdown"
             placeholder="Architecture decisions, constraints, assumptions"
             emptyText="Click to add technical context..."
-            className={isFieldChanged('context.technicalContext') ? styles.fieldChanged : ''}
+            className={isFieldChanged('technicalContext') ? styles.fieldChanged : ''}
             borderless={false}
           >
-            <MarkdownRenderer content={getCurrentValue('context.technicalContext')} />
+            <MarkdownRenderer content={getCurrentValue('technicalContext')} />
           </EditableField>
         </div>
 
-        {devlog.context?.acceptanceCriteria && devlog.context.acceptanceCriteria.length > 0 && (
+        {devlog?.acceptanceCriteria && devlog.acceptanceCriteria.length > 0 && (
           <div className={styles.criteriaSection} id="acceptance-criteria">
             <div className={styles.sectionHeader}>
               <Title level={3}>
@@ -451,7 +431,7 @@ export function DevlogDetails({
             </div>
             <Card size="small">
               <List
-                dataSource={devlog.context.acceptanceCriteria}
+                dataSource={devlog.acceptanceCriteria}
                 renderItem={(criteria, index) => (
                   <List.Item className={styles.criteriaItem}>
                     <Space align="start">
@@ -462,327 +442,6 @@ export function DevlogDetails({
                 )}
               />
             </Card>
-          </div>
-        )}
-
-        {devlog.context?.dependencies && devlog.context.dependencies.length > 0 && (
-          <div className={styles.dependencySection} id="dependencies">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <NodeIndexOutlined className={styles.sectionIcon} />
-                Dependencies
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.context.dependencies.map((dep, index) => (
-                <Card key={index} size="small" className={styles.dependencyCard}>
-                  <div className={styles.dependencyHeader}>
-                    <div>
-                      <Text strong>{dep.description}</Text>
-                      {dep.externalId && (
-                        <div className={styles.dependencyInfo}>
-                          <Text type="secondary">External ID: {dep.externalId}</Text>
-                        </div>
-                      )}
-                    </div>
-                    <Tag
-                      color={
-                        dep.type === 'blocks'
-                          ? 'red'
-                          : dep.type === 'blocked-by'
-                            ? 'orange'
-                            : 'blue'
-                      }
-                    >
-                      {dep.type}
-                    </Tag>
-                  </div>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.context?.decisions && devlog.context.decisions.length > 0 && (
-          <div className={styles.decisionSection} id="decisions">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <SettingOutlined style={{ marginRight: 8, color: '#13c2c2' }} />
-                Decisions
-              </Title>
-            </div>
-            <Timeline>
-              {devlog.context.decisions.map((decision) => (
-                <Timeline.Item key={decision.id}>
-                  <div className={styles.decisionItem}>
-                    <Text strong>{decision.decision}</Text>
-                  </div>
-                  <div className={styles.decisionContent}>
-                    <Text>{decision.rationale}</Text>
-                  </div>
-                  {decision.alternatives && decision.alternatives.length > 0 && (
-                    <div className={styles.decisionAlternatives}>
-                      <Text type="secondary">Alternatives considered: </Text>
-                      <Text type="secondary">{decision.alternatives.join(', ')}</Text>
-                    </div>
-                  )}
-                  <Text type="secondary" className={styles.noteTimestamp}>
-                    By {decision.decisionMaker} •{' '}
-                    <span title={formatTimeAgoWithTooltip(decision.timestamp).fullDate}>
-                      {formatTimeAgoWithTooltip(decision.timestamp).timeAgo}
-                    </span>
-                  </Text>
-                </Timeline.Item>
-              ))}
-            </Timeline>
-          </div>
-        )}
-
-        {devlog.context?.risks && devlog.context.risks.length > 0 && (
-          <div className={styles.riskSection} id="risks">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <WarningOutlined className={styles.sectionIcon} />
-                Risks
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.context.risks.map((risk, index) => (
-                <Card key={index} size="small" className={styles.riskCard}>
-                  <div>
-                    <div className={styles.riskHeader}>
-                      <Text strong>{risk.description}</Text>
-                      <Space>
-                        <Tag
-                          color={
-                            risk.impact === 'high'
-                              ? 'red'
-                              : risk.impact === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          Impact: {risk.impact}
-                        </Tag>
-                        <Tag
-                          color={
-                            risk.probability === 'high'
-                              ? 'red'
-                              : risk.probability === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          Probability: {risk.probability}
-                        </Tag>
-                      </Space>
-                    </div>
-                    <div className={styles.riskMitigation}>
-                      <Text type="secondary">Mitigation: </Text>
-                      <Text>{risk.mitigation}</Text>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.files && devlog.files.length > 0 && (
-          <div className={styles.fileSection} id="files">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <FileTextOutlined className={styles.sectionIcon} />
-                Related Files
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.files.map((file, index) => (
-                <Card key={index} size="small" className={styles.fileCard}>
-                  <Text code>{file}</Text>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.relatedDevlogs && devlog.relatedDevlogs.length > 0 && (
-          <div className={styles.relatedSection} id="related-devlogs">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <LinkOutlined className={styles.sectionIcon} />
-                Related Devlogs
-              </Title>
-            </div>
-            <Space wrap>
-              {devlog.relatedDevlogs.map((relatedId, index) => (
-                <Tag key={index} color="cyan">
-                  #{relatedId}
-                </Tag>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.aiContext &&
-          (devlog.aiContext.currentSummary ||
-            (devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0) ||
-            (devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0) ||
-            (devlog.aiContext.suggestedNextSteps &&
-              devlog.aiContext.suggestedNextSteps.length > 0) ||
-            (devlog.aiContext.relatedPatterns && devlog.aiContext.relatedPatterns.length > 0)) && (
-            <div className={styles.aiContextSection} id="ai-context">
-              <div className={styles.sectionHeader}>
-                <Title level={3}>
-                  <RobotOutlined className={styles.sectionIcon} />
-                  AI Context
-                </Title>
-              </div>
-              <Card>
-                {devlog.aiContext.currentSummary && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Summary:</Text>
-                    <MarkdownRenderer content={devlog.aiContext.currentSummary} />
-                  </div>
-                )}
-
-                {devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0 && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Key Insights:</Text>
-                    <List
-                      size="small"
-                      style={{ marginTop: '8px' }}
-                      dataSource={devlog.aiContext.keyInsights}
-                      renderItem={(insight) => (
-                        <List.Item className={styles.aiInsightItem}>
-                          <Space align="start">
-                            <BulbOutlined style={{ color: '#faad14', marginTop: '2px' }} />
-                            <Text>{insight}</Text>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
-                )}
-
-                {devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0 && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Open Questions:</Text>
-                    <List
-                      size="small"
-                      style={{ marginTop: '8px' }}
-                      dataSource={devlog.aiContext.openQuestions}
-                      renderItem={(question) => (
-                        <List.Item className={styles.aiQuestionItem}>
-                          <Space align="start">
-                            <QuestionCircleOutlined
-                              style={{ color: '#f5222d', marginTop: '2px' }}
-                            />
-                            <Text>{question}</Text>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
-                )}
-
-                {devlog.aiContext.suggestedNextSteps &&
-                  devlog.aiContext.suggestedNextSteps.length > 0 && (
-                    <div className={styles.aiSection}>
-                      <Text strong>Suggested Next Steps:</Text>
-                      <List
-                        size="small"
-                        style={{ marginTop: '8px' }}
-                        dataSource={devlog.aiContext.suggestedNextSteps}
-                        renderItem={(step) => (
-                          <List.Item className={styles.aiStepItem}>
-                            <Space align="start">
-                              <RightOutlined style={{ color: '#52c41a', marginTop: '2px' }} />
-                              <Text>{step}</Text>
-                            </Space>
-                          </List.Item>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                {devlog.aiContext.relatedPatterns &&
-                  devlog.aiContext.relatedPatterns.length > 0 && (
-                    <div className={styles.aiSection}>
-                      <Text strong>Related Patterns:</Text>
-                      <List
-                        size="small"
-                        style={{ marginTop: '8px' }}
-                        dataSource={devlog.aiContext.relatedPatterns}
-                        renderItem={(pattern) => (
-                          <List.Item className={styles.aiPatternItem}>
-                            <Space align="start">
-                              <ApartmentOutlined style={{ color: '#722ed1', marginTop: '2px' }} />
-                              <Text>{pattern}</Text>
-                            </Space>
-                          </List.Item>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                <div>
-                  <Text type="secondary" className={styles.aiUpdateInfo}>
-                    Last AI Update:{' '}
-                    <span
-                      title={formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.fullDate}
-                    >
-                      {formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.timeAgo}
-                    </span>{' '}
-                    • Version: {devlog.aiContext.contextVersion}
-                  </Text>
-                </div>
-              </Card>
-            </div>
-          )}
-
-        {devlog.externalReferences && devlog.externalReferences.length > 0 && (
-          <div className={styles.externalRefSection} id="external-references">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <LinkOutlined className={styles.sectionIcon} />
-                External References
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.externalReferences.map((ref, index) => (
-                <Card key={index} size="small" className={styles.externalRefCard}>
-                  <div className={styles.externalRefHeader}>
-                    <div>
-                      <Text strong>{ref.title || ref.id}</Text>
-                      {ref.url && (
-                        <div>
-                          <a href={ref.url} target="_blank" rel="noopener noreferrer">
-                            <Text className={styles.externalRefLink}>{ref.url}</Text>
-                          </a>
-                        </div>
-                      )}
-                      {ref.status && (
-                        <div className={styles.externalRefStatus}>
-                          <Text type="secondary">Status: {ref.status}</Text>
-                        </div>
-                      )}
-                      {ref.lastSync && (
-                        <div className={styles.externalRefSync}>
-                          <Text type="secondary">
-                            Last Sync:{' '}
-                            <span title={formatTimeAgoWithTooltip(ref.lastSync).fullDate}>
-                              {formatTimeAgoWithTooltip(ref.lastSync).timeAgo}
-                            </span>
-                          </Text>
-                        </div>
-                      )}
-                    </div>
-                    <Tag color="blue">{ref.system}</Tag>
-                  </div>
-                </Card>
-              ))}
-            </Space>
           </div>
         )}
 

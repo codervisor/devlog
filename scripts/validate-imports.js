@@ -21,7 +21,7 @@ function validateFile(filePath) {
     const lineNum = index + 1;
 
     // Check for import statements
-    const importMatch = line.match(/^import\s+.*\s+from\s+['"](.+)['"];?\s*$/);
+    const importMatch = line.match(/^import\s+.*\s+from\s+['"](.+)['"];?\s*(.*)$/);
     if (!importMatch) return;
 
     const importPath = importMatch[1];
@@ -68,14 +68,106 @@ function validateFile(filePath) {
       }
     }
 
-    // Rule 3: Cross-package imports should use @devlog/*
+    // Rule 3: Cross-package imports validation
     if (isRelativeImport && importPath.includes('../../../')) {
-      ERRORS.push({
-        file: filePath,
-        line: lineNum,
-        message: `Use @devlog/* for cross-package imports instead of deep relative paths: ${importPath}`,
-        suggestion: `Replace with @codervisor/devlog-core, @codervisor/devlog-mcp, etc.`,
-      });
+      // Check if this is actually a cross-package import by resolving the path
+      if (filePath.includes('packages/')) {
+        const currentPackageMatch = filePath.match(/packages\/([^\/]+)\//);
+        if (currentPackageMatch) {
+          const currentPackage = currentPackageMatch[1];
+          
+          // Resolve the relative path to see if it crosses package boundaries
+          const importSegments = importPath.split('/');
+          let currentDir = filePath.split('/');
+          currentDir.pop(); // Remove filename
+          
+          for (const segment of importSegments) {
+            if (segment === '..') {
+              currentDir.pop();
+            } else if (segment !== '.') {
+              currentDir.push(segment);
+            }
+          }
+          
+          const resolvedPath = currentDir.join('/');
+          const targetPackageMatch = resolvedPath.match(/packages\/([^\/]+)\//);
+          
+          // Only flag if it actually crosses package boundaries
+          if (targetPackageMatch && targetPackageMatch[1] !== currentPackage) {
+            const targetPackage = targetPackageMatch[1];
+            ERRORS.push({
+              file: filePath,
+              line: lineNum,
+              message: `Use @codervisor/devlog-* for cross-package imports instead of deep relative paths: ${importPath}`,
+              suggestion: `Replace with @codervisor/devlog-${targetPackage}`,
+            });
+          }
+        }
+      }
+    }
+
+    // Rule 3b: Validate proper cross-package import naming
+    if (importPath.startsWith('@devlog/') || importPath.startsWith('@codervisor/devlog-')) {
+      // Check for old incorrect @devlog/ pattern
+      if (importPath.startsWith('@devlog/')) {
+        ERRORS.push({
+          file: filePath,
+          line: lineNum,
+          message: `Use @codervisor/devlog-* instead of @devlog/*: ${importPath}`,
+          suggestion: `Replace @devlog/ with @codervisor/devlog-`,
+        });
+      }
+
+      // Validate that cross-package imports reference actual packages
+      const validPackages = ['core', 'mcp', 'web', 'ai', 'cli'];
+      const packageMatch = importPath.match(/^@codervisor\/devlog-([^\/]+)/);
+      if (packageMatch) {
+        const packageName = packageMatch[1];
+        if (!validPackages.includes(packageName)) {
+          ERRORS.push({
+            file: filePath,
+            line: lineNum,
+            message: `Invalid package name in cross-package import: @codervisor/devlog-${packageName}`,
+            suggestion: `Valid packages are: ${validPackages.map(p => `@codervisor/devlog-${p}`).join(', ')}`,
+          });
+        }
+      }
+    }
+
+    // Rule 3c: Detect potential cross-package relative imports
+    if (isRelativeImport && importPath.includes('../') && filePath.includes('packages/')) {
+      // Extract current package name from file path
+      const currentPackageMatch = filePath.match(/packages\/([^\/]+)\//);
+      if (currentPackageMatch) {
+        const currentPackage = currentPackageMatch[1];
+        
+        // Check if the relative import might be going to a different package
+        const importSegments = importPath.split('/');
+        let currentDir = filePath.split('/');
+        currentDir.pop(); // Remove filename
+        
+        // Resolve the relative path
+        for (const segment of importSegments) {
+          if (segment === '..') {
+            currentDir.pop();
+          } else if (segment !== '.') {
+            currentDir.push(segment);
+          }
+        }
+        
+        const resolvedPath = currentDir.join('/');
+        const targetPackageMatch = resolvedPath.match(/packages\/([^\/]+)\//);
+        
+        if (targetPackageMatch && targetPackageMatch[1] !== currentPackage) {
+          const targetPackage = targetPackageMatch[1];
+          ERRORS.push({
+            file: filePath,
+            line: lineNum,
+            message: `Cross-package relative import from ${currentPackage} to ${targetPackage}: ${importPath}`,
+            suggestion: `Use @codervisor/devlog-${targetPackage} instead of relative paths for cross-package imports`,
+          });
+        }
+      }
     }
   });
 }

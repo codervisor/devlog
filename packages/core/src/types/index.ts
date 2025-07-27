@@ -28,3 +28,6 @@ export * from './chat.js';
 
 // Event system types and interfaces
 export * from './event.js';
+
+// Change tracking and field history types
+export * from './change-tracking.js';
