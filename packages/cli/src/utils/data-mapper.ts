@@ -43,7 +43,7 @@ export function convertWorkspaceDataToCoreFormat(
       timestamp:
         typeof aiSession.timestamp === 'string'
           ? aiSession.timestamp
-          : aiSession.timestamp.toISOString(),
+          : aiSession.timestamp?.toISOString() || currentTime,
       workspace: aiSession.workspace || 'unknown',
       title: aiSession.metadata?.customTitle || `Chat ${sessionId.slice(0, 8)}`,
       status: 'imported',
@@ -52,6 +52,9 @@ export function convertWorkspaceDataToCoreFormat(
       importedAt: currentTime,
       updatedAt: (() => {
         const lastDate = aiSession.metadata?.lastMessageDate || aiSession.timestamp;
+        if (!lastDate) {
+          return currentTime; // Fallback to current time if no date available
+        }
         return typeof lastDate === 'string' ? lastDate : lastDate.toISOString();
       })(),
       linkedDevlogs: [],
@@ -79,7 +82,7 @@ export function convertWorkspaceDataToCoreFormat(
           timestamp:
             typeof aiMessage.timestamp === 'string'
               ? aiMessage.timestamp
-              : aiMessage.timestamp.toISOString(),
+              : aiMessage.timestamp?.toISOString() || new Date().toISOString(),
           sequence: i,
           metadata: {
             ...aiMessage.metadata,
