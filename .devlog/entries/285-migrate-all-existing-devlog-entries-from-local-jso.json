@@ -1,0 +1,63 @@
+{
+  "id": 285,
+  "key": "migrate-all-existing-devlog-entries-from-local-jso",
+  "title": "Migrate all existing devlog entries from local JSON to PostgreSQL",
+  "type": "task",
+  "description": "Migrate all existing devlog entries from local JSON storage in .devlog/entries/ directory to PostgreSQL database configured in .env file. The migration involves reading all JSON files, transforming them to the correct format, and inserting them into the PostgreSQL database using the TypeORM-based storage provider. After migration, update the configuration to switch from JSON to PostgreSQL storage.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-27T14:21:21.710Z",
+  "updatedAt": "2025-07-27T14:38:53.242Z",
+  "notes": [
+    {
+      "id": "ed2a3f0b-dfc6-4f1c-bcdf-8d05eeb66b7e",
+      "timestamp": "2025-07-27T14:22:34.486Z",
+      "category": "progress",
+      "content": "Created comprehensive migration script `tmp/migrate-json-to-postgres.mjs` with the following features:\n\n✅ **Key Features**:\n- **Environment Setup**: Loads .env variables and validates configuration  \n- **Connection Validation**: Tests PostgreSQL connection before migration\n- **JSON Loading**: Reads all entries from .devlog/entries/ directory\n- **Backup Creation**: Creates full backup before migration\n- **Data Transformation**: Converts JSON format to TypeORM entity format\n- **Batch Migration**: Processes entries in ID order with error handling\n- **Configuration Update**: Automatically switches .env from JSON to PostgreSQL\n- **Verification**: Confirms all entries migrated successfully\n\n✅ **Safety Features**:\n- Creates backup at `.devlog/backup-json-to-postgres-migration/`\n- Skips entries that already exist in PostgreSQL\n- Handles errors gracefully without stopping entire migration\n- Provides detailed progress and error reporting\n- Maintains chronological order during migration\n\nReady to execute the migration script."
+    },
+    {
+      "id": "5e7fc1c5-8a34-4f50-b134-7d1768bf7baa",
+      "timestamp": "2025-07-27T14:27:38.257Z",
+      "category": "issue",
+      "content": "Migration failing due to unique constraint violations on the `key_field` column. This indicates entries already exist in PostgreSQL database. The migration script is trying to insert entries with keys that already exist.\n\n**Error Details:**\n- Error: `duplicate key value violates unique constraint \"UQ_e3107a0c2aadbd7c03281c80a3f\"`\n- This suggests entries were previously migrated or PostgreSQL contains conflicting data\n\n**Next Steps:**\n1. Check existing entries in PostgreSQL\n2. Modify migration to handle existing entries (UPDATE instead of INSERT for existing keys)\n3. Or clear PostgreSQL database if safe to do so"
+    },
+    {
+      "id": "7c933a4f-5158-49d2-87f4-c6ceddc371bb",
+      "timestamp": "2025-07-27T14:34:56.072Z",
+      "category": "solution",
+      "content": "✅ **Root Cause Identified**: PostgreSQL database already contains 153 entries, while JSON storage has 273 files.\n\n**Problem**: The migration script tries to INSERT entries that already exist in PostgreSQL, causing unique constraint violations on the `key_field` column.\n\n**Analysis:**\n- PostgreSQL: 153 entries (partial migration already done)\n- JSON files: 273 entries (source data)\n- Missing: ~120 entries need to be migrated\n- Conflict: Existing entries prevent simple INSERT strategy\n\n**Solution Options:**\n1. **UPSERT Strategy**: Modify migration to use INSERT ... ON CONFLICT DO UPDATE\n2. **Clear + Fresh Migration**: Drop PostgreSQL data and migrate all from scratch  \n3. **Incremental Migration**: Only migrate entries not already in PostgreSQL\n\n**Recommendation**: Use UPSERT strategy to handle both new entries and update existing ones with latest JSON data."
+    },
+    {
+      "id": "9ce33d95-c2da-4b4e-8ed6-7cc5f74700c5",
+      "timestamp": "2025-07-27T14:38:53.242Z",
+      "category": "issue",
+      "content": "❌ **Critical Issue Identified**: TypeORM storage provider missing `update` method.\n\n**Error**: `postgresProvider.update is not a function`\n\n**Root Cause**: The migration script assumes all storage providers have an `update` method, but TypeORM storage provider only has `save` method.\n\n**Analysis**: \n- All 252 entries failed with the same error\n- The PostgreSQL provider creates/updates entries using `save()` method, not `update()`\n- Need to modify migration script to use correct method signature\n\n**Next Steps**:\n1. Check TypeORM storage provider API to identify correct update method\n2. Modify migration script to use `save()` instead of `update()`\n3. Re-run migration with corrected method calls"
+    }
+  ],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "Moving from local JSON storage to PostgreSQL enables better data persistence, scalability, real-time collaboration, and supports cloud deployment. PostgreSQL provides ACID compliance, better querying capabilities, and eliminates file system dependencies.",
+    "technicalContext": "Current setup: .env file has POSTGRES_URL configured but DEVLOG_STORAGE_TYPE=json. The system has TypeORMStorageProvider that supports PostgreSQL via TypeORM. Need to create migration script that reads JSON files, validates data, and bulk inserts into PostgreSQL, then update .env configuration.",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "All existing JSON devlog entries successfully migrated to PostgreSQL",
+      "Data integrity verified - all fields, notes, and metadata preserved",
+      "PostgreSQL storage provider initialized and working",
+      "Configuration updated to use PostgreSQL instead of JSON",
+      "Migration script handles errors gracefully with rollback capability",
+      "Backup of JSON data created before migration"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-27T14:21:21.710Z",
+    "contextVersion": 1
+  }
+}

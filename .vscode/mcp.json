@@ -1,29 +1,34 @@
 {
-    "servers": {
-        // "github": {
-        //     "url": "https://api.githubcopilot.com/mcp/"
-        // },
-        "devlog": {
-            "type": "stdio",
-            "command": "pnpm",
-            "args": [
-                "--filter", 
-                "@codervisor/devlog-mcp", 
-                "dev:nodemon"
-            ],
-            "cwd": ".",
-            "env": {
-                "NODE_ENV": "development",
-                "MCP_MODE": "direct",
-                // "MCP_MODE": "api",
-                // "MCP_WEB_API_URL": "http://localhost:3200"
-            }
-        },
-        "playwright": {
-            "command": "npx",
-            "args": [
-                "@playwright/mcp@latest"
-            ]
-        },
-    }
+	"servers": {
+		"devlog": {
+			"type": "stdio",
+			"command": "pnpm",
+			"args": [
+				"--filter",
+				"@codervisor/devlog-mcp",
+				"dev:nodemon"
+			],
+			"cwd": ".",
+			"env": {
+				"NODE_ENV": "development",
+				"MCP_MODE": "direct"
+			}
+		},
+		"playwright": {
+			"command": "npx",
+			"args": [
+				"@playwright/mcp@latest"
+			],
+			"type": "stdio"
+		},
+		"jetbrains": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@jetbrains/mcp-proxy"
+			],
+			"type": "stdio"
+		}
+	},
+	"inputs": []
 }
