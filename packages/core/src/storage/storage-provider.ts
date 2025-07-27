@@ -3,11 +3,7 @@
  */
 
 import { StorageConfig, StorageProvider } from '../types/index.js';
-import {
-  GitHubStorageProvider,
-  JsonStorageProvider,
-  TypeORMStorageProvider,
-} from './providers/index.js';
+import { JsonStorageProvider, TypeORMStorageProvider } from './providers/index.js';
 import { TypeORMStorageOptions } from './typeorm/typeorm-config.js';
 
 /**
@@ -15,14 +11,8 @@ import { TypeORMStorageOptions } from './typeorm/typeorm-config.js';
  */
 export class StorageProviderFactory {
   static async create(config?: StorageConfig): Promise<StorageProvider> {
-    // Handle new storage strategies
+    // Handle storage types (GitHub is now an integration, not storage)
     switch (config?.type) {
-      case 'github':
-        if (!config?.github) {
-          throw new Error('GitHub configuration is required for github storage type');
-        }
-        return new GitHubStorageProvider(config.github);
-
       case 'sqlite':
         // Use TypeORM for SQLite
         const sqliteOptions: TypeORMStorageOptions = {

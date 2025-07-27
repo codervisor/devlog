@@ -372,23 +372,10 @@ export class WorkspaceDevlogManager {
       notes: [],
       files: [],
       relatedDevlogs: [],
-      context: {
-        businessContext: request.businessContext || '',
-        technicalContext: request.technicalContext || '',
-        dependencies: [],
-        decisions: [],
-        acceptanceCriteria: request.acceptanceCriteria || [],
-        risks: [],
-      },
-      aiContext: {
-        currentSummary: '',
-        keyInsights: request.initialInsights || [],
-        openQuestions: [],
-        relatedPatterns: request.relatedPatterns || [],
-        suggestedNextSteps: [],
-        lastAIUpdate: now,
-        contextVersion: 1,
-      },
+      acceptanceCriteria: request.acceptanceCriteria || [],
+      businessContext: request.businessContext || '',
+      technicalContext: request.technicalContext || '',
+      dependencies: [],
     };
 
     await provider.save(entry);
@@ -456,32 +443,10 @@ export class WorkspaceDevlogManager {
       initialInsights !== undefined ||
       relatedPatterns !== undefined
     ) {
-      updated.context = {
-        ...existing.context,
-        ...(businessContext !== undefined && { businessContext }),
-        ...(technicalContext !== undefined && { technicalContext }),
-        ...(acceptanceCriteria !== undefined && { acceptanceCriteria }),
-        ...(initialInsights !== undefined && { initialInsights }),
-        ...(relatedPatterns !== undefined && { relatedPatterns }),
-      };
-    }
-
-    // Update aiContext object if any AI context fields are provided
-    if (
-      currentSummary !== undefined ||
-      keyInsights !== undefined ||
-      openQuestions !== undefined ||
-      suggestedNextSteps !== undefined
-    ) {
-      updated.aiContext = {
-        ...existing.aiContext,
-        ...(currentSummary !== undefined && { currentSummary }),
-        ...(keyInsights !== undefined && { keyInsights }),
-        ...(openQuestions !== undefined && { openQuestions }),
-        ...(suggestedNextSteps !== undefined && { suggestedNextSteps }),
-        lastAIUpdate: now,
-        contextVersion: (existing.aiContext?.contextVersion || 0) + 1,
-      };
+      // Update flattened context fields directly
+      if (businessContext !== undefined) updated.businessContext = businessContext;
+      if (technicalContext !== undefined) updated.technicalContext = technicalContext;
+      if (acceptanceCriteria !== undefined) updated.acceptanceCriteria = acceptanceCriteria;
     }
 
     // Ensure closedAt is set when status changes to 'done' or 'cancelled'

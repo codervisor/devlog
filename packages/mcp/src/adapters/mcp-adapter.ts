@@ -7,7 +7,6 @@ import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   CreateDevlogRequest,
   DevlogConfig,
-  DevlogContext,
   DevlogStatus,
   DiscoveredDevlogEntry,
   NoteCategory,
@@ -85,7 +84,7 @@ export class MCPDevlogAdapter {
       content: [
         {
           type: 'text',
-          text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nPriority: ${entry.priority}\nStatus: ${entry.status}\n\nBusiness Context: ${entry.context?.businessContext}\nTechnical Context: ${entry.context?.technicalContext}`,
+          text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nPriority: ${entry.priority}\nStatus: ${entry.status}\n\nBusiness Context: ${entry.businessContext}\nTechnical Context: ${entry.technicalContext}`,
         },
       ],
     };
@@ -103,15 +102,13 @@ export class MCPDevlogAdapter {
       args.openQuestions ||
       args.suggestedNextSteps
     );
-    const aiContextNote = aiFieldsProvided
-      ? `\nAI Context Updated: ${entry.aiContext?.lastAIUpdate}`
-      : '';
+    const aiContextNote = aiFieldsProvided ? `\nLast Updated: ${entry.updatedAt}` : '';
 
     return {
       content: [
         {
           type: 'text',
-          text: `Updated devlog entry: ${entry.id}\nTitle: ${entry.title}\nStatus: ${entry.status}\nLast Updated: ${entry.updatedAt}${aiContextNote}\n\nTotal Notes: ${entry.notes.length}`,
+          text: `Updated devlog entry: ${entry.id}\nTitle: ${entry.title}\nStatus: ${entry.status}\nLast Updated: ${entry.updatedAt}${aiContextNote}\n\nTotal Notes: ${entry.notes?.length || 0}`,
         },
       ],
     };
@@ -275,51 +272,14 @@ export class MCPDevlogAdapter {
   }
 
   async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    const entry = await this.workspaceManager.getDevlog(args.id);
-    if (!entry) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Devlog entry '${args.id}' not found.`,
-          },
-        ],
-        isError: true,
-      };
-    }
-
-    const decision = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      decision: args.decision,
-      rationale: args.rationale,
-      alternatives: args.alternatives,
-      decisionMaker: args.decisionMaker,
-    };
-
-    if (!entry.context) {
-      entry.context = {} as DevlogContext;
-    }
-    if (!entry.context.decisions) {
-      entry.context.decisions = [];
-    }
-    entry.context.decisions.push(decision);
-
-    // Update the entry to trigger save
-    await this.workspaceManager.updateDevlog(args.id, {
-      // Use a field that exists in UpdateDevlogRequest to trigger save
-      description: entry.description,
-    });
-
     return {
       content: [
         {
           type: 'text',
-          text: `Added decision to devlog '${args.id}':\nDecision: ${args.decision}\nRationale: ${args.rationale}\nDecision Maker: ${args.decisionMaker}`,
+          text: `Decision tracking has been simplified and is no longer supported. Use notes with category 'idea' or 'solution' instead.`,
         },
       ],
+      isError: true,
     };
   }
 
@@ -429,7 +389,7 @@ export class MCPDevlogAdapter {
 
     const summary = limited
       .map((entry) => {
-        const recentNotes = entry.notes.slice(-2);
+        const recentNotes = entry.notes?.slice(-2) || [];
         const notesText =
           recentNotes.length > 0
             ? `\n  Recent notes: ${recentNotes.map((n) => n.content).join('; ')}`
@@ -478,10 +438,11 @@ export class MCPDevlogAdapter {
       status: entry.status,
       priority: entry.priority,
       description: entry.description,
-      context: entry.context,
-      aiContext: entry.aiContext,
-      recentNotes: entry.notes.slice(-5),
-      totalNotes: entry.notes.length,
+      businessContext: entry.businessContext,
+      technicalContext: entry.technicalContext,
+      acceptanceCriteria: entry.acceptanceCriteria,
+      recentNotes: entry.notes?.slice(-5) || [],
+      totalNotes: entry.notes?.length || 0,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     };
@@ -636,7 +597,7 @@ export class MCPDevlogAdapter {
       content: [
         {
           type: 'text',
-          text: `Updated devlog '${entry.id}' and added ${args.category || 'progress'} note:\n${args.note}\n\nStatus: ${entry.status}\nTotal notes: ${entry.notes.length}`,
+          text: `Updated devlog '${entry.id}' and added ${args.category || 'progress'} note:\n${args.note}\n\nStatus: ${entry.status}\nTotal notes: ${entry.notes?.length || 0}`,
         },
       ],
     };
