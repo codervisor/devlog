@@ -3,7 +3,7 @@
  * Ensures that API routes and SSE bridge use the same manager instance
  */
 
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 import { join } from 'path';
 import { homedir } from 'os';
 

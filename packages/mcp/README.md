@@ -1,4 +1,4 @@
-# @devlog/mcp
+# @codervisor/devlog-mcp
 
 Model Context Protocol (MCP) server for managing development logs and working notes.
 

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button, Select, Space, Typography } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { PaginationMeta } from '@devlog/core';
+import { PaginationMeta } from '@codervisor/devlog-core';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -73,18 +73,19 @@ export function Pagination({
         {/* Page size selector */}
         {showSizeChanger && (
           <Space size="small">
-            <Text type="secondary" className="text-sm">Show</Text>
-            <Select
-              value={limit}
-              onChange={onPageSizeChange}
-              size="small"
-              style={{ width: 70 }}
-            >
-              {pageSizeOptions.map(size => (
-                <Option key={size} value={size}>{size}</Option>
+            <Text type="secondary" className="text-sm">
+              Show
+            </Text>
+            <Select value={limit} onChange={onPageSizeChange} size="small" style={{ width: 70 }}>
+              {pageSizeOptions.map((size) => (
+                <Option key={size} value={size}>
+                  {size}
+                </Option>
               ))}
             </Select>
-            <Text type="secondary" className="text-sm">per page</Text>
+            <Text type="secondary" className="text-sm">
+              per page
+            </Text>
           </Space>
         )}
 
@@ -101,9 +102,11 @@ export function Pagination({
 
           {/* Page numbers */}
           <Space size={4}>
-            {getVisiblePages().map((pageNum, index) => (
+            {getVisiblePages().map((pageNum, index) =>
               pageNum === '...' ? (
-                <span key={`dots-${index}`} className="px-2 text-gray-400">...</span>
+                <span key={`dots-${index}`} className="px-2 text-gray-400">
+                  ...
+                </span>
               ) : (
                 <Button
                   key={pageNum}
@@ -114,8 +117,8 @@ export function Pagination({
                 >
                   {pageNum}
                 </Button>
-              )
-            ))}
+              ),
+            )}
           </Space>
 
           <Button

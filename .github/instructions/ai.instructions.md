@@ -20,8 +20,8 @@ import { ChatStatistics } from '../models/index.js';
 import type { SearchResult } from '../types/index.js';
 
 // ✅ Cross-package imports
-import { DevlogEntry } from '@devlog/core';
-import type { StorageProvider } from '@devlog/core/storage';
+import { DevlogEntry } from '@codervisor/devlog-core';
+import type { StorageProvider } from '@codervisor/devlog-core/storage';
 
 // ✅ External AI/ML libraries
 import { ChatOpenAI } from '@langchain/openai';

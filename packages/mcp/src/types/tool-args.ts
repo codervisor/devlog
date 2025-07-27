@@ -3,7 +3,7 @@
  * This file provides proper typing for all tool arguments to eliminate 'any' types
  */
 
-import { DevlogType, DevlogStatus, DevlogPriority, DevlogId } from '@devlog/core';
+import { DevlogType, DevlogStatus, DevlogPriority, DevlogId } from '@codervisor/devlog-core';
 
 // Base interfaces for common argument patterns
 export interface BaseDevlogArgs {

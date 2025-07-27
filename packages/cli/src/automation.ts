@@ -14,7 +14,7 @@ import {
   CodeGenerationScenario,
   ScenarioFactory,
   AutomationResultExporter,
-} from '@devlog/ai';
+} from '@codervisor/devlog-ai';
 
 const program = new Command();
 

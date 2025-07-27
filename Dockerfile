@@ -47,13 +47,13 @@ COPY packages/web ./packages/web
 COPY tsconfig.json ./
 
 # Build packages in dependency order (core packages needed for web)
-RUN pnpm --filter @devlog/core build
-RUN pnpm --filter @devlog/ai build
+RUN pnpm --filter @codervisor/devlog-core build
+RUN pnpm --filter @codervisor/devlog-ai build
 
 # Build web app with standalone output for production
 ENV NODE_ENV=production
 ENV NEXT_BUILD_MODE=standalone
-RUN pnpm --filter @devlog/web build
+RUN pnpm --filter @codervisor/devlog-web build
 
 # ========================================
 # Runtime stage

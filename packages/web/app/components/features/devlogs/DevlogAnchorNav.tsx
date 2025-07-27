@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Anchor } from 'antd';
-import { DevlogEntry } from '@devlog/core';
+import { DevlogEntry } from '@codervisor/devlog-core';
 import styles from './DevlogAnchorNav.module.css';
 
 interface DevlogAnchorNavProps {

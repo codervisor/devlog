@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
+import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 import { getColorHex, getStatusColor } from '@/lib/devlog-ui-utils';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';

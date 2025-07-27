@@ -79,7 +79,7 @@ jobs:
           cat packages/mcp/package.json | grep -A 5 '"dependencies"' || echo "No dependencies section found"
 
       - name: Build core package
-        run: pnpm --filter @devlog/core build
+        run: pnpm --filter @codervisor/devlog-core build
 
       - name: Verify core build and types
         run: |
@@ -88,7 +88,7 @@ jobs:
           echo "✅ Core package built successfully"
 
       - name: Build ai package first
-        run: pnpm --filter @devlog/ai build
+        run: pnpm --filter @codervisor/devlog-ai build
 
       - name: Verify ai build
         run: |
@@ -104,10 +104,10 @@ jobs:
           echo "✅ MCP package type-check passed"
 
       - name: Build MCP package
-        run: pnpm --filter @devlog/mcp build
+        run: pnpm --filter @codervisor/devlog-mcp build
 
       - name: Build web package
-        run: pnpm --filter @devlog/web build
+        run: pnpm --filter @codervisor/devlog-web build
 
       - name: Run tests
         run: |

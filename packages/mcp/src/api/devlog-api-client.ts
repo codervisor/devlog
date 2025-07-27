@@ -1,6 +1,6 @@
 /**
  * HTTP API client for devlog operations
- * Provides workspace-aware interface to @devlog/web API endpoints
+ * Provides workspace-aware interface to @codervisor/devlog-web API endpoints
  */
 
 import type {
@@ -18,7 +18,7 @@ import type {
   ChatSearchResult,
   ChatImportProgress,
   ChatDevlogLink,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 
 export interface DevlogApiClientConfig {
   /** Base URL for the web API server */

@@ -7,7 +7,7 @@ import { broadcastUpdate } from './sse-manager';
 import { getSharedWorkspaceManager } from './shared-workspace-manager';
 
 // Types only - won't be bundled at runtime
-import type { WorkspaceDevlogManager, DevlogEvent } from '@devlog/core';
+import type { WorkspaceDevlogManager, DevlogEvent } from '@codervisor/devlog-core';
 
 class SSEEventBridge {
   private initialized = false;
@@ -39,7 +39,7 @@ class SSEEventBridge {
 
       // Dynamically import to avoid bundling TypeORM in client-side code
       console.log('[SSE Event Bridge] Importing devlog events...');
-      const { getDevlogEvents } = await import('@devlog/core');
+      const { getDevlogEvents } = await import('@codervisor/devlog-core');
 
       // Get the singleton devlogEvents instance to ensure we listen to the same instance
       // that WorkspaceDevlogManager emits to

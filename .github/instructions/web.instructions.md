@@ -24,8 +24,8 @@ import { DevlogList } from './devlog-list';
 import { StatusBadge } from '../ui/status-badge';
 
 // ✅ Cross-package imports (no .js needed in Next.js)
-import { DevlogManager } from '@devlog/core';
-import { ChatParser } from '@devlog/ai';
+import { DevlogManager } from '@codervisor/devlog-core';
+import { ChatParser } from '@codervisor/devlog-ai';
 
 // ✅ External libraries
 import { clsx } from 'clsx';
@@ -44,7 +44,7 @@ import Link from 'next/link';
 **When editing Web package files, auto-detect core dependency changes:**
 
 #### **Implicit Migration Triggers**
-- **Import errors from @devlog/core** → Core API likely changed
+- **Import errors from @codervisor/devlog-core** → Core API likely changed
 - **Type errors in API routes** → Core types may have been updated
 - **Context provider errors** → Core manager interfaces changed
 - **SSE event issues** → Core event system updated
@@ -52,14 +52,14 @@ import Link from 'next/link';
 #### **Auto-Check Before Web Changes**
 ```bash
 # Check if core types are still compatible:
-pnpm --filter @devlog/web build:test
+pnpm --filter @codervisor/devlog-web build:test
 
 # Search for core imports that might be affected:
-grep -r "@devlog/core" packages/web/app/ --include="*.ts" --include="*.tsx"
+grep -r "@codervisor/devlog-core" packages/web/app/ --include="*.ts" --include="*.tsx"
 ```
 
 ### **Migration Awareness for Web Package**
-⚠️ **When @devlog/core architecture changes:**
+⚠️ **When @codervisor/devlog-core architecture changes:**
 1. **Update API routes** in `app/api/` directory
 2. **Update React contexts** for new manager/service patterns
 3. **Update component integration** with core types and methods

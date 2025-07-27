@@ -1,5 +1,5 @@
 {
-  "name": "@devlog/ai",
+  "name": "@codervisor/devlog-ai",
   "version": "0.1.0",
   "description": "AI Chat History Extractor & Docker-based Automation - TypeScript implementation for GitHub Copilot and other AI coding assistants with automated testing capabilities",
   "type": "module",
@@ -35,7 +35,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "commander": "^12.0.0",
     "chalk": "^5.3.0",
     "cli-table3": "^0.6.5",

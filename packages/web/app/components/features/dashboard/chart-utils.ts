@@ -2,7 +2,7 @@
  * Chart utility functions for dashboard components
  */
 
-import { TimeSeriesStats } from '@devlog/core';
+import { TimeSeriesStats } from '@codervisor/devlog-core';
 
 export interface FormattedChartData {
   date: string;
@@ -33,7 +33,7 @@ export function formatTimeSeriesData(timeSeriesData: TimeSeriesStats | null): Fo
  */
 export const CHART_COLORS = {
   primary: '#1890ff',
-  success: '#52c41a', 
+  success: '#52c41a',
   warning: '#fa8c16',
   error: '#ff4d4f',
   purple: '#722ed1',
@@ -56,10 +56,10 @@ export const CHART_OPACITY = {
 export function formatTooltipValue(value: number, name: string): [number, string] {
   const nameMap: Record<string, string> = {
     totalCreated: 'Total Created',
-    totalClosed: 'Total Closed', 
+    totalClosed: 'Total Closed',
     open: 'Open',
   };
-  
+
   return [value, nameMap[name] || name];
 }
 

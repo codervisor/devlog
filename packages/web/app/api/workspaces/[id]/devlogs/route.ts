@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
-import { filterTypeToStatusFilter, type FilterType } from '@devlog/core';
+import { filterTypeToStatusFilter, type FilterType } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

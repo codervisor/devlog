@@ -167,7 +167,7 @@ export class CopilotParser extends AIAssistantParser {
         const response = request.response;
         if (response) {
           let responseText = '';
-          if (typeof response === 'object' && response !== null) {
+          if (typeof response === 'object') {
             if ('value' in response) {
               responseText = response.value;
             } else if ('text' in response) {

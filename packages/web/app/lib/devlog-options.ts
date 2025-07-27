@@ -1,4 +1,4 @@
-import { DevlogStatus, DevlogPriority, DevlogType } from '@devlog/core';
+import { DevlogStatus, DevlogPriority, DevlogType } from '@codervisor/devlog-core';
 
 export interface SelectOption {
   label: string;
@@ -34,19 +34,19 @@ export const typeOptions: SelectOption[] = [
  * Get the display label for a status value
  */
 export const getStatusLabel = (status: DevlogStatus): string => {
-  return statusOptions.find(option => option.value === status)?.label || status;
+  return statusOptions.find((option) => option.value === status)?.label || status;
 };
 
 /**
  * Get the display label for a priority value
  */
 export const getPriorityLabel = (priority: DevlogPriority): string => {
-  return priorityOptions.find(option => option.value === priority)?.label || priority;
+  return priorityOptions.find((option) => option.value === priority)?.label || priority;
 };
 
 /**
  * Get the display label for a type value
  */
 export const getTypeLabel = (type: DevlogType): string => {
-  return typeOptions.find(option => option.value === type)?.label || type;
+  return typeOptions.find((option) => option.value === type)?.label || type;
 };

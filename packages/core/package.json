@@ -1,5 +1,5 @@
 {
-  "name": "@devlog/core",
+  "name": "@codervisor/devlog-core",
   "version": "1.0.0",
   "description": "Core devlog management functionality",
   "main": "build/index.js",

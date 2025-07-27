@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   swcMinify: true,
-  transpilePackages: ['@devlog/core'],
+  transpilePackages: ['@codervisor/devlog-core'],
   // Use separate build directory for standalone builds only
   distDir: process.env.NEXT_BUILD_MODE === 'standalone' ? '.next-build' : '.next',
   // Enable standalone output for Docker

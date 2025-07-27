@@ -1,6 +1,6 @@
 # Vercel Deployment Guide
 
-## 🚀 Deploying @devlog/web to Vercel
+## 🚀 Deploying @codervisor/devlog-web to Vercel
 
 This guide walks you through deploying the devlog web interface to Vercel with PostgreSQL.
 
@@ -43,8 +43,8 @@ Click **Deploy**!
 
 Vercel will:
 1. Install dependencies with pnpm
-2. Build @devlog/core package (with auto-detection from `POSTGRES_URL`)
-3. Build @devlog/web package  
+2. Build @codervisor/devlog-core package (with auto-detection from `POSTGRES_URL`)
+3. Build @codervisor/devlog-web package  
 4. Deploy the web app
 
 ### Step 5: Verify Deployment
@@ -84,7 +84,7 @@ No configuration files needed! 🎉
 
 ## 🐛 Troubleshooting
 
-### Build Fails: "Cannot resolve @devlog/core"
+### Build Fails: "Cannot resolve @codervisor/devlog-core"
 - Ensure `vercel.json` is in repository root
 - Check that build command includes `pnpm build:core`
 
@@ -110,8 +110,8 @@ devlog/                    # Repository root
 ├── .env.example          # Environment variables template
 ├── turbo.json           # Optional: Turborepo config
 └── packages/
-    ├── core/            # @devlog/core (auto-detects DB from env vars)
-    └── web/             # @devlog/web package (deployed)
+    ├── core/            # @codervisor/devlog-core (auto-detects DB from env vars)
+    └── web/             # @codervisor/devlog-web package (deployed)
 ```
 
 **Key insight**: No configuration files needed! The system auto-detects your database from environment variables. 🚀

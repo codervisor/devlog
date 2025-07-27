@@ -37,7 +37,7 @@ import {
   DevlogStatus,
   DevlogType,
   PaginationMeta,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';

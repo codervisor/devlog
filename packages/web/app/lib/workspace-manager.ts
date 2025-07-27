@@ -3,7 +3,7 @@
  * Automatically selects appropriate storage backend for deployment environment
  */
 
-import { AutoWorkspaceManager } from '@devlog/core';
+import { AutoWorkspaceManager } from '@codervisor/devlog-core';
 import { join } from 'path';
 import { homedir } from 'os';
 
@@ -69,7 +69,7 @@ export async function getWorkspaceManager(): Promise<AutoWorkspaceManager> {
 export async function getStorageInfo() {
   try {
     const manager = await getWorkspaceManager();
-    
+
     // Check if getStorageInfo method exists
     if (typeof manager.getStorageInfo === 'function') {
       return manager.getStorageInfo();

@@ -1,10 +1,10 @@
 {
-  "name": "@devlog/web",
+  "name": "@codervisor/devlog-web",
   "version": "1.0.0",
   "description": "Web interface for devlog management",
   "scripts": {
     "dev": "next dev --port 3000",
-    "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
+    "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "build": "NEXT_BUILD_MODE=standalone next build",
     "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",
     "start": "pnpm run build && next start --port 3010",
@@ -14,8 +14,8 @@
     "clean:build": "rimraf .next-build"
   },
   "dependencies": {
-    "@devlog/ai": "workspace:*",
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-ai": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "@uiw/react-textarea-code-editor": "3.1.1",
     "classnames": "2.5.1",
     "highlight.js": "11.11.1",

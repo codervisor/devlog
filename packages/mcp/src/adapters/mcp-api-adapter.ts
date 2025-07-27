@@ -17,7 +17,7 @@ import type {
   UpdateDevlogRequest,
   DevlogFilter,
   PaginatedResult,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 import type {
   CreateDevlogArgs,
   UpdateDevlogArgs,

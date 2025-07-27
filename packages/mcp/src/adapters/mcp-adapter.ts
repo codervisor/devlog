@@ -13,7 +13,7 @@ import {
   NoteCategory,
   UpdateDevlogRequest,
   WorkspaceDevlogManager,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 import {
   AddDecisionArgs,
   AddDevlogNoteArgs,

@@ -90,14 +90,14 @@ grep -r "import.*ClassToMigrate" packages/
 ### **Validation Commands**
 ```bash
 # Build all packages in dependency order
-pnpm --filter @devlog/core build
-pnpm --filter @devlog/mcp build  
-pnpm --filter @devlog/ai build
-pnpm --filter @devlog/web build:test
+pnpm --filter @codervisor/devlog-core build
+pnpm --filter @codervisor/devlog-mcp build  
+pnpm --filter @codervisor/devlog-ai build
+pnpm --filter @codervisor/devlog-web build:test
 
 # Run tests
-pnpm --filter @devlog/core test
-pnpm --filter @devlog/mcp test
+pnpm --filter @codervisor/devlog-core test
+pnpm --filter @codervisor/devlog-mcp test
 
 # Validate import patterns
 node scripts/validate-imports.js

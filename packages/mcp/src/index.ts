@@ -6,7 +6,7 @@
  */
 
 // Load environment variables from root .env file
-import { loadRootEnv } from '@devlog/core';
+import { loadRootEnv } from '@codervisor/devlog-core';
 
 loadRootEnv();
 

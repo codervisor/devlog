@@ -1,11 +1,11 @@
-# @devlog/cli
+# @codervisor/devlog-cli
 
 Command-line interface for devlog - Extract and stream chat history to devlog server.
 
 ## Installation
 
 ```bash
-pnpm install -g @devlog/cli
+pnpm install -g @codervisor/devlog-cli
 ```
 
 ## Usage

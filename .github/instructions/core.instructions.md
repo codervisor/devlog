@@ -54,7 +54,7 @@ grep -r "YourInterfaceName" packages/ --include="*.ts" --include="*.tsx"
 ### Manager Selection Guidelines
 ```typescript
 // ✅ Preferred: Workspace-aware manager
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 
 const manager = new WorkspaceDevlogManager({
   defaultWorkspaceId: 'primary',
@@ -62,7 +62,7 @@ const manager = new WorkspaceDevlogManager({
 });
 
 // ❌ Deprecated: Legacy manager (avoid in new code)
-import { DevlogManager } from '@devlog/core';
+import { DevlogManager } from '@codervisor/devlog-core';
 ```
 
 ### Dependency Injection Pattern
@@ -127,8 +127,8 @@ import { StorageProvider } from '../storage/index.js';
 import type { DevlogEntry } from '../types/index.js';  // Explicit index.js for types too
 
 // ✅ Cross-package imports
-import { ChatParser } from '@devlog/ai';
-import type { AIModel } from '@devlog/ai/models';
+import { ChatParser } from '@codervisor/devlog-ai';
+import type { AIModel } from '@codervisor/devlog-ai/models';
 
 // ✅ External module imports
 import { Database } from 'better-sqlite3';

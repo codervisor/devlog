@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { DevlogEntry, DevlogId } from '@devlog/core';
+import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 
@@ -37,9 +37,11 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${devlogId}`);
-      
+
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${devlogId}`,
+      );
+
       if (!response.ok) {
         if (response.status === 404) {
           setError('Devlog not found');
@@ -89,43 +91,55 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   }, [fetchDevlog]);
 
   // CRUD operations for this specific devlog
-  const updateDevlog = useCallback(async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    if (!currentWorkspace) {
-      throw new Error('No workspace selected');
-    }
+  const updateDevlog = useCallback(
+    async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+      if (!currentWorkspace) {
+        throw new Error('No workspace selected');
+      }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error('Failed to update devlog');
-    }
+      if (!response.ok) {
+        throw new Error('Failed to update devlog');
+      }
 
-    const updatedDevlog = await response.json();
-    setDevlog(updatedDevlog);
-    return updatedDevlog;
-  }, [currentWorkspace]);
+      const updatedDevlog = await response.json();
+      setDevlog(updatedDevlog);
+      return updatedDevlog;
+    },
+    [currentWorkspace],
+  );
 
-  const deleteDevlog = useCallback(async (id: DevlogId) => {
-    if (!currentWorkspace) {
-      throw new Error('No workspace selected');
-    }
+  const deleteDevlog = useCallback(
+    async (id: DevlogId) => {
+      if (!currentWorkspace) {
+        throw new Error('No workspace selected');
+      }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`, {
-      method: 'DELETE',
-    });
+      const response = await fetch(
+        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`,
+        {
+          method: 'DELETE',
+        },
+      );
 
-    if (!response.ok) {
-      throw new Error('Failed to delete devlog');
-    }
+      if (!response.ok) {
+        throw new Error('Failed to delete devlog');
+      }
 
-    setDevlog(null);
-  }, [currentWorkspace]);
+      setDevlog(null);
+    },
+    [currentWorkspace],
+  );
 
   return {
     devlog,

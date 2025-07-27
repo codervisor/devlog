@@ -83,14 +83,14 @@ jobs:
               NEW_VERSION=$(npm version ${{ github.event.inputs.release_type }} --no-git-tag-version)
               NEW_VERSION=${NEW_VERSION#v} # Remove 'v' prefix
               echo "mcp_new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-              NEW_VERSIONS="$NEW_VERSIONS@devlog/mcp@$NEW_VERSION "
+              NEW_VERSIONS="$NEW_VERSIONS@codervisor/devlog-mcp@$NEW_VERSION "
               cd ../..
             elif [ "$pkg" == "types" ]; then
               cd packages/types
               NEW_VERSION=$(npm version ${{ github.event.inputs.release_type }} --no-git-tag-version)
               NEW_VERSION=${NEW_VERSION#v} # Remove 'v' prefix
               echo "types_new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-              NEW_VERSIONS="$NEW_VERSIONS@devlog/types@$NEW_VERSION "
+              NEW_VERSIONS="$NEW_VERSIONS@codervisor/devlog-types@$NEW_VERSION "
               cd ../..
             fi
           done
@@ -107,11 +107,11 @@ jobs:
           CHANGELOG="$CHANGELOG### Packages Updated\n"
           
           if [[ "${{ steps.bump_versions.outputs.packages }}" == *"mcp-server"* ]]; then
-            CHANGELOG="$CHANGELOG- **@devlog/mcp**: ${{ steps.current_versions.outputs.mcp_version }} → ${{ steps.bump_versions.outputs.mcp_new_version }}\n"
+            CHANGELOG="$CHANGELOG- **@codervisor/devlog-mcp**: ${{ steps.current_versions.outputs.mcp_version }} → ${{ steps.bump_versions.outputs.mcp_new_version }}\n"
           fi
           
           if [[ "${{ steps.bump_versions.outputs.packages }}" == *"types"* ]]; then
-            CHANGELOG="$CHANGELOG- **@devlog/types**: ${{ steps.current_versions.outputs.types_version }} → ${{ steps.bump_versions.outputs.types_new_version }}\n"
+            CHANGELOG="$CHANGELOG- **@codervisor/devlog-types**: ${{ steps.current_versions.outputs.types_version }} → ${{ steps.bump_versions.outputs.types_new_version }}\n"
           fi
           
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
@@ -153,12 +153,12 @@ jobs:
           for pkg in "${PACKAGE_ARRAY[@]}"; do
             pkg=$(echo "$pkg" | xargs) # trim whitespace
             if [ "$pkg" == "mcp-server" ]; then
-              echo "Publishing @devlog/mcp..."
+              echo "Publishing @codervisor/devlog-mcp..."
               cd packages/mcp-server
               npm publish --access public
               cd ../..
             elif [ "$pkg" == "types" ]; then
-              echo "Publishing @devlog/types..."
+              echo "Publishing @codervisor/devlog-types..."
               cd packages/types
               npm publish --access public
               cd ../..

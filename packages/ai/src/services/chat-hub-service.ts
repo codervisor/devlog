@@ -16,7 +16,7 @@ import type {
   ChatStatus,
   DevlogEntry,
   StorageProvider,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 
 export interface IChatHubService {
   /**

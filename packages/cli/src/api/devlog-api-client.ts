@@ -6,7 +6,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { ChatSession, ChatMessage } from '@devlog/core';
+import { ChatSession, ChatMessage } from '@codervisor/devlog-core';
 
 export interface ChatImportRequest {
   sessions: ChatSession[];

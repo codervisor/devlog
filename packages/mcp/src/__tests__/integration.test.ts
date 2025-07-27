@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 import { MCPDevlogAdapter } from '../adapters/mcp-adapter.js';
 import { allTools } from '../tools/index.js';
 import * as fs from 'fs/promises';

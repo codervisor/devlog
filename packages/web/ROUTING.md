@@ -1,4 +1,4 @@
-# Routing Implementation for @devlog/web
+# Routing Implementation for @codervisor/devlog-web
 
 ## Overview
 
@@ -39,24 +39,29 @@ app/
 ## Key Features
 
 ### 1. Proper Navigation
+
 - Uses Next.js `useRouter` and `usePathname` for navigation
 - Sidebar automatically highlights current route
 - Breadcrumb navigation shows current location
 
 ### 2. Type Safety
+
 - Proper type conversion for DevlogId (string to number)
 - TypeScript support throughout routing components
 
 ### 3. Shared Layout
+
 - `AppLayout` provides consistent sidebar, header, and error handling
 - Global state management for stats and WebSocket connection
 - Error boundaries for better error handling
 
 ### 4. Loading States
+
 - Dedicated `LoadingPage` component for consistent loading UX
 - Proper loading states in data-dependent pages
 
 ### 5. Deep Linking
+
 - Direct access to specific devlogs via URL
 - Bookmarkable URLs for all pages
 - Better SEO support
@@ -70,10 +75,11 @@ The previous implementation used a single `client.tsx` file with view state mana
 const [currentView, setCurrentView] = useState<View>('dashboard');
 const renderCurrentView = () => {
   switch (currentView) {
-    case 'dashboard': return <Dashboard />
+    case 'dashboard':
+      return <Dashboard />;
     // ...
   }
-}
+};
 ```
 
 Now each view is a proper route with its own page component:
@@ -97,11 +103,13 @@ Now each view is a proper route with its own page component:
 ## Development
 
 To run the development server:
+
 ```bash
-pnpm --filter @devlog/web dev
+pnpm --filter @codervisor/devlog-web dev
 ```
 
 To build for production:
+
 ```bash
-pnpm --filter @devlog/web build
+pnpm --filter @codervisor/devlog-web build
 ```

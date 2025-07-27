@@ -1,7 +1,7 @@
 import { sseEventBridge } from './sse-event-bridge';
 
 // Types only - these won't be bundled at runtime
-import type { WorkspaceDevlogManager } from '@devlog/core';
+import type { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 
 // Use globalThis to persist the manager across hot reloads in development
 declare global {
@@ -19,22 +19,22 @@ export async function getWorkspaceDevlogManager(): Promise<WorkspaceDevlogManage
 
   if (!workspaceDevlogManager) {
     // Dynamically import to avoid bundling TypeORM in client-side code
-    const { WorkspaceDevlogManager, loadRootEnv } = await import('@devlog/core');
-    
+    const { WorkspaceDevlogManager, loadRootEnv } = await import('@codervisor/devlog-core');
+
     // Ensure environment variables are loaded from root before initializing
     loadRootEnv();
-    
+
     workspaceDevlogManager = new WorkspaceDevlogManager({
       fallbackToEnvConfig: true,
       createWorkspaceConfigIfMissing: true,
     });
     await workspaceDevlogManager.initialize();
-    
+
     // Store in global scope for development hot reload persistence
     if (process.env.NODE_ENV === 'development') {
       globalThis.__workspaceDevlogManager = workspaceDevlogManager;
     }
-    
+
     // Initialize SSE bridge to ensure real-time updates work
     // This ensures events from MCP server are captured and broadcast to web clients
     sseEventBridge.initialize();

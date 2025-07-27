@@ -10,7 +10,7 @@ Devlog is a monorepo for AI-assisted development logging that provides **persist
 
 This is a TypeScript ESM monorepo with three main packages:
 
-### `@devlog/core`
+### `@codervisor/devlog-core`
 Core functionality including:
 - **WorkspaceDevlogManager**: Main interface for managing development logs across workspaces
 - **Storage providers**: SQLite, PostgreSQL, MySQL, GitHub, and JSON file storage
@@ -18,13 +18,13 @@ Core functionality including:
 - **Enterprise integrations**: Jira, Azure DevOps, GitHub sync
 - **Time-series analytics**: Progress tracking and statistics
 
-### `@devlog/mcp`
+### `@codervisor/devlog-mcp`
 Model Context Protocol server that exposes devlog functionality to AI assistants:
 - **MCPDevlogAdapter**: Main adapter class wrapping WorkspaceDevlogManager
 - **15+ specialized tools**: Core operations, search, progress tracking, AI context, workspace management
 - **Tool categories**: core-tools, search-tools, progress-tools, ai-context-tools, workspace-tools
 
-### `@devlog/web`
+### `@codervisor/devlog-web`
 Next.js web interface for visual management:
 - **Dashboard**: Overview of development activities and progress
 - **Real-time updates**: SSE (Server-Sent Events) for live updates
@@ -39,9 +39,9 @@ Next.js web interface for visual management:
 pnpm build
 
 # Build specific packages
-pnpm --filter @devlog/core build
-pnpm --filter @devlog/mcp build
-pnpm --filter @devlog/web build
+pnpm --filter @codervisor/devlog-core build
+pnpm --filter @codervisor/devlog-mcp build
+pnpm --filter @codervisor/devlog-web build
 
 # Build for testing (doesn't conflict with dev server)
 pnpm build:test
@@ -59,8 +59,8 @@ pnpm dev:mcp
 pnpm dev:web
 
 # Start individual packages
-pnpm --filter @devlog/mcp dev
-pnpm --filter @devlog/web dev
+pnpm --filter @codervisor/devlog-mcp dev
+pnpm --filter @codervisor/devlog-web dev
 ```
 
 ### Testing Commands
@@ -72,14 +72,14 @@ pnpm test
 pnpm test:watch
 
 # Run specific package tests
-pnpm --filter @devlog/core test
-pnpm --filter @devlog/mcp test
+pnpm --filter @codervisor/devlog-core test
+pnpm --filter @codervisor/devlog-mcp test
 
 # Run integration tests
-pnpm --filter @devlog/mcp test:integration
+pnpm --filter @codervisor/devlog-mcp test:integration
 
 # Run tests with coverage
-pnpm --filter @devlog/mcp test:coverage
+pnpm --filter @codervisor/devlog-mcp test:coverage
 ```
 
 ## Key Architecture Components
@@ -107,7 +107,7 @@ Tools are organized into categories:
 
 ### TypeScript ESM Requirements
 - **File extensions**: Always add `.js` to import paths for internal imports
-- **Cross-package imports**: Use `@devlog/*` aliases for inter-package references
+- **Cross-package imports**: Use `@codervisor/devlog-*` aliases for inter-package references
 - **Avoid self-reference**: Don't use `@/` for intra-package imports
 
 ### Testing and Build Practices
