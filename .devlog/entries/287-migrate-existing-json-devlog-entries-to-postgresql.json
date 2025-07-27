@@ -7,8 +7,15 @@
   "status": "new",
   "priority": "high",
   "createdAt": "2025-07-27T14:46:29.476Z",
-  "updatedAt": "2025-07-27T14:46:29.476Z",
-  "notes": [],
+  "updatedAt": "2025-07-27T15:27:24.888Z",
+  "notes": [
+    {
+      "id": "d27fc3ec-db94-4b68-94b1-ea9745c2d110",
+      "timestamp": "2025-07-27T15:27:24.888Z",
+      "category": "progress",
+      "content": "Starting JSON to PostgreSQL migration. User has truncated existing PG entries and wants fast bulk migration approach. Need to:\n1. Explore existing JSON devlog structure \n2. Map to flattened DevlogEntry structure from #286\n3. Create efficient bulk insert script\n4. Use PostgreSQL connection from .env file"
+    }
+  ],
   "files": [],
   "relatedDevlogs": [],
   "context": {

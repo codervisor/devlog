@@ -6,6 +6,7 @@
 import { join } from 'path';
 import { homedir } from 'os';
 import * as crypto from 'crypto';
+import { createAcceptanceCriteriaNote } from '../../utils/acceptance-criteria.js';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
@@ -370,8 +371,6 @@ export class WorkspaceDevlogManager {
       updatedAt: now,
       assignee: request.assignee,
       notes: [],
-      files: [],
-      relatedDevlogs: [],
       acceptanceCriteria: request.acceptanceCriteria || [],
       businessContext: request.businessContext || '',
       technicalContext: request.technicalContext || '',
@@ -443,10 +442,32 @@ export class WorkspaceDevlogManager {
       initialInsights !== undefined ||
       relatedPatterns !== undefined
     ) {
-      // Update flattened context fields directly
+      // Update other flattened context fields directly
       if (businessContext !== undefined) updated.businessContext = businessContext;
       if (technicalContext !== undefined) updated.technicalContext = technicalContext;
-      if (acceptanceCriteria !== undefined) updated.acceptanceCriteria = acceptanceCriteria;
+    }
+
+    // Handle acceptance criteria updates with automatic change tracking
+    if (acceptanceCriteria !== undefined) {
+      const previousCriteria = existing.acceptanceCriteria || [];
+      updated.acceptanceCriteria = acceptanceCriteria;
+
+      // Create automatic AC change note if criteria actually changed
+      if (JSON.stringify(previousCriteria) !== JSON.stringify(acceptanceCriteria)) {
+        const acNote = createAcceptanceCriteriaNote(
+          previousCriteria,
+          acceptanceCriteria,
+          data.acChangeReason, // Optional reason from the update request
+        );
+
+        // Add the note to the entry (will be saved with the entry)
+        if (!updated.notes) updated.notes = [];
+        updated.notes.push({
+          id: crypto.randomUUID(),
+          timestamp: now,
+          ...acNote,
+        });
+      }
     }
 
     // Ensure closedAt is set when status changes to 'done' or 'cancelled'
