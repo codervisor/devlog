@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
-import type { ChatFilter } from '@devlog/core';
+import type { ChatFilter } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

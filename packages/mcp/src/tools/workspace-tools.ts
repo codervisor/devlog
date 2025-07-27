@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 
 // Workspace management tools for MCP server
 export const listWorkspacesTool: Tool = {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MCPApiAdapter, type MCPApiAdapterConfig } from '../adapters/mcp-api-adapter.js';
 import { DevlogApiClient, DevlogApiClientError } from '../api/devlog-api-client.js';
-import { DevlogType, DevlogStatus, DevlogPriority } from '@devlog/core';
+import { DevlogType, DevlogStatus, DevlogPriority } from '@codervisor/devlog-core';
 
 // Mock the DevlogApiClient
 vi.mock('../api/devlog-api-client.js', () => ({

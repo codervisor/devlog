@@ -17,7 +17,7 @@ applyTo: 'packages/mcp/src/**/*.ts'
 // ✅ Correct MCP imports
 import { Tool, CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { DevlogManager } from '@devlog/core';
+import { DevlogManager } from '@codervisor/devlog-core';
 
 // ✅ Internal MCP imports  
 import { MCPAdapter } from './mcp-adapter.js';
@@ -130,7 +130,7 @@ grep -r "MCPAdapterClass" packages/ --include="*.ts"
 ```
 
 ### **Migration Awareness for MCP Package**
-⚠️ **When @devlog/core architecture changes:**
+⚠️ **When @codervisor/devlog-core architecture changes:**
 1. **Always check MCP adapter** (`mcp-adapter.ts`) for compatibility
 2. **Update tool implementations** in `tools/` directory 
 3. **Verify manager integration** - ensure using current manager classes

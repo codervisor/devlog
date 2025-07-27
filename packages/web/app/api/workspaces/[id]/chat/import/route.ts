@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedWorkspaceManager } from '@/lib/shared-workspace-manager';
-import { ChatHubService } from '@devlog/ai';
+import { ChatHubService } from '@codervisor/devlog-ai';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

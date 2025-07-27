@@ -5,7 +5,7 @@ import { Dashboard, PageLayout, OverviewStats } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
 import { useTimeSeriesStats } from '@/hooks/useTimeSeriesStats';
-import { DevlogEntry } from '@devlog/core';
+import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
@@ -19,10 +19,10 @@ export function DashboardPage() {
   };
 
   const actions = (
-    <OverviewStats 
-      stats={stats} 
+    <OverviewStats
+      stats={stats}
       loading={isLoadingStats}
-      variant="detailed" 
+      variant="detailed"
       currentFilters={filters}
       onFilterToggle={handleStatusFilter}
     />

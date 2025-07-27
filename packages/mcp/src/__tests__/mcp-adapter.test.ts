@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MCPDevlogAdapter } from '../adapters/mcp-adapter.js';
-import { DevlogType, DevlogStatus, DevlogPriority } from '@devlog/core';
+import { DevlogType, DevlogStatus, DevlogPriority } from '@codervisor/devlog-core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

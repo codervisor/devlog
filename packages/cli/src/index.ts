@@ -13,7 +13,12 @@ import Table from 'cli-table3';
 import ora from 'ora';
 import { resolve } from 'path';
 import ProgressBar from 'progress';
-import { ChatStatistics, CopilotParser, SearchResult, WorkspaceDataContainer } from '@devlog/ai';
+import {
+  ChatStatistics,
+  CopilotParser,
+  SearchResult,
+  WorkspaceDataContainer,
+} from '@codervisor/devlog-ai';
 import { DevlogApiClient, ChatImportRequest } from './api/devlog-api-client.js';
 import {
   convertWorkspaceDataToCoreFormat,

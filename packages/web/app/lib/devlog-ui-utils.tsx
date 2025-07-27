@@ -16,25 +16,25 @@ import {
   ToolOutlined,
   WarningOutlined,
 } from '@ant-design/icons';
-import { DevlogPriority, DevlogStatus, DevlogType } from '@devlog/core';
+import { DevlogPriority, DevlogStatus, DevlogType } from '@codervisor/devlog-core';
 
 /**
  * Maps Ant Design color names to their corresponding hex values
  * Based on Ant Design's default color palette
  */
 const antColorMap: Record<string, string> = {
-  'blue': '#1890ff',
-  'orange': '#fa8c16', 
-  'red': '#ff4d4f',
-  'purple': '#722ed1',
-  'cyan': '#13c2c2',
-  'green': '#52c41a',
-  'geekblue': '#2f54eb',
-  'magenta': '#eb2f96',
-  'volcano': '#fa541c',
-  'gold': '#faad14',
-  'lime': '#a0d911',
-  'default': '#8c8c8c',
+  blue: '#1890ff',
+  orange: '#fa8c16',
+  red: '#ff4d4f',
+  purple: '#722ed1',
+  cyan: '#13c2c2',
+  green: '#52c41a',
+  geekblue: '#2f54eb',
+  magenta: '#eb2f96',
+  volcano: '#fa541c',
+  gold: '#faad14',
+  lime: '#a0d911',
+  default: '#8c8c8c',
 };
 
 /**
@@ -51,19 +51,19 @@ export const getColorHex = (antColorName: string): string => {
 export const getStatusColor = (status: DevlogStatus): string => {
   switch (status) {
     case 'new':
-      return 'blue';        // Fresh, ready to start
+      return 'blue'; // Fresh, ready to start
     case 'in-progress':
-      return 'orange';      // Active work, attention needed
+      return 'orange'; // Active work, attention needed
     case 'blocked':
-      return 'red';         // Critical attention required
+      return 'red'; // Critical attention required
     case 'in-review':
-      return 'purple';      // Under evaluation
+      return 'purple'; // Under evaluation
     case 'testing':
-      return 'cyan';        // Verification phase
+      return 'cyan'; // Verification phase
     case 'done':
-      return 'green';       // Completed successfully
+      return 'green'; // Completed successfully
     case 'cancelled':
-      return 'default';     // Neutral/inactive
+      return 'default'; // Neutral/inactive
     default:
       return 'default';
   }
@@ -76,21 +76,21 @@ export const getStatusColor = (status: DevlogStatus): string => {
 export const getStatusIcon = (status: DevlogStatus): React.ReactNode => {
   switch (status) {
     case 'new':
-      return <PlusOutlined />;           // Ready to start
+      return <PlusOutlined />; // Ready to start
     case 'in-progress':
-      return <SyncOutlined spin />;      // Active work (spinning for movement)
+      return <SyncOutlined spin />; // Active work (spinning for movement)
     case 'blocked':
-      return <StopOutlined />;           // Blocked/stopped
+      return <StopOutlined />; // Blocked/stopped
     case 'in-review':
-      return <EyeOutlined />;            // Under review/examination
+      return <EyeOutlined />; // Under review/examination
     case 'testing':
-      return <FileProtectOutlined />;    // Testing/verification
+      return <FileProtectOutlined />; // Testing/verification
     case 'done':
-      return <CheckCircleOutlined />;    // Completed
+      return <CheckCircleOutlined />; // Completed
     case 'cancelled':
-      return <MinusCircleOutlined />;    // Cancelled/inactive
+      return <MinusCircleOutlined />; // Cancelled/inactive
     default:
-      return <ClockCircleOutlined />;    // Default fallback
+      return <ClockCircleOutlined />; // Default fallback
   }
 };
 
@@ -101,13 +101,13 @@ export const getStatusIcon = (status: DevlogStatus): React.ReactNode => {
 export const getPriorityColor = (priority: DevlogPriority): string => {
   switch (priority) {
     case 'critical':
-      return 'red';         // Urgent/critical attention
+      return 'red'; // Urgent/critical attention
     case 'high':
-      return 'volcano';     // High importance, warm orange-red
+      return 'volcano'; // High importance, warm orange-red
     case 'medium':
-      return 'gold';        // Moderate importance, balanced yellow
+      return 'gold'; // Moderate importance, balanced yellow
     case 'low':
-      return 'lime';        // Low priority, calm green
+      return 'lime'; // Low priority, calm green
     default:
       return 'default';
   }
@@ -120,13 +120,13 @@ export const getPriorityColor = (priority: DevlogPriority): string => {
 export const getPriorityIcon = (priority: string): React.ReactNode => {
   switch (priority) {
     case 'critical':
-      return <ExclamationCircleOutlined />;  // Critical alert
+      return <ExclamationCircleOutlined />; // Critical alert
     case 'high':
-      return <WarningOutlined />;            // Warning/high importance
+      return <WarningOutlined />; // Warning/high importance
     case 'medium':
-      return <InfoCircleOutlined />;         // Information/medium
+      return <InfoCircleOutlined />; // Information/medium
     case 'low':
-      return <MinusCircleOutlined />;        // Low/minimal indicator
+      return <MinusCircleOutlined />; // Low/minimal indicator
     default:
       return <MinusCircleOutlined />;
   }
@@ -139,15 +139,15 @@ export const getPriorityIcon = (priority: string): React.ReactNode => {
 export const getTypeColor = (type: DevlogType): string => {
   switch (type) {
     case 'feature':
-      return 'geekblue';    // New functionality, blue theme
+      return 'geekblue'; // New functionality, blue theme
     case 'bugfix':
-      return 'magenta';     // Bug fixes, attention-getting
+      return 'magenta'; // Bug fixes, attention-getting
     case 'task':
-      return 'purple';      // General tasks, neutral but distinct
+      return 'purple'; // General tasks, neutral but distinct
     case 'refactor':
-      return 'cyan';        // Code improvement, technical
+      return 'cyan'; // Code improvement, technical
     case 'docs':
-      return 'green';       // Documentation, knowledge-based
+      return 'green'; // Documentation, knowledge-based
     default:
       return 'default';
   }

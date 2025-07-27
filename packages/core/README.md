@@ -1,4 +1,4 @@
-# @devlog/core
+# @codervisor/devlog-core
 
 Core functionality for the devlog system. This package provides the main `DevlogManager` class that handles creation,
 updating, querying, and management of development logs.
@@ -39,13 +39,13 @@ Devlog entries use a well-defined status system to track work progression:
 ## Installation
 
 ```bash
-pnpm add @devlog/core
+pnpm add @codervisor/devlog-core
 ```
 
 ## Usage
 
 ```typescript
-import { DevlogManager } from '@devlog/core';
+import { DevlogManager } from '@codervisor/devlog-core';
 
 // Initialize the manager
 const devlog = new DevlogManager({
@@ -145,9 +145,9 @@ Storage is configured through the `DevlogManager` constructor or environment var
 
 This core package is designed to be used by:
 
-- `@devlog/mcp` - MCP server for AI assistants
-- `@devlog/cli` - Command-line interface
-- `@devlog/web` - Web interface for browsing devlogs
+- `@codervisor/devlog-mcp` - MCP server for AI assistants
+- `@codervisor/devlog-cli` - Command-line interface
+- `@codervisor/devlog-web` - Web interface for browsing devlogs
 - Custom applications and scripts
 
 ## License

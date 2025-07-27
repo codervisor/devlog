@@ -6,7 +6,7 @@
 /* eslint-disable no-unused-vars */
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 import { DevlogApiClient } from '../api/devlog-api-client.js';
 
 // Global API client instance

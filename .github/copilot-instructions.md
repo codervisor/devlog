@@ -42,7 +42,7 @@
 ```typescript
 // ✅ Correct patterns
 import { DevlogManager } from './managers/devlog-manager.js';     // Internal
-import { ChatParser } from '@devlog/ai';                        // Cross-package
+import { ChatParser } from '@codervisor/devlog-ai';                        // Cross-package
 import type { DevlogEntry } from '../types/index.js';           // Type-only can omit .js
 
 // ❌ Avoid these patterns
@@ -85,12 +85,12 @@ Run: grep -r "TypeName" packages/ --include="*.ts" --include="*.tsx"
 Run: grep -r "StorageInterface" packages/ --include="*.ts"
 ```
 
-#### **When making any @devlog/core changes:**
+#### **When making any @codervisor/devlog-core changes:**
 ```
 ⚠️  AUTO-CHECK: After core changes, verify:
 1. pnpm detect-migration  # Automatic migration detection
-2. pnpm --filter @devlog/mcp build
-3. pnpm --filter @devlog/web build:test  
+2. pnpm --filter @codervisor/devlog-mcp build
+3. pnpm --filter @codervisor/devlog-web build:test  
 4. Check for new compilation errors in dependent packages
 ```
 
@@ -132,7 +132,7 @@ that require migration attention.
    - Dependency version compatibility matrix
 
 ### **Cross-Package Dependency Map:**
-- **@devlog/core changes** → ALWAYS update @devlog/mcp, @devlog/web APIs
+- **@codervisor/devlog-core changes** → ALWAYS update @codervisor/devlog-mcp, @codervisor/devlog-web APIs
 - **Manager class changes** → Update adapters, API routes, tests, web contexts
 - **Type/Interface changes** → Update ALL imports and usages across packages
 - **Storage provider changes** → Update web API endpoints and MCP tools
@@ -246,4 +246,4 @@ For every significant architectural change:
 
 #### Build Dependencies
 - **Build order**: Core → MCP → Web (follow dependency chain)
-- **After core changes**: `pnpm --filter @devlog/core build` then restart MCP server
+- **After core changes**: `pnpm --filter @codervisor/devlog-core build` then restart MCP server

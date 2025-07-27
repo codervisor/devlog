@@ -42,7 +42,7 @@ importers:
 
   packages/ai:
     dependencies:
-      '@devlog/core':
+      '@codervisor/devlog-core':
         specifier: workspace:*
         version: link:../core
       chalk:
@@ -82,10 +82,10 @@ importers:
 
   packages/cli:
     dependencies:
-      '@devlog/ai':
+      '@codervisor/devlog-ai':
         specifier: workspace:*
         version: link:../ai
-      '@devlog/core':
+      '@codervisor/devlog-core':
         specifier: workspace:*
         version: link:../core
       axios:
@@ -183,7 +183,7 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@devlog/core':
+      '@codervisor/devlog-core':
         specifier: workspace:*
         version: link:../core
       '@modelcontextprotocol/sdk':
@@ -223,10 +223,10 @@ importers:
 
   packages/web:
     dependencies:
-      '@devlog/ai':
+      '@codervisor/devlog-ai':
         specifier: workspace:*
         version: link:../ai
-      '@devlog/core':
+      '@codervisor/devlog-core':
         specifier: workspace:*
         version: link:../core
       '@uiw/react-textarea-code-editor':

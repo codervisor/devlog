@@ -18,24 +18,11 @@
     "composite": false,
     "incremental": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@devlog/core": [
-        "../core/build"
-      ],
-      "@devlog/core/*": [
-        "../core/build/*"
-      ]
+      "@/*": ["./src/*"],
+      "@codervisor/devlog-core": ["../core/build"],
+      "@codervisor/devlog-core/*": ["../core/build/*"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "src/**/*.test.ts",
-    "src/__tests__"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build", "src/**/*.test.ts", "src/__tests__"]
 }

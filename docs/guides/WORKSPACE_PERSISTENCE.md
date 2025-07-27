@@ -87,7 +87,7 @@ const storageInfo = await getStorageInfo(); // For debugging
 ### Direct Usage
 
 ```typescript
-import { AutoWorkspaceManager } from '@devlog/core';
+import { AutoWorkspaceManager } from '@codervisor/devlog-core';
 
 // Auto-detect storage type
 const manager = new AutoWorkspaceManager({ storageType: 'auto' });

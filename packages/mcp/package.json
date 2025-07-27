@@ -1,5 +1,5 @@
 {
-  "name": "@devlog/mcp",
+  "name": "@codervisor/devlog-mcp",
   "version": "1.0.0",
   "description": "MCP server for managing development logs and working notes",
   "main": "build/index.js",
@@ -27,7 +27,7 @@
     "start": "node build/index.js",
     "dev": "tsx src/index.ts",
     "dev:nodemon": "nodemon",
-    "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
+    "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -48,13 +48,13 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0"
   },
   "devDependencies": {
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "2.1.9",
     "@vitest/ui": "^2.1.9",

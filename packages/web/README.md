@@ -1,4 +1,4 @@
-# @devlog/web
+# @codervisor/devlog-web
 
 Web interface for devlog management - A modern dashboard for tracking development progress.
 
@@ -14,7 +14,7 @@ Web interface for devlog management - A modern dashboard for tracking developmen
 
 ### Development
 
-```bash
+````bash
 # Install dependencies
 pnpm install
 
@@ -29,17 +29,19 @@ pnpm build
 
 # Start the production server
 pnpm start
-```
+````
 
 ## API Endpoints
 
 ### Workspace Management
+
 - `GET /api/workspaces` - List all workspaces
 - `GET /api/workspaces/:id` - Get workspace details
 - `PUT /api/workspaces/:id` - Update workspace configuration
 - `POST /api/workspaces/:id/switch` - Switch to workspace
 
 ### Devlog Management (Workspace-Scoped)
+
 - `GET /api/workspaces/:id/devlogs` - List devlogs in workspace
 - `POST /api/workspaces/:id/devlogs` - Create devlog in workspace
 - `GET /api/workspaces/:id/devlogs/:devlogId` - Get devlog by ID from workspace
@@ -47,10 +49,12 @@ pnpm start
 - `DELETE /api/workspaces/:id/devlogs/:devlogId` - Delete devlog from workspace
 
 ### Statistics (Workspace-Scoped)
+
 - `GET /api/workspaces/:id/devlogs/stats/overview` - Get overview statistics for workspace
 - `GET /api/workspaces/:id/devlogs/stats/timeseries` - Get time series data for workspace
 
 ### Batch Operations (Workspace-Scoped)
+
 - `POST /api/workspaces/:id/devlogs/batch/update` - Batch update devlogs in workspace
 - `POST /api/workspaces/:id/devlogs/batch/delete` - Batch delete devlogs in workspace
 - `POST /api/workspaces/:id/devlogs/batch/note` - Batch add notes to devlogs in workspace
@@ -63,7 +67,7 @@ Real-time updates are implemented using Server-Sent Events instead of WebSockets
 
 - `connected` - Client successfully connected to SSE stream
 - `devlog-created` - New devlog entry was created
-- `devlog-updated` - Existing devlog entry was updated  
+- `devlog-updated` - Existing devlog entry was updated
 - `devlog-deleted` - Devlog entry was deleted
 
 ### Usage
@@ -73,13 +77,13 @@ import { useServerSentEvents } from '@/hooks/useServerSentEvents';
 
 function MyComponent() {
   const { connected, subscribe } = useServerSentEvents();
-  
+
   useEffect(() => {
     subscribe('devlog-updated', (devlog) => {
       console.log('Devlog updated:', devlog);
     });
   }, [subscribe]);
-  
+
   return <div>Connected: {connected}</div>;
 }
 ```

@@ -1,6 +1,6 @@
-# @devlog/ai
+# @codervisor/devlog-ai
 
-# @devlog/ai
+# @codervisor/devlog-ai
 
 AI Chat History Extractor & Docker-based Automation - TypeScript implementation for GitHub Copilot and other AI coding assistants in the devlog ecosystem.
 
@@ -38,7 +38,7 @@ AI Chat History Extractor & Docker-based Automation - TypeScript implementation 
 pnpm install
 
 # Build the package
-pnpm --filter @devlog/ai build
+pnpm --filter @codervisor/devlog-ai build
 ```
 
 ## Usage
@@ -48,35 +48,34 @@ pnpm --filter @devlog/ai build
 #### Chat History Analysis
 
 ```bash
-# View usage statistics
-npx @devlog/ai stats
+npx @codervisor/devlog-ai stats
 
-# View all chat conversations
-npx @devlog/ai chat
+# Search chat sessions with filters
+npx @codervisor/devlog-ai chat
 
-# Search for specific content
-npx @devlog/ai search "error handling" --limit 20
+# Search with advanced filters
+npx @codervisor/devlog-ai search "error handling" --limit 20
 
-# Export to different formats
-npx @devlog/ai chat --format json --output chat_history.json
-npx @devlog/ai chat --format md --output chat_history.md
+# Export chat history
+npx @codervisor/devlog-ai chat --format json --output chat_history.json
+npx @codervisor/devlog-ai chat --format md --output chat_history.md
 ```
 
 #### 🤖 Docker-based Automation
 
 ```bash
-# Test Docker environment setup
-npx @devlog/ai automation test-setup
+# Test Docker setup
+npx @codervisor/devlog-ai automation test-setup
 
-# List available test scenarios
-npx @devlog/ai automation scenarios
-npx @devlog/ai automation scenarios --category algorithms --verbose
+# List available scenarios
+npx @codervisor/devlog-ai automation scenarios
+npx @codervisor/devlog-ai automation scenarios --category algorithms --verbose
 
 # List scenario categories
-npx @devlog/ai automation categories
+npx @codervisor/devlog-ai automation categories
 
-# Run automation session
-npx @devlog/ai automation run \
+# Run a specific scenario
+npx @codervisor/devlog-ai automation run \
   --token YOUR_GITHUB_TOKEN \
   --scenarios algorithms,api \
   --language javascript \
@@ -86,7 +85,8 @@ npx @devlog/ai automation run \
 
 # Run with environment variable
 export GITHUB_TOKEN=your_token_here
-npx @devlog/ai automation run --scenarios testing --language python
+# Run multiple scenarios
+npx @codervisor/devlog-ai automation run --scenarios testing --language python
 ```
 
 ### Programmatic Usage
@@ -94,7 +94,7 @@ npx @devlog/ai automation run --scenarios testing --language python
 #### Chat History Analysis
 
 ```typescript
-import { CopilotParser, JSONExporter, MarkdownExporter } from '@devlog/ai';
+import { CopilotParser, JSONExporter, MarkdownExporter } from '@codervisor/devlog-ai';
 
 // Parse chat data
 const parser = new CopilotParser();
@@ -135,7 +135,7 @@ import {
   DockerCopilotAutomation,
   CodeGenerationScenario,
   AutomationResultExporter,
-} from '@devlog/ai';
+} from '@codervisor/devlog-ai';
 
 // Configure automation
 const config = {
@@ -306,13 +306,13 @@ docker pull ubuntu:22.04
 
 ```bash
 # Test environment setup
-npx @devlog/ai automation test-setup
+npx @codervisor/devlog-ai automation test-setup
 
 # Check GitHub token
 echo $GITHUB_TOKEN
 
 # Run with debug logging
-npx @devlog/ai automation run --debug --token $GITHUB_TOKEN
+npx @codervisor/devlog-ai automation run --debug --token $GITHUB_TOKEN
 ```
 
 ### Common Problems
@@ -337,7 +337,7 @@ npx @devlog/ai automation run --debug --token $GITHUB_TOKEN
 
 **"No scenarios found"**
 
-- List available categories: `npx @devlog/ai automation categories`
+- List available categories: `npx @codervisor/devlog-ai automation categories`
 - Check scenario filters: `--category algorithms --language javascript`
 - Create custom scenarios using the programmatic API
 
@@ -345,9 +345,9 @@ npx @devlog/ai automation run --debug --token $GITHUB_TOKEN
 
 This package is part of the devlog monorepo ecosystem:
 
-- **@devlog/core**: Shared utilities and types
-- **@devlog/mcp**: MCP server integration for AI agents
-- **@devlog/web**: Web interface for visualization
+- **@codervisor/devlog-core**: Shared utilities and types
+- **@codervisor/devlog-mcp**: MCP server integration for AI agents
+- **@codervisor/devlog-web**: Web interface for visualization
 
 ## License
 

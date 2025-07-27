@@ -1,5 +1,5 @@
 /**
- * @devlog/ai - GitHub Copilot Chat History Extractor
+ * @codervisor/devlog-ai - GitHub Copilot Chat History Extractor
  *
  * Main entry point for the TypeScript implementation
  */

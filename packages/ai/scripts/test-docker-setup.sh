@@ -56,12 +56,12 @@ else
 fi
 
 # Test AI automation package
-echo -n "📦 Testing @devlog/ai package... "
-if npx @devlog/ai automation test-setup >/dev/null 2>&1; then
+echo -n "📦 Testing @codervisor/devlog-ai package... "
+if npx @codervisor/devlog-ai automation test-setup >/dev/null 2>&1; then
     echo "✅ Package test passed"
 else
     echo "❌ Package test failed"
-    echo "   Run: pnpm --filter @devlog/ai build"
+    echo "   Run: pnpm --filter @codervisor/devlog-ai build"
     exit 1
 fi
 
@@ -80,13 +80,13 @@ echo "🎉 Docker automation environment ready!"
 echo ""
 echo "Next steps:"
 echo "  1. List available scenarios:"
-echo "     npx @devlog/ai automation scenarios"
+echo "     npx @codervisor/devlog-ai automation scenarios"
 echo ""
 echo "  2. Run a quick test:"
-echo "     npx @devlog/ai automation run --scenarios algorithms --count 2"
+echo "     npx @codervisor/devlog-ai automation run --scenarios algorithms --count 2"
 echo ""
 echo "  3. Run comprehensive testing:"
-echo "     npx @devlog/ai automation run --scenarios algorithms,api,testing --language javascript"
+echo "     npx @codervisor/devlog-ai automation run --scenarios algorithms,api,testing --language javascript"
 echo ""
 echo "  4. Custom automation (programmatic):"
 echo "     node examples/automation-examples.js"

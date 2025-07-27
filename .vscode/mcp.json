@@ -8,7 +8,7 @@
             "command": "pnpm",
             "args": [
                 "--filter", 
-                "@devlog/mcp", 
+                "@codervisor/devlog-mcp", 
                 "dev:nodemon"
             ],
             "cwd": ".",

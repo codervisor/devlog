@@ -5,13 +5,16 @@
  * structures used by the AI parsing logic and the core storage system.
  */
 
-import { ChatSession as CoreChatSession, ChatMessage as CoreChatMessage } from '@devlog/core';
+import {
+  ChatSession as CoreChatSession,
+  ChatMessage as CoreChatMessage,
+} from '@codervisor/devlog-core';
 import {
   WorkspaceData,
   WorkspaceDataContainer,
   ChatSession as AiChatSession,
   Message as AiMessage,
-} from '@devlog/ai';
+} from '@codervisor/devlog-ai';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ConvertedChatData {

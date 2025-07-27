@@ -3,7 +3,7 @@
 import React from 'react';
 import { BarChartOutlined } from '@ant-design/icons';
 import { Popover, Skeleton } from 'antd';
-import { DevlogFilter, DevlogStats, DevlogStatus, FilterType } from '@devlog/core';
+import { DevlogFilter, DevlogStats, DevlogStatus, FilterType } from '@codervisor/devlog-core';
 import styles from './OverviewStats.module.css';
 
 export type OverviewStatsVariant = 'detailed' | 'icon';

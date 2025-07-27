@@ -19,7 +19,7 @@ import {
   FilterType,
   DevlogStats,
   TimeSeriesStats,
-} from '@devlog/core';
+} from '@codervisor/devlog-core';
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
 import { useWorkspace } from './WorkspaceContext';
 

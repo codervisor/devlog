@@ -18,7 +18,7 @@ AI assistants face significant **memory limitations** when working on large code
 
 This monorepo contains three core packages that work together to provide persistent memory for development:
 
-### `@devlog/core` 
+### `@codervisor/devlog-core` 
 Core devlog management functionality including:
 - **TypeScript types**: All shared types and interfaces for type safety and consistency
 - **Storage backends**: SQLite, PostgreSQL, MySQL support
@@ -27,14 +27,14 @@ Core devlog management functionality including:
 - **Memory persistence**: Maintain state across AI sessions
 - **Integration services**: Sync with enterprise platforms (Jira, GitHub, Azure DevOps)
 
-### `@devlog/mcp`
+### `@codervisor/devlog-mcp`
 MCP (Model Context Protocol) server that exposes core functionality to AI assistants:
 - **15+ specialized tools** for devlog management
 - **Standardized MCP interface** for broad AI client compatibility
 - **Real-time memory access** during AI conversations
 - **Session persistence** across multiple interactions
 
-### `@devlog/web`
+### `@codervisor/devlog-web`
 Next.js web interface for visual devlog management:
 - **Dashboard view** of all development activities
 - **Timeline visualization** of project progress
@@ -167,10 +167,10 @@ See the [docs/](docs/) directory for comprehensive documentation including techn
 
 ## 🔧 Using the Core Library
 
-The `@devlog/core` package can be used directly in your applications:
+The `@codervisor/devlog-core` package can be used directly in your applications:
 
 ```typescript
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
 
 const devlog = new WorkspaceDevlogManager({
   fallbackToEnvConfig: true,
