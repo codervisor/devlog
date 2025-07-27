@@ -13,15 +13,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import type {
-  AIContext,
-  DevlogContext,
-  DevlogNote,
-  DevlogPriority,
-  DevlogStatus,
-  DevlogType,
-  ExternalReference,
-} from '../types/index.js';
+import type { DevlogPriority, DevlogStatus, DevlogType } from '../types/index.js';
 import {
   JsonColumn,
   TimestampColumn,
@@ -84,21 +76,20 @@ export class DevlogEntryEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   assignee?: string;
 
-  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [] })
-  notes!: DevlogNote[];
+  // Flattened DevlogContext fields (simple strings and arrays)
+  @Column({ type: 'text', nullable: true, name: 'business_context' })
+  businessContext?: string;
 
+  @Column({ type: 'text', nullable: true, name: 'technical_context' })
+  technicalContext?: string;
+
+  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'acceptance_criteria' })
+  acceptanceCriteria!: string[];
+
+  // Simple arrays that can remain as JSON columns
   @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [] })
   files!: string[];
 
   @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'related_devlogs' })
   relatedDevlogs!: string[];
-
-  @JsonColumn({ nullable: true })
-  context?: DevlogContext;
-
-  @JsonColumn({ nullable: true, name: 'ai_context' })
-  aiContext?: AIContext;
-
-  @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'external_references' })
-  externalReferences!: ExternalReference[];
 }

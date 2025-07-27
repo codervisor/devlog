@@ -430,12 +430,14 @@ export class TypeORMStorageProvider implements StorageProvider {
       closedAt: entity.closedAt?.toISOString(),
       archived: entity.archived,
       assignee: entity.assignee,
-      notes: this.parseJsonField(entity.notes, []),
       files: this.parseJsonField(entity.files, []),
       relatedDevlogs: this.parseJsonField(entity.relatedDevlogs, []),
-      context: this.parseJsonField(entity.context, undefined),
-      aiContext: this.parseJsonField(entity.aiContext, undefined),
-      externalReferences: this.parseJsonField(entity.externalReferences, []),
+      acceptanceCriteria: this.parseJsonField(entity.acceptanceCriteria, []),
+      businessContext: entity.businessContext,
+      technicalContext: entity.technicalContext,
+      // Related entities will be loaded separately when needed
+      notes: [], // TODO: Load from DevlogNoteEntity
+      dependencies: [], // TODO: Load from DevlogDependencyEntity
     };
   }
 
@@ -454,12 +456,14 @@ export class TypeORMStorageProvider implements StorageProvider {
     if (entry.closedAt) entity.closedAt = new Date(entry.closedAt);
     entity.archived = entry.archived || false;
     entity.assignee = entry.assignee;
-    entity.notes = this.stringifyJsonField(entry.notes || []);
     entity.files = this.stringifyJsonField(entry.files || []);
     entity.relatedDevlogs = this.stringifyJsonField(entry.relatedDevlogs || []);
-    entity.context = this.stringifyJsonField(entry.context);
-    entity.aiContext = this.stringifyJsonField(entry.aiContext);
-    entity.externalReferences = this.stringifyJsonField(entry.externalReferences || []);
+    entity.acceptanceCriteria = this.stringifyJsonField(entry.acceptanceCriteria || []);
+    entity.businessContext = entry.businessContext;
+    entity.technicalContext = entry.technicalContext;
+
+    // Related entities (notes, dependencies, externalReferences)
+    // will be handled separately through their respective repositories
 
     return entity;
   }

@@ -137,7 +137,14 @@ export type NoteCategory =
    * - Results from usability testing or user research
    * - Use for: User feedback, stakeholder input, testing results, customer requests
    */
-  | 'feedback';
+  | 'feedback'
+  /**
+   * **Acceptance Criteria** - Updates on acceptance criteria validation and completion status
+   * - Tracking progress on specific acceptance criteria items
+   * - Marking criteria as complete, in-progress, or blocked
+   * - Use for: AC validation results, criteria check-offs, completion tracking
+   */
+  | 'acceptance-criteria';
 
 /**
  * ID type for devlog entries - integer only for clean, user-friendly references
@@ -165,72 +172,28 @@ export interface DevlogEntry {
   updatedAt: string;
   closedAt?: string; // ISO timestamp when status changed to 'done' or 'cancelled'
   assignee?: string;
-  notes?: DevlogNote[];
-  files?: string[];
-  relatedDevlogs?: string[];
   archived?: boolean; // For long-term management and performance
 
-  // Enhanced AI agent context
-  context?: DevlogContext;
-
-  // AI-specific context for cross-session persistence
-  aiContext?: AIContext;
-
-  // Enterprise tool integration (optional for now)
-  externalReferences?: ExternalReference[];
-}
-
-export interface DevlogContext {
-  // What problem this solves or what goal it achieves
-  businessContext?: string;
-
-  // Technical context - architecture decisions, constraints, assumptions
-  technicalContext?: string;
-
-  // Dependencies on other work items or external factors
-  dependencies?: Dependency[];
-
-  // Key decisions made and their rationale
-  decisions?: Decision[];
-
-  // Acceptance criteria or definition of done
+  // Simple arrays that remain as JSON
+  files?: string[];
+  relatedDevlogs?: string[];
   acceptanceCriteria?: string[];
 
-  // Risks and mitigation strategies
-  risks?: Risk[];
+  // Flattened context fields (simple strings)
+  businessContext?: string;
+  technicalContext?: string;
+
+  // Related entities (loaded separately, not stored as JSON)
+  notes?: DevlogNote[];
+  dependencies?: Dependency[];
 }
 
 export interface Dependency {
   id: string;
-  type: 'blocks' | 'blocked-by' | 'related-to';
+  type: 'blocks' | 'blocked-by' | 'related-to' | 'parent-of' | 'child-of';
   description: string;
-  externalId?: string; // For Jira, ADO, etc.
-}
-
-export interface Decision {
-  id: string;
-  timestamp: string;
-  decision: string;
-  rationale: string;
-  alternatives?: string[];
-  decisionMaker: string; // human name or AI agent identifier
-}
-
-export interface Risk {
-  id: string;
-  description: string;
-  impact: 'low' | 'medium' | 'high';
-  probability: 'low' | 'medium' | 'high';
-  mitigation: string;
-}
-
-export interface ExternalReference {
-  system: 'jira' | 'ado' | 'github' | 'slack' | 'confluence' | 'other';
-  id: string;
-  url?: string;
-  title?: string;
-  status?: string;
-  lastSync?: string;
+  externalId?: string; // For external systems like Jira, ADO, etc.
+  targetDevlogId?: number; // For internal devlog relationships (hierarchical structure)
 }
 
 export interface DevlogFilter {
@@ -292,28 +255,6 @@ export interface TimeSeriesRequest {
   days?: number; // Number of days to look back (default: 30)
   from?: string; // Start date (ISO string)
   to?: string; // End date (ISO string)
-}
-
-// AI Agent Context Enhancement
-export interface AIContext {
-  // Summary of the current understanding for AI agents
-  currentSummary?: string;
-
-  // Key insights that should be preserved across sessions
-  keyInsights?: string[];
-
-  // Current blockers or questions that need resolution
-  openQuestions?: string[];
-
-  // Related concepts or patterns from other projects
-  relatedPatterns?: string[];
-
-  // Next logical steps based on current progress
-  suggestedNextSteps?: string[];
-
-  // Context freshness indicator
-  lastAIUpdate?: string;
-  contextVersion?: number;
 }
 
 // Pagination Support

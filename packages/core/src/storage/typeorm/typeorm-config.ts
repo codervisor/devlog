@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import {
   DevlogEntryEntity,
+  DevlogNoteEntity,
   ChatSessionEntity,
   ChatMessageEntity,
   ChatDevlogLinkEntity,
@@ -66,6 +67,7 @@ export function createDataSource(
   const baseConfig: Partial<DataSourceOptions> = {
     entities: entities || [
       DevlogEntryEntity,
+      DevlogNoteEntity,
       ChatSessionEntity,
       ChatMessageEntity,
       ChatDevlogLinkEntity,

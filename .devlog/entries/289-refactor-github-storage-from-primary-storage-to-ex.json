@@ -1,0 +1,43 @@
+{
+  "id": 289,
+  "key": "refactor-github-storage-from-primary-storage-to-ex",
+  "title": "Refactor GitHub storage from primary storage to external integration system",
+  "type": "refactor",
+  "description": "Refactor the current GitHub storage implementation from being a primary storage provider to an external integration/sync system. Currently, GitHub storage is treated as one of the storage options alongside JSON, SQLite, and PostgreSQL, which creates confusion about the system architecture.\n\n**Current Issues:**\n- GitHub storage is listed as a primary storage type in DEVLOG_STORAGE_TYPE\n- Creates confusion about where data is actually stored\n- Mixes data persistence concerns with external system integration\n- Makes it unclear what the \"source of truth\" is for devlog data\n\n**Proposed Architecture:**\n- Primary storage: SQLite (development) or PostgreSQL (production)\n- External integrations: GitHub Issues sync, Jira sync, etc.\n- GitHub integration syncs data bidirectionally with primary database\n- Clear separation of concerns between storage and integration\n\nThis aligns with the broader goal of simplifying storage options and creating a cleaner architecture.",
+  "status": "new",
+  "priority": "medium",
+  "createdAt": "2025-07-27T15:00:16.197Z",
+  "updatedAt": "2025-07-27T15:00:16.197Z",
+  "notes": [],
+  "files": [],
+  "relatedDevlogs": [],
+  "context": {
+    "businessContext": "GitHub should be treated as an external system integration for syncing devlog entries with GitHub Issues, not as a primary storage provider. This clarifies the architecture and separates concerns between data persistence and external system synchronization.",
+    "technicalContext": "Currently GitHub storage is implemented as a StorageProvider alongside JSON and TypeORM providers. Need to:\n1. Remove GitHub from storage provider options\n2. Move GitHub functionality to integration/sync layer\n3. Update configuration options to remove GitHub as storage type\n4. Ensure GitHub sync works with primary database (SQLite/PostgreSQL)\n5. Update documentation and examples",
+    "dependencies": [],
+    "decisions": [],
+    "acceptanceCriteria": [
+      "GitHub storage is removed from primary storage provider options",
+      "GitHub integration is moved to external sync/integration layer",
+      "Clear separation between primary storage (SQLite/PostgreSQL) and external sync systems",
+      "GitHub sync works bidirectionally with primary database",
+      "Configuration updated to reflect GitHub as integration, not storage",
+      "Documentation clarifies GitHub's role as external integration"
+    ],
+    "risks": []
+  },
+  "aiContext": {
+    "currentSummary": "",
+    "keyInsights": [
+      "GitHub storage currently exists in packages/core/src/storage/providers/",
+      "Configuration treats GitHub as storage type rather than integration",
+      "Need to move GitHub functionality to integration layer",
+      "Should maintain bidirectional sync capabilities"
+    ],
+    "openQuestions": [],
+    "relatedPatterns": [],
+    "suggestedNextSteps": [],
+    "lastAIUpdate": "2025-07-27T15:00:16.197Z",
+    "contextVersion": 1
+  }
+}
