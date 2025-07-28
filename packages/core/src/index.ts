@@ -15,3 +15,4 @@ export * from './types/index.js';
 
 // Validation
 export * from './validation/project-schemas.js';
+export * from './validation/devlog-schemas.js';

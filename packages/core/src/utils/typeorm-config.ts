@@ -8,9 +8,11 @@ import {
   ChatDevlogLinkEntity,
   ChatMessageEntity,
   ChatSessionEntity,
+  DevlogDependencyEntity,
   DevlogEntryEntity,
   DevlogNoteEntity,
-} from '../entities';
+  ProjectEntity,
+} from '../entities/index.js';
 
 /**
  * Configuration options for TypeORM storage
@@ -33,34 +35,26 @@ export interface TypeORMStorageOptions {
 }
 
 /**
- * Create a cache key for DataSource based on configuration
- */
-function createCacheKey(options: TypeORMStorageOptions): string {
-  if (options.type === 'postgres' && options.url) {
-    return `postgres-${options.url}`;
-  }
-  if (options.type === 'sqlite') {
-    return `sqlite-${options.database_path || ':memory:'}`;
-  }
-  return `${options.type}-${options.host}-${options.port}-${options.database}`;
-}
-
-/**
  * Create TypeORM DataSource based on storage options
  * Uses caching to prevent duplicate connections in development
  */
-export function createDataSource(
-  options?: TypeORMStorageOptions,
-  entities?: Function[],
-): DataSource {
+export function createDataSource({
+  options,
+  entities,
+}: {
+  options?: TypeORMStorageOptions;
+  entities?: Function[];
+}): DataSource {
   if (!options) {
     options = parseTypeORMConfig(); // Fallback to environment-based configuration
   }
 
   const baseConfig: Partial<DataSourceOptions> = {
     entities: entities || [
+      ProjectEntity,
       DevlogEntryEntity,
       DevlogNoteEntity,
+      DevlogDependencyEntity,
       ChatSessionEntity,
       ChatMessageEntity,
       ChatDevlogLinkEntity,

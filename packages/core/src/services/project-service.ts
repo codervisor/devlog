@@ -9,7 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 import type { ProjectMetadata } from '../types/project.js';
 import { ProjectEntity } from '../entities/project.entity.js';
 import { createDataSource } from '../utils/typeorm-config.js';
-import { ProjectValidator, type CreateProjectRequest, type UpdateProjectRequest } from '../validation/project-schemas.js';
+import { ProjectValidator } from '../validation/project-schemas.js';
 
 export class ProjectService {
   private static instance: ProjectService | null = null;
@@ -18,7 +18,7 @@ export class ProjectService {
   private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.database = createDataSource();
+    this.database = createDataSource({ entities: [ProjectEntity] });
     this.repository = this.database.getRepository(ProjectEntity);
   }
 
@@ -34,10 +34,18 @@ export class ProjectService {
       return this.initPromise; // Return existing initialization promise
     }
 
-    // Create default project if it doesn't exist
-    this.initPromise = this.createDefaultProject();
-
+    this.initPromise = this._initialize();
     return this.initPromise;
+  }
+
+  private async _initialize(): Promise<void> {
+    // Initialize the DataSource first
+    if (!this.database.isInitialized) {
+      await this.database.initialize();
+    }
+
+    // Create default project if it doesn't exist
+    await this.createDefaultProject();
   }
 
   /**
@@ -85,24 +93,24 @@ export class ProjectService {
   }
 
   async create(
-    projectData: unknown,
+    project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
   ): Promise<ProjectMetadata> {
     // Validate input data
-    const validation = ProjectValidator.validateCreateRequest(projectData);
+    const validation = ProjectValidator.validateCreateRequest(project);
     if (!validation.success) {
       throw new Error(`Invalid project data: ${validation.errors.join(', ')}`);
     }
 
-    const project = validation.data;
+    const validatedProject = validation.data;
 
     // Check for duplicate project name
     const uniqueCheck = await ProjectValidator.validateUniqueProjectName(
-      project.name,
+      validatedProject.name,
       undefined,
       async (name) => {
         const existing = await this.repository.findOne({ where: { name } });
         return !!existing;
-      }
+      },
     );
 
     if (!uniqueCheck.success) {
@@ -110,13 +118,13 @@ export class ProjectService {
     }
 
     // Create and save new project entity
-    const entity = ProjectEntity.fromProjectData(project);
+    const entity = ProjectEntity.fromProjectData(validatedProject);
     const savedEntity = await this.repository.save(entity);
 
     return savedEntity.toProjectMetadata();
   }
 
-  async update(id: number, updatesData: unknown): Promise<ProjectMetadata> {
+  async update(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
     // Validate project ID
     const idValidation = ProjectValidator.validateProjectId(id);
     if (!idValidation.success) {
@@ -124,12 +132,12 @@ export class ProjectService {
     }
 
     // Validate update data
-    const validation = ProjectValidator.validateUpdateRequest(updatesData);
+    const validation = ProjectValidator.validateUpdateRequest(updates);
     if (!validation.success) {
       throw new Error(`Invalid update data: ${validation.errors.join(', ')}`);
     }
 
-    const updates = validation.data;
+    const validatedUpdates = validation.data;
 
     const entity = await this.repository.findOne({ where: { id } });
     if (!entity) {
@@ -137,16 +145,16 @@ export class ProjectService {
     }
 
     // Check for duplicate project name if name is being updated
-    if (updates.name && updates.name !== entity.name) {
+    if (validatedUpdates.name && validatedUpdates.name !== entity.name) {
       const uniqueCheck = await ProjectValidator.validateUniqueProjectName(
-        updates.name,
+        validatedUpdates.name,
         id,
         async (name, excludeId) => {
-          const existing = await this.repository.findOne({ 
-            where: { name } 
+          const existing = await this.repository.findOne({
+            where: { name },
           });
           return !!existing && existing.id !== excludeId;
-        }
+        },
       );
 
       if (!uniqueCheck.success) {
@@ -155,7 +163,7 @@ export class ProjectService {
     }
 
     // Update entity
-    entity.updateFromProjectData(updates);
+    entity.updateFromProjectData(validatedUpdates);
     const savedEntity = await this.repository.save(entity);
 
     return savedEntity.toProjectMetadata();

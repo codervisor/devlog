@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
-import { ApiValidator, CreateProjectBodySchema } from '@/schemas';
+import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -23,17 +23,23 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
   try {
-    // Validate request body
+    // Validate request body (HTTP layer validation)
     const bodyValidation = await ApiValidator.validateJsonBody(request, CreateProjectBodySchema);
     if (!bodyValidation.success) {
       return bodyValidation.response;
     }
 
+    // Transform to service layer type (with additional validation)
+    const serviceData = ApiValidator.transformForService(
+      bodyValidation.data, 
+      WebToServiceProjectCreateSchema
+    );
+
     const projectService = ProjectService.getInstance();
     await projectService.initialize();
 
     // Create project (service layer will perform business logic validation)
-    const createdProject = await projectService.create(bodyValidation.data);
+    const createdProject = await projectService.create(serviceData);
 
     return NextResponse.json(createdProject, { status: 201 });
   } catch (error) {
