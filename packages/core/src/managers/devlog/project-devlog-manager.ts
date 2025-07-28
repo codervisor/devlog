@@ -33,6 +33,7 @@ export interface ProjectDevlogManagerOptions {
 export class ProjectDevlogManager {
   private storageProvider: StorageProvider | null = null;
   private initialized = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor(private options: ProjectDevlogManagerOptions) {}
 
@@ -40,12 +41,26 @@ export class ProjectDevlogManager {
    * Initialize the devlog manager
    */
   async initialize(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      console.log('🔄 ProjectDevlogManager already initialized, skipping...');
+      return;
+    }
+
+    console.log('🚀 Initializing ProjectDevlogManager...');
+
+    if (this.options.projectContext) {
+      console.log(`📂 Project context: ${this.options.projectContext.projectId}`);
+    } else {
+      console.log('📂 No project context configured');
+    }
+
+    console.log(`💾 Storage type: ${this.options.storageConfig.type}`);
 
     this.storageProvider = await StorageProviderFactory.create(this.options.storageConfig);
     await this.storageProvider.initialize();
 
     this.initialized = true;
+    console.log('✅ ProjectDevlogManager initialized successfully');
   }
 
   /**

@@ -11,7 +11,7 @@
  */
 export interface ProjectMetadata {
   /** Unique project identifier */
-  id: string;
+  id: number;
 
   /** Human-readable project name */
   name: string;
@@ -30,9 +30,6 @@ export interface ProjectMetadata {
 
   /** Repository/codebase URL (optional) */
   repositoryUrl?: string;
-
-  /** Project tags for organization */
-  tags?: string[];
 }
 
 /**
@@ -60,7 +57,7 @@ export interface ProjectSettings {
  */
 export interface ProjectContext {
   /** Current project ID */
-  projectId: string;
+  projectId: number;
 
   /** Current project metadata */
   project: ProjectMetadata;
@@ -81,39 +78,39 @@ export interface ProjectManager {
   /**
    * Get project by ID
    */
-  getProject(id: string): Promise<ProjectMetadata | null>;
+  getProject(id: number): Promise<ProjectMetadata | null>;
 
   /**
    * Create a new project
    */
   createProject(
-    project: Omit<ProjectMetadata, 'createdAt' | 'lastAccessedAt'>,
+    project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
   ): Promise<ProjectMetadata>;
 
   /**
    * Update project metadata
    */
-  updateProject(id: string, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata>;
+  updateProject(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata>;
 
   /**
    * Delete a project and all its data
    */
-  deleteProject(id: string): Promise<void>;
+  deleteProject(id: number): Promise<void>;
 
   /**
    * Get the default project ID
    */
-  getDefaultProject(): Promise<string>;
+  getDefaultProject(): Promise<number>;
 
   /**
    * Set the default project
    */
-  setDefaultProject(id: string): Promise<void>;
+  setDefaultProject(id: number): Promise<void>;
 
   /**
    * Switch to a project and return context
    */
-  switchToProject(id: string): Promise<ProjectContext>;
+  switchToProject(id: number): Promise<ProjectContext>;
 
   /**
    * Get current project context
@@ -137,10 +134,10 @@ export interface DevlogOperationContext {
  */
 export interface ProjectsConfig {
   /** Default project ID to use when none specified */
-  defaultProject: string;
+  defaultProject: number;
 
   /** Map of project ID to project metadata */
-  projects: Record<string, ProjectMetadata>;
+  projects: Record<number, ProjectMetadata>;
 
   /** Global settings that apply to all projects */
   globalSettings?: {
