@@ -53,7 +53,7 @@
     "typeorm": "0.3.25",
     "ws": "^8.14.2",
     "zod": "^3.25.67",
-    "@tailwindcss/postcss": "4.1.11"
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
@@ -68,7 +68,6 @@
     "postcss": "^8.5.6",
     "recharts": "^2.10.3",
     "rimraf": "^5.0.5",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5.3.3"
   },
   "keywords": [
