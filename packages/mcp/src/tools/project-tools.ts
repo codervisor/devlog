@@ -107,7 +107,7 @@ export async function handleGetCurrentProject(adapter: any) {
 ID: ${currentProject.id}
 Description: ${currentProject.description || 'No description'}
 Created: ${new Date(currentProject.createdAt).toLocaleDateString()}
-Updated: ${new Date(currentProject.updatedAt).toLocaleDateString()}
+Updated: ${new Date(currentProject.lastAccessedAt).toLocaleDateString()}
 
 Note: This is the MCP server's in-memory current project. Web app project may differ.`;
 
@@ -157,7 +157,7 @@ export async function handleSwitchProject(adapter: any, args: { projectId: strin
 ID: ${targetProject.id}
 Description: ${targetProject.description || 'No description'}
 Created: ${new Date(targetProject.createdAt).toLocaleDateString()}
-Updated: ${new Date(targetProject.updatedAt).toLocaleDateString()}
+Updated: ${new Date(targetProject.lastAccessedAt).toLocaleDateString()}
 
 Note: This only affects the MCP server's current project. Web app project is managed separately.`;
 

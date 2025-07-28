@@ -1,6 +1,6 @@
 /**
- * MCP Adapter using HTTP API client instead of direct core access
- * This implements the new architecture where MCP communicates through web API
+ * MCP Adapter using HTTP API client
+ * Simplified version that only uses devlog operations through the web API
  */
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -11,8 +11,6 @@ import {
 } from '../api/devlog-api-client.js';
 import type {
   DevlogEntry,
-  WorkspaceMetadata,
-  WorkspaceContext,
   CreateDevlogRequest,
   UpdateDevlogRequest,
   DevlogFilter,
@@ -32,32 +30,31 @@ import type {
   GetContextForAIArgs,
   DiscoverRelatedDevlogsArgs,
   UpdateAIContextArgs,
-} from '../types/index.js';
+} from '../types/tool-args.js';
 
 export interface MCPApiAdapterConfig {
   /** Configuration for the underlying API client */
   apiClient: DevlogApiClientConfig;
-  /** Default workspace ID to use */
-  defaultWorkspaceId?: string;
+  /** Default project ID to use */
+  defaultProjectId?: string;
   /** Whether to automatically detect web service URL */
   autoDiscoverWebService?: boolean;
 }
 
 /**
  * MCP Adapter that communicates through HTTP API instead of direct core access
- * This maintains the same interface as the original MCPDevlogAdapter but uses HTTP
  */
 export class MCPApiAdapter {
   private apiClient: DevlogApiClient;
+  private currentProjectId: string;
   private initialized = false;
-  private currentWorkspaceId: string | null = null;
 
   constructor(config: MCPApiAdapterConfig) {
     this.apiClient = new DevlogApiClient(config.apiClient);
-    this.currentWorkspaceId = config.defaultWorkspaceId || 'default';
+    this.currentProjectId = config.defaultProjectId || 'default';
 
-    if (this.currentWorkspaceId) {
-      this.apiClient.setCurrentWorkspace(this.currentWorkspaceId);
+    if (this.currentProjectId) {
+      this.apiClient.setCurrentProject(this.currentProjectId);
     }
   }
 
@@ -68,176 +65,84 @@ export class MCPApiAdapter {
     if (this.initialized) return;
 
     try {
-      // Test connection to the web API
-      const connectionOk = await this.apiClient.testConnection();
-      if (!connectionOk) {
-        throw new Error('Failed to connect to devlog web API');
-      }
-
-      // If we have a default workspace, verify it exists
-      if (this.currentWorkspaceId) {
-        try {
-          await this.apiClient.switchToWorkspace(this.currentWorkspaceId);
-        } catch (error) {
-          console.warn(`Default workspace '${this.currentWorkspaceId}' not available:`, error);
-          // Continue without workspace - tools will handle this
-          this.currentWorkspaceId = null;
-        }
-      }
-
+      // Test connection to the API
+      await this.apiClient.healthCheck();
+      console.log('✅ MCP API adapter initialized successfully');
       this.initialized = true;
-      console.log('MCP API Adapter initialized successfully');
     } catch (error) {
+      console.error('❌ Failed to initialize MCP API adapter:', error);
       throw new Error(
-        `Failed to initialize MCP API Adapter: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to connect to devlog API: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
   /**
-   * Cleanup resources
+   * Get the current project ID
    */
-  async dispose(): Promise<void> {
-    this.initialized = false;
-    // API client doesn't have persistent connections to clean up
+  getCurrentProjectId(): string {
+    return this.currentProjectId;
   }
 
   /**
-   * Get the current workspace ID (in-memory only)
+   * Set the current project ID
    */
-  getCurrentWorkspaceId(): string | null {
-    return this.currentWorkspaceId;
+  setCurrentProjectId(projectId: string): void {
+    this.currentProjectId = projectId;
+    this.apiClient.setCurrentProject(projectId);
   }
 
   /**
-   * Set the current workspace ID (in-memory only)
+   * Get the underlying API client (for project tools)
    */
-  setCurrentWorkspaceId(workspaceId: string): void {
-    this.currentWorkspaceId = workspaceId;
-    this.apiClient.setCurrentWorkspace(workspaceId);
+  get manager(): DevlogApiClient {
+    return this.apiClient;
   }
 
-  /**
-   * Convert API client errors to MCP-compatible format
-   */
-  private handleApiError(error: unknown, operation: string): never {
-    if (error instanceof DevlogApiClientError) {
-      throw new Error(`${operation} failed: ${error.message}`);
-    }
-
-    let message: string;
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'Unknown error';
-    }
-
-    throw new Error(`${operation} failed: ${message}`);
-  }
-
-  // === Tool Implementation Methods ===
-
-  /**
-   * Create a new devlog entry
-   */
+  // Devlog Operations
   async createDevlog(args: CreateDevlogArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
-      // Convert MCP args to API request format
-      const request: CreateDevlogRequest = {
-        title: args.title,
-        type: args.type,
-        description: args.description,
-        priority: args.priority,
-        businessContext: args.businessContext,
-        technicalContext: args.technicalContext,
-        acceptanceCriteria: args.acceptanceCriteria,
-        initialInsights: args.initialInsights,
-        relatedPatterns: args.relatedPatterns,
-      };
-
-      const entry = await this.apiClient.createDevlog(request);
+      const entry = await this.apiClient.createDevlog(args as CreateDevlogRequest);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nStatus: ${entry.status}\nPriority: ${entry.priority}`,
+            text: `Created devlog entry: ${entry.id}\nTitle: ${entry.title}\nType: ${entry.type}\nPriority: ${entry.priority}\nStatus: ${entry.status}`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Create devlog');
+      return this.handleError('Failed to create devlog', error);
     }
   }
 
-  /**
-   * Update an existing devlog entry
-   */
   async updateDevlog(args: UpdateDevlogArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
-      // Convert MCP args to API request format, filtering out undefined values
-      const updateData: UpdateDevlogRequest = {
-        id: args.id,
-        ...(args.status !== undefined && { status: args.status }),
-        ...(args.priority !== undefined && { priority: args.priority }),
-        ...(args.blockers !== undefined && { blockers: args.blockers }),
-        ...(args.nextSteps !== undefined && { nextSteps: args.nextSteps }),
-        ...(args.files !== undefined && { files: args.files }),
-        ...(args.businessContext !== undefined && { businessContext: args.businessContext }),
-        ...(args.technicalContext !== undefined && { technicalContext: args.technicalContext }),
-        ...(args.acceptanceCriteria !== undefined && {
-          acceptanceCriteria: args.acceptanceCriteria,
-        }),
-        ...(args.initialInsights !== undefined && { initialInsights: args.initialInsights }),
-        ...(args.relatedPatterns !== undefined && { relatedPatterns: args.relatedPatterns }),
-        ...(args.currentSummary !== undefined && { currentSummary: args.currentSummary }),
-        ...(args.keyInsights !== undefined && { keyInsights: args.keyInsights }),
-        ...(args.openQuestions !== undefined && { openQuestions: args.openQuestions }),
-        ...(args.suggestedNextSteps !== undefined && {
-          suggestedNextSteps: args.suggestedNextSteps,
-        }),
-      };
-
-      const entry = await this.apiClient.updateDevlog(args.id, updateData);
+      const entry = await this.apiClient.updateDevlog(args.id, args as UpdateDevlogRequest);
 
       return {
         content: [
           {
             type: 'text',
-            text: `Updated devlog entry: ${entry.id}\nTitle: ${entry.title}\nStatus: ${entry.status}\nLast updated: ${entry.updatedAt}`,
+            text: `Updated devlog entry: ${entry.id}\nTitle: ${entry.title}\nStatus: ${entry.status}\nLast Updated: ${entry.updatedAt}`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Update devlog');
+      return this.handleError('Failed to update devlog', error);
     }
   }
 
-  /**
-   * Get a devlog entry by ID
-   */
   async getDevlog(args: GetContextForAIArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
       const entry = await this.apiClient.getDevlog(args.id);
-
-      if (!entry) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Devlog entry ${args.id} not found`,
-            },
-          ],
-        };
-      }
 
       return {
         content: [
@@ -248,312 +153,160 @@ export class MCPApiAdapter {
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Get devlog');
+      return this.handleError(`Failed to get devlog ${args.id}`, error);
     }
   }
 
-  /**
-   * List devlog entries with optional filtering - supports both direct filter and args object
-   */
   async listDevlogs(args: ListDevlogsArgs = {}): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
+    await this.ensureInitialized();
 
-      // Convert MCP args to API filter format, filtering out undefined values
+    try {
       const filter: DevlogFilter = {
-        ...(args.status && { status: [args.status] }),
-        ...(args.type && { type: [args.type] }),
-        ...(args.priority && { priority: [args.priority] }),
-        ...(args.archived !== undefined && { archived: args.archived }),
-        ...(args.page || args.limit || args.sortBy
-          ? {
-              pagination: {
-                ...(args.page !== undefined && { page: args.page }),
-                ...(args.limit !== undefined && { limit: args.limit }),
-                ...(args.sortBy !== undefined && { sortBy: args.sortBy }),
-                sortOrder: args.sortOrder || 'desc',
-              },
-            }
-          : {}),
+        status: args.status ? [args.status] : undefined,
+        type: args.type ? [args.type] : undefined,
+        priority: args.priority ? [args.priority] : undefined,
+        archived: args.archived,
+        pagination:
+          args.page || args.limit || args.sortBy
+            ? {
+                page: args.page,
+                limit: args.limit,
+                sortBy: args.sortBy,
+                sortOrder: args.sortOrder,
+              }
+            : undefined,
       };
 
       const result = await this.apiClient.listDevlogs(filter);
+      const entries = result.items;
+
+      if (entries.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'No devlog entries found matching the criteria.',
+            },
+          ],
+        };
+      }
+
+      const summary = entries
+        .map(
+          (entry: DevlogEntry) =>
+            `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority}) - ${entry.id}`,
+        )
+        .join('\n');
+
+      let resultText = `Found ${entries.length} devlog entries`;
+      if (result.pagination) {
+        resultText += ` (page ${result.pagination.page} of ${result.pagination.totalPages}, ${result.pagination.total} total)`;
+      }
+      resultText += `:\n\n${summary}`;
 
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(result, null, 2),
+            text: resultText,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'List devlogs');
+      return this.handleError('Failed to list devlogs', error);
     }
   }
 
-  /**
-   * Search devlog entries - supports both separate args and args object
-   */
   async searchDevlogs(args: SearchDevlogsArgs): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
+    await this.ensureInitialized();
 
-      // Convert MCP args to API call format
-      const searchFilter: DevlogFilter = {
+    try {
+      const filter: DevlogFilter = {
         status: args.status ? [args.status] : undefined,
         type: args.type ? [args.type] : undefined,
         priority: args.priority ? [args.priority] : undefined,
         archived: args.archived,
       };
 
-      const result = await this.apiClient.searchDevlogs(args.query, searchFilter);
+      const result = await this.apiClient.searchDevlogs(args.query, filter);
+      const entries = result.items;
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Search devlogs');
-    }
-  }
-
-  /**
-   * Archive (soft delete) a devlog entry - supports both direct ID and args object
-   */
-  async archiveDevlog(
-    idOrArgs: string | number | { id: string | number },
-  ): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      const id = typeof idOrArgs === 'object' ? idOrArgs.id : idOrArgs;
-      await this.apiClient.archiveDevlog(id);
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Archived devlog entry: ${id}`,
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Archive devlog');
-    }
-  }
-
-  // === Workspace Operations ===
-
-  /**
-   * List all available workspaces
-   */
-  async listWorkspaces(): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      const result = await this.apiClient.listWorkspaces();
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'List workspaces');
-    }
-  }
-
-  /**
-   * Get current workspace context
-   */
-  async getCurrentWorkspace(): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      const workspace = await this.apiClient.getCurrentWorkspace();
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: workspace ? JSON.stringify(workspace, null, 2) : 'No current workspace',
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Get current workspace');
-    }
-  }
-
-  /**
-   * Switch to a different workspace (client-side only)
-   */
-  async switchToWorkspace(workspaceId: string): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      // First verify the workspace exists
-      const workspaceResult = await this.listWorkspaces();
-      const workspaces = JSON.parse(workspaceResult.content[0].text as string);
-      const targetWorkspace = workspaces.workspaces.find((ws: any) => ws.id === workspaceId);
-
-      if (!targetWorkspace) {
+      if (entries.length === 0) {
         return {
           content: [
             {
               type: 'text',
-              text: `Workspace '${workspaceId}' not found. Available workspaces: ${workspaces.workspaces.map((ws: any) => ws.id).join(', ')}`,
+              text: `No devlog entries found matching query: "${args.query}"`,
             },
           ],
-          isError: true,
         };
       }
 
-      // Switch workspace client-side only
-      this.apiClient.switchToWorkspace(workspaceId);
-      this.currentWorkspaceId = workspaceId;
+      const summary = entries
+        .map(
+          (entry: DevlogEntry) =>
+            `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority}) - ${entry.id}`,
+        )
+        .join('\n');
 
       return {
         content: [
           {
             type: 'text',
-            text: `Switched to workspace: ${workspaceId}\nName: ${targetWorkspace.name}\nDescription: ${targetWorkspace.description || 'No description'}`,
+            text: `Found ${entries.length} devlog entries matching "${args.query}":\n\n${summary}`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Switch workspace');
+      return this.handleError('Failed to search devlogs', error);
     }
   }
 
-  /**
-   * Create a new workspace
-   */
-  async createWorkspace(
-    workspace: Omit<WorkspaceMetadata, 'createdAt' | 'lastAccessedAt'>,
-    storage: any,
-  ): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      const created = await this.apiClient.createWorkspace(workspace, storage);
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Created workspace: ${created.id}\n${JSON.stringify(created, null, 2)}`,
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Create workspace');
-    }
-  }
-
-  // === Batch Operations ===
-
-  /**
-   * Add note to a devlog entry - supports both separate args and args object
-   */
   async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
-      const result = await this.apiClient.batchAddNotes([
-        {
-          id: args.id,
-          note: args.note,
-          category: args.category || 'progress',
-          codeChanges: args.codeChanges,
-          files: args.files,
-        },
-      ]);
-
-      const entry = result[0];
+      const entry = await this.apiClient.addDevlogNote(
+        args.id,
+        args.note,
+        args.category,
+        args.files,
+        args.codeChanges,
+      );
 
       return {
         content: [
           {
             type: 'text',
-            text: `Added note to devlog ${entry?.id}:\n"${args.note}"\nTotal notes: ${entry?.notes?.length || 0}`,
+            text: `Added ${args.category || 'progress'} note to devlog '${entry.id}':\n${args.note}\n\nTotal notes: ${entry.notes?.length || 0}`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Add devlog note');
+      return this.handleError('Failed to add devlog note', error);
     }
   }
 
-  // === Missing Methods from Original Adapter ===
-
-  /**
-   * Unarchive a devlog entry
-   */
-  async unarchiveDevlog(args: { id: number }): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      // Note: The web API doesn't have a direct unarchive endpoint
-      // We'll need to update the devlog to set archived: false
-      const entry = await this.apiClient.updateDevlog(args.id, {
-        id: args.id,
-        archived: false,
-      } as UpdateDevlogRequest);
-
-      if (!entry) {
-        throw new Error(`Devlog entry ${args.id} not found`);
-      }
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Unarchived devlog '${entry.id}': ${entry.title}`,
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Unarchive devlog');
-    }
-  }
-
-  /**
-   * Update devlog with note in one operation
-   */
   async updateDevlogWithNote(args: UpdateDevlogWithNoteArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
-      // First update the devlog fields
-      const updates: any = {};
-      if (args.status) updates.status = args.status;
-      if (args.priority) updates.priority = args.priority;
-
-      if (Object.keys(updates).length > 0) {
-        await this.apiClient.updateDevlog(args.id, updates);
+      // First update the devlog fields if provided
+      if (args.status || args.priority) {
+        await this.apiClient.updateDevlog(args.id, {
+          status: args.status,
+          priority: args.priority,
+        } as UpdateDevlogRequest);
       }
 
       // Then add the note
-      const result = await this.apiClient.batchAddNotes([
-        {
-          id: args.id,
-          note: args.note,
-          category: args.category || 'progress',
-          codeChanges: args.codeChanges,
-          files: args.files,
-        },
-      ]);
-
-      const entry = result[0];
+      const entry = await this.apiClient.addDevlogNote(
+        args.id,
+        args.note,
+        args.category,
+        args.files,
+        args.codeChanges,
+      );
 
       return {
         content: [
@@ -564,82 +317,24 @@ export class MCPApiAdapter {
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Update devlog with note');
+      return this.handleError('Failed to update devlog with note', error);
     }
   }
 
-  /**
-   * Add a decision to a devlog entry
-   */
-  async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      // Get the current devlog to update its decisions
-      const currentEntry = await this.apiClient.getDevlog(args.id);
-      if (!currentEntry) {
-        throw new Error(`Devlog entry '${args.id}' not found`);
-      }
-
-      const decision = {
-        id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        decision: args.decision,
-        rationale: args.rationale,
-        alternatives: args.alternatives || [],
-        decisionMaker: args.decisionMaker,
-      };
-
-      // For now, we'll skip decisions since the context structure changed
-      // TODO: Re-implement decision tracking if needed
-      const updatedEntry = await this.apiClient.updateDevlog(args.id, {
-        id: args.id,
-        // Note: context updates might not be supported directly
-        // We'll add the decision as a note instead
-      } as UpdateDevlogRequest);
-
-      // Add the decision as a structured note
-      await this.apiClient.batchAddNotes([
-        {
-          id: args.id,
-          note: `**Decision Made**: ${args.decision}\n\n**Rationale**: ${args.rationale}\n\n**Decision Maker**: ${args.decisionMaker}${args.alternatives ? `\n\n**Alternatives Considered**: ${args.alternatives.join(', ')}` : ''}`,
-          category: 'solution',
-        },
-      ]);
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Added decision to devlog '${args.id}':\nDecision: ${args.decision}\nRationale: ${args.rationale}\nDecision Maker: ${args.decisionMaker}`,
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Add decision');
-    }
-  }
-
-  /**
-   * Complete a devlog entry
-   */
   async completeDevlog(args: CompleteDevlogArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
+      // Update status to done
+      const entry = await this.apiClient.updateDevlog(args.id, {
+        status: 'done',
+        closedAt: new Date().toISOString(),
+      } as any);
 
-      const updates: any = { status: 'done' };
+      // Add completion note if provided
       if (args.summary) {
-        // Add completion summary as a note
-        await this.apiClient.batchAddNotes([
-          {
-            id: args.id,
-            note: `Completion Summary: ${args.summary}`,
-            category: 'solution',
-          },
-        ]);
+        await this.apiClient.addDevlogNote(args.id, `Completed: ${args.summary}`, 'progress');
       }
-
-      const entry = await this.apiClient.updateDevlog(args.id, updates);
 
       return {
         content: [
@@ -652,30 +347,24 @@ export class MCPApiAdapter {
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Complete devlog');
+      return this.handleError('Failed to complete devlog', error);
     }
   }
 
-  /**
-   * Close a devlog entry (set to cancelled)
-   */
   async closeDevlog(args: CloseDevlogArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
+      // Update status to cancelled
+      const entry = await this.apiClient.updateDevlog(args.id, {
+        status: 'cancelled',
+        closedAt: new Date().toISOString(),
+      } as any);
 
-      const updates: any = { status: 'cancelled' };
+      // Add closure note if provided
       if (args.reason) {
-        // Add closure reason as a note
-        await this.apiClient.batchAddNotes([
-          {
-            id: args.id,
-            note: `Closure Reason: ${args.reason}`,
-            category: 'feedback',
-          },
-        ]);
+        await this.apiClient.addDevlogNote(args.id, `Closed: ${args.reason}`, 'feedback');
       }
-
-      const entry = await this.apiClient.updateDevlog(args.id, updates);
 
       return {
         content: [
@@ -686,40 +375,62 @@ export class MCPApiAdapter {
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Close devlog');
+      return this.handleError('Failed to close devlog', error);
     }
   }
 
-  /**
-   * Get active context - list of active devlog entries
-   */
-  async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
+  async archiveDevlog(args: { id: number }): Promise<CallToolResult> {
+    await this.ensureInitialized();
 
-      const filter = {
-        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'] as any[],
-        pagination: {
-          limit: args.limit || 10,
-        },
+    try {
+      const entry = await this.apiClient.archiveDevlog(args.id);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Archived devlog '${entry.id}': ${entry.title}`,
+          },
+        ],
+      };
+    } catch (error) {
+      return this.handleError('Failed to archive devlog', error);
+    }
+  }
+
+  async unarchiveDevlog(args: { id: number }): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      const entry = await this.apiClient.unarchiveDevlog(args.id);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Unarchived devlog '${entry.id}': ${entry.title}`,
+          },
+        ],
+      };
+    } catch (error) {
+      return this.handleError('Failed to unarchive devlog', error);
+    }
+  }
+
+  async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      const filter: DevlogFilter = {
+        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'],
+        pagination: args.limit ? { limit: args.limit } : undefined,
       };
 
       const result = await this.apiClient.listDevlogs(filter);
-
-      if (!result || !result.items) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'No active devlog entries found.',
-            },
-          ],
-        };
-      }
-
       const entries = result.items;
+      const limited = entries.slice(0, args.limit || 10);
 
-      if (entries.length === 0) {
+      if (limited.length === 0) {
         return {
           content: [
             {
@@ -730,13 +441,14 @@ export class MCPApiAdapter {
         };
       }
 
-      const summary = entries
-        .map((entry) => {
+      const summary = limited
+        .map((entry: DevlogEntry) => {
           const recentNotes = entry.notes?.slice(-2) || [];
           const notesText =
             recentNotes.length > 0
-              ? `\n  Recent notes: ${recentNotes.map((n) => n.content).join('; ')}`
+              ? `\n  Recent notes: ${recentNotes.map((n: any) => n.content).join('; ')}`
               : '';
+
           return `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority})${notesText}`;
         })
         .join('\n');
@@ -745,98 +457,98 @@ export class MCPApiAdapter {
         content: [
           {
             type: 'text',
-            text: `${entries.length} active devlog entries:\n\n${summary}`,
+            text: `${limited.length} active devlog entries:\n\n${summary}`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Get active context');
+      return this.handleError('Failed to get active context', error);
     }
   }
 
-  /**
-   * Get context for AI - detailed devlog information
-   */
   async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
-    // For now, just delegate to getDevlog since the API client returns full detail
-    return this.getDevlog(args);
+    await this.ensureInitialized();
+
+    try {
+      const entry = await this.apiClient.getDevlog(args.id);
+
+      const context = {
+        id: entry.id,
+        title: entry.title,
+        type: entry.type,
+        status: entry.status,
+        priority: entry.priority,
+        description: entry.description,
+        businessContext: entry.businessContext,
+        technicalContext: entry.technicalContext,
+        acceptanceCriteria: entry.acceptanceCriteria,
+        recentNotes: entry.notes?.slice(-5) || [],
+        totalNotes: entry.notes?.length || 0,
+        createdAt: entry.createdAt,
+        updatedAt: entry.updatedAt,
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(context, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return this.handleError('Failed to get context for AI', error);
+    }
   }
 
-  /**
-   * Update AI context for a devlog entry
-   */
   async updateAIContext(args: UpdateAIContextArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
     try {
-      this.ensureInitialized();
-
-      const updates: any = {};
-      if (args.summary) updates.currentSummary = args.summary;
-      if (args.insights) updates.keyInsights = args.insights;
-      if (args.patterns) updates.relatedPatterns = args.patterns;
-      if (args.questions) updates.openQuestions = args.questions;
-      if (args.nextSteps) updates.suggestedNextSteps = args.nextSteps;
-
-      // Note: AI context updates might not be directly supported
-      // We'll add the AI context as a structured note instead
-      const aiContextNote = Object.entries(updates)
+      // For now, we'll add AI context updates as structured notes
+      const aiContextNote = Object.entries({
+        summary: args.summary,
+        insights: args.insights,
+        nextSteps: args.nextSteps,
+        questions: args.questions,
+        patterns: args.patterns,
+      })
+        .filter(([_, value]) => value !== undefined)
         .map(([key, value]) => `**${key}**: ${Array.isArray(value) ? value.join(', ') : value}`)
         .join('\n\n');
 
       if (aiContextNote) {
-        await this.apiClient.batchAddNotes([
-          {
-            id: args.id,
-            note: `**AI Context Update**\n\n${aiContextNote}`,
-            category: 'idea',
-          },
-        ]);
-      }
-
-      const entry = await this.apiClient.getDevlog(args.id);
-
-      if (!entry) {
-        throw new Error(`Devlog entry '${args.id}' not found`);
+        await this.apiClient.addDevlogNote(
+          args.id,
+          `**AI Context Update**\n\n${aiContextNote}`,
+          'idea',
+        );
       }
 
       return {
         content: [
           {
             type: 'text',
-            text: `Updated AI context for devlog '${entry.title}' (ID: ${entry.id})`,
+            text: `Updated AI context for devlog '${args.id}'`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Update AI context');
+      return this.handleError('Failed to update AI context', error);
     }
   }
 
-  /**
-   * Discover related devlog entries
-   */
   async discoverRelatedDevlogs(args: DiscoverRelatedDevlogsArgs): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
+    await this.ensureInitialized();
 
+    try {
       // Use search to find potentially related entries
       const searchTerms = [args.workDescription, ...(args.keywords || []), args.scope || '']
         .filter(Boolean)
         .join(' ');
 
-      const searchResult = await this.apiClient.searchDevlogs(searchTerms);
-
-      if (!searchResult || !searchResult.items) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `No related devlog entries found for:\nWork: ${args.workDescription}\nType: ${args.workType}\n\n✅ Safe to create a new devlog entry - no overlapping work detected.`,
-            },
-          ],
-        };
-      }
-
-      const entries = searchResult.items;
+      const result = await this.apiClient.searchDevlogs(searchTerms);
+      const entries = result.items;
 
       if (entries.length === 0) {
         return {
@@ -851,7 +563,7 @@ export class MCPApiAdapter {
 
       const analysis = entries
         .slice(0, 10)
-        .map((entry) => {
+        .map((entry: DevlogEntry) => {
           const statusEmoji: Record<string, string> = {
             new: '🆕',
             'in-progress': '🔄',
@@ -863,7 +575,7 @@ export class MCPApiAdapter {
           };
 
           return (
-            `${statusEmoji[entry.status] || '📝'} **${entry.title}** (${entry.type})\n` +
+            `${statusEmoji[entry.status] || '📄'} **${entry.title}** (${entry.type})\n` +
             `   ID: ${entry.id}\n` +
             `   Status: ${entry.status} | Priority: ${entry.priority}\n` +
             `   Description: ${entry.description.substring(0, 150)}${entry.description.length > 150 ? '...' : ''}\n` +
@@ -882,85 +594,52 @@ export class MCPApiAdapter {
               `- Type: ${args.workType}\n` +
               `- Keywords: ${args.keywords?.join(', ') || 'None'}\n` +
               `- Scope: ${args.scope || 'Not specified'}\n\n` +
-              `**Found ${entries.length} related entries:**\n\n${analysis}\n\n` +
+              `**Found ${entries.length} potentially related entries:**\n\n${analysis}\n\n` +
               `⚠️ RECOMMENDATION: Review related entries before creating new work to avoid duplication.`,
           },
         ],
       };
     } catch (error) {
-      this.handleApiError(error, 'Discover related devlogs');
+      return this.handleError('Failed to discover related devlogs', error);
     }
   }
 
-  /**
-   * Get the manager property for compatibility (returns this for API client)
-   */
-  get manager(): any {
+  // Stub implementations for unsupported operations
+  async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
     return {
-      // Provide minimal compatibility interface
-      listWorkspaces: () => this.listWorkspaces(),
-      getCurrentWorkspace: () => this.getCurrentWorkspace(),
-      switchToWorkspace: (id: string) => this.switchToWorkspace(id),
+      content: [
+        {
+          type: 'text',
+          text: `Decision tracking has been simplified and is no longer supported. Use notes with category 'idea' or 'solution' instead.`,
+        },
+      ],
+      isError: true,
     };
   }
 
-  /**
-   * Get workspace statistics
-   */
-  async getWorkspaceStats(): Promise<CallToolResult> {
-    try {
-      this.ensureInitialized();
-
-      const stats = await this.apiClient.getWorkspaceStats();
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(stats, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      this.handleApiError(error, 'Get workspace stats');
-    }
+  async dispose(): Promise<void> {
+    this.initialized = false;
   }
 
-  // === Utility Methods ===
-
-  /**
-   * Ensure adapter is initialized
-   */
-  private ensureInitialized(): void {
+  // Helper methods
+  private async ensureInitialized(): Promise<void> {
     if (!this.initialized) {
-      throw new Error('MCP API Adapter not initialized. Call initialize() first.');
+      await this.initialize();
     }
   }
 
-  /**
-   * Test connection to the web API
-   */
-  async testConnection(): Promise<CallToolResult> {
-    try {
-      const isConnected = await this.apiClient.testConnection();
+  private handleError(message: string, error: unknown): CallToolResult {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`${message}:`, errorMessage);
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `API connection: ${isConnected ? 'Connected' : 'Failed'}`,
-          },
-        ],
-      };
-    } catch (error) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `API connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          },
-        ],
-      };
-    }
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `${message}: ${errorMessage}`,
+        },
+      ],
+      isError: true,
+    };
   }
 }

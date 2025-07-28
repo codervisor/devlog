@@ -27,7 +27,7 @@ export interface CreateDevlogRequest {
 }
 
 export interface UpdateDevlogRequest {
-  id: DevlogId;
+  id?: DevlogId;
   title?: string;
   description?: string;
   type?: DevlogType;
