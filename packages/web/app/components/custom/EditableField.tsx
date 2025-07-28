@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Input, Select, Typography } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit2 } from 'lucide-react';
 import { MarkdownEditor } from './MarkdownEditor';
-import styles from './EditableField.module.css';
-
-const { TextArea } = Input;
-const { Option } = Select;
-const { Text } = Typography;
+import { cn } from '@/lib/utils';
 
 interface EditableFieldProps {
   value: string;
@@ -19,7 +17,7 @@ interface EditableFieldProps {
   placeholder?: string;
   emptyText?: string;
   className?: string;
-  size?: 'small' | 'middle' | 'large';
+  size?: 'sm' | 'default' | 'lg';
   draftMode?: boolean; // When true, doesn't auto-save on blur
   borderless?: boolean; // Use borderless style for input
   children: React.ReactNode;
@@ -34,7 +32,7 @@ export function EditableField({
   placeholder,
   emptyText,
   className,
-  size = 'small',
+  size = 'sm',
   draftMode = true,
   borderless = true,
   children,
@@ -42,7 +40,8 @@ export function EditableField({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [isHovered, setIsHovered] = useState(false);
-  const inputRef = useRef<any>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Update editValue when value prop changes
@@ -52,8 +51,12 @@ export function EditableField({
 
   // Focus input when entering edit mode
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
+    if (isEditing) {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      } else if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
     }
   }, [isEditing]);
 
@@ -68,7 +71,7 @@ export function EditableField({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !multiline) {
+    if (e.key === 'Enter' && !multiline && type !== 'textarea') {
       e.preventDefault();
       handleSave();
     } else if (e.key === 'Escape') {
@@ -98,12 +101,6 @@ export function EditableField({
     setIsEditing(true);
   };
 
-  useEffect(() => {
-    if (type === 'select') {
-      handleBlur();
-    }
-  }, [editValue]);
-
   const renderInput = () => {
     if (type === 'markdown') {
       return (
@@ -120,50 +117,79 @@ export function EditableField({
       );
     }
 
-    const inputProps = {
-      ref: inputRef,
-      value: editValue,
-      onChange: (e: any) => {
-        const newValue = e.target.value;
-        setEditValue(newValue);
-      },
-      onKeyDown: handleKeyPress,
-      onBlur: handleBlur,
-      placeholder,
-    };
-
     if (type === 'select') {
       return (
         <Select
-          {...inputProps}
-          size={size}
-          open={isEditing}
-          onChange={(newValue) => {
+          value={editValue}
+          onValueChange={(newValue) => {
             setEditValue(newValue);
+            if (draftMode) {
+              if (newValue !== value) {
+                onSave(newValue);
+              }
+              setIsEditing(false);
+            }
           }}
-          style={{ width: '100%', borderRadius: '4px', height: '32px' }}
-          variant="borderless"
+          open={isEditing}
+          onOpenChange={setIsEditing}
         >
-          {options.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
+          <SelectTrigger className={cn(
+            "w-full",
+            borderless && "border-none shadow-none bg-transparent",
+            size === 'sm' && "h-8",
+            size === 'lg' && "h-12"
+          )}>
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       );
     } else if (type === 'textarea' || multiline) {
-      return <TextArea {...inputProps} autoSize={{ minRows: 1 }} variant="borderless" />;
+      return (
+        <Textarea
+          ref={textareaRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={cn(
+            "min-h-[32px] resize-none",
+            borderless && "border-none shadow-none bg-transparent focus-visible:ring-0"
+          )}
+        />
+      );
     } else {
-      return <Input {...inputProps} variant="borderless" />;
+      return (
+        <Input
+          ref={inputRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={handleKeyPress}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={cn(
+            borderless && "border-none shadow-none bg-transparent focus-visible:ring-0",
+            size === 'sm' && "h-8",
+            size === 'lg' && "h-12"
+          )}
+        />
+      );
     }
   };
 
   const renderContent = () => {
     if (showEmptyText && (!value || value.trim() === '')) {
       return (
-        <Text type="secondary" className={styles.emptyFieldText}>
+        <span className="text-muted-foreground italic">
           {emptyText}
-        </Text>
+        </span>
       );
     }
 
@@ -172,9 +198,7 @@ export function EditableField({
 
   if (isEditing) {
     return (
-      <div
-        className={`${styles.editableField} ${styles.editing} ${className} ${type === 'select' ? styles.isSelect : ''}`}
-      >
+      <div className={cn("relative", className)}>
         {renderInput()}
       </div>
     );
@@ -186,15 +210,23 @@ export function EditableField({
   return (
     <div
       ref={contentRef}
-      className={`${styles.editableField} ${isHovered ? styles.hovered : ''} ${className} ${borderless ? styles.borderless : ''}`}
+      className={cn(
+        "relative cursor-pointer group hover:bg-muted/20 rounded transition-colors",
+        "p-1 -m-1",
+        borderless && "border-none",
+        className
+      )}
       onClick={handleEnterEdit}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       title="Click to edit"
     >
       {renderContent()}
-      <div className={styles.hoverOverlay}>
-        <EditOutlined className={styles.editIcon} />
+      <div className={cn(
+        "absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity",
+        "bg-background/80 rounded p-1"
+      )}>
+        <Edit2 className="h-3 w-3 text-muted-foreground" />
       </div>
     </div>
   );
