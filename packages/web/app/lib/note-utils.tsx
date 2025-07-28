@@ -64,6 +64,12 @@ export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
     description: 'External feedback from users, customers, stakeholders, or usability testing',
     color: '#722ed1',
   },
+  'acceptance-criteria': {
+    icon: <CheckCircleOutlined style={{ color: '#13c2c2' }} />,
+    label: 'Acceptance Criteria',
+    description: 'Updates on acceptance criteria validation and completion status',
+    color: '#13c2c2',
+  },
 };
 
 /**

@@ -14,7 +14,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@codervisor/devlog-core';
-import { OverviewStats, WorkspaceSwitcher } from '@/components';
+import { OverviewStats, ProjectSwitcher } from '@/components';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
@@ -49,7 +49,7 @@ export function NavigationSidebar({
     if (pathname === '/') return 'dashboard';
     if (pathname === '/devlogs') return 'list';
     if (pathname === '/devlogs/create') return 'create';
-    if (pathname === '/workspaces') return 'workspaces';
+    if (pathname === '/projects') return 'projects';
     if (pathname.startsWith('/devlogs/')) return 'list'; // For individual devlog pages
     return 'dashboard';
   };
@@ -71,8 +71,8 @@ export function NavigationSidebar({
       icon: <PlusOutlined />,
     },
     {
-      key: 'workspaces',
-      label: 'Workspaces',
+      key: 'projects',
+      label: 'Projects',
       icon: <AppstoreOutlined />,
     },
   ];
@@ -90,8 +90,8 @@ export function NavigationSidebar({
       case 'create':
         router.push('/devlogs/create');
         break;
-      case 'workspaces':
-        router.push('/workspaces');
+      case 'projects':
+        router.push('/projects');
         break;
     }
   };
@@ -178,10 +178,10 @@ export function NavigationSidebar({
 
       <div
         className={
-          collapsed ? styles.workspaceSwitcherContainerCollapsed : styles.workspaceSwitcherContainer
+          collapsed ? styles.projectSwitcherContainerCollapsed : styles.projectSwitcherContainer
         }
       >
-        <WorkspaceSwitcher collapsed={collapsed} />
+        <ProjectSwitcher collapsed={collapsed} />
       </div>
 
       <Menu

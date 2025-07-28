@@ -170,9 +170,9 @@ export class DevlogApiClient {
   /**
    * Import chat data to a workspace
    */
-  async importChatData(workspaceId: string, data: ChatImportRequest): Promise<ChatImportResponse> {
+  async importChatData(projectId: string, data: ChatImportRequest): Promise<ChatImportResponse> {
     try {
-      const response = await this.client.post(`/api/workspaces/${workspaceId}/chat/import`, data);
+      const response = await this.client.post(`/api/projects/${projectId}/chat/import`, data);
       return response.data;
     } catch (error) {
       throw error instanceof Error ? error : new Error('Failed to import chat data');
@@ -182,10 +182,10 @@ export class DevlogApiClient {
   /**
    * Get import progress status
    */
-  async getImportProgress(workspaceId: string, importId: string): Promise<ChatProgressResponse> {
+  async getImportProgress(projectId: string, importId: string): Promise<ChatProgressResponse> {
     try {
       const response = await this.client.get(
-        `/api/workspaces/${workspaceId}/chat/import?importId=${importId}`,
+        `/api/projects/${projectId}/chat/import?importId=${importId}`,
       );
       return response.data;
     } catch (error) {
@@ -196,9 +196,9 @@ export class DevlogApiClient {
   /**
    * List workspaces available on the server
    */
-  async listWorkspaces(): Promise<any[]> {
+  async listProjects(): Promise<any[]> {
     try {
-      const response = await this.client.get('/api/workspaces');
+      const response = await this.client.get('/api/projects');
       return response.data.workspaces || [];
     } catch (error) {
       throw error instanceof Error ? error : new Error('Failed to list workspaces');
@@ -208,12 +208,12 @@ export class DevlogApiClient {
   /**
    * Get workspace details
    */
-  async getWorkspace(workspaceId: string): Promise<any> {
+  async getProject(projectId: string): Promise<any> {
     try {
-      const response = await this.client.get(`/api/workspaces/${workspaceId}`);
+      const response = await this.client.get(`/api/projects/${projectId}`);
       return response.data;
     } catch (error) {
-      throw error instanceof Error ? error : new Error(`Failed to get workspace ${workspaceId}`);
+      throw error instanceof Error ? error : new Error(`Failed to get workspace ${projectId}`);
     }
   }
 
@@ -221,7 +221,7 @@ export class DevlogApiClient {
    * Search chat content in a workspace
    */
   async searchChatContent(
-    workspaceId: string,
+    projectId: string,
     query: string,
     options: {
       limit?: number;
@@ -238,7 +238,7 @@ export class DevlogApiClient {
       });
 
       const response = await this.client.get(
-        `/api/workspaces/${workspaceId}/chat/search?${params.toString()}`,
+        `/api/projects/${projectId}/chat/search?${params.toString()}`,
       );
       return response.data;
     } catch (error) {
@@ -249,9 +249,9 @@ export class DevlogApiClient {
   /**
    * Get chat statistics for a workspace
    */
-  async getChatStats(workspaceId: string): Promise<any> {
+  async getChatStats(projectId: string): Promise<any> {
     try {
-      const response = await this.client.get(`/api/workspaces/${workspaceId}/chat/stats`);
+      const response = await this.client.get(`/api/projects/${projectId}/chat/stats`);
       return response.data;
     } catch (error) {
       throw error instanceof Error ? error : new Error('Failed to get chat statistics');

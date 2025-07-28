@@ -4,14 +4,14 @@
  */
 
 import { broadcastUpdate } from './sse-manager';
-import { getSharedWorkspaceManager } from './shared-workspace-manager';
+import { getProjectManager, getAppStorageConfig } from './project-manager';
 
 // Types only - won't be bundled at runtime
-import type { WorkspaceDevlogManager, DevlogEvent } from '@codervisor/devlog-core';
+import type { ProjectDevlogManager, DevlogEvent } from '@codervisor/devlog-core';
 
 class SSEEventBridge {
   private initialized = false;
-  private workspaceManager?: WorkspaceDevlogManager;
+  private projectManager?: any;
 
   /**
    * Initialize the bridge to start listening to devlog events
@@ -30,19 +30,19 @@ class SSEEventBridge {
     const startTime = Date.now();
 
     try {
-      // Use the shared workspace manager instance
-      console.log('[SSE Event Bridge] Getting shared workspace manager...');
+      // Use the project manager instance
+      console.log('[SSE Event Bridge] Getting project manager...');
       const managerStartTime = Date.now();
-      this.workspaceManager = await getSharedWorkspaceManager();
+      this.projectManager = await getProjectManager();
       const managerDuration = Date.now() - managerStartTime;
-      console.log(`[SSE Event Bridge] Workspace manager ready in ${managerDuration}ms`);
+      console.log(`[SSE Event Bridge] Project manager ready in ${managerDuration}ms`);
 
       // Dynamically import to avoid bundling TypeORM in client-side code
       console.log('[SSE Event Bridge] Importing devlog events...');
       const { getDevlogEvents } = await import('@codervisor/devlog-core');
 
       // Get the singleton devlogEvents instance to ensure we listen to the same instance
-      // that WorkspaceDevlogManager emits to
+      // that ProjectDevlogManager emits to
       const devlogEvents = getDevlogEvents();
 
       // Listen to local devlog events (which now include storage events via subscription)
@@ -159,10 +159,10 @@ class SSEEventBridge {
    */
   async cleanup(): Promise<void> {
     if (this.initialized) {
-      // Cleanup WorkspaceDevlogManager
-      if (this.workspaceManager) {
-        await this.workspaceManager.cleanup();
-        this.workspaceManager = undefined;
+      // Cleanup ProjectManager
+      if (this.projectManager) {
+        await this.projectManager.dispose();
+        this.projectManager = undefined;
       }
 
       this.initialized = false;

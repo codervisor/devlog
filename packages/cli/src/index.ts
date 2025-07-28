@@ -4,7 +4,7 @@
  * DevLog CLI - Main Entry Point
  *
  * Command-line interface for streaming chat history to devlog server
- * and managing devlog workspaces.
+ * and managing devlog projects.
  */
 
 import { Command } from 'commander';
@@ -17,12 +17,12 @@ import {
   ChatStatistics,
   CopilotParser,
   SearchResult,
-  WorkspaceDataContainer,
+  ProjectDataContainer,
 } from '@codervisor/devlog-ai';
 import { DevlogApiClient, ChatImportRequest } from './api/devlog-api-client.js';
 import {
-  convertWorkspaceDataToCoreFormat,
-  extractWorkspaceInfo,
+  convertProjectDataToCoreFormat,
+  extractProjectInfo,
   validateConvertedData,
 } from './utils/data-mapper.js';
 import {
@@ -38,7 +38,7 @@ import { loadConfig, ConfigOptions } from './utils/config.js';
 // CLI option interfaces for better type safety
 interface BaseCommandOptions {
   server?: string;
-  workspace?: string;
+  project?: string;
   verbose: boolean;
   config?: string;
 }
@@ -60,10 +60,10 @@ const program = new Command();
 
 program
   .name('devlog')
-  .description('DevLog CLI - Stream chat history and manage devlog workspaces')
+  .description('DevLog CLI - Stream chat history and manage devlog projects')
   .version('0.1.0')
   .option('-s, --server <url>', 'DevLog server URL')
-  .option('-w, --workspace <id>', 'Workspace ID')
+  .option('-w, --project <id>', 'Project ID')
   .option('-c, --config <path>', 'Configuration file path')
   .option('-v, --verbose', 'Show detailed progress', false);
 
@@ -87,16 +87,16 @@ async function setupApiClient(options: BaseCommandOptions): Promise<DevlogApiCli
   });
 }
 
-function getWorkspaceId(options: BaseCommandOptions, config: ConfigOptions): string {
-  const workspaceId = options.workspace || config.workspace || process.env.DEVLOG_WORKSPACE;
-  if (!workspaceId) {
+function getProjectId(options: BaseCommandOptions, config: ConfigOptions): string {
+  const projectId = options.project || config.project || process.env.DEVLOG_PROJECT;
+  if (!projectId) {
     displayError(
       'configuration',
-      'Workspace ID is required. Use --workspace, DEVLOG_WORKSPACE env var, or config file.',
+      'Project ID is required. Use --project, DEVLOG_PROJECT env var, or config file.',
     );
     process.exit(1);
   }
-  return workspaceId;
+  return projectId;
 }
 
 // Chat import command
@@ -120,7 +120,7 @@ program
         try {
           const config = await loadConfig(options.config);
           const apiClient = await setupApiClient(options);
-          const workspaceId = getWorkspaceId(options, config);
+          const projectId = getProjectId(options, config);
 
           // Test connection first
           spinner && (spinner.text = 'Testing server connection...');
@@ -139,9 +139,9 @@ program
           }
 
           const parser = new CopilotParser();
-          const workspaceData = await parser.discoverVSCodeCopilotData();
+          const projectData = await parser.discoverVSCodeCopilotData();
 
-          if (workspaceData.chat_sessions.length === 0) {
+          if (projectData.chat_sessions.length === 0) {
             spinner?.stop();
             displayError('discovery', 'No GitHub Copilot chat data found');
             displayWarning('Make sure VS Code is installed and you have used GitHub Copilot chat');
@@ -149,20 +149,18 @@ program
           }
 
           spinner?.stop();
-          displaySuccess(`Found ${formatCount(workspaceData.chat_sessions.length)} chat sessions`);
+          displaySuccess(`Found ${formatCount(projectData.chat_sessions.length)} chat sessions`);
 
           // Show dry run information
           if (options.dryRun) {
-            const stats = parser.getChatStatistics(workspaceData);
+            const stats = parser.getChatStatistics(projectData);
             displayInfo('DRY RUN - No data will be imported');
             displayChatSummary(stats, [], options.verbose);
             return;
           }
 
           // Convert AI package data to Core package format
-          const convertedData = convertWorkspaceDataToCoreFormat(
-            workspaceData as WorkspaceDataContainer,
-          );
+          const convertedData = convertProjectDataToCoreFormat(projectData as ProjectDataContainer);
 
           // Validate the converted data
           if (!validateConvertedData(convertedData)) {
@@ -176,14 +174,14 @@ program
             sessions: convertedData.sessions,
             messages: convertedData.messages,
             source: options.source,
-            workspaceInfo: extractWorkspaceInfo(workspaceData as WorkspaceDataContainer),
+            projectInfo: extractProjectInfo(projectData as ProjectDataContainer),
           };
 
           // Start import
-          displayInfo(`Importing to workspace: ${workspaceId}`);
+          displayInfo(`Importing to project: ${projectId}`);
           const progressSpinner = ora('Starting import...').start();
 
-          const importResponse = await apiClient.importChatData(workspaceId, importData);
+          const importResponse = await apiClient.importChatData(projectId, importData);
 
           progressSpinner.stop();
           displaySuccess(`Import started: ${importResponse.importId}`);
@@ -204,7 +202,7 @@ program
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
             const progressResponse = await apiClient.getImportProgress(
-              workspaceId,
+              projectId,
               importResponse.importId,
             );
             lastProgress = progressResponse.progress;
@@ -246,9 +244,9 @@ program
         try {
           const config = await loadConfig(options.config);
           const apiClient = await setupApiClient(options);
-          const workspaceId = getWorkspaceId(options, config);
+          const projectId = getProjectId(options, config);
 
-          const stats = await apiClient.getChatStats(workspaceId);
+          const stats = await apiClient.getChatStats(projectId);
 
           displayHeader('DevLog Chat Statistics');
 
@@ -261,7 +259,7 @@ program
             ['Total Sessions', stats.totalSessions?.toString() || '0'],
             ['Total Messages', stats.totalMessages?.toString() || '0'],
             ['Unique Agents', stats.uniqueAgents?.toString() || '0'],
-            ['Workspaces', stats.workspaceCount?.toString() || '0'],
+            ['Projects', stats.projectCount?.toString() || '0'],
           );
 
           if (stats.dateRange?.earliest) {
@@ -294,9 +292,9 @@ program
         try {
           const config = await loadConfig(options.config);
           const apiClient = await setupApiClient(options);
-          const workspaceId = getWorkspaceId(options, config);
+          const projectId = getProjectId(options, config);
 
-          const searchResults = await apiClient.searchChatContent(workspaceId, query, {
+          const searchResults = await apiClient.searchChatContent(projectId, query, {
             limit: parseInt(options.limit, 10),
             caseSensitive: options.caseSensitive,
             searchType: options.searchType,
@@ -327,57 +325,57 @@ program
       }),
   );
 
-// Workspace management commands
+// Project management commands
 program
-  .command('workspace')
-  .description('Workspace management commands')
+  .command('project')
+  .description('Project management commands')
   .addCommand(
     new Command('list')
-      .description('List available workspaces on server')
+      .description('List available projects on server')
       .action(async (options: BaseCommandOptions) => {
         try {
           const apiClient = await setupApiClient(options);
-          const workspaces = await apiClient.listWorkspaces();
+          const projects = await apiClient.listProjects();
 
-          if (workspaces.length === 0) {
-            console.log(chalk.yellow('No workspaces found'));
+          if (projects.length === 0) {
+            console.log(chalk.yellow('No projects found'));
             return;
           }
 
-          displayHeader('Available Workspaces');
+          displayHeader('Available Projects');
 
           const table = new Table({
             head: [chalk.cyan('ID'), chalk.cyan('Name'), chalk.cyan('Status')],
             colWidths: [20, 30, 15],
           });
 
-          for (const workspace of workspaces) {
+          for (const project of projects) {
             table.push([
-              workspace.id || 'N/A',
-              workspace.name || 'Unnamed',
-              workspace.status || 'active',
+              project.id || 'N/A',
+              project.name || 'Unnamed',
+              project.status || 'active',
             ]);
           }
 
           console.log(table.toString());
         } catch (error) {
-          displayError('listing workspaces', error);
+          displayError('listing projects', error);
           process.exit(1);
         }
       }),
   )
   .addCommand(
     new Command('info')
-      .description('Show workspace information')
+      .description('Show project information')
       .action(async (options: BaseCommandOptions) => {
         try {
           const config = await loadConfig(options.config);
           const apiClient = await setupApiClient(options);
-          const workspaceId = getWorkspaceId(options, config);
+          const projectId = getProjectId(options, config);
 
-          const workspace = await apiClient.getWorkspace(workspaceId);
+          const project = await apiClient.getProject(projectId);
 
-          displayHeader(`Workspace: ${workspace.name || workspaceId}`);
+          displayHeader(`Project: ${project.name || projectId}`);
 
           const table = new Table({
             head: [chalk.cyan('Property'), chalk.green('Value')],
@@ -385,22 +383,16 @@ program
           });
 
           table.push(
-            ['ID', workspace.id || 'N/A'],
-            ['Name', workspace.name || 'Unnamed'],
-            ['Status', workspace.status || 'active'],
-            [
-              'Created',
-              workspace.createdAt ? new Date(workspace.createdAt).toLocaleString() : 'N/A',
-            ],
-            [
-              'Updated',
-              workspace.updatedAt ? new Date(workspace.updatedAt).toLocaleString() : 'N/A',
-            ],
+            ['ID', project.id || 'N/A'],
+            ['Name', project.name || 'Unnamed'],
+            ['Status', project.status || 'active'],
+            ['Created', project.createdAt ? new Date(project.createdAt).toLocaleString() : 'N/A'],
+            ['Updated', project.updatedAt ? new Date(project.updatedAt).toLocaleString() : 'N/A'],
           );
 
           console.log(table.toString());
         } catch (error) {
-          displayError('getting workspace info', error);
+          displayError('getting project info', error);
           process.exit(1);
         }
       }),

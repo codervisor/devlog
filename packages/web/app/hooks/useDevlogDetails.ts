@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useProject } from '@/contexts/ProjectContext';
 
 interface UseDevlogDetailsResult {
   devlog: DevlogEntry | null;
@@ -17,7 +17,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
-  const { currentWorkspace } = useWorkspace();
+  const { currentProject } = useProject();
 
   const devlogId = typeof id === 'string' ? parseInt(id, 10) : id;
 
@@ -28,8 +28,8 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       return;
     }
 
-    if (!currentWorkspace) {
-      setError('No workspace selected');
+    if (!currentProject) {
+      setError('No project selected');
       setLoading(false);
       return;
     }
@@ -38,9 +38,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${devlogId}`,
-      );
+      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${devlogId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -58,7 +56,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     } finally {
       setLoading(false);
     }
-  }, [devlogId, currentWorkspace]);
+  }, [devlogId, currentProject]);
 
   // Set up real-time event listeners for this specific devlog
   useEffect(() => {
@@ -93,20 +91,17 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   // CRUD operations for this specific devlog
   const updateDevlog = useCallback(
     async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      if (!currentWorkspace) {
-        throw new Error('No workspace selected');
+      if (!currentProject) {
+        throw new Error('No project selected');
       }
 
-      const response = await fetch(
-        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
+      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify(data),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to update devlog');
@@ -116,21 +111,18 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       setDevlog(updatedDevlog);
       return updatedDevlog;
     },
-    [currentWorkspace],
+    [currentProject],
   );
 
   const deleteDevlog = useCallback(
     async (id: DevlogId) => {
-      if (!currentWorkspace) {
-        throw new Error('No workspace selected');
+      if (!currentProject) {
+        throw new Error('No project selected');
       }
 
-      const response = await fetch(
-        `/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`,
-        {
-          method: 'DELETE',
-        },
-      );
+      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${id}`, {
+        method: 'DELETE',
+      });
 
       if (!response.ok) {
         throw new Error('Failed to delete devlog');
@@ -138,7 +130,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
 
       setDevlog(null);
     },
-    [currentWorkspace],
+    [currentProject],
   );
 
   return {

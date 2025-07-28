@@ -1,0 +1,223 @@
+/* Project Switcher Styles */
+
+.projectSwitcher {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.projectSwitcherCollapsed {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.projectSwitcherButton {
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.projectSwitcherButton:hover {
+  border-color: #40a9ff;
+  background: #f6ffed;
+}
+
+.projectSwitcherButtonContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.projectSwitcherAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.projectSwitcherText {
+  flex: 1;
+  margin-left: 12px;
+  margin-right: 8px;
+  text-align: left;
+  font-weight: 500;
+  color: #262626;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectSwitcherArrow {
+  color: #8c8c8c;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Dropdown Styles */
+
+.projectDropdown {
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+}
+
+.projectDropdownContent {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 0;
+  min-width: 280px;
+  max-width: 360px;
+}
+
+.projectDropdownHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.projectDropdownTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c8c8c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.projectList {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.projectItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.projectItem:hover {
+  background-color: #f5f5f5;
+}
+
+.projectItemCurrent {
+  background-color: #e6f7ff;
+  cursor: default;
+}
+
+.projectItemCurrent:hover {
+  background-color: #e6f7ff;
+}
+
+.projectItemAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.projectItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.projectItemMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.projectItemName {
+  font-weight: 500;
+  color: #262626;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectItemId {
+  font-size: 12px;
+  color: #8c8c8c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectItemStatus {
+  margin-left: 8px;
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+}
+
+.connectionIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.connectionIndicatorConnected {
+  background-color: #52c41a;
+}
+
+.connectionIndicatorDisconnected {
+  background-color: #ff4d4f;
+}
+
+.connectionIndicatorLoading {
+  background-color: #d9d9d9;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Actions */
+
+.projectActions {
+  padding: 8px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projectActionButton {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  height: 32px;
+  padding: 0 8px;
+  color: #595959;
+  font-size: 13px;
+}
+
+.projectActionButton:hover {
+  background-color: #f5f5f5;
+  color: #262626;
+}

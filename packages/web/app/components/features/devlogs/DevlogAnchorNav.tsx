@@ -1,19 +1,16 @@
-'use client';
-
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Anchor } from 'antd';
 import { DevlogEntry } from '@codervisor/devlog-core';
-import styles from './DevlogAnchorNav.module.css';
 
 interface DevlogAnchorNavProps {
   devlog: DevlogEntry;
 }
 
 export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
-  const anchorItems = useMemo(() => {
-    const items = [];
+  const items = React.useMemo(() => {
+    const items: { key: string; href: string; title: string }[] = [];
 
-    // Description - always present
+    // Description (always present)
     items.push({
       key: 'description',
       href: '#description',
@@ -21,7 +18,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     });
 
     // Business Context
-    if (devlog.context?.businessContext) {
+    if (devlog.businessContext) {
       items.push({
         key: 'business-context',
         href: '#business-context',
@@ -30,7 +27,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Technical Context
-    if (devlog.context?.technicalContext) {
+    if (devlog.technicalContext) {
       items.push({
         key: 'technical-context',
         href: '#technical-context',
@@ -39,7 +36,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Acceptance Criteria
-    if (devlog.context?.acceptanceCriteria && devlog.context.acceptanceCriteria.length > 0) {
+    if (devlog.acceptanceCriteria && devlog.acceptanceCriteria.length > 0) {
       items.push({
         key: 'acceptance-criteria',
         href: '#acceptance-criteria',
@@ -48,72 +45,11 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Dependencies
-    if (devlog.context?.dependencies && devlog.context.dependencies.length > 0) {
+    if (devlog.dependencies && devlog.dependencies.length > 0) {
       items.push({
         key: 'dependencies',
         href: '#dependencies',
         title: 'Dependencies',
-      });
-    }
-
-    // Decisions
-    if (devlog.context?.decisions && devlog.context.decisions.length > 0) {
-      items.push({
-        key: 'decisions',
-        href: '#decisions',
-        title: 'Decisions',
-      });
-    }
-
-    // Risks
-    if (devlog.context?.risks && devlog.context.risks.length > 0) {
-      items.push({
-        key: 'risks',
-        href: '#risks',
-        title: 'Risks',
-      });
-    }
-
-    // Related Files
-    if (devlog.files && devlog.files.length > 0) {
-      items.push({
-        key: 'files',
-        href: '#files',
-        title: 'Related Files',
-      });
-    }
-
-    // Related Devlogs
-    if (devlog.relatedDevlogs && devlog.relatedDevlogs.length > 0) {
-      items.push({
-        key: 'related-devlogs',
-        href: '#related-devlogs',
-        title: 'Related Devlogs',
-      });
-    }
-
-    // AI Context
-    if (
-      devlog.aiContext &&
-      (devlog.aiContext.currentSummary ||
-        (devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0) ||
-        (devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0) ||
-        (devlog.aiContext.suggestedNextSteps && devlog.aiContext.suggestedNextSteps.length > 0) ||
-        (devlog.aiContext.relatedPatterns && devlog.aiContext.relatedPatterns.length > 0))
-    ) {
-      items.push({
-        key: 'ai-context',
-        href: '#ai-context',
-        title: 'AI Context',
-      });
-    }
-
-    // External References
-    if (devlog.externalReferences && devlog.externalReferences.length > 0) {
-      items.push({
-        key: 'external-references',
-        href: '#external-references',
-        title: 'External References',
       });
     }
 
@@ -129,19 +65,30 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     return items;
   }, [devlog]);
 
-  // Don't render if there are too few sections to navigate
-  if (anchorItems.length <= 2) {
-    return null;
+  if (items.length <= 1) {
+    return null; // Don't show anchor nav if only description exists
   }
 
   return (
-    <Anchor
-      className={styles.anchorNav}
-      getContainer={() => document.querySelector('.page-content.scrollable-content') as HTMLElement}
-      items={anchorItems}
-      offsetTop={120} // Account for sticky header height
-      bounds={20}
-      targetOffset={120}
-    />
+    <div style={{ position: 'sticky', top: 20 }}>
+      <Anchor
+        direction="vertical"
+        items={items}
+        affix={false}
+        onClick={(e, link) => {
+          e.preventDefault();
+          // Scroll to the target element
+          const targetId = link.href.replace('#', '');
+          const element = document.getElementById(targetId);
+          if (element) {
+            const offsetTop = element.offsetTop - 80; // Account for fixed header
+            window.scrollTo({
+              top: offsetTop,
+              behavior: 'smooth',
+            });
+          }
+        }}
+      />
+    </div>
   );
 }
