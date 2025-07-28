@@ -1,20 +1,15 @@
 'use client';
 
 import React from 'react';
-import { NavigationBreadcrumb } from './NavigationBreadcrumb';
 
 interface PageLayoutProps {
   children: React.ReactNode;
   /**
-   * Custom breadcrumb element to replace the default NavigationBreadcrumb
-   */
-  breadcrumb?: React.ReactNode;
-  /**
-   * Actions to display on the right side of the breadcrumb area
+   * Actions to display in the page header (like buttons, etc.)
    */
   actions?: React.ReactNode;
   /**
-   * Custom header content that replaces the entire breadcrumb area
+   * Custom header content that replaces the entire header area
    */
   headerContent?: React.ReactNode;
   /**
@@ -29,7 +24,6 @@ interface PageLayoutProps {
 
 export function PageLayout({
   children,
-  breadcrumb,
   actions,
   headerContent,
   className = '',
@@ -45,17 +39,23 @@ export function PageLayout({
     );
   }
 
-  // Default layout with breadcrumb and/or actions
+  // If actions are provided, show a simple header with actions
+  if (actions) {
+    return (
+      <div className={`page-layout scrollable-content ${className}`}>
+        <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>
+          <div className="page-header-content">
+            <div className="page-header-right">{actions}</div>
+          </div>
+        </div>
+        <div className="page-content scrollable-content">{children}</div>
+      </div>
+    );
+  }
+
+  // Default layout with just content (no header)
   return (
     <div className={`page-layout scrollable-content ${className}`}>
-      <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>
-        <div className="page-header-content">
-          <div className="page-header-left">
-            {breadcrumb || <NavigationBreadcrumb />}
-          </div>
-          {actions && <div className="page-header-right">{actions}</div>}
-        </div>
-      </div>
       <div className="page-content scrollable-content">{children}</div>
     </div>
   );

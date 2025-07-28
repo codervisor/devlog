@@ -1,1 +1,1 @@
-export { ProjectSwitcher } from './ProjectSwitcher';
+// Project components would be exported here if needed

@@ -4,6 +4,8 @@
 .app-layout {
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-content {
@@ -11,6 +13,7 @@
   overflow: hidden; /* Prevent outer scroll */
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .app-content-wrapper {
@@ -43,24 +46,16 @@
 
 .page-header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 12px 24px;
-  border-bottom: 1px solid #e8e8e8;
   height: 64px;
-}
-
-.page-header-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
 }
 
 .page-header-right {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 16px;
 }
 
 .page-content {
@@ -84,7 +79,7 @@
 
 .page-header-sticky .page-header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 12px 24px;
   min-height: 48px;

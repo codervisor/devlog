@@ -14,7 +14,7 @@ import {
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@codervisor/devlog-core';
-import { OverviewStats, ProjectSwitcher } from '@/components';
+import { OverviewStats } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
 import styles from './NavigationSidebar.module.css';
 
@@ -45,40 +45,133 @@ export function NavigationSidebar({
     setMounted(true);
   }, []);
 
-  // Determine selected key based on current pathname
-  const getSelectedKey = () => {
-    if (!mounted) return 'dashboard'; // Fallback during SSR
-    if (pathname === '/') return 'dashboard';
-    if (pathname === '/projects') return 'projects';
-    if (pathname.startsWith('/projects/') && pathname.endsWith('/devlogs')) return 'list';
-    if (pathname.startsWith('/projects/') && pathname.includes('/devlogs/create')) return 'create';
-    if (pathname.startsWith('/projects/') && pathname.includes('/devlogs/')) return 'list';
-    if (pathname.startsWith('/projects/') && !pathname.includes('/devlogs')) return 'projects';
-    return 'dashboard';
+  // Check if sidebar should be hidden
+  const shouldHideSidebar = () => {
+    if (!mounted) return false;
+    // Hide sidebar on /projects page
+    return pathname === '/projects';
   };
 
-  const menuItems = [
-    {
-      key: 'dashboard',
-      label: 'Dashboard',
-      icon: <DashboardOutlined />,
-    },
-    {
-      key: 'projects',
-      label: 'Projects',
-      icon: <AppstoreOutlined />,
-    },
-    {
-      key: 'list',
-      label: 'Devlogs',
-      icon: <FileTextOutlined />,
-    },
-    {
-      key: 'create',
-      label: 'New Devlog',
-      icon: <PlusOutlined />,
-    },
-  ];
+  // Get contextual menu items based on current path
+  const getMenuItems = () => {
+    if (!mounted) return [];
+    
+    const pathParts = pathname.split('/').filter(Boolean);
+    
+    // Dashboard page (/)
+    if (pathname === '/') {
+      return [
+        {
+          key: 'projects',
+          label: 'Projects',
+          icon: <AppstoreOutlined />,
+        },
+      ];
+    }
+    
+    // Project detail page (/projects/[id])
+    if (pathParts.length === 2 && pathParts[0] === 'projects') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          icon: <DashboardOutlined />,
+        },
+        {
+          key: 'list',
+          label: 'Devlogs',
+          icon: <FileTextOutlined />,
+        },
+        {
+          key: 'create',
+          label: 'New Devlog',
+          icon: <PlusOutlined />,
+        },
+      ];
+    }
+    
+    // Project devlogs page (/projects/[id]/devlogs)
+    if (pathParts.length === 3 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          icon: <DashboardOutlined />,
+        },
+        {
+          key: 'create',
+          label: 'New Devlog',
+          icon: <PlusOutlined />,
+        },
+      ];
+    }
+    
+    // Devlog detail page (/projects/[id]/devlogs/[devlogId])
+    if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          icon: <DashboardOutlined />,
+        },
+        {
+          key: 'list',
+          label: 'Back to Devlogs',
+          icon: <FileTextOutlined />,
+        },
+        {
+          key: 'create',
+          label: 'New Devlog',
+          icon: <PlusOutlined />,
+        },
+      ];
+    }
+    
+    // Devlog create page (/projects/[id]/devlogs/create)
+    if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[3] === 'create') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Dashboard',
+          icon: <DashboardOutlined />,
+        },
+        {
+          key: 'list',
+          label: 'Back to Devlogs',
+          icon: <FileTextOutlined />,
+        },
+      ];
+    }
+    
+    // Default fallback
+    return [
+      {
+        key: 'dashboard',
+        label: 'Dashboard',
+        icon: <DashboardOutlined />,
+      },
+      {
+        key: 'projects',
+        label: 'Projects',
+        icon: <AppstoreOutlined />,
+      },
+    ];
+  };
+
+  // Determine selected key based on current pathname and menu items
+  const getSelectedKey = () => {
+    if (!mounted) return 'dashboard';
+    
+    const pathParts = pathname.split('/').filter(Boolean);
+    
+    if (pathname === '/') return 'projects';
+    if (pathParts.length === 2 && pathParts[0] === 'projects') return 'dashboard';
+    if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length === 4 && pathParts[3] === 'create') return 'create';
+    if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
+    
+    return 'dashboard';
+  };
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (!mounted) return;
@@ -112,46 +205,11 @@ export function NavigationSidebar({
   };
 
   // Don't render menu items until mounted to prevent hydration issues
-  if (!mounted) {
-    return (
-      <Sider
-        width={280}
-        collapsed={collapsed}
-        collapsedWidth={60}
-        breakpoint="md"
-        collapsible={false}
-        trigger={null}
-        style={{
-          background: '#fff',
-          borderRight: '1px solid #f0f0f0',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div className={styles.sidebarHeader}>
-          <div className={styles.sidebarBrand}>
-            <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
-          </div>
-        </div>
-
-        <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarFooterContent}>
-            {onToggle && (
-              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
-                <Button
-                  type="text"
-                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                  onClick={onToggle}
-                  className={styles.sidebarToggle}
-                  size="small"
-                />
-              </Tooltip>
-            )}
-          </div>
-        </div>
-      </Sider>
-    );
+  if (!mounted || shouldHideSidebar()) {
+    return null;
   }
+
+  const menuItems = getMenuItems();
 
   return (
     <Sider
@@ -169,36 +227,8 @@ export function NavigationSidebar({
         position: 'relative',
       }}
     >
-      <div className={styles.sidebarHeader}>
-        <div className={styles.sidebarBrand}>
-          {collapsed ? (
-            <Image
-              src="/devlog-logo.svg"
-              alt="Devlog Logo"
-              width={24}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          ) : (
-            <Image
-              src="/devlog-logo-text.svg"
-              alt="Devlog Logo"
-              width={(200 / 64) * 48}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          )}
-        </div>
-      </div>
-
-      <div
-        className={
-          collapsed ? styles.projectSwitcherContainerCollapsed : styles.projectSwitcherContainer
-        }
-      >
-        <ProjectSwitcher collapsed={collapsed} />
-      </div>
-
+      {/* Remove the brand/logo section since it's now in the top navbar */}
+      
       <Menu
         mode="inline"
         selectedKeys={[getSelectedKey()]}

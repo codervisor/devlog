@@ -23,6 +23,7 @@ import {
 } from '@ant-design/icons';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -87,56 +88,61 @@ export function ProjectManagementPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Spin size="large" />
-        <div style={{ marginTop: 16 }}>Loading projects...</div>
-      </div>
+      <PageLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Loading projects...</div>
+        </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <Alert
-        message="Error Loading Projects"
-        description={error}
-        type="error"
-        showIcon
-        style={{ margin: '20px' }}
-      />
+      <PageLayout>
+        <Alert
+          message="Error Loading Projects"
+          description={error}
+          type="error"
+          showIcon
+          style={{ margin: '20px' }}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div style={{ padding: '24px' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-        }}
-      >
-        <div>
+    <PageLayout
+      actions={
+        <Button 
+          type="primary" 
+          size="large"
+          icon={<PlusOutlined />} 
+          onClick={() => setIsModalVisible(true)}
+        >
+          New Project
+        </Button>
+      }
+    >
+      <div style={{ padding: '24px' }}>
+        <div style={{ marginBottom: '32px' }}>
           <Title level={2} style={{ margin: 0 }}>
             <ProjectOutlined style={{ marginRight: 8 }} />
             Projects
           </Title>
-          <Paragraph type="secondary" style={{ margin: '8px 0 0 0' }}>
+          <Paragraph type="secondary" style={{ margin: '8px 0 0 0', fontSize: '16px' }}>
             Manage your development projects and view their dashboards
           </Paragraph>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
-          Create Project
-        </Button>
-      </div>
 
-      <div
-        style={{
-          display: 'grid',
-          gap: '16px',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        }}
-      >
+        <div
+          style={{
+            display: 'grid',
+            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
+            marginBottom: '32px',
+          }}
+        >
         {projects.map((project) => (
           <Card
             key={project.id}
@@ -162,7 +168,14 @@ export function ProjectManagementPage() {
             }
             style={{
               border: currentProject?.projectId === project.id ? '2px solid #1890ff' : undefined,
+              borderRadius: '8px',
+              boxShadow: currentProject?.projectId === project.id 
+                ? '0 4px 12px rgba(24, 144, 255, 0.15)' 
+                : '0 2px 8px rgba(0, 0, 0, 0.06)',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
             }}
+            hoverable
             actions={[
               <Button
                 key="view"
@@ -216,20 +229,33 @@ export function ProjectManagementPage() {
         ))}
       </div>
 
-      {projects.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: '40px' }}>
-          <ProjectOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">
-            No Projects Found
-          </Title>
-          <Paragraph type="secondary">
-            Create your first project to get started with organizing your development work.
-          </Paragraph>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
-            Create First Project
-          </Button>
-        </Card>
-      )}
+        {projects.length === 0 && (
+          <Card 
+            style={{ 
+              textAlign: 'center', 
+              padding: '60px 40px',
+              border: '2px dashed #d9d9d9',
+              borderRadius: '12px',
+              background: '#fafafa'
+            }}
+          >
+            <ProjectOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: '24px' }} />
+            <Title level={3} type="secondary" style={{ marginBottom: '12px' }}>
+              No Projects Found
+            </Title>
+            <Paragraph type="secondary" style={{ fontSize: '16px', marginBottom: '32px' }}>
+              Create your first project to get started with organizing your development work.
+            </Paragraph>
+            <Button 
+              type="primary" 
+              size="large"
+              icon={<PlusOutlined />} 
+              onClick={() => setIsModalVisible(true)}
+            >
+              Create First Project
+            </Button>
+          </Card>
+        )}
 
       <Modal
         title="Create New Project"
@@ -278,6 +304,7 @@ export function ProjectManagementPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

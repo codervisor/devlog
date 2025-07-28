@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Alert, Layout } from 'antd';
-import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton } from '@/components';
+import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton, TopNavbar } from '@/components';
 import { useDevlogContext } from './contexts/DevlogContext';
 import { useStats } from '@/hooks/useStats';
 
@@ -32,29 +32,32 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <ErrorBoundary>
       <Layout className="app-layout">
-        <NavigationSidebar
-          stats={stats}
-          statsLoading={isLoadingStats}
-          collapsed={sidebarCollapsed}
-          connected={connected}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-        <Layout>
-          <Content className="app-content">
-            <div className="app-content-wrapper">
-              {error && (
-                <Alert
-                  message="Error"
-                  description={error}
-                  type="error"
-                  showIcon
-                  closable
-                  className="app-error-alert"
-                />
-              )}
-              {children}
-            </div>
-          </Content>
+        <TopNavbar />
+        <Layout style={{ flex: 1 }}>
+          <NavigationSidebar
+            stats={stats}
+            statsLoading={isLoadingStats}
+            collapsed={sidebarCollapsed}
+            connected={connected}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+          <Layout>
+            <Content className="app-content">
+              <div className="app-content-wrapper">
+                {error && (
+                  <Alert
+                    message="Error"
+                    description={error}
+                    type="error"
+                    showIcon
+                    closable
+                    className="app-error-alert"
+                  />
+                )}
+                {children}
+              </div>
+            </Content>
+          </Layout>
         </Layout>
       </Layout>
     </ErrorBoundary>
