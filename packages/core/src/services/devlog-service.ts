@@ -16,8 +16,9 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
-import { DevlogEntryEntity } from '../entities/index.js';
+import { DevlogDependencyEntity, DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
 import { createDataSource } from '../utils/typeorm-config.js';
+import { DevlogValidator } from '../validation/devlog-schemas.js';
 
 interface DevlogServiceInstance {
   service: DevlogService;
@@ -31,8 +32,19 @@ export class DevlogService {
   private devlogRepository: Repository<DevlogEntryEntity>;
 
   private constructor(private projectId?: number) {
-    this.database = createDataSource();
+    this.database = createDataSource({
+      entities: [DevlogEntryEntity, DevlogNoteEntity, DevlogDependencyEntity],
+    });
     this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
+  }
+
+  /**
+   * Initialize the database connection if not already initialized
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (!this.database.isInitialized) {
+      await this.database.initialize();
+    }
   }
 
   /**
@@ -42,24 +54,29 @@ export class DevlogService {
     const instanceKey = projectId || 0; // Use 0 for undefined projectId
     const now = Date.now();
     const existingInstance = DevlogService.instances.get(instanceKey);
-    
-    if (
-      !existingInstance ||
-      now - existingInstance.createdAt > DevlogService.TTL_MS
-    ) {
+
+    if (!existingInstance || now - existingInstance.createdAt > DevlogService.TTL_MS) {
       const newService = new DevlogService(projectId);
       DevlogService.instances.set(instanceKey, {
         service: newService,
-        createdAt: now
+        createdAt: now,
       });
       return newService;
     }
-    
+
     return existingInstance.service;
   }
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
-    const entity = await this.devlogRepository.findOne({ where: { id } });
+    await this.ensureInitialized();
+    
+    // Validate devlog ID
+    const idValidation = DevlogValidator.validateDevlogId(id);
+    if (!idValidation.success) {
+      throw new Error(`Invalid devlog ID: ${idValidation.errors.join(', ')}`);
+    }
+
+    const entity = await this.devlogRepository.findOne({ where: { id: idValidation.data } });
 
     if (!entity) {
       return null;
@@ -69,16 +86,84 @@ export class DevlogService {
   }
 
   async save(entry: DevlogEntry): Promise<void> {
+    await this.ensureInitialized();
+    
+    // Validate devlog entry data
+    const validation = DevlogValidator.validateDevlogEntry(entry);
+    if (!validation.success) {
+      throw new Error(`Invalid devlog entry: ${validation.errors.join(', ')}`);
+    }
+
+    const validatedEntry = validation.data;
+
+    // If this is an update (entry has ID), validate status transition
+    if (validatedEntry.id) {
+      const existingEntity = await this.devlogRepository.findOne({
+        where: { id: validatedEntry.id },
+      });
+      if (existingEntity && existingEntity.status !== validatedEntry.status) {
+        const statusTransition = DevlogValidator.validateStatusTransition(
+          existingEntity.status,
+          validatedEntry.status,
+        );
+        if (!statusTransition.success) {
+          throw new Error(statusTransition.error!);
+        }
+      }
+    }
+
+    // Validate unique key within project if key is provided
+    if (validatedEntry.key && validatedEntry.projectId) {
+      const keyValidation = await DevlogValidator.validateUniqueKey(
+        validatedEntry.key,
+        validatedEntry.projectId,
+        validatedEntry.id,
+        async (key: string, projectId: number, excludeId?: number) => {
+          const existing = await this.devlogRepository.findOne({
+            where: { key, projectId },
+          });
+          return !!existing && existing.id !== excludeId;
+        },
+      );
+
+      if (!keyValidation.success) {
+        throw new Error(keyValidation.error!);
+      }
+    }
+
     // Convert to entity and save
-    const entity = DevlogEntryEntity.fromDevlogEntry(entry);
+    const entity = DevlogEntryEntity.fromDevlogEntry(validatedEntry);
     await this.devlogRepository.save(entity);
   }
 
   async delete(id: DevlogId): Promise<void> {
-    await this.devlogRepository.delete({ id });
+    await this.ensureInitialized();
+    
+    // Validate devlog ID
+    const idValidation = DevlogValidator.validateDevlogId(id);
+    if (!idValidation.success) {
+      throw new Error(`Invalid devlog ID: ${idValidation.errors.join(', ')}`);
+    }
+
+    const result = await this.devlogRepository.delete({ id: idValidation.data });
+    if (result.affected === 0) {
+      throw new Error(`Devlog with ID '${id}' not found`);
+    }
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+    await this.ensureInitialized();
+    
+    // Validate filter if provided
+    if (filter) {
+      const filterValidation = DevlogValidator.validateFilter(filter);
+      if (!filterValidation.success) {
+        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
+      }
+      // Use validated filter for consistent behavior
+      filter = filterValidation.data;
+    }
+
     const projectFilter = this.addProjectFilter(filter);
 
     // Build TypeORM query based on filter
@@ -88,6 +173,23 @@ export class DevlogService {
   }
 
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+    await this.ensureInitialized();
+    
+    // Validate search query
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      throw new Error('Search query is required and must be a non-empty string');
+    }
+
+    // Validate filter if provided
+    if (filter) {
+      const filterValidation = DevlogValidator.validateFilter(filter);
+      if (!filterValidation.success) {
+        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
+      }
+      // Use validated filter for consistent behavior
+      filter = filterValidation.data;
+    }
+
     const projectFilter = this.addProjectFilter(filter);
 
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
@@ -103,6 +205,18 @@ export class DevlogService {
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
+    await this.ensureInitialized();
+    
+    // Validate filter if provided
+    if (filter) {
+      const filterValidation = DevlogValidator.validateFilter(filter);
+      if (!filterValidation.success) {
+        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
+      }
+      // Use validated filter for consistent behavior
+      filter = filterValidation.data;
+    }
+
     const projectFilter = this.addProjectFilter(filter);
 
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
@@ -180,6 +294,8 @@ export class DevlogService {
     projectId: number,
     request?: TimeSeriesRequest,
   ): Promise<TimeSeriesStats> {
+    await this.ensureInitialized();
+    
     // Calculate date range
     const days = request?.days || 30;
     const to = request?.to ? new Date(request.to) : new Date();
@@ -224,6 +340,8 @@ export class DevlogService {
   }
 
   async getNextId(): Promise<DevlogId> {
+    await this.ensureInitialized();
+    
     const result = await this.devlogRepository
       .createQueryBuilder('devlog')
       .select('MAX(devlog.id)', 'maxId')

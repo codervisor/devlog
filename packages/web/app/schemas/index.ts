@@ -9,6 +9,7 @@
 export * from './project';
 export * from './devlog';
 export * from './validation';
+export * from './bridge';
 
 // Common schemas that might be used across multiple endpoints
 import { z } from 'zod';

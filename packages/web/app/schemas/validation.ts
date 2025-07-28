@@ -138,6 +138,28 @@ export class ApiValidator {
   }
 
   /**
+   * Transform and validate web request data for service layer
+   * This bridges the gap between HTTP unknown data and typed service methods
+   */
+  static transformForService<TInput, TOutput>(
+    data: unknown,
+    schema: z.ZodSchema<TOutput, any, TInput>
+  ): TOutput {
+    const result = schema.safeParse(data);
+    
+    if (result.success) {
+      return result.data;
+    }
+    
+    // Transform validation errors into a service-appropriate error
+    const errorMessage = result.error.errors
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join(', ');
+    
+    throw new Error(`Invalid data: ${errorMessage}`);
+  }
+
+  /**
    * Handle service layer errors and convert to appropriate HTTP responses
    */
   static handleServiceError(error: unknown): NextResponse {
@@ -146,7 +168,8 @@ export class ApiValidator {
       if (error.message.includes('Invalid project data') || 
           error.message.includes('Invalid update data') ||
           error.message.includes('Invalid project ID') ||
-          error.message.includes('Invalid devlog data')) {
+          error.message.includes('Invalid devlog data') ||
+          error.message.includes('Invalid data:')) {
         return NextResponse.json(
           { error: error.message },
           { status: 400 }
