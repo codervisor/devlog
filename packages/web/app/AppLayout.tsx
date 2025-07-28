@@ -5,6 +5,7 @@ import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton, TopNavbar } from '
 import { useDevlogContext } from './contexts/DevlogContext';
 import { useStats } from '@/hooks/useStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,31 +32,33 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background">
-        <TopNavbar />
-        <div className="flex flex-1">
-          <NavigationSidebar
-            stats={stats}
-            statsLoading={isLoadingStats}
-            collapsed={sidebarCollapsed}
-            connected={connected}
-            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          />
-          <div className="flex-1 flex flex-col">
-            <main className="flex-1 p-6">
-              <div className="max-w-full">
-                {error && (
-                  <Alert className="mb-4">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                {children}
-              </div>
-            </main>
+      <SidebarProvider>
+        <div className="min-h-screen bg-background">
+          <TopNavbar />
+          <div className="flex flex-1">
+            <NavigationSidebar
+              stats={stats}
+              statsLoading={isLoadingStats}
+              collapsed={sidebarCollapsed}
+              connected={connected}
+              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            />
+            <div className="flex-1 flex flex-col">
+              <main className="flex-1 p-6">
+                <div className="max-w-full">
+                  {error && (
+                    <Alert className="mb-4">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  {children}
+                </div>
+              </main>
+            </div>
           </div>
         </div>
-      </div>
+      </SidebarProvider>
     </ErrorBoundary>
   );
 }
