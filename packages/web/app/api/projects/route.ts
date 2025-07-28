@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getProjectManager,
-  getAppStorageConfig,
-  getProjectStorageInfo,
-} from '../../lib/project-manager';
+import { ProjectService } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -11,18 +7,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects - List all projects
 export async function GET(request: NextRequest) {
   try {
-    const manager = await getProjectManager();
-    const projects = await manager.listProjects();
-    const currentProject = await manager.getCurrentProject();
-    const appStorageConfig = await getAppStorageConfig();
-    const projectStorageInfo = await getProjectStorageInfo();
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
 
-    return NextResponse.json({
-      projects,
-      currentProject,
-      appStorageConfig, // Centralized storage configuration
-      projectStorageInfo, // Project metadata storage info
-    });
+    const result = await projectService.list();
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
@@ -32,14 +22,16 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
   try {
-    const manager = await getProjectManager();
     const projectData = await request.json();
 
-    if (!projectData.id || !projectData.name) {
-      return NextResponse.json({ error: 'Project id and name are required' }, { status: 400 });
+    if (!projectData.name) {
+      return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
     }
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
 
-    const createdProject = await manager.createProject(projectData);
+    // Create project entity from data
+    const createdProject = await projectService.create(projectData);
 
     return NextResponse.json(createdProject, { status: 201 });
   } catch (error) {

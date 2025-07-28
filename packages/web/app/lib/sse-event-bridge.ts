@@ -3,15 +3,36 @@
  * This allows the web UI to receive realtime updates when devlogs are modified through any channel (MCP, API, etc.)
  */
 
-import { broadcastUpdate } from './sse-manager';
-import { getProjectManager, getAppStorageConfig } from './project-manager';
-
 // Types only - won't be bundled at runtime
-import type { ProjectDevlogManager, DevlogEvent } from '@codervisor/devlog-core';
+import type { DevlogEvent } from '@codervisor/devlog-core';
+
+// Keep track of active SSE connections
+const activeConnections = new Set<ReadableStreamDefaultController>();
+
+// Function to broadcast updates to all connected clients
+export function broadcastUpdate(type: string, data: any) {
+  const message = JSON.stringify({
+    type,
+    data,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`Broadcasting SSE update: ${type} to ${activeConnections.size} connections`);
+
+  // Send to all active connections
+  for (const controller of activeConnections) {
+    try {
+      controller.enqueue(`data: ${message}\n\n`);
+    } catch (error) {
+      console.error('Error sending SSE message, removing dead connection:', error);
+      // Remove dead connections
+      activeConnections.delete(controller);
+    }
+  }
+}
 
 class SSEEventBridge {
   private initialized = false;
-  private projectManager?: any;
 
   /**
    * Initialize the bridge to start listening to devlog events
@@ -33,7 +54,6 @@ class SSEEventBridge {
       // Use the project manager instance
       console.log('[SSE Event Bridge] Getting project manager...');
       const managerStartTime = Date.now();
-      this.projectManager = await getProjectManager();
       const managerDuration = Date.now() - managerStartTime;
       console.log(`[SSE Event Bridge] Project manager ready in ${managerDuration}ms`);
 
@@ -42,7 +62,7 @@ class SSEEventBridge {
       const { getDevlogEvents } = await import('@codervisor/devlog-core');
 
       // Get the singleton devlogEvents instance to ensure we listen to the same instance
-      // that ProjectDevlogManager emits to
+      // that DevlogService emits to
       const devlogEvents = getDevlogEvents();
 
       // Listen to local devlog events (which now include storage events via subscription)
@@ -153,23 +173,9 @@ class SSEEventBridge {
       console.error('Error broadcasting devlog-unarchived event:', error);
     }
   }
-
-  /**
-   * Cleanup method for graceful shutdown
-   */
-  async cleanup(): Promise<void> {
-    if (this.initialized) {
-      // Cleanup ProjectManager
-      if (this.projectManager) {
-        await this.projectManager.dispose();
-        this.projectManager = undefined;
-      }
-
-      this.initialized = false;
-      console.log('SSE Event Bridge cleaned up');
-    }
-  }
 }
 
 // Global instance
 export const sseEventBridge = new SSEEventBridge();
+
+export { activeConnections };
