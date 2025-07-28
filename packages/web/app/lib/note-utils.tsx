@@ -1,14 +1,14 @@
 import React from 'react';
-import { Tooltip } from 'antd';
-import {
-  BellOutlined,
-  BugOutlined,
-  BulbOutlined,
-  CheckCircleOutlined,
-  CommentOutlined,
-  TrophyOutlined,
-} from '@ant-design/icons';
 import { NoteCategory } from '@codervisor/devlog-core';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  BellIcon,
+  BugIcon,
+  LightbulbIcon,
+  CheckCircleIcon,
+  MessageCircleIcon,
+  TrophyIcon,
+} from 'lucide-react';
 
 /**
  * Note category configuration with metadata for each category
@@ -29,43 +29,43 @@ export interface NoteCategoryConfig {
  */
 export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
   progress: {
-    icon: <TrophyOutlined style={{ color: '#52c41a' }} />,
+    icon: <TrophyIcon size={16} className="text-green-500" />,
     label: 'Progress',
     description: 'Work progress updates, milestones, and status changes',
     color: '#52c41a',
   },
   issue: {
-    icon: <BugOutlined style={{ color: '#f5222d' }} />,
+    icon: <BugIcon size={16} className="text-red-500" />,
     label: 'Issue',
     description: 'Problems encountered, bugs found, or obstacles discovered',
     color: '#f5222d',
   },
   solution: {
-    icon: <CheckCircleOutlined style={{ color: '#1890ff' }} />,
+    icon: <CheckCircleIcon size={16} className="text-blue-500" />,
     label: 'Solution',
     description: 'Solutions implemented, fixes applied, or workarounds found',
     color: '#1890ff',
   },
   idea: {
-    icon: <BulbOutlined style={{ color: '#faad14' }} />,
+    icon: <LightbulbIcon size={16} className="text-yellow-500" />,
     label: 'Idea',
     description: 'New ideas, suggestions, or potential improvements',
     color: '#faad14',
   },
   reminder: {
-    icon: <BellOutlined style={{ color: '#fa8c16' }} />,
+    icon: <BellIcon size={16} className="text-orange-500" />,
     label: 'Reminder',
     description: 'Important reminders, action items, or follow-up tasks',
     color: '#fa8c16',
   },
   feedback: {
-    icon: <CommentOutlined style={{ color: '#722ed1' }} />,
+    icon: <MessageCircleIcon size={16} className="text-purple-500" />,
     label: 'Feedback',
     description: 'External feedback from users, customers, stakeholders, or usability testing',
     color: '#722ed1',
   },
   'acceptance-criteria': {
-    icon: <CheckCircleOutlined style={{ color: '#13c2c2' }} />,
+    icon: <CheckCircleIcon size={16} className="text-cyan-500" />,
     label: 'Acceptance Criteria',
     description: 'Updates on acceptance criteria validation and completion status',
     color: '#13c2c2',
@@ -79,12 +79,19 @@ export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
  */
 export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
   const config = noteCategoryConfig[category];
-  const icon = config?.icon || <CommentOutlined style={{ color: '#8c8c8c' }} />;
+  const icon = config?.icon || <MessageCircleIcon size={16} className="text-gray-500" />;
   const label = config?.label || category;
 
   return (
-    <Tooltip title={label} placement="left">
-      {icon}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="cursor-default">
+          {icon}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="left">
+        {label}
+      </TooltipContent>
     </Tooltip>
   );
 };
@@ -96,7 +103,7 @@ export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
  */
 export const getCategoryIconRaw = (category: NoteCategory): React.ReactNode => {
   const config = noteCategoryConfig[category];
-  return config?.icon || <CommentOutlined style={{ color: '#8c8c8c' }} />;
+  return config?.icon || <MessageCircleIcon size={16} className="text-gray-500" />;
 };
 
 /**

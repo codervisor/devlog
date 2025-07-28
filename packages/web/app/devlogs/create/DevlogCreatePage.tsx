@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Button, Space } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
 import { DevlogForm, PageLayout } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { ArrowLeftIcon } from 'lucide-react';
 
 export function DevlogCreatePage() {
   const { createDevlog } = useDevlogs();
@@ -25,14 +25,12 @@ export function DevlogCreatePage() {
   };
 
   const actions = (
-    <Space>
-      <Button 
-        icon={<ArrowLeftOutlined />} 
-        onClick={handleCancel}
-      >
+    <div>
+      <Button variant="outline" onClick={handleCancel} className="flex items-center gap-2">
+        <ArrowLeftIcon size={16} />
         Back to List
       </Button>
-    </Space>
+    </div>
   );
 
   return (

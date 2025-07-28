@@ -1,11 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Dropdown, Tooltip, message } from 'antd';
-import { DownOutlined, ProjectOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useProject } from '@/contexts/ProjectContext';
 import styles from './ProjectSwitcher.module.css';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  ChevronDownIcon, 
+  FolderIcon, 
+  PlusIcon, 
+  SettingsIcon,
+  CheckIcon 
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProjectSwitcherProps {
   collapsed?: boolean;
@@ -97,13 +112,13 @@ export function ProjectSwitcher({ collapsed = false, className = '' }: ProjectSw
         isDefault: projectId === 'default',
       });
 
-      message.success(`Switched to project: ${targetProject.name}`);
+      toast.success(`Switched to project: ${targetProject.name}`);
 
       // Force immediate hard reload to ensure all components refresh with new project context
       window.location.reload();
     } catch (error) {
       console.error('Error switching project:', error);
-      message.error('Failed to switch project');
+      toast.error('Failed to switch project');
     }
   };
 
@@ -130,96 +145,95 @@ export function ProjectSwitcher({ collapsed = false, className = '' }: ProjectSw
     );
   };
 
-  const dropdownContent = (
-    <div className={styles.projectDropdownContent}>
-      <div className={styles.projectDropdownHeader}>
-        <div className={styles.projectDropdownTitle}>
-          <ProjectOutlined style={{ marginRight: 8 }} />
-          PROJECTS
-        </div>
-      </div>
-      <div className={styles.projectList}>
-        {projects.map((project) => {
-          const isCurrentProject = currentProject?.project.id === project.id;
-          return (
-            <div
-              key={project.id}
-              className={`${styles.projectItem} ${isCurrentProject ? styles.projectItemCurrent : ''}`}
-              onClick={() => !isCurrentProject && switchProject(project.id)}
-            >
-              <div
-                className={styles.projectItemAvatar}
-                style={{
-                  backgroundColor: getProjectColor(project.name),
-                }}
-              >
-                {getProjectInitials(project.name)}
-              </div>
-              <div className={styles.projectItemContent}>
-                <div className={styles.projectItemMain}>
-                  <div className={styles.projectItemName}>{project.name}</div>
-                  <div className={styles.projectItemStatus}>
-                    {renderConnectionStatus(project.id)}
-                  </div>
-                </div>
-                <div className={styles.projectItemId}>{project.id}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className={styles.projectActions}>
-        <Button
-          type="text"
-          icon={<PlusOutlined />}
-          className={styles.projectActionButton}
-          onClick={() => router.push('/projects')}
-        >
-          Create project
-        </Button>
-        <Button
-          type="text"
-          icon={<SettingOutlined />}
-          className={styles.projectActionButton}
-          onClick={() => router.push('/projects')}
-        >
-          Project settings
-        </Button>
-      </div>
-    </div>
-  );
-
   return (
     <div className={collapsed ? styles.projectSwitcherCollapsed : styles.projectSwitcher}>
-      <Dropdown
-        dropdownRender={() => dropdownContent}
-        trigger={['click']}
-        placement="topLeft"
-        overlayClassName={styles.projectDropdown}
-      >
-        <Button type="text" className={styles.projectSwitcherButton} loading={loading}>
-          <Tooltip title={collapsed ? 'Switch Project' : undefined} placement="top">
-            <div className={styles.projectSwitcherButtonContent}>
-              <div
-                className={styles.projectSwitcherAvatar}
-                style={{
-                  backgroundColor: currentProject
-                    ? getProjectColor(currentProject.project.name)
-                    : '#d9d9d9',
-                }}
-              >
-                {currentProject ? getProjectInitials(currentProject.project.name) : '?'}
-              </div>
-              {!collapsed && (
-                <div className={styles.projectSwitcherText}>
-                  {currentProject?.project.name || 'Select Project'}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className={styles.projectSwitcherButton} disabled={loading}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={styles.projectSwitcherButtonContent}>
+                  <div
+                    className={styles.projectSwitcherAvatar}
+                    style={{
+                      backgroundColor: currentProject
+                        ? getProjectColor(currentProject.project.name)
+                        : '#d9d9d9',
+                    }}
+                  >
+                    {currentProject ? getProjectInitials(currentProject.project.name) : '?'}
+                  </div>
+                  {!collapsed && (
+                    <div className={styles.projectSwitcherText}>
+                      {currentProject?.project.name || 'Select Project'}
+                    </div>
+                  )}
+                  <ChevronDownIcon className={styles.projectSwitcherArrow} size={16} />
                 </div>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent>
+                  Switch Project
+                </TooltipContent>
               )}
-              <DownOutlined className={styles.projectSwitcherArrow} />
+            </Tooltip>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-80" align="start">
+          <div className="px-3 py-2 border-b">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+              <FolderIcon size={16} />
+              PROJECTS
             </div>
-          </Tooltip>
-        </Button>
-      </Dropdown>
+          </div>
+          
+          <div className="max-h-64 overflow-y-auto">
+            {projects.map((project) => {
+              const isCurrentProject = currentProject?.project.id === project.id;
+              return (
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => !isCurrentProject && switchProject(project.id)}
+                  className="flex items-center gap-3 p-3 cursor-pointer"
+                  disabled={isCurrentProject}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                    style={{
+                      backgroundColor: getProjectColor(project.name),
+                    }}
+                  >
+                    {getProjectInitials(project.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{project.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{project.id}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {renderConnectionStatus(project.id)}
+                    {isCurrentProject && (
+                      <CheckIcon size={16} className="text-primary" />
+                    )}
+                  </div>
+                </DropdownMenuItem>
+              );
+            })}
+          </div>
+
+          <DropdownMenuSeparator />
+          
+          <div className="p-2">
+            <DropdownMenuItem onClick={() => router.push('/projects')} className="flex items-center gap-2">
+              <PlusIcon size={16} />
+              Create project
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/projects')} className="flex items-center gap-2">
+              <SettingsIcon size={16} />
+              Project settings
+            </DropdownMenuItem>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

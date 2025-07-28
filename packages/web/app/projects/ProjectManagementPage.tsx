@@ -1,32 +1,27 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Button,
-  Card,
-  Spin,
-  Alert,
-  Typography,
-  Tag,
-  Space,
-  Modal,
-  Form,
-  Input,
-  message,
-} from 'antd';
-import {
-  PlusOutlined,
-  SettingOutlined,
-  ProjectOutlined,
-  DatabaseOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
-
-const { Title, Paragraph } = Typography;
-const { TextArea } = Input;
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  PlusIcon,
+  SettingsIcon,
+  FolderIcon,
+  DatabaseIcon,
+  EyeIcon,
+  LoaderIcon,
+  AlertTriangleIcon,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProjectFormData {
   name: string;
@@ -37,10 +32,17 @@ export function ProjectManagementPage() {
   const { projects, currentProject, refreshProjects, loading, error } = useProject();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form] = Form.useForm<ProjectFormData>();
+  const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
   const router = useRouter();
 
-  const handleCreateProject = async (values: ProjectFormData) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast.error('Project name is required');
+      return;
+    }
+
     try {
       setCreating(true);
 
@@ -49,7 +51,7 @@ export function ProjectManagementPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -57,14 +59,14 @@ export function ProjectManagementPage() {
       }
 
       const newProject = await response.json();
-      message.success(`Project "${newProject.name}" created successfully`);
+      toast.success(`Project "${newProject.name}" created successfully`);
 
       setIsModalVisible(false);
-      form.resetFields();
+      setFormData({ name: '', description: '' });
       await refreshProjects();
     } catch (error) {
       console.error('Error creating project:', error);
-      message.error('Failed to create project');
+      toast.error('Failed to create project');
     } finally {
       setCreating(false);
     }
@@ -89,9 +91,9 @@ export function ProjectManagementPage() {
   if (loading) {
     return (
       <PageLayout>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Spin size="large" />
-          <div style={{ marginTop: 16 }}>Loading projects...</div>
+        <div className="flex flex-col items-center justify-center py-12">
+          <LoaderIcon className="h-8 w-8 animate-spin mb-4" />
+          <div>Loading projects...</div>
         </div>
       </PageLayout>
     );
@@ -100,13 +102,13 @@ export function ProjectManagementPage() {
   if (error) {
     return (
       <PageLayout>
-        <Alert
-          message="Error Loading Projects"
-          description={error}
-          type="error"
-          showIcon
-          style={{ margin: '20px' }}
-        />
+        <Alert variant="destructive" className="m-5 flex items-center gap-2">
+          <AlertTriangleIcon size={16} />
+          <div>
+            <div className="font-semibold">Error Loading Projects</div>
+            <AlertDescription>{error}</AlertDescription>
+          </div>
+        </Alert>
       </PageLayout>
     );
   }
@@ -115,195 +117,184 @@ export function ProjectManagementPage() {
     <PageLayout
       actions={
         <Button 
-          type="primary" 
-          size="large"
-          icon={<PlusOutlined />} 
+          size="lg"
           onClick={() => setIsModalVisible(true)}
+          className="flex items-center gap-2"
         >
+          <PlusIcon size={16} />
           New Project
         </Button>
       }
     >
-      <div style={{ padding: '24px' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            <ProjectOutlined style={{ marginRight: 8 }} />
+      <div className="p-6">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
+            <FolderIcon size={24} />
             Projects
-          </Title>
-          <Paragraph type="secondary" style={{ margin: '8px 0 0 0', fontSize: '16px' }}>
+          </h2>
+          <p className="text-muted-foreground text-base">
             Manage your development projects and view their dashboards
-          </Paragraph>
+          </p>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gap: '24px',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-            marginBottom: '32px',
-          }}
-        >
-        {projects.map((project) => (
-          <Card
-            key={project.id}
-            title={
-              <Space>
-                <ProjectOutlined />
-                {project.name}
-                <Tag color={getProjectStatusColor(project.id)}>
-                  {getProjectStatusText(project.id)}
-                </Tag>
-              </Space>
-            }
-            extra={
-              <Button
-                type="text"
-                icon={<SettingOutlined />}
-                size="small"
-                onClick={() => {
-                  // TODO: Implement project settings
-                  message.info('Project settings coming soon');
-                }}
-              />
-            }
-            style={{
-              border: currentProject?.projectId === project.id ? '2px solid #1890ff' : undefined,
-              borderRadius: '8px',
-              boxShadow: currentProject?.projectId === project.id 
-                ? '0 4px 12px rgba(24, 144, 255, 0.15)' 
-                : '0 2px 8px rgba(0, 0, 0, 0.06)',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-            }}
-            hoverable
-            actions={[
-              <Button
-                key="view"
-                type="link"
-                icon={<EyeOutlined />}
-                onClick={() => handleViewProject(project.id)}
-              >
-                View Dashboard
-              </Button>,
-              <Button
-                key="stats"
-                type="link"
-                icon={<DatabaseOutlined />}
-                onClick={() => {
-                  // Navigate to project dashboard where stats are shown
-                  handleViewProject(project.id);
-                }}
-              >
-                View Stats
-              </Button>,
-            ]}
-          >
-            <div style={{ marginBottom: 16 }}>
-              <Paragraph ellipsis={{ rows: 2 }}>
-                {project.description || 'No description provided'}
-              </Paragraph>
-            </div>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          {projects.map((project) => (
+            <Card
+              key={project.id}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                currentProject?.projectId === project.id 
+                  ? 'border-primary shadow-primary/20' 
+                  : ''
+              }`}
+              onClick={() => handleViewProject(project.id)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FolderIcon size={20} />
+                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getProjectStatusColor(project.id) === 'green' ? 'default' : 'secondary'}>
+                      {getProjectStatusText(project.id)}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toast.info('Project settings coming soon');
+                      }}
+                    >
+                      <SettingsIcon size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pb-3">
+                <CardDescription className="line-clamp-2 mb-4">
+                  {project.description || 'No description provided'}
+                </CardDescription>
 
-            <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: 16 }}>
-              <div>
-                <strong>ID:</strong> {project.id}
-              </div>
-              <div>
-                <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
-              </div>
-              <div>
-                <strong>Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}
-              </div>
-            </div>
+                <div className="text-xs text-muted-foreground space-y-1 mb-4">
+                  <div><strong>ID:</strong> {project.id}</div>
+                  <div><strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}</div>
+                  <div><strong>Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}</div>
+                </div>
 
-            {project.tags && project.tags.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <Space wrap>
-                  {project.tags.map((tag) => (
-                    <Tag key={tag}>{tag}</Tag>
-                  ))}
-                </Space>
-              </div>
-            )}
-          </Card>
-        ))}
-      </div>
+                {project.tags && project.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {project.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+
+              <CardFooter className="pt-0 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 flex items-center gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewProject(project.id);
+                  }}
+                >
+                  <EyeIcon size={14} />
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 flex items-center gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewProject(project.id);
+                  }}
+                >
+                  <DatabaseIcon size={14} />
+                  Stats
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
 
         {projects.length === 0 && (
-          <Card 
-            style={{ 
-              textAlign: 'center', 
-              padding: '60px 40px',
-              border: '2px dashed #d9d9d9',
-              borderRadius: '12px',
-              background: '#fafafa'
-            }}
-          >
-            <ProjectOutlined style={{ fontSize: '64px', color: '#d9d9d9', marginBottom: '24px' }} />
-            <Title level={3} type="secondary" style={{ marginBottom: '12px' }}>
+          <Card className="text-center p-12 border-dashed border-2 bg-muted/50">
+            <FolderIcon size={64} className="mx-auto mb-6 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-3 text-muted-foreground">
               No Projects Found
-            </Title>
-            <Paragraph type="secondary" style={{ fontSize: '16px', marginBottom: '32px' }}>
+            </h3>
+            <p className="text-muted-foreground mb-8 text-base">
               Create your first project to get started with organizing your development work.
-            </Paragraph>
+            </p>
             <Button 
-              type="primary" 
-              size="large"
-              icon={<PlusOutlined />} 
+              size="lg"
               onClick={() => setIsModalVisible(true)}
+              className="flex items-center gap-2"
             >
+              <PlusIcon size={16} />
               Create First Project
             </Button>
           </Card>
         )}
 
-      <Modal
-        title="Create New Project"
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          form.resetFields();
-        }}
-        footer={null}
-      >
-        <Form form={form} layout="vertical" onFinish={handleCreateProject}>
-          <Form.Item
-            name="name"
-            label="Project Name"
-            rules={[
-              { required: true, message: 'Please enter a project name' },
-              { min: 3, message: 'Project name must be at least 3 characters' },
-              { max: 50, message: 'Project name must be less than 50 characters' },
-            ]}
-          >
-            <Input placeholder="e.g., My Development Project" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Description (Optional)"
-            rules={[{ max: 200, message: 'Description must be less than 200 characters' }]}
-          >
-            <TextArea rows={3} placeholder="Describe what this project is about..." />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Space>
-              <Button
-                onClick={() => {
-                  setIsModalVisible(false);
-                  form.resetFields();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="primary" htmlType="submit" loading={creating}>
-                Create Project
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+        <Dialog open={isModalVisible} onOpenChange={setIsModalVisible}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Project</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateProject} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Project Name</Label>
+                <Input
+                  id="name"
+                  placeholder="e.g., My Development Project"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe what this project is about..."
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsModalVisible(false);
+                    setFormData({ name: '', description: '' });
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={creating}>
+                  {creating ? (
+                    <>
+                      <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Project'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageLayout>
   );
