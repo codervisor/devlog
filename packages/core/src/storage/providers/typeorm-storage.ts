@@ -49,6 +49,9 @@ export class TypeORMStorageProvider implements StorageProvider {
   private chatDevlogLinkRepository?: Repository<ChatDevlogLinkEntity>;
   private options: TypeORMStorageOptions;
 
+  // Initialization race condition protection
+  private initializationPromise: Promise<void> | null = null;
+
   // Event subscription properties
   private eventCallbacks = new Set<(event: DevlogEvent) => void>();
   private isWatching = false;
@@ -59,9 +62,37 @@ export class TypeORMStorageProvider implements StorageProvider {
   }
 
   async initialize(): Promise<void> {
+    // If already initialized, return immediately
+    if (this.dataSource.isInitialized && this.repository) {
+      console.log('[TypeORMStorage] Already initialized, skipping...');
+      return;
+    }
+
+    // If initialization is in progress, wait for it
+    if (this.initializationPromise) {
+      console.log('[TypeORMStorage] Initialization in progress, waiting...');
+      return this.initializationPromise;
+    }
+
+    console.log('[TypeORMStorage] Starting new initialization...');
+
+    // Create initialization promise to prevent race conditions
+    this.initializationPromise = this.doInitialize();
+
+    try {
+      await this.initializationPromise;
+    } catch (error) {
+      // Clear the promise on failure so next call can retry
+      this.initializationPromise = null;
+      throw error;
+    }
+  }
+
+  private async doInitialize(): Promise<void> {
     try {
       // Check if already initialized to prevent "already connected" errors in development
       if (!this.dataSource.isInitialized) {
+        console.log(`[TypeORMStorage] Connecting to ${this.options.type} database...`);
         await this.dataSource.initialize();
         console.log('[TypeORMStorage] Connected to database successfully');
       } else {
@@ -84,7 +115,10 @@ export class TypeORMStorageProvider implements StorageProvider {
           // Don't fail initialization if chat tables already exist
         }
       }
+
+      console.log('[TypeORMStorage] Repositories initialized successfully');
     } catch (error) {
+      console.error('[TypeORMStorage] Initialization failed:', error);
       throw new Error(`Failed to initialize TypeORM storage: ${error}`);
     }
   }

@@ -39,28 +39,57 @@ export class ProjectDevlogManager {
 
   /**
    * Initialize the devlog manager
+   * Protects against race conditions during concurrent initialization
    */
   async initialize(): Promise<void> {
+    // If already initialized, return immediately
     if (this.initialized) {
       console.log('🔄 ProjectDevlogManager already initialized, skipping...');
       return;
     }
 
-    console.log('🚀 Initializing ProjectDevlogManager...');
-
-    if (this.options.projectContext) {
-      console.log(`📂 Project context: ${this.options.projectContext.projectId}`);
-    } else {
-      console.log('📂 No project context configured');
+    // If initialization is in progress, wait for it
+    if (this.initPromise) {
+      console.log('⏳ ProjectDevlogManager initialization in progress, waiting...');
+      return this.initPromise;
     }
 
-    console.log(`💾 Storage type: ${this.options.storageConfig.type}`);
+    console.log('🚀 Initializing ProjectDevlogManager...');
 
-    this.storageProvider = await StorageProviderFactory.create(this.options.storageConfig);
-    await this.storageProvider.initialize();
+    // Create initialization promise to prevent race conditions
+    this.initPromise = this.performInitialization();
 
-    this.initialized = true;
-    console.log('✅ ProjectDevlogManager initialized successfully');
+    try {
+      await this.initPromise;
+    } catch (error) {
+      // Clear promise on failure so next call can retry
+      this.initPromise = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Internal method to perform the actual initialization
+   */
+  private async performInitialization(): Promise<void> {
+    try {
+      if (this.options.projectContext) {
+        console.log(`📂 Project context: ${this.options.projectContext.projectId}`);
+      } else {
+        console.log('📂 No project context configured');
+      }
+
+      console.log(`💾 Storage type: ${this.options.storageConfig.type}`);
+
+      this.storageProvider = await StorageProviderFactory.create(this.options.storageConfig);
+      await this.storageProvider.initialize();
+
+      this.initialized = true;
+      console.log('✅ ProjectDevlogManager initialized successfully');
+    } catch (error) {
+      console.error('❌ ProjectDevlogManager initialization failed:', error);
+      throw error;
+    }
   }
 
   /**
