@@ -214,20 +214,6 @@ export class DevlogApiClient {
     return this.get(`${this.getProjectEndpoint()}/devlogs/search?${params.toString()}`);
   }
 
-  async getDevlogStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    const params = new URLSearchParams();
-
-    if (filter) {
-      if (filter.status?.length) params.append('status', filter.status.join(','));
-      if (filter.type?.length) params.append('type', filter.type.join(','));
-      if (filter.priority?.length) params.append('priority', filter.priority.join(','));
-      if (filter.archived !== undefined) params.append('archived', String(filter.archived));
-    }
-
-    const query = params.toString() ? `?${params.toString()}` : '';
-    return this.get(`${this.getProjectEndpoint()}/devlogs/stats${query}`);
-  }
-
   async addDevlogNote(
     devlogId: number,
     note: string,

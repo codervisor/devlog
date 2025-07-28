@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { AutoProjectManager } from '@codervisor/devlog-core';
+import type { DevlogApiClient } from '../api/devlog-api-client.js';
 
 // Project management tools for MCP server
 export const listProjectsTool: Tool = {
@@ -40,9 +40,9 @@ export const switchProjectTool: Tool = {
 export const projectTools: Tool[] = [listProjectsTool, getCurrentProjectTool, switchProjectTool];
 
 // Tool implementations for project management
-export async function handleListProjects(projectManager: AutoProjectManager) {
+export async function handleListProjects(apiClient: DevlogApiClient) {
   try {
-    const projects = await projectManager.listProjects();
+    const projects = await apiClient.listProjects();
 
     if (projects.length === 0) {
       return {
@@ -88,7 +88,7 @@ export async function handleListProjects(projectManager: AutoProjectManager) {
 export async function handleGetCurrentProject(adapter: any) {
   try {
     const currentProjectId = adapter.getCurrentProjectId();
-    const projects = await adapter.manager.listProjects();
+    const projects = await adapter.apiClient.listProjects();
     const currentProject = projects.find((p: any) => p.id === currentProjectId);
 
     if (!currentProject) {
@@ -135,7 +135,7 @@ Note: This is the MCP server's in-memory current project. Web app project may di
 export async function handleSwitchProject(adapter: any, args: { projectId: string }) {
   try {
     // Validate that the project exists
-    const projects = await adapter.manager.listProjects();
+    const projects = await adapter.apiClient.listProjects();
     const targetProject = projects.find((p: any) => p.id === args.projectId);
 
     if (!targetProject) {

@@ -4,17 +4,12 @@
  */
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import {
-  DevlogApiClient,
-  DevlogApiClientError,
-  type DevlogApiClientConfig,
-} from '../api/devlog-api-client.js';
+import { DevlogApiClient, type DevlogApiClientConfig } from '../api/devlog-api-client.js';
 import type {
   DevlogEntry,
   CreateDevlogRequest,
   UpdateDevlogRequest,
   DevlogFilter,
-  PaginatedResult,
 } from '@codervisor/devlog-core';
 import type {
   CreateDevlogArgs,
@@ -23,13 +18,11 @@ import type {
   SearchDevlogsArgs,
   AddDevlogNoteArgs,
   UpdateDevlogWithNoteArgs,
-  AddDecisionArgs,
   CompleteDevlogArgs,
   CloseDevlogArgs,
   GetActiveContextArgs,
-  GetContextForAIArgs,
+  GetDevlogArgs,
   DiscoverRelatedDevlogsArgs,
-  UpdateAIContextArgs,
 } from '../types/tool-args.js';
 
 export interface MCPApiAdapterConfig {
@@ -104,7 +97,17 @@ export class MCPApiAdapter {
     await this.ensureInitialized();
 
     try {
-      const entry = await this.apiClient.createDevlog(args as CreateDevlogRequest);
+      const createRequest: CreateDevlogRequest = {
+        title: args.title,
+        type: args.type,
+        description: args.description,
+        priority: args.priority,
+        businessContext: args.businessContext,
+        technicalContext: args.technicalContext,
+        acceptanceCriteria: args.acceptanceCriteria,
+      };
+
+      const entry = await this.apiClient.createDevlog(createRequest);
 
       return {
         content: [
@@ -123,7 +126,15 @@ export class MCPApiAdapter {
     await this.ensureInitialized();
 
     try {
-      const entry = await this.apiClient.updateDevlog(args.id, args as UpdateDevlogRequest);
+      const updateRequest: UpdateDevlogRequest = {
+        status: args.status,
+        priority: args.priority,
+        businessContext: args.businessContext,
+        technicalContext: args.technicalContext,
+        acceptanceCriteria: args.acceptanceCriteria,
+      };
+
+      const entry = await this.apiClient.updateDevlog(args.id, updateRequest);
 
       return {
         content: [
@@ -138,7 +149,7 @@ export class MCPApiAdapter {
     }
   }
 
-  async getDevlog(args: GetContextForAIArgs): Promise<CallToolResult> {
+  async getDevlog(args: GetDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
@@ -293,10 +304,11 @@ export class MCPApiAdapter {
     try {
       // First update the devlog fields if provided
       if (args.status || args.priority) {
-        await this.apiClient.updateDevlog(args.id, {
+        const updateRequest: UpdateDevlogRequest = {
           status: args.status,
           priority: args.priority,
-        } as UpdateDevlogRequest);
+        };
+        await this.apiClient.updateDevlog(args.id, updateRequest);
       }
 
       // Then add the note
@@ -326,10 +338,12 @@ export class MCPApiAdapter {
 
     try {
       // Update status to done
-      const entry = await this.apiClient.updateDevlog(args.id, {
+      const updateRequest: UpdateDevlogRequest = {
         status: 'done',
-        closedAt: new Date().toISOString(),
-      } as any);
+        // Note: closedAt is not part of UpdateDevlogRequest interface
+        // This should be handled by the API implementation
+      };
+      const entry = await this.apiClient.updateDevlog(args.id, updateRequest);
 
       // Add completion note if provided
       if (args.summary) {
@@ -356,10 +370,12 @@ export class MCPApiAdapter {
 
     try {
       // Update status to cancelled
-      const entry = await this.apiClient.updateDevlog(args.id, {
+      const updateRequest: UpdateDevlogRequest = {
         status: 'cancelled',
-        closedAt: new Date().toISOString(),
-      } as any);
+        // Note: closedAt is not part of UpdateDevlogRequest interface
+        // This should be handled by the API implementation
+      };
+      const entry = await this.apiClient.updateDevlog(args.id, updateRequest);
 
       // Add closure note if provided
       if (args.reason) {
@@ -414,127 +430,6 @@ export class MCPApiAdapter {
       };
     } catch (error) {
       return this.handleError('Failed to unarchive devlog', error);
-    }
-  }
-
-  async getActiveContext(args: GetActiveContextArgs = {}): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      const filter: DevlogFilter = {
-        status: ['new', 'in-progress', 'blocked', 'in-review', 'testing'],
-        pagination: args.limit ? { limit: args.limit } : undefined,
-      };
-
-      const result = await this.apiClient.listDevlogs(filter);
-      const entries = result.items;
-      const limited = entries.slice(0, args.limit || 10);
-
-      if (limited.length === 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'No active devlog entries found.',
-            },
-          ],
-        };
-      }
-
-      const summary = limited
-        .map((entry: DevlogEntry) => {
-          const recentNotes = entry.notes?.slice(-2) || [];
-          const notesText =
-            recentNotes.length > 0
-              ? `\n  Recent notes: ${recentNotes.map((n: any) => n.content).join('; ')}`
-              : '';
-
-          return `- [${entry.status}] ${entry.title} (${entry.type}, ${entry.priority})${notesText}`;
-        })
-        .join('\n');
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `${limited.length} active devlog entries:\n\n${summary}`,
-          },
-        ],
-      };
-    } catch (error) {
-      return this.handleError('Failed to get active context', error);
-    }
-  }
-
-  async getContextForAI(args: GetContextForAIArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      const entry = await this.apiClient.getDevlog(args.id);
-
-      const context = {
-        id: entry.id,
-        title: entry.title,
-        type: entry.type,
-        status: entry.status,
-        priority: entry.priority,
-        description: entry.description,
-        businessContext: entry.businessContext,
-        technicalContext: entry.technicalContext,
-        acceptanceCriteria: entry.acceptanceCriteria,
-        recentNotes: entry.notes?.slice(-5) || [],
-        totalNotes: entry.notes?.length || 0,
-        createdAt: entry.createdAt,
-        updatedAt: entry.updatedAt,
-      };
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(context, null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      return this.handleError('Failed to get context for AI', error);
-    }
-  }
-
-  async updateAIContext(args: UpdateAIContextArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      // For now, we'll add AI context updates as structured notes
-      const aiContextNote = Object.entries({
-        summary: args.summary,
-        insights: args.insights,
-        nextSteps: args.nextSteps,
-        questions: args.questions,
-        patterns: args.patterns,
-      })
-        .filter(([_, value]) => value !== undefined)
-        .map(([key, value]) => `**${key}**: ${Array.isArray(value) ? value.join(', ') : value}`)
-        .join('\n\n');
-
-      if (aiContextNote) {
-        await this.apiClient.addDevlogNote(
-          args.id,
-          `**AI Context Update**\n\n${aiContextNote}`,
-          'idea',
-        );
-      }
-
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Updated AI context for devlog '${args.id}'`,
-          },
-        ],
-      };
-    } catch (error) {
-      return this.handleError('Failed to update AI context', error);
     }
   }
 
@@ -602,19 +497,6 @@ export class MCPApiAdapter {
     } catch (error) {
       return this.handleError('Failed to discover related devlogs', error);
     }
-  }
-
-  // Stub implementations for unsupported operations
-  async addDecision(args: AddDecisionArgs): Promise<CallToolResult> {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Decision tracking has been simplified and is no longer supported. Use notes with category 'idea' or 'solution' instead.`,
-        },
-      ],
-      isError: true,
-    };
   }
 
   async dispose(): Promise<void> {
