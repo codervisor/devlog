@@ -42,7 +42,7 @@ export class DevlogApiClient {
   private baseUrl: string;
   private timeout: number;
   private retries: number;
-  private currentProjectId: string | null = null;
+  private currentProjectId: number | null = null;
 
   constructor(config: DevlogApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
@@ -53,14 +53,14 @@ export class DevlogApiClient {
   /**
    * Set the current project ID for all subsequent requests
    */
-  setCurrentProject(projectId: string): void {
+  setCurrentProject(projectId: number): void {
     this.currentProjectId = projectId;
   }
 
   /**
    * Get the current project ID
    */
-  getCurrentProjectId(): string | null {
+  getCurrentProjectId(): number | null {
     return this.currentProjectId;
   }
 
@@ -157,8 +157,8 @@ export class DevlogApiClient {
     return this.get('/api/projects');
   }
 
-  async getProject(projectId?: string): Promise<any> {
-    const id = projectId || this.currentProjectId || 'default';
+  async getProject(projectId?: number): Promise<any> {
+    const id = projectId || this.currentProjectId || 0;
     return this.get(`/api/projects/${id}`);
   }
 

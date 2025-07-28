@@ -1,40 +1,29 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import type { DevlogApiClient } from '../api/devlog-api-client.js';
+import { zodToJsonSchema } from '../utils/schema-converter.js';
+import {
+  ListProjectsArgsSchema,
+  GetCurrentProjectArgsSchema,
+  SwitchProjectArgsSchema,
+} from '../schemas/mcp-tool-schemas.js';
 
 // Project management tools for MCP server
 export const listProjectsTool: Tool = {
   name: 'list_projects',
   description: 'List all available projects with their configurations',
-  inputSchema: {
-    type: 'object',
-    properties: {},
-    required: [],
-  },
+  inputSchema: zodToJsonSchema(ListProjectsArgsSchema),
 };
 
 export const getCurrentProjectTool: Tool = {
   name: 'get_current_project',
   description: 'Get the currently active project information',
-  inputSchema: {
-    type: 'object',
-    properties: {},
-    required: [],
-  },
+  inputSchema: zodToJsonSchema(GetCurrentProjectArgsSchema),
 };
 
 export const switchProjectTool: Tool = {
   name: 'switch_project',
   description: 'Switch to a different project by ID',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      projectId: {
-        type: 'string',
-        description: 'The ID of the project to switch to',
-      },
-    },
-    required: ['projectId'],
-  },
+  inputSchema: zodToJsonSchema(SwitchProjectArgsSchema),
 };
 
 export const projectTools: Tool[] = [listProjectsTool, getCurrentProjectTool, switchProjectTool];

@@ -19,8 +19,10 @@ import {
   SettingOutlined,
   ProjectOutlined,
   DatabaseOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { useProject } from '@/contexts/ProjectContext';
+import { useRouter } from 'next/navigation';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -35,6 +37,7 @@ export function ProjectManagementPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form] = Form.useForm<ProjectFormData>();
+  const router = useRouter();
 
   const handleCreateProject = async (values: ProjectFormData) => {
     try {
@@ -64,6 +67,10 @@ export function ProjectManagementPage() {
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleViewProject = (projectId: string) => {
+    router.push(`/projects/${projectId}`);
   };
 
   const getProjectStatusColor = (projectId: string) => {
@@ -112,10 +119,10 @@ export function ProjectManagementPage() {
         <div>
           <Title level={2} style={{ margin: 0 }}>
             <ProjectOutlined style={{ marginRight: 8 }} />
-            Project Management
+            Projects
           </Title>
           <Paragraph type="secondary" style={{ margin: '8px 0 0 0' }}>
-            Manage your development projects and switch between different contexts
+            Manage your development projects and view their dashboards
           </Paragraph>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
@@ -156,6 +163,27 @@ export function ProjectManagementPage() {
             style={{
               border: currentProject?.projectId === project.id ? '2px solid #1890ff' : undefined,
             }}
+            actions={[
+              <Button
+                key="view"
+                type="link"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewProject(project.id)}
+              >
+                View Dashboard
+              </Button>,
+              <Button
+                key="stats"
+                type="link"
+                icon={<DatabaseOutlined />}
+                onClick={() => {
+                  // Navigate to project dashboard where stats are shown
+                  handleViewProject(project.id);
+                }}
+              >
+                View Stats
+              </Button>,
+            ]}
           >
             <div style={{ marginBottom: 16 }}>
               <Paragraph ellipsis={{ rows: 2 }}>
@@ -184,20 +212,6 @@ export function ProjectManagementPage() {
                 </Space>
               </div>
             )}
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button
-                type="link"
-                icon={<DatabaseOutlined />}
-                size="small"
-                onClick={() => {
-                  // TODO: Show project statistics
-                  message.info('Project statistics coming soon');
-                }}
-              >
-                View Stats
-              </Button>
-            </div>
           </Card>
         ))}
       </div>

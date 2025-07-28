@@ -16,23 +16,30 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { createMCPAdapterWithDiscovery, type MCPAdapter } from './adapters/index.js';
 import type {
   CreateDevlogArgs,
-  UpdateDevlogArgs,
-  ListDevlogsArgs,
-  SearchDevlogsArgs,
   AddDevlogNoteArgs,
   UpdateDevlogWithNoteArgs,
-  CompleteDevlogArgs,
-  CloseDevlogArgs,
-  GetActiveContextArgs,
-  GetDevlogArgs,
-  DiscoverRelatedDevlogsArgs,
-} from './types';
+} from './types/index.js';
 import { allTools } from './tools/index.js';
 import {
   handleListProjects,
   handleGetCurrentProject,
   handleSwitchProject,
 } from './tools/project-tools.js';
+import { validateToolArgs } from './utils/validation.js';
+import {
+  CreateDevlogArgsSchema,
+  UpdateDevlogArgsSchema,
+  GetDevlogArgsSchema,
+  ListDevlogsArgsSchema,
+  SearchDevlogsArgsSchema,
+  AddDevlogNoteArgsSchema,
+  UpdateDevlogWithNoteArgsSchema,
+  CompleteDevlogArgsSchema,
+  CloseDevlogArgsSchema,
+  ArchiveDevlogArgsSchema,
+  DiscoverRelatedDevlogsArgsSchema,
+  SwitchProjectArgsSchema,
+} from './schemas/mcp-tool-schemas.js';
 
 const server = new Server(
   {
@@ -58,41 +65,98 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case 'discover_related_devlogs':
-        return await adapter.discoverRelatedDevlogs(args as unknown as DiscoverRelatedDevlogsArgs);
+      case 'list_devlogs': {
+        const validation = validateToolArgs(ListDevlogsArgsSchema, args, 'list_devlogs');
+        if (!validation.success) return validation.result;
+        return await adapter.listDevlogs(validation.data);
+      }
 
-      case 'search_devlogs':
-        return await adapter.searchDevlogs(args as unknown as SearchDevlogsArgs);
+      case 'search_devlogs': {
+        const validation = validateToolArgs(SearchDevlogsArgsSchema, args, 'search_devlogs');
+        if (!validation.success) return validation.result;
+        return await adapter.searchDevlogs(validation.data);
+      }
 
-      case 'list_devlogs':
-        return await adapter.listDevlogs(args as unknown as ListDevlogsArgs);
+      case 'discover_related_devlogs': {
+        const validation = validateToolArgs(DiscoverRelatedDevlogsArgsSchema, args, 'discover_related_devlogs');
+        if (!validation.success) return validation.result;
+        return await adapter.discoverRelatedDevlogs(validation.data);
+      }
 
-      case 'create_devlog':
-        return await adapter.createDevlog(args as unknown as CreateDevlogArgs);
+      case 'create_devlog': {
+        const validation = validateToolArgs(CreateDevlogArgsSchema, args, 'create_devlog');
+        if (!validation.success) return validation.result;
+        
+        // Apply defaults
+        const validatedArgs: CreateDevlogArgs = {
+          ...validation.data,
+          priority: validation.data.priority ?? 'medium',
+        };
+        
+        return await adapter.createDevlog(validatedArgs);
+      }
 
-      case 'update_devlog':
-        return await adapter.updateDevlog(args as unknown as UpdateDevlogArgs);
+      case 'update_devlog': {
+        const validation = validateToolArgs(UpdateDevlogArgsSchema, args, 'update_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.updateDevlog(validation.data);
+      }
 
-      case 'get_devlog':
-        return await adapter.getDevlog(args as unknown as GetDevlogArgs);
+      case 'get_devlog': {
+        const validation = validateToolArgs(GetDevlogArgsSchema, args, 'get_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.getDevlog(validation.data);
+      }
 
-      case 'add_devlog_note':
-        return await adapter.addDevlogNote(args as unknown as AddDevlogNoteArgs);
+      case 'add_devlog_note': {
+        const validation = validateToolArgs(AddDevlogNoteArgsSchema, args, 'add_devlog_note');
+        if (!validation.success) return validation.result;
+        
+        // Apply defaults
+        const validatedArgs: AddDevlogNoteArgs = {
+          ...validation.data,
+          category: validation.data.category ?? 'progress',
+        };
+        
+        return await adapter.addDevlogNote(validatedArgs);
+      }
 
-      case 'update_devlog_with_note':
-        return await adapter.updateDevlogWithNote(args as unknown as UpdateDevlogWithNoteArgs);
+      case 'update_devlog_with_note': {
+        const validation = validateToolArgs(UpdateDevlogWithNoteArgsSchema, args, 'update_devlog_with_note');
+        if (!validation.success) return validation.result;
+        
+        // Apply defaults
+        const validatedArgs: UpdateDevlogWithNoteArgs = {
+          ...validation.data,
+          category: validation.data.category ?? 'progress',
+        };
+        
+        return await adapter.updateDevlogWithNote(validatedArgs);
+      }
 
-      case 'complete_devlog':
-        return await adapter.completeDevlog(args as unknown as CompleteDevlogArgs);
+      case 'complete_devlog': {
+        const validation = validateToolArgs(CompleteDevlogArgsSchema, args, 'complete_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.completeDevlog(validation.data);
+      }
 
-      case 'close_devlog':
-        return await adapter.closeDevlog(args as unknown as CloseDevlogArgs);
+      case 'close_devlog': {
+        const validation = validateToolArgs(CloseDevlogArgsSchema, args, 'close_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.closeDevlog(validation.data);
+      }
 
-      case 'archive_devlog':
-        return await adapter.archiveDevlog(args as unknown as { id: number });
+      case 'archive_devlog': {
+        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'archive_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.archiveDevlog(validation.data);
+      }
 
-      case 'unarchive_devlog':
-        return await adapter.unarchiveDevlog(args as unknown as { id: number });
+      case 'unarchive_devlog': {
+        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'unarchive_devlog');
+        if (!validation.success) return validation.result;
+        return await adapter.unarchiveDevlog(validation.data);
+      }
 
       // Project management tools
       case 'list_projects':
@@ -101,8 +165,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'get_current_project':
         return await handleGetCurrentProject(adapter);
 
-      case 'switch_project':
-        return await handleSwitchProject(adapter, args as unknown as { projectId: string });
+      case 'switch_project': {
+        const validation = validateToolArgs(SwitchProjectArgsSchema, args, 'switch_project');
+        if (!validation.success) return validation.result;
+        return await handleSwitchProject(adapter, validation.data);
+      }
 
       default:
         throw new Error(`Unknown tool: ${name}`);
