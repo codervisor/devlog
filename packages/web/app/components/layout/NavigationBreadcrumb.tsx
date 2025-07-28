@@ -1,12 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Breadcrumb, Dropdown, Button, message } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useProject } from '@/contexts/ProjectContext';
 import Link from 'next/link';
-import { FolderIcon, BookOpenIcon, CheckIcon } from 'lucide-react';
+import { FolderIcon, BookOpenIcon, CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbSeparator
+} from '@/components/ui/breadcrumb';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
   const pathname = usePathname();
@@ -59,13 +72,13 @@ export function NavigationBreadcrumb() {
         isDefault: projectId === 'default',
       });
 
-      message.success(`Switched to project: ${targetProject.name}`);
+      toast.success(`Switched to project: ${targetProject.name}`);
       
       // Navigate to the project dashboard
       router.push(`/projects/${projectId}`);
     } catch (error) {
       console.error('Error switching project:', error);
-      message.error('Failed to switch project');
+      toast.error('Failed to switch project');
     } finally {
       setSwitchingProject(false);
     }
@@ -74,94 +87,53 @@ export function NavigationBreadcrumb() {
   const renderProjectDropdown = () => {
     if (!currentProject || projects.length <= 1) return null;
 
-    const dropdownItems = projects.map((project) => {
-      const isCurrentProject = currentProject.projectId === project.id;
-      
-      return {
-        key: project.id,
-        label: (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '8px 4px',
-              color: isCurrentProject ? '#1890ff' : '#262626',
-              fontWeight: isCurrentProject ? 500 : 400,
-            }}
-            onClick={() => !isCurrentProject && switchProject(project.id)}
-          >
-            <div
-              style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                backgroundColor: getProjectColor(project.name),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '10px',
-                fontWeight: 600,
-                flexShrink: 0,
-              }}
-            >
-              {getProjectInitials(project.name)}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ 
-                overflow: 'hidden', 
-                textOverflow: 'ellipsis', 
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-              }}>
-                {project.name}
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: '#8c8c8c',
-                overflow: 'hidden', 
-                textOverflow: 'ellipsis', 
-                whiteSpace: 'nowrap',
-              }}>
-                {project.id}
-              </div>
-            </div>
-            {isCurrentProject && (
-              <CheckIcon size={14} style={{ color: '#1890ff', flexShrink: 0 }} />
-            )}
-          </div>
-        ),
-        disabled: isCurrentProject,
-      };
-    });
-
     return (
-      <Dropdown
-        menu={{ items: dropdownItems }}
-        placement="bottomLeft"
-        trigger={['click']}
-        disabled={switchingProject}
-      >
-        <Button
-          type="text"
-          loading={switchingProject}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '0 8px',
-            height: 'auto',
-            border: 'none',
-            boxShadow: 'none',
-            color: 'inherit',
-          }}
-        >
-          <BookOpenIcon size={14} />
-          <span>{currentProject.project.name}</span>
-          <DownOutlined style={{ fontSize: '10px', color: '#8c8c8c' }} />
-        </Button>
-      </Dropdown>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={switchingProject}
+            className="flex items-center gap-2 px-2 h-auto text-inherit hover:bg-accent"
+          >
+            <BookOpenIcon size={14} />
+            <span>{currentProject.project.name}</span>
+            <ChevronDownIcon size={10} className="text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          {projects.map((project) => {
+            const isCurrentProject = currentProject.projectId === project.id;
+            
+            return (
+              <DropdownMenuItem
+                key={project.id}
+                disabled={isCurrentProject}
+                onClick={() => !isCurrentProject && switchProject(project.id)}
+                className="flex items-center gap-3 p-3 cursor-pointer"
+              >
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                  style={{ backgroundColor: getProjectColor(project.name) }}
+                >
+                  {getProjectInitials(project.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {project.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {project.id}
+                  </div>
+                </div>
+                {isCurrentProject && (
+                  <CheckIcon size={14} className="text-primary flex-shrink-0" />
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
@@ -175,18 +147,15 @@ export function NavigationBreadcrumb() {
       if (pathParts.length >= 2) {
         // Add Projects breadcrumb (always linkable)
         items.push({
-          title: (
-            <Link href="/projects" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FolderIcon size={14} />
-              <span>Projects</span>
-            </Link>
-          ),
+          href: '/projects',
+          label: 'Projects',
+          icon: <FolderIcon size={14} />,
         });
         
         // Add project selector dropdown (instead of simple project name)
         if (currentProject?.project) {
           items.push({
-            title: renderProjectDropdown(),
+            component: renderProjectDropdown(),
           });
         }
         
@@ -196,22 +165,42 @@ export function NavigationBreadcrumb() {
     } else if (pathname === '/projects') {
       // Only show Projects breadcrumb when on the projects listing page
       items.push({
-        title: (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <FolderIcon size={14} />
-            <span>Projects</span>
-          </span>
-        ),
+        label: 'Projects',
+        icon: <FolderIcon size={14} />,
       });
     }
 
     return items;
   };
 
+  const breadcrumbItems = getBreadcrumbItems();
+
   return (
-    <Breadcrumb 
-      className="navigation-breadcrumb" 
-      items={getBreadcrumbItems()} 
-    />
+    <Breadcrumb className="navigation-breadcrumb">
+      <BreadcrumbList>
+        {breadcrumbItems.map((item, index) => (
+          <React.Fragment key={index}>
+            <BreadcrumbItem>
+              {item.component ? (
+                item.component
+              ) : item.href ? (
+                <BreadcrumbLink asChild>
+                  <Link href={item.href} className="flex items-center gap-2">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                </BreadcrumbLink>
+              ) : (
+                <span className="flex items-center gap-2">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </span>
+              )}
+            </BreadcrumbItem>
+            {index < breadcrumbItems.length - 1 && <BreadcrumbSeparator />}
+          </React.Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }

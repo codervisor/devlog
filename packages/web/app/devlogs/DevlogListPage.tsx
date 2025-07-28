@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Button, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import { DevlogList, PageLayout, OverviewStats, Pagination } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 
 export function DevlogListPage() {
   const {
@@ -97,7 +97,7 @@ export function DevlogListPage() {
   }, [refetchStats]);
 
   const actions = (
-    <Space size="large" wrap>
+    <div className="flex items-center gap-6 flex-wrap">
       <OverviewStats
         stats={stats}
         loading={isLoadingStats}
@@ -105,10 +105,11 @@ export function DevlogListPage() {
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
       />
-      <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateDevlog}>
+      <Button onClick={handleCreateDevlog} className="flex items-center gap-2">
+        <PlusIcon size={16} />
         Create Devlog
       </Button>
-    </Space>
+    </div>
   );
 
   return (

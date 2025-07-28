@@ -1,12 +1,26 @@
 'use client';
 
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert, Button, message, Popconfirm, Space } from 'antd';
-import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UndoOutlined } from '@ant-design/icons';
 import { DevlogDetails, PageLayout } from '@/components';
 import { useDevlogDetails } from '@/hooks/useDevlogDetails';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { 
+  ArrowLeftIcon, 
+  TrashIcon, 
+  SaveIcon, 
+  UndoIcon, 
+  AlertTriangleIcon,
+  InfoIcon
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 interface DevlogDetailsPageProps {
   id: string;
@@ -33,7 +47,7 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
     try {
       setIsSaving(true);
       await updateDevlog(data);
-      message.success('Changes saved successfully');
+      toast.success('Changes saved successfully');
     } catch (error) {
       console.error('Failed to update devlog:', error);
       throw error; // Re-throw so the component can handle the error
@@ -72,7 +86,7 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
       router.push('/devlogs');
     } catch (error) {
       console.error('Failed to delete devlog:', error);
-      message.error('Failed to delete devlog');
+      toast.error('Failed to delete devlog');
     }
   };
 
@@ -97,7 +111,13 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
   if (fetchError) {
     return (
       <PageLayout>
-        <Alert message="Error" description={fetchError} type="error" showIcon />
+        <Alert variant="destructive" className="flex items-center gap-2">
+          <AlertTriangleIcon size={16} />
+          <div>
+            <div className="font-semibold">Error</div>
+            <AlertDescription>{fetchError}</AlertDescription>
+          </div>
+        </Alert>
       </PageLayout>
     );
   }
@@ -105,47 +125,69 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
   if (!devlog) {
     return (
       <PageLayout>
-        <Alert message="Not Found" description="Devlog not found" type="warning" showIcon />
+        <Alert className="flex items-center gap-2">
+          <InfoIcon size={16} />
+          <div>
+            <div className="font-semibold">Not Found</div>
+            <AlertDescription>Devlog not found</AlertDescription>
+          </div>
+        </Alert>
       </PageLayout>
     );
   }
 
   const actions = (
-    <Space>
+    <div className="flex items-center gap-3">
       {hasUnsavedChanges && (
         <>
           <Button
+            variant="outline"
             onClick={() => discardHandlerRef.current?.()}
-            icon={<UndoOutlined />}
             disabled={isSaving}
+            className="flex items-center gap-2"
           >
+            <UndoIcon size={16} />
             Discard Changes
           </Button>
           <Button
-            type="primary"
             onClick={() => saveHandlerRef.current?.()}
-            loading={isSaving}
-            icon={<SaveOutlined />}
+            disabled={isSaving}
+            className="flex items-center gap-2"
           >
+            <SaveIcon size={16} />
             Save Changes
           </Button>
         </>
       )}
-      <Button icon={<ArrowLeftOutlined />} onClick={handleBack}>
+      <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
+        <ArrowLeftIcon size={16} />
         Back to List
       </Button>
-      <Popconfirm
-        title="Delete Devlog"
-        description="Are you sure you want to delete this devlog?"
-        onConfirm={handleDelete}
-        okText="Yes"
-        cancelText="No"
-      >
-        <Button danger icon={<DeleteOutlined />}>
-          Delete
-        </Button>
-      </Popconfirm>
-    </Space>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="destructive" className="flex items-center gap-2">
+            <TrashIcon size={16} />
+            Delete
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-3">
+            <h4 className="font-semibold">Delete Devlog</h4>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this devlog? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm">
+                Cancel
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleDelete}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 
   return (

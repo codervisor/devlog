@@ -1,22 +1,22 @@
 import React from 'react';
-import {
-  BookOutlined,
-  BugOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-  EyeOutlined,
-  FileProtectOutlined,
-  InfoCircleOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
-  StarOutlined,
-  StopOutlined,
-  SyncOutlined,
-  ToolOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
 import { DevlogPriority, DevlogStatus, DevlogType } from '@codervisor/devlog-core';
+import {
+  BookIcon,
+  BugIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  AlertCircleIcon,
+  EyeIcon,
+  ShieldCheckIcon,
+  InfoIcon,
+  MinusCircleIcon,
+  PlusIcon,
+  StarIcon,
+  StopCircleIcon,
+  LoaderIcon,
+  WrenchIcon,
+  AlertTriangleIcon,
+} from 'lucide-react';
 
 /**
  * Maps Ant Design color names to their corresponding hex values
@@ -76,21 +76,21 @@ export const getStatusColor = (status: DevlogStatus): string => {
 export const getStatusIcon = (status: DevlogStatus): React.ReactNode => {
   switch (status) {
     case 'new':
-      return <PlusOutlined />; // Ready to start
+      return <PlusIcon size={16} />; // Ready to start
     case 'in-progress':
-      return <SyncOutlined spin />; // Active work (spinning for movement)
+      return <LoaderIcon size={16} className="animate-spin" />; // Active work (spinning for movement)
     case 'blocked':
-      return <StopOutlined />; // Blocked/stopped
+      return <StopCircleIcon size={16} />; // Blocked/stopped
     case 'in-review':
-      return <EyeOutlined />; // Under review/examination
+      return <EyeIcon size={16} />; // Under review/examination
     case 'testing':
-      return <FileProtectOutlined />; // Testing/verification
+      return <ShieldCheckIcon size={16} />; // Testing/verification
     case 'done':
-      return <CheckCircleOutlined />; // Completed
+      return <CheckCircleIcon size={16} />; // Completed
     case 'cancelled':
-      return <MinusCircleOutlined />; // Cancelled/inactive
+      return <MinusCircleIcon size={16} />; // Cancelled/inactive
     default:
-      return <ClockCircleOutlined />; // Default fallback
+      return <ClockIcon size={16} />; // Default fallback
   }
 };
 
@@ -120,15 +120,15 @@ export const getPriorityColor = (priority: DevlogPriority): string => {
 export const getPriorityIcon = (priority: string): React.ReactNode => {
   switch (priority) {
     case 'critical':
-      return <ExclamationCircleOutlined />; // Critical alert
+      return <AlertCircleIcon size={16} />; // Critical alert
     case 'high':
-      return <WarningOutlined />; // Warning/high importance
+      return <AlertTriangleIcon size={16} />; // Warning/high importance
     case 'medium':
-      return <InfoCircleOutlined />; // Information/medium
+      return <InfoIcon size={16} />; // Information/medium
     case 'low':
-      return <MinusCircleOutlined />; // Low/minimal indicator
+      return <MinusCircleIcon size={16} />; // Low/minimal indicator
     default:
-      return <MinusCircleOutlined />;
+      return <MinusCircleIcon size={16} />;
   }
 };
 
@@ -156,16 +156,16 @@ export const getTypeColor = (type: DevlogType): string => {
 export const getTypeIcon = (type: DevlogType): React.ReactNode => {
   switch (type) {
     case 'feature':
-      return <StarOutlined />;
+      return <StarIcon size={16} />;
     case 'bugfix':
-      return <BugOutlined />;
+      return <BugIcon size={16} />;
     case 'task':
-      return <CheckCircleOutlined />;
+      return <CheckCircleIcon size={16} />;
     case 'refactor':
-      return <ToolOutlined />;
+      return <WrenchIcon size={16} />;
     case 'docs':
-      return <BookOutlined />;
+      return <BookIcon size={16} />;
     default:
-      return <MinusCircleOutlined />;
+      return <MinusCircleIcon size={16} />;
   }
 };

@@ -1,24 +1,33 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Button, Layout, Menu, Tooltip } from 'antd';
-import {
-  AppstoreOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  LeftOutlined,
-  PlusOutlined,
-  RightOutlined,
-  WifiOutlined,
-} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@codervisor/devlog-core';
 import { OverviewStats } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
 import styles from './NavigationSidebar.module.css';
-
-const { Sider } = Layout;
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AppWindowIcon,
+  LayoutDashboardIcon,
+  FileTextIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  WifiIcon,
+} from 'lucide-react';
 
 interface NavigationSidebarProps {
   stats?: DevlogStats | null;
@@ -64,7 +73,7 @@ export function NavigationSidebar({
         {
           key: 'projects',
           label: 'Projects',
-          icon: <AppstoreOutlined />,
+          icon: <AppWindowIcon size={16} />,
         },
       ];
     }
@@ -75,17 +84,17 @@ export function NavigationSidebar({
         {
           key: 'dashboard',
           label: 'Dashboard',
-          icon: <DashboardOutlined />,
+          icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'list',
           label: 'Devlogs',
-          icon: <FileTextOutlined />,
+          icon: <FileTextIcon size={16} />,
         },
         {
           key: 'create',
           label: 'New Devlog',
-          icon: <PlusOutlined />,
+          icon: <PlusIcon size={16} />,
         },
       ];
     }
@@ -96,12 +105,12 @@ export function NavigationSidebar({
         {
           key: 'dashboard',
           label: 'Dashboard',
-          icon: <DashboardOutlined />,
+          icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'create',
           label: 'New Devlog',
-          icon: <PlusOutlined />,
+          icon: <PlusIcon size={16} />,
         },
       ];
     }
@@ -112,17 +121,17 @@ export function NavigationSidebar({
         {
           key: 'dashboard',
           label: 'Dashboard',
-          icon: <DashboardOutlined />,
+          icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'list',
           label: 'Back to Devlogs',
-          icon: <FileTextOutlined />,
+          icon: <FileTextIcon size={16} />,
         },
         {
           key: 'create',
           label: 'New Devlog',
-          icon: <PlusOutlined />,
+          icon: <PlusIcon size={16} />,
         },
       ];
     }
@@ -133,12 +142,12 @@ export function NavigationSidebar({
         {
           key: 'dashboard',
           label: 'Dashboard',
-          icon: <DashboardOutlined />,
+          icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'list',
           label: 'Back to Devlogs',
-          icon: <FileTextOutlined />,
+          icon: <FileTextIcon size={16} />,
         },
       ];
     }
@@ -148,12 +157,12 @@ export function NavigationSidebar({
       {
         key: 'dashboard',
         label: 'Dashboard',
-        icon: <DashboardOutlined />,
+        icon: <LayoutDashboardIcon size={16} />,
       },
       {
         key: 'projects',
         label: 'Projects',
-        icon: <AppstoreOutlined />,
+        icon: <AppWindowIcon size={16} />,
       },
     ];
   };
@@ -212,67 +221,58 @@ export function NavigationSidebar({
   const menuItems = getMenuItems();
 
   return (
-    <Sider
-      width={280}
-      collapsed={collapsed}
-      collapsedWidth={60}
-      breakpoint="md"
-      collapsible={false}
-      trigger={null}
-      style={{
-        background: '#fff',
-        borderRight: '1px solid #f0f0f0',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
-      {/* Remove the brand/logo section since it's now in the top navbar */}
-      
-      <Menu
-        mode="inline"
-        selectedKeys={[getSelectedKey()]}
-        style={{ borderRight: 0, flex: 1 }}
-        items={menuItems}
-        onClick={handleMenuClick}
-      />
-
-      <div className={styles.sidebarFooter}>
-        <div className={styles.sidebarFooterContent}>
-          {!collapsed && (
-            <div className={styles.sidebarFooterContentLeft}>
-              <Tooltip
-                title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-                placement="top"
+    <Sidebar className="w-72 border-r bg-background">
+      <SidebarContent>
+        <SidebarMenu className="space-y-1 px-2">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.key}>
+              <SidebarMenuButton
+                onClick={() => handleMenuClick({ key: item.key })}
+                isActive={getSelectedKey() === item.key}
+                className="flex items-center gap-3 px-3 py-2 text-sm font-medium"
               >
-                <WifiOutlined
-                  style={{
-                    color: connected ? '#52c41a' : '#ff4d4f',
-                    fontSize: '16px',
-                    cursor: 'default',
-                  }}
-                />
-              </Tooltip>
+                {item.icon}
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
 
-              {(stats || statsLoading) && (
-                <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
-              )}
-            </div>
-          )}
+      <SidebarFooter className="p-4 border-t">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-default">
+                  <WifiIcon
+                    size={16}
+                    className={connected ? 'text-green-500' : 'text-red-500'}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
+              </TooltipContent>
+            </Tooltip>
 
-          <div className={styles.sidebarFooterContentRight}>
-            {onToggle && (
-              <Button
-                type="text"
-                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                onClick={onToggle}
-                className={styles.sidebarToggle}
-                size="small"
-              />
+            {(stats || statsLoading) && (
+              <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
             )}
           </div>
+
+          {onToggle && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="h-8 w-8 p-0"
+            >
+              {collapsed ? <ChevronRightIcon size={16} /> : <ChevronLeftIcon size={16} />}
+            </Button>
+          )}
         </div>
-      </div>
-    </Sider>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
