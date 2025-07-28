@@ -17,8 +17,11 @@ export * from './storage.js';
 // Storage provider-specific option types
 export * from './storage-options.js';
 
-// Workspace isolation and management types
+// Workspace isolation and management types (DEPRECATED)
 export * from './workspace.js';
+
+// Project isolation and management types (NEW)
+export * from './project.js';
 
 // Integration service and enterprise types
 export * from './integration.js';

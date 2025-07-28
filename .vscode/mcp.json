@@ -21,14 +21,14 @@
 			],
 			"type": "stdio"
 		},
-		"jetbrains": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@jetbrains/mcp-proxy"
-			],
-			"type": "stdio"
-		}
+		// "jetbrains": {
+		// 	"command": "npx",
+		// 	"args": [
+		// 		"-y",
+		// 		"@jetbrains/mcp-proxy"
+		// 	],
+		// 	"type": "stdio"
+		// }
 	},
 	"inputs": []
 }
