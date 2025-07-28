@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { 
   FileText, 
   Info, 
@@ -24,6 +25,7 @@ import { DevlogEntry } from '@codervisor/devlog-core';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
+import { getCategoryIcon } from '@/lib/note-utils';
 import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
@@ -509,8 +511,14 @@ export function DevlogDetails({
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline">#{dependency.id}</Badge>
-                          <span className="font-medium">{dependency.description}</span>
+                          <span className="font-medium">{dependency.title}</span>
+                          <DevlogStatusTag status={dependency.status} />
                         </div>
+                        {dependency.description && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {dependency.description}
+                          </p>
+                        )}
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
@@ -572,6 +580,360 @@ export function DevlogDetails({
         <div className="w-64 flex-shrink-0">
           <DevlogAnchorNav devlog={devlog} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface DevlogDetailsProps {
+  devlog?: DevlogEntry;
+  loading?: boolean;
+  hasUnsavedChanges?: boolean;
+  onUpdate: (data: any) => void;
+  onDelete: () => void;
+  onUnsavedChangesChange?: (
+    hasChanges: boolean,
+    saveHandler: () => Promise<void>,
+    discardHandler: () => void,
+  ) => void;
+}
+
+export function DevlogDetails({
+  devlog,
+  loading = false,
+  hasUnsavedChanges = false,
+  onUpdate,
+  onDelete,
+  onUnsavedChangesChange,
+}: DevlogDetailsProps) {
+  const [editingFields, setEditingFields] = useState<Record<string, any>>({});
+
+  // Setup sticky header detection
+  useStickyHeaders({
+    selectorClass: 'section-header',
+    stickyClass: 'is-sticky',
+    topOffset: 0,
+    dependencies: [devlog],
+  });
+
+  const handleFieldUpdate = useCallback((field: string, value: any) => {
+    const newEditingFields = { ...editingFields, [field]: value };
+    setEditingFields(newEditingFields);
+    
+    if (onUnsavedChangesChange) {
+      const hasChanges = Object.keys(newEditingFields).length > 0;
+      onUnsavedChangesChange(
+        hasChanges,
+        async () => {
+          onUpdate(newEditingFields);
+          setEditingFields({});
+        },
+        () => {
+          setEditingFields({});
+        }
+      );
+    }
+  }, [editingFields, onUpdate, onUnsavedChangesChange]);
+
+  const getCategoryIconComponent = (category: string) => {
+    const iconProps = { className: "h-4 w-4" };
+    switch (category) {
+      case 'progress': return <CheckCircle {...iconProps} />;
+      case 'technical': return <Tool {...iconProps} />;
+      case 'business': return <Lightbulb {...iconProps} />;
+      case 'meeting': return <MessageSquare {...iconProps} />;
+      case 'decision': return <HelpCircle {...iconProps} />;
+      case 'issue': return <AlertTriangle {...iconProps} />;
+      case 'idea': return <Lightbulb {...iconProps} />;
+      case 'question': return <HelpCircle {...iconProps} />;
+      case 'link': return <LinkIcon {...iconProps} />;
+      case 'reference': return <FileText {...iconProps} />;
+      case 'ai': return <Bot {...iconProps} />;
+      default: return <Info {...iconProps} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <div className="flex space-x-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!devlog) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Devlog not found</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex max-w-7xl mx-auto p-6 gap-6">
+      {/* Main Content */}
+      <div className="flex-1 space-y-6">
+        {/* Header */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Badge variant="outline" className="font-mono">
+                    #{devlog.id}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    Created {formatTimeAgoWithTooltip(devlog.createdAt).timeAgo}
+                  </span>
+                  {devlog.updatedAt && devlog.updatedAt !== devlog.createdAt && (
+                    <span className="text-sm text-muted-foreground">
+                      • Updated {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                    </span>
+                  )}
+                </div>
+                <EditableField
+                  value={editingFields.title ?? devlog.title}
+                  onChange={(value) => handleFieldUpdate('title', value)}
+                  type="text"
+                  className="text-2xl font-bold"
+                  placeholder="Enter devlog title..."
+                />
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <EditableField
+                    value={editingFields.status ?? devlog.status}
+                    onChange={(value) => handleFieldUpdate('status', value)}
+                    type="select"
+                    options={statusOptions}
+                    renderValue={(value) => <DevlogStatusTag status={value} />}
+                  />
+                  <EditableField
+                    value={editingFields.priority ?? devlog.priority}
+                    onChange={(value) => handleFieldUpdate('priority', value)}
+                    type="select"
+                    options={priorityOptions}
+                    renderValue={(value) => <DevlogPriorityTag priority={value} />}
+                  />
+                  <EditableField
+                    value={editingFields.type ?? devlog.type}
+                    onChange={(value) => handleFieldUpdate('type', value)}
+                    type="select"
+                    options={typeOptions}
+                    renderValue={(value) => <DevlogTypeTag type={value} />}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Description */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="section-header flex items-center" id="description">
+              <FileText className="h-5 w-5 mr-2" />
+              Description
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EditableField
+              value={editingFields.description ?? devlog.description}
+              onChange={(value) => handleFieldUpdate('description', value)}
+              type="markdown"
+              placeholder="Enter devlog description..."
+              renderValue={(value) => (
+                <MarkdownRenderer content={value} className="prose max-w-none" />
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Business Context */}
+        {(devlog.businessContext || editingFields.businessContext !== undefined) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="section-header flex items-center" id="business-context">
+                <Lightbulb className="h-5 w-5 mr-2" />
+                Business Context
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditableField
+                value={editingFields.businessContext ?? devlog.businessContext}
+                onChange={(value) => handleFieldUpdate('businessContext', value)}
+                type="markdown"
+                placeholder="Enter business context..."
+                renderValue={(value) => (
+                  <MarkdownRenderer content={value} className="prose max-w-none" />
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Technical Context */}
+        {(devlog.technicalContext || editingFields.technicalContext !== undefined) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="section-header flex items-center" id="technical-context">
+                <Tool className="h-5 w-5 mr-2" />
+                Technical Context
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditableField
+                value={editingFields.technicalContext ?? devlog.technicalContext}
+                onChange={(value) => handleFieldUpdate('technicalContext', value)}
+                type="markdown"
+                placeholder="Enter technical context..."
+                renderValue={(value) => (
+                  <MarkdownRenderer content={value} className="prose max-w-none" />
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Acceptance Criteria */}
+        {(devlog.acceptanceCriteria && devlog.acceptanceCriteria.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="section-header flex items-center" id="acceptance-criteria">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Acceptance Criteria
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {devlog.acceptanceCriteria.map((criteria, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <Checkbox
+                      checked={criteria.completed}
+                      onCheckedChange={(checked) => {
+                        const newCriteria = [...(editingFields.acceptanceCriteria ?? devlog.acceptanceCriteria)];
+                        newCriteria[index] = { ...newCriteria[index], completed: checked as boolean };
+                        handleFieldUpdate('acceptanceCriteria', newCriteria);
+                      }}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <EditableField
+                        value={editingFields.acceptanceCriteria?.[index]?.description ?? criteria.description}
+                        onChange={(value) => {
+                          const newCriteria = [...(editingFields.acceptanceCriteria ?? devlog.acceptanceCriteria)];
+                          newCriteria[index] = { ...newCriteria[index], description: value };
+                          handleFieldUpdate('acceptanceCriteria', newCriteria);
+                        }}
+                        type="text"
+                        className={cn(
+                          "text-sm",
+                          criteria.completed && "line-through text-muted-foreground"
+                        )}
+                        placeholder="Enter acceptance criteria..."
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Dependencies */}
+        {(devlog.dependencies && devlog.dependencies.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="section-header flex items-center" id="dependencies">
+                <Network className="h-5 w-5 mr-2" />
+                Dependencies
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {devlog.dependencies.map((dependency, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 border border-border rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline">#{dependency.id}</Badge>
+                        <span className="font-medium">{dependency.title}</span>
+                        <DevlogStatusTag status={dependency.status} />
+                      </div>
+                      {dependency.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {dependency.description}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Notes */}
+        {(devlog.notes && devlog.notes.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="section-header flex items-center" id="notes">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Notes ({devlog.notes.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {devlog.notes.map((note, index) => (
+                  <div key={index} className="border-l-4 border-primary/20 pl-4 py-2">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {getCategoryIconComponent(note.category)}
+                      <Badge variant="secondary" className="text-xs">
+                        {note.category}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {formatTimeAgoWithTooltip(note.timestamp).timeAgo}
+                      </span>
+                    </div>
+                    <MarkdownRenderer 
+                      content={note.content} 
+                      className="prose prose-sm max-w-none"
+                      noPadding
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Side Navigation */}
+      <div className="w-64 flex-shrink-0">
+        <DevlogAnchorNav devlog={devlog} />
       </div>
     </div>
   );
