@@ -1,15 +1,22 @@
 /**
  * Simplified Project Manager for Web API Routes
  *
- * Uses centralized storage configuration and project-based isolation
- * instead of per-workspace storage configurations.
+ * Uses database storage directly with centralized configuration.
+ * No longer auto-detects between file and database storage since
+ * JSON/file storage is deprecated.
  */
 
-import { AutoProjectManager, AppConfigManager } from '@codervisor/devlog-core';
+import {
+  DatabaseProjectManager,
+  AppConfigManager,
+  parseTypeORMConfig,
+  createDataSource,
+  ProjectEntity,
+} from '@codervisor/devlog-core';
 import { join } from 'path';
 import { homedir } from 'os';
 
-let globalProjectManager: AutoProjectManager | null = null;
+let globalProjectManager: DatabaseProjectManager | null = null;
 let globalAppConfigManager: AppConfigManager | null = null;
 
 /**
@@ -32,29 +39,25 @@ export async function getAppConfigManager(): Promise<AppConfigManager> {
 
 /**
  * Get or create the singleton project manager instance
- * Uses centralized storage configuration from AppConfigManager
+ * Uses database storage directly with centralized configuration
  */
-export async function getProjectManager(): Promise<AutoProjectManager> {
+export async function getProjectManager(): Promise<DatabaseProjectManager> {
   if (!globalProjectManager) {
-    console.log('[ProjectManager] Creating new AutoProjectManager...');
+    console.log('[ProjectManager] Creating new DatabaseProjectManager...');
     console.log('[ProjectManager] Environment:', {
       NODE_ENV: process.env.NODE_ENV,
       POSTGRES_URL: !!process.env.POSTGRES_URL,
       DEVLOG_STORAGE_TYPE: process.env.DEVLOG_STORAGE_TYPE,
     });
 
-    const appConfigManager = await getAppConfigManager();
+    // Create database connection
+    const typeormConfig = parseTypeORMConfig();
+    const dataSource = createDataSource(typeormConfig, [ProjectEntity]);
 
-    globalProjectManager = new AutoProjectManager({
-      projectStorageType: 'auto', // Auto-detect for project metadata storage
-      fileOptions: {
-        configPath: join(homedir(), '.devlog', 'projects.json'),
-        createIfMissing: true,
-      },
-      databaseOptions: {
-        createDefaultIfMissing: true,
-        maxProjects: 100,
-      },
+    globalProjectManager = new DatabaseProjectManager({
+      database: dataSource,
+      createDefaultIfMissing: true,
+      maxProjects: 100,
       defaultProjectConfig: {
         name: 'Default Project',
         description: 'Default devlog project',
@@ -63,7 +66,6 @@ export async function getProjectManager(): Promise<AutoProjectManager> {
         },
         tags: [],
       },
-      appConfigManager, // Pass centralized app config manager
     });
 
     console.log('[ProjectManager] Initializing project manager...');
@@ -102,7 +104,11 @@ export async function getAppStorageConfig() {
 export async function getProjectStorageInfo() {
   try {
     const projectManager = await getProjectManager();
-    return projectManager.getProjectStorageInfo();
+    return {
+      type: 'database',
+      manager: 'DatabaseProjectManager',
+      status: 'active',
+    };
   } catch (error) {
     console.error('[ProjectManager] Error getting project storage info:', error);
     return {

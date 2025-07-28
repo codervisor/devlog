@@ -1,7 +1,5 @@
 /**
- * Project managers - centralized without per-project storage configuration
+ * Project managers - database-based storage only
  */
 
-export * from './file-project-manager.js';
 export * from './database-project-manager.js';
-export * from './auto-project-manager.js';

@@ -21,13 +21,11 @@ import type {
   SearchDevlogsArgs,
   AddDevlogNoteArgs,
   UpdateDevlogWithNoteArgs,
-  AddDecisionArgs,
   CompleteDevlogArgs,
   CloseDevlogArgs,
   GetActiveContextArgs,
-  GetContextForAIArgs,
+  GetDevlogArgs,
   DiscoverRelatedDevlogsArgs,
-  UpdateAIContextArgs,
 } from './types';
 import { allTools } from './tools/index.js';
 import {
@@ -60,23 +58,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case 'create_devlog':
-        return await adapter.createDevlog(args as unknown as CreateDevlogArgs);
-
       case 'discover_related_devlogs':
         return await adapter.discoverRelatedDevlogs(args as unknown as DiscoverRelatedDevlogsArgs);
+
+      case 'search_devlogs':
+        return await adapter.searchDevlogs(args as unknown as SearchDevlogsArgs);
+
+      case 'list_devlogs':
+        return await adapter.listDevlogs(args as unknown as ListDevlogsArgs);
+
+      case 'create_devlog':
+        return await adapter.createDevlog(args as unknown as CreateDevlogArgs);
 
       case 'update_devlog':
         return await adapter.updateDevlog(args as unknown as UpdateDevlogArgs);
 
       case 'get_devlog':
-        return await adapter.getDevlog(args as unknown as GetContextForAIArgs);
-
-      case 'list_devlogs':
-        return await adapter.listDevlogs(args as unknown as ListDevlogsArgs);
-
-      case 'search_devlogs':
-        return await adapter.searchDevlogs(args as unknown as SearchDevlogsArgs);
+        return await adapter.getDevlog(args as unknown as GetDevlogArgs);
 
       case 'add_devlog_note':
         return await adapter.addDevlogNote(args as unknown as AddDevlogNoteArgs);
@@ -95,15 +93,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'unarchive_devlog':
         return await adapter.unarchiveDevlog(args as unknown as { id: number });
-
-      case 'get_active_context':
-        return await adapter.getActiveContext(args as unknown as GetActiveContextArgs);
-
-      case 'get_context_for_ai':
-        return await adapter.getContextForAI(args as unknown as GetContextForAIArgs);
-
-      case 'update_ai_context':
-        return await adapter.updateAIContext(args as unknown as UpdateAIContextArgs);
 
       // Project management tools
       case 'list_projects':

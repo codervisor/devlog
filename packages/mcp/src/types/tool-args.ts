@@ -31,31 +31,14 @@ export interface CreateDevlogArgs {
   businessContext?: string;
   technicalContext?: string;
   acceptanceCriteria?: string[];
-  initialInsights?: string[];
-  relatedPatterns?: string[];
-  // AI context fields (embedded from update_ai_context)
-  currentSummary?: string;
-  keyInsights?: string[];
-  openQuestions?: string[];
-  suggestedNextSteps?: string[];
 }
 
 export interface UpdateDevlogArgs extends BaseDevlogArgs {
   status?: DevlogStatus;
   priority?: DevlogPriority;
-  blockers?: string;
-  nextSteps?: string;
-  files?: string[];
   businessContext?: string;
   technicalContext?: string;
   acceptanceCriteria?: string[];
-  initialInsights?: string[];
-  relatedPatterns?: string[];
-  // AI context fields
-  currentSummary?: string;
-  keyInsights?: string[];
-  openQuestions?: string[];
-  suggestedNextSteps?: string[];
 }
 
 export interface ListDevlogsArgs extends DevlogFilterArgs {
@@ -82,13 +65,6 @@ export interface UpdateDevlogWithNoteArgs extends BaseDevlogArgs {
   priority?: DevlogPriority;
 }
 
-export interface AddDecisionArgs extends BaseDevlogArgs {
-  decision: string;
-  rationale: string;
-  decisionMaker: string;
-  alternatives?: string[];
-}
-
 export interface CompleteDevlogArgs extends BaseDevlogArgs {
   summary?: string;
 }
@@ -101,7 +77,7 @@ export interface GetActiveContextArgs {
   limit?: number;
 }
 
-export interface GetContextForAIArgs extends BaseDevlogArgs {
+export interface GetDevlogArgs extends BaseDevlogArgs {
   // Just the id from BaseDevlogArgs
 }
 
@@ -110,13 +86,4 @@ export interface DiscoverRelatedDevlogsArgs {
   workType: DevlogType;
   keywords?: string[];
   scope?: string;
-}
-
-// Legacy AI context tool (deprecated)
-export interface UpdateAIContextArgs extends BaseDevlogArgs {
-  summary?: string;
-  insights?: string[];
-  questions?: string[];
-  patterns?: string[];
-  nextSteps?: string[];
 }
