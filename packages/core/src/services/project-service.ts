@@ -9,6 +9,7 @@ import { DataSource, Repository } from 'typeorm';
 import type { ProjectMetadata } from '../types/project.js';
 import { ProjectEntity } from '../entities/project.entity.js';
 import { createDataSource } from '../utils/typeorm-config.js';
+import { ProjectValidator, type CreateProjectRequest, type UpdateProjectRequest } from '../validation/project-schemas.js';
 
 export class ProjectService {
   private static instance: ProjectService | null = null;
@@ -84,8 +85,30 @@ export class ProjectService {
   }
 
   async create(
-    project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
+    projectData: unknown,
   ): Promise<ProjectMetadata> {
+    // Validate input data
+    const validation = ProjectValidator.validateCreateRequest(projectData);
+    if (!validation.success) {
+      throw new Error(`Invalid project data: ${validation.errors.join(', ')}`);
+    }
+
+    const project = validation.data;
+
+    // Check for duplicate project name
+    const uniqueCheck = await ProjectValidator.validateUniqueProjectName(
+      project.name,
+      undefined,
+      async (name) => {
+        const existing = await this.repository.findOne({ where: { name } });
+        return !!existing;
+      }
+    );
+
+    if (!uniqueCheck.success) {
+      throw new Error(uniqueCheck.error!);
+    }
+
     // Create and save new project entity
     const entity = ProjectEntity.fromProjectData(project);
     const savedEntity = await this.repository.save(entity);
@@ -93,15 +116,42 @@ export class ProjectService {
     return savedEntity.toProjectMetadata();
   }
 
-  async update(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
+  async update(id: number, updatesData: unknown): Promise<ProjectMetadata> {
+    // Validate project ID
+    const idValidation = ProjectValidator.validateProjectId(id);
+    if (!idValidation.success) {
+      throw new Error(`Invalid project ID: ${idValidation.errors.join(', ')}`);
+    }
+
+    // Validate update data
+    const validation = ProjectValidator.validateUpdateRequest(updatesData);
+    if (!validation.success) {
+      throw new Error(`Invalid update data: ${validation.errors.join(', ')}`);
+    }
+
+    const updates = validation.data;
+
     const entity = await this.repository.findOne({ where: { id } });
     if (!entity) {
       throw new Error(`Project with ID '${id}' not found`);
     }
 
-    // Prevent changing project ID
-    if (updates.id && updates.id !== id) {
-      throw new Error('Cannot change project ID');
+    // Check for duplicate project name if name is being updated
+    if (updates.name && updates.name !== entity.name) {
+      const uniqueCheck = await ProjectValidator.validateUniqueProjectName(
+        updates.name,
+        id,
+        async (name, excludeId) => {
+          const existing = await this.repository.findOne({ 
+            where: { name } 
+          });
+          return !!existing && existing.id !== excludeId;
+        }
+      );
+
+      if (!uniqueCheck.success) {
+        throw new Error(uniqueCheck.error!);
+      }
     }
 
     // Update entity
@@ -112,6 +162,12 @@ export class ProjectService {
   }
 
   async delete(id: number): Promise<void> {
+    // Validate project ID
+    const idValidation = ProjectValidator.validateProjectId(id);
+    if (!idValidation.success) {
+      throw new Error(`Invalid project ID: ${idValidation.errors.join(', ')}`);
+    }
+
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
       throw new Error(`Project with ID '${id}' not found`);
