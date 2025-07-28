@@ -19,13 +19,43 @@ import type {
 import { DevlogEntryEntity } from '../entities/index.js';
 import { createDataSource } from '../utils/typeorm-config.js';
 
+interface DevlogServiceInstance {
+  service: DevlogService;
+  createdAt: number;
+}
+
 export class DevlogService {
+  private static instances: Map<number, DevlogServiceInstance> = new Map();
+  private static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
   private database: DataSource;
   private devlogRepository: Repository<DevlogEntryEntity>;
 
-  constructor(private projectId?: number) {
+  private constructor(private projectId?: number) {
     this.database = createDataSource();
     this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
+  }
+
+  /**
+   * Get singleton instance for specific projectId with TTL. If TTL expired, create new instance.
+   */
+  static getInstance(projectId?: number): DevlogService {
+    const instanceKey = projectId || 0; // Use 0 for undefined projectId
+    const now = Date.now();
+    const existingInstance = DevlogService.instances.get(instanceKey);
+    
+    if (
+      !existingInstance ||
+      now - existingInstance.createdAt > DevlogService.TTL_MS
+    ) {
+      const newService = new DevlogService(projectId);
+      DevlogService.instances.set(instanceKey, {
+        service: newService,
+        createdAt: now
+      });
+      return newService;
+    }
+    
+    return existingInstance.service;
   }
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {

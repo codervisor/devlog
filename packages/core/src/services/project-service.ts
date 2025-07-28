@@ -8,7 +8,7 @@
 import { DataSource, Repository } from 'typeorm';
 import type { ProjectMetadata } from '../types/project.js';
 import { ProjectEntity } from '../entities/project.entity.js';
-import { createDataSource } from '@/utils/typeorm-config';
+import { createDataSource } from '../utils/typeorm-config.js';
 
 export class ProjectService {
   private static instance: ProjectService | null = null;

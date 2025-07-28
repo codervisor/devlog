@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProjectManager } from '../../../../../../lib/project-manager';
-import { createDevlogService } from '../../../../../../lib/devlog-service';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -8,8 +7,9 @@ export const dynamic = 'force-dynamic';
 // POST /api/projects/[id]/devlogs/batch/note - Batch add notes to devlog entries
 export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.get(params.id);
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
+    const project = await projectService.get(params.id);
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -24,11 +24,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
       );
     }
 
-    // Create project-aware devlog service
-    const devlogService = await createDevlogService({
-      projectId: params.id,
-      project,
-    });
+    const devlogService = DevlogService.getInstance(params.id);
 
     const updatedEntries = [];
     const errors = [];
@@ -67,8 +63,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
         });
       }
     }
-
-    await devlogService.dispose();
 
     return NextResponse.json({
       success: true,
