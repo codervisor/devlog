@@ -64,19 +64,19 @@ export function NavigationSidebar({
       icon: <DashboardOutlined />,
     },
     {
+      key: 'projects',
+      label: 'Projects',
+      icon: <AppstoreOutlined />,
+    },
+    {
       key: 'list',
-      label: currentProject ? 'Project Devlogs' : 'Devlogs',
+      label: 'Devlogs',
       icon: <FileTextOutlined />,
     },
     {
       key: 'create',
       label: 'New Devlog',
       icon: <PlusOutlined />,
-    },
-    {
-      key: 'projects',
-      label: 'Projects',
-      icon: <AppstoreOutlined />,
     },
   ];
 
@@ -87,26 +87,26 @@ export function NavigationSidebar({
       case 'dashboard':
         router.push('/');
         break;
+      case 'projects':
+        router.push('/projects');
+        break;
       case 'list':
-        // Always use hierarchical routing - require project selection
+        // If a project is selected, go to that project's devlogs
+        // Otherwise, redirect to projects to select one first
         if (currentProject) {
           router.push(`/projects/${currentProject.projectId}/devlogs`);
         } else {
-          // If no project selected, redirect to projects page
           router.push('/projects');
         }
         break;
       case 'create':
-        // Always use hierarchical routing - require project selection
+        // If a project is selected, create within that project
+        // Otherwise, redirect to projects to select one first
         if (currentProject) {
           router.push(`/projects/${currentProject.projectId}/devlogs/create`);
         } else {
-          // If no project selected, redirect to projects page
           router.push('/projects');
         }
-        break;
-      case 'projects':
-        router.push('/projects');
         break;
     }
   };

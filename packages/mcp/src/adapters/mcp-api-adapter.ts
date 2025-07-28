@@ -20,16 +20,29 @@ import type {
   UpdateDevlogWithNoteArgs,
   CompleteDevlogArgs,
   CloseDevlogArgs,
-  GetActiveContextArgs,
   GetDevlogArgs,
   DiscoverRelatedDevlogsArgs,
 } from '../types/tool-args.js';
+import { validateToolArgs } from '../utils/validation.js';
+import {
+  CreateDevlogArgsSchema,
+  UpdateDevlogArgsSchema,
+  GetDevlogArgsSchema,
+  ListDevlogsArgsSchema,
+  SearchDevlogsArgsSchema,
+  AddDevlogNoteArgsSchema,
+  UpdateDevlogWithNoteArgsSchema,
+  CompleteDevlogArgsSchema,
+  CloseDevlogArgsSchema,
+  ArchiveDevlogArgsSchema,
+  DiscoverRelatedDevlogsArgsSchema,
+} from '../schemas/mcp-tool-schemas.js';
 
 export interface MCPApiAdapterConfig {
   /** Configuration for the underlying API client */
   apiClient: DevlogApiClientConfig;
   /** Default project ID to use */
-  defaultProjectId?: string;
+  defaultProjectId?: number;
   /** Whether to automatically detect web service URL */
   autoDiscoverWebService?: boolean;
 }
@@ -39,12 +52,12 @@ export interface MCPApiAdapterConfig {
  */
 export class MCPApiAdapter {
   private apiClient: DevlogApiClient;
-  private currentProjectId: string;
+  private currentProjectId: number;
   private initialized = false;
 
   constructor(config: MCPApiAdapterConfig) {
     this.apiClient = new DevlogApiClient(config.apiClient);
-    this.currentProjectId = config.defaultProjectId || 'default';
+    this.currentProjectId = config.defaultProjectId || 0;
 
     if (this.currentProjectId) {
       this.apiClient.setCurrentProject(this.currentProjectId);
@@ -71,16 +84,9 @@ export class MCPApiAdapter {
   }
 
   /**
-   * Get the current project ID
-   */
-  getCurrentProjectId(): string {
-    return this.currentProjectId;
-  }
-
-  /**
    * Set the current project ID
    */
-  setCurrentProjectId(projectId: string): void {
+  setCurrentProjectId(projectId: number): void {
     this.currentProjectId = projectId;
     this.apiClient.setCurrentProject(projectId);
   }

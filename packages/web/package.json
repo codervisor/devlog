@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Web interface for devlog management",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3000 --turbo",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "build": "NEXT_BUILD_MODE=standalone next build",
     "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",

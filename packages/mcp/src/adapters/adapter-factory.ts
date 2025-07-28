@@ -33,7 +33,7 @@ export async function createMCPAdapter(config?: MCPServerConfig): Promise<MCPAda
       timeout: mcpConfig.webApi.timeout,
       retries: mcpConfig.webApi.retries,
     },
-    defaultProjectId: mcpConfig.defaultProjectId,
+    defaultProjectId: mcpConfig.defaultProjectId ? Number(mcpConfig.defaultProjectId) : undefined,
     autoDiscoverWebService: mcpConfig.webApi.autoDiscover,
   };
 
