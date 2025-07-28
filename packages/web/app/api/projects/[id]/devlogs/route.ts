@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProjectManager, getAppStorageConfig } from '../../../../lib/project-manager';
-import { ProjectDevlogManager } from '@codervisor/devlog-core';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -8,31 +7,15 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[id]/devlogs - List devlogs for a project
 export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.getProject(params.id);
-
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
+    const project = await projectService.get(params.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // Get centralized storage config
-    const storageConfig = await getAppStorageConfig();
-
-    // Check if we got an error response
-    if ('status' in storageConfig && storageConfig.status === 'error') {
-      return NextResponse.json({ error: 'Storage configuration error' }, { status: 500 });
-    }
-
-    // Create project-aware devlog manager
-    const devlogManager = new ProjectDevlogManager({
-      storageConfig: storageConfig as any, // Type assertion after error check
-      projectContext: {
-        projectId: params.id,
-        project,
-      },
-    });
-
-    await devlogManager.initialize();
+    // Create project-aware devlog service
+    const devlogService = new DevlogService();
 
     // Parse query parameters for filtering
     const url = new URL(request.url);
@@ -60,9 +43,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
 
     // Search query
     const search = searchParams.get('search');
-    if (search) {
-      filter.search = search;
-    }
 
     // Archived filter
     const archived = searchParams.get('archived');
@@ -73,13 +53,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
     // Pagination
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
 
-    filter.pagination = { offset, limit };
+    filter.pagination = { page, limit };
 
-    const result = await devlogManager.list(filter);
-
-    await devlogManager.dispose();
+    let result;
+    if (search) {
+      result = await devlogService.search(search, filter);
+    } else {
+      result = await devlogService.list(filter);
+    }
 
     return NextResponse.json(result);
   } catch (error) {
@@ -91,33 +73,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
 // POST /api/projects/[id]/devlogs - Create new devlog entry
 export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.getProject(params.id);
-
+    const projectService = ProjectService.getInstance();
+    const project = await projectService.get(params.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     const data = await request.json();
 
-    // Get centralized storage config
-    const storageConfig = await getAppStorageConfig();
-
-    // Check if we got an error response
-    if ('status' in storageConfig && storageConfig.status === 'error') {
-      return NextResponse.json({ error: 'Storage configuration error' }, { status: 500 });
-    }
-
-    // Create project-aware devlog manager
-    const devlogManager = new ProjectDevlogManager({
-      storageConfig: storageConfig as any, // Type assertion after error check
-      projectContext: {
-        projectId: params.id,
-        project,
-      },
-    });
-
-    await devlogManager.initialize();
+    // Create project-aware devlog service
+    const devlogService = new DevlogService();
 
     // Add required fields if missing
     const now = new Date().toISOString();
@@ -130,12 +95,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
 
     // Get next ID if not provided
     if (!devlogEntry.id) {
-      devlogEntry.id = await devlogManager.getNextId();
+      devlogEntry.id = await devlogService.getNextId();
     }
 
-    await devlogManager.save(devlogEntry);
-
-    await devlogManager.dispose();
+    await devlogService.save(devlogEntry);
 
     return NextResponse.json(devlogEntry, { status: 201 });
   } catch (error) {

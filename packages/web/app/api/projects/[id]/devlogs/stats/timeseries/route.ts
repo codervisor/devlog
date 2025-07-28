@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProjectManager, getAppStorageConfig } from '../../../../../../lib/project-manager';
-import { ProjectDevlogManager } from '@codervisor/devlog-core';
+import { getProjectManager } from '../../../../../../lib/project-manager';
+import { createDevlogService } from '../../../../../../lib/devlog-service';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectManager = await getProjectManager();
-    const project = await projectManager.getProject(params.id);
+    const project = await projectManager.get(params.id);
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -27,28 +27,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
       granularity: granularity as 'day' | 'week' | 'month',
     };
 
-    // Get centralized storage config
-    const storageConfig = await getAppStorageConfig();
-
-    // Check if we got an error response
-    if ('status' in storageConfig && storageConfig.status === 'error') {
-      return NextResponse.json({ error: 'Storage configuration error' }, { status: 500 });
-    }
-
-    // Create project-aware devlog manager
-    const devlogManager = new ProjectDevlogManager({
-      storageConfig: storageConfig as any, // Type assertion after error check
-      projectContext: {
-        projectId: params.id,
-        project,
-      },
+    // Create project-aware devlog service
+    const devlogService = await createDevlogService({
+      projectId: params.id,
+      project,
     });
 
-    await devlogManager.initialize();
+    const stats = await devlogService.getTimeSeriesStats(timeSeriesRequest);
 
-    const stats = await devlogManager.getTimeSeriesStats(timeSeriesRequest);
-
-    await devlogManager.dispose();
+    await devlogService.dispose();
 
     return NextResponse.json(stats);
   } catch (error) {

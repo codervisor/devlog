@@ -5,12 +5,12 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import {
+  ChatDevlogLinkEntity,
+  ChatMessageEntity,
+  ChatSessionEntity,
   DevlogEntryEntity,
   DevlogNoteEntity,
-  ChatSessionEntity,
-  ChatMessageEntity,
-  ChatDevlogLinkEntity,
-} from '../../entities/index.js';
+} from '../entities';
 
 /**
  * Configuration options for TypeORM storage
@@ -32,9 +32,6 @@ export interface TypeORMStorageOptions {
   ssl?: boolean;
 }
 
-// Global cache for DataSource instances to prevent duplicate connections
-const dataSourceCache = new Map<string, DataSource>();
-
 /**
  * Create a cache key for DataSource based on configuration
  */
@@ -53,15 +50,11 @@ function createCacheKey(options: TypeORMStorageOptions): string {
  * Uses caching to prevent duplicate connections in development
  */
 export function createDataSource(
-  options: TypeORMStorageOptions,
+  options?: TypeORMStorageOptions,
   entities?: Function[],
 ): DataSource {
-  const cacheKey = createCacheKey(options) + (entities ? `-entities-${entities.length}` : '');
-
-  // Return existing DataSource if already cached
-  const existingDataSource = dataSourceCache.get(cacheKey);
-  if (existingDataSource) {
-    return existingDataSource;
+  if (!options) {
+    options = parseTypeORMConfig(); // Fallback to environment-based configuration
   }
 
   const baseConfig: Partial<DataSourceOptions> = {
@@ -125,12 +118,7 @@ export function createDataSource(
       throw new Error(`Unsupported database type: ${options.type}`);
   }
 
-  const dataSource = new DataSource(config);
-
-  // Cache the DataSource to prevent duplicate connections
-  dataSourceCache.set(cacheKey, dataSource);
-
-  return dataSource;
+  return new DataSource(config);
 }
 
 /**

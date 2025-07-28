@@ -260,6 +260,7 @@ export interface TimeSeriesRequest {
   days?: number; // Number of days to look back (default: 30)
   from?: string; // Start date (ISO string)
   to?: string; // End date (ISO string)
+  projectId: number;
 }
 
 // Pagination Support

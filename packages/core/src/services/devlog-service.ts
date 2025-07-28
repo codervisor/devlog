@@ -6,6 +6,7 @@
  */
 
 import { DataSource, Repository } from 'typeorm';
+import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
 import type {
   DevlogEntry,
   DevlogFilter,
@@ -15,207 +16,48 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
-import type { ProjectContext } from '../types/project.js';
-import {
-  DevlogEntryEntity,
-  ChatSessionEntity,
-  ChatMessageEntity,
-  ChatDevlogLinkEntity,
-} from '../entities/index.js';
+import { DevlogEntryEntity } from '../entities/index.js';
+import { createDataSource } from '../utils/typeorm-config.js';
 
-export interface DevlogServiceOptions {
-  /** TypeORM database connection */
-  database: DataSource;
-
-  /** Project context for filtering operations */
-  projectContext?: ProjectContext;
-}
-
-/**
- * DevlogService - Business logic for devlog operations
- */
 export class DevlogService {
+  private database: DataSource;
   private devlogRepository: Repository<DevlogEntryEntity>;
-  private chatSessionRepository: Repository<ChatSessionEntity>;
-  private chatMessageRepository: Repository<ChatMessageEntity>;
-  private chatDevlogLinkRepository: Repository<ChatDevlogLinkEntity>;
-  private initialized = false;
 
-  constructor(private options: DevlogServiceOptions) {
-    this.devlogRepository = this.options.database.getRepository(DevlogEntryEntity);
-    this.chatSessionRepository = this.options.database.getRepository(ChatSessionEntity);
-    this.chatMessageRepository = this.options.database.getRepository(ChatMessageEntity);
-    this.chatDevlogLinkRepository = this.options.database.getRepository(ChatDevlogLinkEntity);
-  }
-
-  /**
-   * Initialize the service
-   */
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    // Ensure database connection is established
-    if (!this.options.database.isInitialized) {
-      await this.options.database.initialize();
-    }
-
-    this.initialized = true;
-  }
-
-  /**
-   * Cleanup resources
-   */
-  async dispose(): Promise<void> {
-    if (!this.initialized) return;
-
-    // Note: We don't destroy the database connection here as it may be shared
-    // The DatabaseService manages the connection lifecycle
-    this.initialized = false;
-  }
-
-  /**
-   * Set the current project context
-   */
-  setProjectContext(projectContext: ProjectContext): void {
-    this.options.projectContext = projectContext;
-  }
-
-  /**
-   * Get the current project context
-   */
-  getProjectContext(): ProjectContext | undefined {
-    return this.options.projectContext;
-  }
-
-  private ensureInitialized(): void {
-    if (!this.initialized) {
-      throw new Error('DevlogService not initialized. Call initialize() first.');
-    }
-  }
-
-  /**
-   * Add project filter to devlog filter if project context is available
-   */
-  private addProjectFilter(filter?: DevlogFilter): DevlogFilter {
-    const projectFilter: DevlogFilter = { ...filter };
-
-    // Add project-specific filtering using projectId
-    if (this.options.projectContext) {
-      projectFilter.projectId = this.options.projectContext.projectId;
-    }
-
-    return projectFilter;
-  }
-
-  /**
-   * Add project ID to devlog entry
-   */
-  private addProjectId(entry: DevlogEntry): DevlogEntry {
-    if (!this.options.projectContext) {
-      return entry;
-    }
-
-    const updatedEntry = { ...entry };
-    updatedEntry.projectId = this.options.projectContext.projectId;
-
-    return updatedEntry;
-  }
-
-  // Devlog operations using direct repository access
-
-  async exists(id: DevlogId): Promise<boolean> {
-    this.ensureInitialized();
-    const count = await this.devlogRepository.count({ where: { id } });
-    return count > 0;
+  constructor(private projectId?: number) {
+    this.database = createDataSource();
+    this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
   }
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
-    this.ensureInitialized();
     const entity = await this.devlogRepository.findOne({ where: { id } });
 
     if (!entity) {
       return null;
     }
 
-    const entry = entity.toDevlogEntry();
-
-    // Verify entry belongs to current project if project context is set
-    if (this.options.projectContext) {
-      if (entry.projectId !== this.options.projectContext.projectId) {
-        return null; // Entry doesn't belong to current project
-      }
-    }
-
-    return entry;
+    return entity.toDevlogEntry();
   }
 
   async save(entry: DevlogEntry): Promise<void> {
-    this.ensureInitialized();
-    const projectEntry = this.addProjectId(entry);
-
     // Convert to entity and save
-    const entity = DevlogEntryEntity.fromDevlogEntry(projectEntry);
+    const entity = DevlogEntryEntity.fromDevlogEntry(entry);
     await this.devlogRepository.save(entity);
   }
 
   async delete(id: DevlogId): Promise<void> {
-    this.ensureInitialized();
     await this.devlogRepository.delete({ id });
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
 
     // Build TypeORM query based on filter
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
 
-    // Apply project filter
-    if (projectFilter.projectId !== undefined) {
-      queryBuilder.andWhere('devlog.projectId = :projectId', {
-        projectId: projectFilter.projectId,
-      });
-    }
-
-    // Apply status filter
-    if (projectFilter.status) {
-      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
-    }
-
-    // Apply priority filter
-    if (projectFilter.priority) {
-      queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
-        priorities: projectFilter.priority,
-      });
-    }
-
-    // Apply pagination
-    const pagination = projectFilter.pagination || { page: 1, limit: 20 };
-    const page = pagination.page || 1;
-    const limit = pagination.limit || 20;
-    const offset = (page - 1) * limit;
-
-    queryBuilder.skip(offset).take(limit);
-    queryBuilder.orderBy('devlog.updatedAt', 'DESC');
-
-    const [entities, total] = await queryBuilder.getManyAndCount();
-    const entries = entities.map((entity) => entity.toDevlogEntry());
-
-    return {
-      items: entries,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasPreviousPage: page > 1,
-        hasNextPage: offset + entries.length < total,
-      },
-    };
+    return await this.handleList(projectFilter, queryBuilder);
   }
 
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
 
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
@@ -227,51 +69,10 @@ export class DevlogService {
       .orWhere('devlog.businessContext LIKE :query', { query: `%${query}%` })
       .orWhere('devlog.technicalContext LIKE :query', { query: `%${query}%` });
 
-    // Apply project filter
-    if (projectFilter.projectId !== undefined) {
-      queryBuilder.andWhere('devlog.projectId = :projectId', {
-        projectId: projectFilter.projectId,
-      });
-    }
-
-    // Apply other filters
-    if (projectFilter.status) {
-      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
-    }
-
-    if (projectFilter.priority) {
-      queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
-        priorities: projectFilter.priority,
-      });
-    }
-
-    // Apply pagination
-    const pagination = projectFilter.pagination || { page: 1, limit: 20 };
-    const page = pagination.page || 1;
-    const limit = pagination.limit || 20;
-    const offset = (page - 1) * limit;
-
-    queryBuilder.skip(offset).take(limit);
-    queryBuilder.orderBy('devlog.updatedAt', 'DESC');
-
-    const [entities, total] = await queryBuilder.getManyAndCount();
-    const entries = entities.map((entity) => entity.toDevlogEntry());
-
-    return {
-      items: entries,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasPreviousPage: page > 1,
-        hasNextPage: offset + entries.length < total,
-      },
-    };
+    return await this.handleList(projectFilter, queryBuilder);
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
 
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
@@ -345,9 +146,10 @@ export class DevlogService {
     };
   }
 
-  async getTimeSeriesStats(request?: TimeSeriesRequest): Promise<TimeSeriesStats> {
-    this.ensureInitialized();
-
+  async getTimeSeriesStats(
+    projectId: number,
+    request?: TimeSeriesRequest,
+  ): Promise<TimeSeriesStats> {
     // Calculate date range
     const days = request?.days || 30;
     const to = request?.to ? new Date(request.to) : new Date();
@@ -359,11 +161,9 @@ export class DevlogService {
     // This would need to be expanded based on specific time series requirements
     const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
 
-    if (this.options.projectContext) {
-      queryBuilder.where('devlog.projectId = :projectId', {
-        projectId: this.options.projectContext.projectId,
-      });
-    }
+    queryBuilder.where('devlog.projectId = :projectId', {
+      projectId: projectId,
+    });
 
     const entries = await queryBuilder
       .select('DATE(devlog.createdAt)', 'date')
@@ -394,8 +194,6 @@ export class DevlogService {
   }
 
   async getNextId(): Promise<DevlogId> {
-    this.ensureInitialized();
-
     const result = await this.devlogRepository
       .createQueryBuilder('devlog')
       .select('MAX(devlog.id)', 'maxId')
@@ -404,144 +202,65 @@ export class DevlogService {
     return (result?.maxId || 0) + 1;
   }
 
-  // Chat operations using direct repository access
-
-  async saveChatSession(session: any): Promise<void> {
-    this.ensureInitialized();
-    const entity = ChatSessionEntity.fromChatSession(session);
-    await this.chatSessionRepository.save(entity);
-  }
-
-  async getChatSession(id: string): Promise<any> {
-    this.ensureInitialized();
-    const entity = await this.chatSessionRepository.findOne({ where: { id } });
-    return entity ? entity.toChatSession() : null;
-  }
-
-  async listChatSessions(filter?: any, offset?: number, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
-
-    const queryBuilder = this.chatSessionRepository.createQueryBuilder('session');
-
-    if (offset !== undefined) {
-      queryBuilder.skip(offset);
+  private async handleList(
+    projectFilter: DevlogFilter,
+    queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
+  ): Promise<PaginatedResult<DevlogEntry>> {
+    // Apply project filter
+    if (projectFilter.projectId !== undefined) {
+      queryBuilder.andWhere('devlog.projectId = :projectId', {
+        projectId: projectFilter.projectId,
+      });
     }
 
-    if (limit !== undefined) {
-      queryBuilder.take(limit);
+    // Apply status filter
+    if (projectFilter.status) {
+      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
     }
 
-    queryBuilder.orderBy('session.createdAt', 'DESC');
-
-    const entities = await queryBuilder.getMany();
-    return entities.map((entity) => entity.toChatSession());
-  }
-
-  async deleteChatSession(id: string): Promise<void> {
-    this.ensureInitialized();
-    await this.chatSessionRepository.delete({ id });
-  }
-
-  async saveChatMessages(messages: any[]): Promise<void> {
-    this.ensureInitialized();
-    const entities = messages.map((message) => ChatMessageEntity.fromChatMessage(message));
-    await this.chatMessageRepository.save(entities);
-  }
-
-  async getChatMessages(sessionId: string, offset?: number, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
-
-    const queryBuilder = this.chatMessageRepository
-      .createQueryBuilder('message')
-      .where('message.sessionId = :sessionId', { sessionId });
-
-    if (offset !== undefined) {
-      queryBuilder.skip(offset);
+    // Apply priority filter
+    if (projectFilter.priority) {
+      queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
+        priorities: projectFilter.priority,
+      });
     }
 
-    if (limit !== undefined) {
-      queryBuilder.take(limit);
-    }
+    // Apply pagination
+    const pagination = projectFilter.pagination || { page: 1, limit: 20 };
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const offset = (page - 1) * limit;
 
-    queryBuilder.orderBy('message.timestamp', 'ASC');
+    queryBuilder.skip(offset).take(limit);
+    queryBuilder.orderBy('devlog.updatedAt', 'DESC');
 
-    const entities = await queryBuilder.getMany();
-    return entities.map((entity) => entity.toChatMessage());
-  }
-
-  async searchChatContent(query: string, filter?: any, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
-
-    const queryBuilder = this.chatMessageRepository
-      .createQueryBuilder('message')
-      .where('message.content LIKE :query', { query: `%${query}%` });
-
-    if (limit !== undefined) {
-      queryBuilder.take(limit);
-    }
-
-    queryBuilder.orderBy('message.timestamp', 'DESC');
-
-    const entities = await queryBuilder.getMany();
-    return entities.map((entity) => entity.toChatMessage());
-  }
-
-  async getChatStats(filter?: any): Promise<any> {
-    this.ensureInitialized();
-
-    const totalSessions = await this.chatSessionRepository.count();
-    const totalMessages = await this.chatMessageRepository.count();
+    const [entities, total] = await queryBuilder.getManyAndCount();
+    const entries = entities.map((entity) => entity.toDevlogEntry());
 
     return {
-      totalSessions,
-      totalMessages,
+      items: entries,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasPreviousPage: page > 1,
+        hasNextPage: offset + entries.length < total,
+      },
     };
   }
 
-  async saveChatDevlogLink(link: any): Promise<void> {
-    this.ensureInitialized();
-    const entity = ChatDevlogLinkEntity.fromChatDevlogLink(link);
-    await this.chatDevlogLinkRepository.save(entity);
-  }
+  /**
+   * Add project filter to devlog filter if project context is available
+   */
+  private addProjectFilter(filter?: DevlogFilter): DevlogFilter {
+    const projectFilter: DevlogFilter = { ...filter };
 
-  async getChatDevlogLinks(sessionId?: string, devlogId?: DevlogId): Promise<any[]> {
-    this.ensureInitialized();
-
-    const queryBuilder = this.chatDevlogLinkRepository.createQueryBuilder('link');
-
-    if (sessionId) {
-      queryBuilder.andWhere('link.sessionId = :sessionId', { sessionId });
+    // Add project-specific filtering using projectId
+    if (this.projectId) {
+      projectFilter.projectId = this.projectId;
     }
 
-    if (devlogId !== undefined) {
-      queryBuilder.andWhere('link.devlogId = :devlogId', { devlogId });
-    }
-
-    const entities = await queryBuilder.getMany();
-    return entities.map((entity) => entity.toChatDevlogLink());
-  }
-
-  async removeChatDevlogLink(sessionId: string, devlogId: DevlogId): Promise<void> {
-    this.ensureInitialized();
-    await this.chatDevlogLinkRepository.delete({ sessionId, devlogId });
-  }
-
-  async getChatWorkspaces(): Promise<any[]> {
-    this.ensureInitialized();
-
-    // Get unique workspace information from chat sessions
-    const workspaces = await this.chatSessionRepository
-      .createQueryBuilder('session')
-      .select('DISTINCT session.workspace', 'workspace')
-      .where('session.workspace IS NOT NULL')
-      .getRawMany();
-
-    return workspaces.map((w) => ({ workspace: w.workspace }));
-  }
-
-  async saveChatWorkspace(workspace: any): Promise<void> {
-    this.ensureInitialized();
-    // For now, this is a no-op since workspace info is stored in chat sessions
-    // In the future, this could store workspace metadata in a separate table
+    return projectFilter;
   }
 }

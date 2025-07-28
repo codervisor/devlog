@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProjectManager } from '../../../lib/project-manager';
+import { ProjectService } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -7,8 +7,10 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[id] - Get specific project
 export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const manager = await getProjectManager();
-    const project = await manager.getProject(params.id);
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
+
+    const project = await projectService.get(params.id);
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -24,10 +26,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
 // PUT /api/projects/[id] - Update project
 export async function PUT(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const manager = await getProjectManager();
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
+
     const updates = await request.json();
 
-    const updatedProject = await manager.updateProject(params.id, updates);
+    const updatedProject = await projectService.update(params.id, updates);
 
     return NextResponse.json(updatedProject);
   } catch (error) {
@@ -40,27 +44,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: numb
 // DELETE /api/projects/[id] - Delete project
 export async function DELETE(request: NextRequest, { params }: { params: { id: number } }) {
   try {
-    const manager = await getProjectManager();
-    await manager.deleteProject(params.id);
+    const projectService = ProjectService.getInstance();
+    await projectService.initialize();
+
+    await projectService.delete(params.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting project:', error);
     const message = error instanceof Error ? error.message : 'Failed to delete project';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-// POST /api/projects/[id]/switch - Switch to project
-export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
-  try {
-    const manager = await getProjectManager();
-    const projectContext = await manager.switchToProject(params.id);
-
-    return NextResponse.json(projectContext);
-  } catch (error) {
-    console.error('Error switching to project:', error);
-    const message = error instanceof Error ? error.message : 'Failed to switch to project';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
