@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProjectManager } from '../../../../../lib/project-manager';
-import { createDevlogService } from '../../../../../lib/devlog-service';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -11,13 +10,13 @@ export async function GET(
   { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.get(params.id);
-
+    const projectService = ProjectService.getInstance();
+    const project = await projectService.get(params.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
+    const devlogService = DevlogService.getInstance(params.id);
     const entry = await devlogService.get(params.devlogId);
 
     if (!entry) {
@@ -37,25 +36,19 @@ export async function PUT(
   { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.get(params.id);
-
+    const projectService = ProjectService.getInstance();
+    const project = await projectService.get(params.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     const data = await request.json();
 
-    // Create project-aware devlog service
-    const devlogService = await createDevlogService({
-      projectId: params.id,
-      project,
-    });
+    const devlogService = DevlogService.getInstance(params.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(params.devlogId);
     if (!existingEntry) {
-      await devlogService.dispose();
       return NextResponse.json({ error: 'Devlog entry not found' }, { status: 404 });
     }
 
@@ -69,8 +62,6 @@ export async function PUT(
     };
 
     await devlogService.save(updatedEntry);
-
-    await devlogService.dispose();
 
     return NextResponse.json(updatedEntry);
   } catch (error) {
@@ -86,29 +77,22 @@ export async function DELETE(
   { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
-    const projectManager = await getProjectManager();
-    const project = await projectManager.get(params.id);
+    const projectService = ProjectService.getInstance();
+    const project = await projectService.get(params.id);
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // Create project-aware devlog service
-    const devlogService = await createDevlogService({
-      projectId: params.id,
-      project,
-    });
+    const devlogService = DevlogService.getInstance(params.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(params.devlogId);
     if (!existingEntry) {
-      await devlogService.dispose();
       return NextResponse.json({ error: 'Devlog entry not found' }, { status: 404 });
     }
 
     await devlogService.delete(params.devlogId);
-
-    await devlogService.dispose();
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -11,19 +11,18 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';
-import { resolve } from 'path';
 import ProgressBar from 'progress';
 import {
   ChatStatistics,
   CopilotParser,
   SearchResult,
-  ProjectDataContainer,
+  WorkspaceDataContainer,
 } from '@codervisor/devlog-ai';
 import { DevlogApiClient, ChatImportRequest } from './api/devlog-api-client.js';
 import {
-  convertProjectDataToCoreFormat,
-  extractProjectInfo,
   validateConvertedData,
+  convertWorkspaceDataToCoreFormat,
+  extractWorkspaceInfo,
 } from './utils/data-mapper.js';
 import {
   displayError,
@@ -88,7 +87,7 @@ async function setupApiClient(options: BaseCommandOptions): Promise<DevlogApiCli
 }
 
 function getProjectId(options: BaseCommandOptions, config: ConfigOptions): string {
-  const projectId = options.project || config.project || process.env.DEVLOG_PROJECT;
+  const projectId = options.project || process.env.DEVLOG_PROJECT;
   if (!projectId) {
     displayError(
       'configuration',
@@ -160,7 +159,9 @@ program
           }
 
           // Convert AI package data to Core package format
-          const convertedData = convertProjectDataToCoreFormat(projectData as ProjectDataContainer);
+          const convertedData = convertWorkspaceDataToCoreFormat(
+            projectData as WorkspaceDataContainer,
+          );
 
           // Validate the converted data
           if (!validateConvertedData(convertedData)) {
@@ -174,7 +175,7 @@ program
             sessions: convertedData.sessions,
             messages: convertedData.messages,
             source: options.source,
-            projectInfo: extractProjectInfo(projectData as ProjectDataContainer),
+            workspaceInfo: extractWorkspaceInfo(projectData as WorkspaceDataContainer),
           };
 
           // Start import

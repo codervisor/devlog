@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
     }
 
     // Create project-aware devlog service
-    const devlogService = new DevlogService();
+    const devlogService = DevlogService.getInstance(params.id);
 
     // Parse query parameters for filtering
     const url = new URL(request.url);
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
     const data = await request.json();
 
     // Create project-aware devlog service
-    const devlogService = new DevlogService();
+    const devlogService = DevlogService.getInstance(params.id);
 
     // Add required fields if missing
     const now = new Date().toISOString();
