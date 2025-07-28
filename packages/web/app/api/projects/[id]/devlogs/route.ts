@@ -6,7 +6,7 @@ import { ProjectDevlogManager } from '@codervisor/devlog-core';
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id]/devlogs - List devlogs for a project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectManager = await getProjectManager();
     const project = await projectManager.getProject(params.id);
@@ -29,7 +29,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 
@@ -90,7 +89,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // POST /api/projects/[id]/devlogs - Create new devlog entry
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectManager = await getProjectManager();
     const project = await projectManager.getProject(params.id);
@@ -115,7 +114,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 

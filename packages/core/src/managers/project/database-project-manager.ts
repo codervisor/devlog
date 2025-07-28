@@ -29,7 +29,7 @@ export interface DatabaseProjectManagerOptions {
 export class DatabaseProjectManager implements ProjectManager {
   private repository: Repository<ProjectEntity>;
   private currentProjectId: number | null = null;
-  private initialized = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor(private options: DatabaseProjectManagerOptions) {
     this.repository = this.options.database.getRepository(ProjectEntity);
@@ -37,24 +37,62 @@ export class DatabaseProjectManager implements ProjectManager {
 
   /**
    * Initialize the project manager
+   * Protects against race conditions during concurrent initialization
    */
   async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    // Ensure database connection is established
-    if (!this.options.database.isInitialized) {
-      await this.options.database.initialize();
+    // If initialization is in progress, wait for it
+    if (this.initPromise) {
+      console.log('⏳ DatabaseProjectManager initialization in progress, waiting...');
+      return this.initPromise;
     }
 
-    // Create default project if none exist and option is enabled
-    if (this.options.createDefaultIfMissing) {
-      const projectCount = await this.repository.count();
-      if (projectCount === 0) {
-        await this.createDefaultProject();
+    console.log('🚀 Initializing DatabaseProjectManager...');
+
+    // Create initialization promise to prevent race conditions
+    this.initPromise = this.performInitialization();
+
+    try {
+      await this.initPromise;
+    } catch (error) {
+      // Clear promise on failure so next call can retry
+      this.initPromise = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Internal method to perform the actual initialization
+   */
+  private async performInitialization(): Promise<void> {
+    try {
+      console.log('💾 Ensuring database connection is established...');
+
+      // Ensure database connection is established
+      if (!this.options.database.isInitialized) {
+        await this.options.database.initialize();
+        console.log('✅ Database connection initialized');
+      } else {
+        console.log('✅ Database connection already initialized');
       }
-    }
 
-    this.initialized = true;
+      // Create default project if none exist and option is enabled
+      if (this.options.createDefaultIfMissing) {
+        console.log('🔍 Checking for default project...');
+        const projectCount = await this.repository.count();
+        if (projectCount === 0) {
+          console.log('📝 Creating default project...');
+          await this.createDefaultProject();
+          console.log('✅ Default project created');
+        } else {
+          console.log(`✅ Found ${projectCount} existing projects`);
+        }
+      }
+
+      console.log('✅ DatabaseProjectManager initialized successfully');
+    } catch (error) {
+      console.error('❌ DatabaseProjectManager initialization failed:', error);
+      throw error;
+    }
   }
 
   /**
@@ -64,7 +102,7 @@ export class DatabaseProjectManager implements ProjectManager {
     if (this.options.database.isInitialized) {
       await this.options.database.destroy();
     }
-    this.initialized = false;
+    this.initPromise = null;
   }
 
   /**
@@ -99,14 +137,12 @@ export class DatabaseProjectManager implements ProjectManager {
     await this.repository.save(entity);
   }
 
-  private ensureInitialized(): void {
-    if (!this.initialized) {
-      throw new Error('DatabaseProjectManager not initialized. Call initialize() first.');
-    }
+  private async ensureInitialized(): Promise<void> {
+    await this.initialize();
   }
 
   async listProjects(): Promise<ProjectMetadata[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const entities = await this.repository.find({
       order: { lastAccessedAt: 'DESC' },
     });
@@ -226,11 +262,9 @@ export class DatabaseProjectManager implements ProjectManager {
     this.currentProjectId = id;
 
     const project = entity.toProjectMetadata();
-    const defaultProjectId = await this.getDefaultProject();
     return {
       projectId: id,
       project,
-      isDefault: id === defaultProjectId,
     };
   }
 
@@ -258,7 +292,6 @@ export class DatabaseProjectManager implements ProjectManager {
     return {
       projectId,
       project,
-      isDefault: projectId === defaultProjectId,
     };
   }
 }

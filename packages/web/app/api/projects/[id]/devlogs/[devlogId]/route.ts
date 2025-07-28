@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[id]/devlogs/[devlogId] - Get specific devlog entry
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
     const projectManager = await getProjectManager();
@@ -32,14 +32,12 @@ export async function GET(
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 
     await devlogManager.initialize();
 
-    const devlogId = parseInt(params.devlogId);
-    const entry = await devlogManager.get(devlogId);
+    const entry = await devlogManager.get(params.devlogId);
 
     await devlogManager.dispose();
 
@@ -57,7 +55,7 @@ export async function GET(
 // PUT /api/projects/[id]/devlogs/[devlogId] - Update devlog entry
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
     const projectManager = await getProjectManager();
@@ -83,16 +81,13 @@ export async function PUT(
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 
     await devlogManager.initialize();
 
-    const devlogId = parseInt(params.devlogId);
-
     // Verify entry exists and belongs to project
-    const existingEntry = await devlogManager.get(devlogId);
+    const existingEntry = await devlogManager.get(params.devlogId);
     if (!existingEntry) {
       await devlogManager.dispose();
       return NextResponse.json({ error: 'Devlog entry not found' }, { status: 404 });
@@ -102,7 +97,7 @@ export async function PUT(
     const updatedEntry = {
       ...existingEntry,
       ...data,
-      id: devlogId,
+      id: params.devlogId,
       projectId: params.id, // Ensure project context is maintained
       updatedAt: new Date().toISOString(),
     };
@@ -122,7 +117,7 @@ export async function PUT(
 // DELETE /api/projects/[id]/devlogs/[devlogId] - Delete devlog entry
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { id: number; devlogId: number } },
 ) {
   try {
     const projectManager = await getProjectManager();
@@ -146,22 +141,19 @@ export async function DELETE(
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 
     await devlogManager.initialize();
 
-    const devlogId = parseInt(params.devlogId);
-
     // Verify entry exists and belongs to project
-    const existingEntry = await devlogManager.get(devlogId);
+    const existingEntry = await devlogManager.get(params.devlogId);
     if (!existingEntry) {
       await devlogManager.dispose();
       return NextResponse.json({ error: 'Devlog entry not found' }, { status: 404 });
     }
 
-    await devlogManager.delete(devlogId);
+    await devlogManager.delete(params.devlogId);
 
     await devlogManager.dispose();
 
