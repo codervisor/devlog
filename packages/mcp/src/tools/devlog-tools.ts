@@ -3,7 +3,7 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 /**
  * Core CRUD operations for devlog entries
  */
-export const coreTools: Tool[] = [
+export const devlogTools: Tool[] = [
   {
     name: 'create_devlog',
     description: 'Create a new devlog entry for a task, feature, or bugfix with rich context',
@@ -42,16 +42,6 @@ export const coreTools: Tool[] = [
           items: { type: 'string' },
           description: 'Acceptance criteria or definition of done',
         },
-        initialInsights: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Initial insights or knowledge about this work',
-        },
-        relatedPatterns: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Related patterns or examples from other projects',
-        },
       },
       required: ['title', 'type', 'description'],
     },
@@ -85,19 +75,6 @@ export const coreTools: Tool[] = [
           enum: ['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'],
           description: 'Current status of the task',
         },
-        blockers: {
-          type: 'string',
-          description: 'Any blockers or issues encountered',
-        },
-        nextSteps: {
-          type: 'string',
-          description: 'Next steps to take',
-        },
-        files: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'List of files that were modified',
-        },
         businessContext: {
           type: 'string',
           description: 'Business context - why this work matters and what problem it solves',
@@ -111,35 +88,99 @@ export const coreTools: Tool[] = [
           items: { type: 'string' },
           description: 'Acceptance criteria or definition of done',
         },
-        initialInsights: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Initial insights or knowledge about this work',
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'add_devlog_note',
+    description: 'Add a timestamped note to an existing devlog entry',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry',
         },
-        relatedPatterns: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Related patterns or examples from other projects',
-        },
-        // AI context fields (embedded from update_ai_context)
-        currentSummary: {
+        note: {
           type: 'string',
-          description: 'Updated summary of current understanding',
+          description: 'Note content',
         },
-        keyInsights: {
+        category: {
+          type: 'string',
+          enum: ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'],
+          default: 'progress',
+          description: 'Category of the note',
+        },
+        files: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Key insights or learnings',
+          description: 'Files related to this note',
         },
-        openQuestions: {
+        codeChanges: {
+          type: 'string',
+          description: 'Summary of code changes made',
+        },
+      },
+      required: ['id', 'note'],
+    },
+  },
+  {
+    name: 'update_devlog_with_note',
+    description: 'Update devlog status/fields and add a note in one operation',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry',
+        },
+        status: {
+          type: 'string',
+          enum: ['new', 'in-progress', 'in-review', 'blocked', 'testing', 'done', 'closed'],
+          description: 'New status for the devlog entry',
+        },
+        note: {
+          type: 'string',
+          description: 'Note content to add',
+        },
+        category: {
+          type: 'string',
+          enum: ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback'],
+          default: 'progress',
+          description: 'Category of the note being added',
+        },
+        codeChanges: {
+          type: 'string',
+          description: 'Summary of code changes made',
+        },
+        files: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Open questions that need resolution',
+          description: 'Files modified in this update',
         },
-        suggestedNextSteps: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Suggested next steps based on current progress',
+        priority: {
+          type: 'string',
+          enum: ['low', 'medium', 'high', 'critical'],
+          description: 'Updated priority level',
+        },
+      },
+      required: ['id', 'note'],
+    },
+  },
+  {
+    name: 'complete_devlog',
+    description: 'Mark a devlog entry as completed and archive it',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'number',
+          description: 'Numeric ID of the devlog entry to complete',
+        },
+        summary: {
+          type: 'string',
+          description: 'Completion summary',
         },
       },
       required: ['id'],
@@ -192,7 +233,8 @@ export const coreTools: Tool[] = [
   },
   {
     name: 'close_devlog',
-    description: 'Close a devlog entry by setting status to cancelled. Safer alternative to deletion that preserves the entry.',
+    description:
+      'Close a devlog entry by setting status to cancelled. Safer alternative to deletion that preserves the entry.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -202,7 +244,8 @@ export const coreTools: Tool[] = [
         },
         reason: {
           type: 'string',
-          description: 'Optional reason for closing the entry (e.g., "Test entry completed", "Duplicate work", "No longer needed")',
+          description:
+            'Optional reason for closing the entry (e.g., "Test entry completed", "Duplicate work", "No longer needed")',
         },
       },
       required: ['id'],

@@ -1,15 +1,13 @@
 /**
- * Configuration for MCP server architecture mode
- * Determines whether to use direct core access or HTTP API client
+ * Configuration for MCP server
+ * Uses HTTP API client for secure and isolated access to devlog operations
  */
 
 export interface MCPServerConfig {
-  /** Architecture mode: 'direct' uses core directly, 'api' uses HTTP client */
-  mode: 'direct' | 'api';
-  /** Default workspace ID */
+  /** Default project ID */
   defaultProjectId?: string;
-  /** Web API configuration (required for 'api' mode) */
-  webApi?: {
+  /** Web API configuration */
+  webApi: {
     /** Base URL for the web API server */
     baseUrl: string;
     /** Request timeout in milliseconds */
@@ -19,71 +17,45 @@ export interface MCPServerConfig {
     /** Auto-discovery of web service */
     autoDiscover?: boolean;
   };
-  /** Direct core configuration (for 'direct' mode) */
-  direct?: {
-    /** Workspace configuration path */
-    workspaceConfigPath?: string;
-    /** Create workspace config if missing */
-    createWorkspaceConfigIfMissing?: boolean;
-    /** Fallback to environment config */
-    fallbackToEnvConfig?: boolean;
-  };
 }
 
 /**
  * Load MCP server configuration from environment variables
  */
 export function loadMCPConfig(): MCPServerConfig {
-  const mode = (process.env.MCP_MODE || 'direct') as 'direct' | 'api';
   const defaultProjectId = process.env.MCP_DEFAULT_PROJECT || 'default';
+  const baseUrl = process.env.MCP_WEB_API_URL || 'http://localhost:3200';
+  const timeout = process.env.MCP_WEB_API_TIMEOUT
+    ? parseInt(process.env.MCP_WEB_API_TIMEOUT, 10)
+    : 30000;
+  const retries = process.env.MCP_WEB_API_RETRIES
+    ? parseInt(process.env.MCP_WEB_API_RETRIES, 10)
+    : 3;
+  const autoDiscover = process.env.MCP_WEB_API_AUTO_DISCOVER !== 'false'; // Default to true
 
-  const config: MCPServerConfig = {
-    mode,
+  return {
     defaultProjectId,
-  };
-
-  if (mode === 'api') {
-    const baseUrl = process.env.MCP_WEB_API_URL || 'http://localhost:3200';
-    const timeout = process.env.MCP_WEB_API_TIMEOUT
-      ? parseInt(process.env.MCP_WEB_API_TIMEOUT, 10)
-      : 30000;
-    const retries = process.env.MCP_WEB_API_RETRIES
-      ? parseInt(process.env.MCP_WEB_API_RETRIES, 10)
-      : 3;
-    const autoDiscover = process.env.MCP_WEB_API_AUTO_DISCOVER === 'true';
-
-    config.webApi = {
+    webApi: {
       baseUrl,
       timeout,
       retries,
       autoDiscover,
-    };
-  } else {
-    // Direct mode configuration
-    config.direct = {
-      workspaceConfigPath: process.env.MCP_WORKSPACE_CONFIG_PATH,
-      createWorkspaceConfigIfMissing: process.env.MCP_CREATE_WORKSPACE_CONFIG !== 'false',
-      fallbackToEnvConfig: process.env.MCP_FALLBACK_TO_ENV_CONFIG !== 'false',
-    };
-  }
-
-  return config;
+    },
+  };
 }
 
 /**
  * Validate MCP configuration
  */
 export function validateMCPConfig(config: MCPServerConfig): void {
-  if (config.mode === 'api') {
-    if (!config.webApi?.baseUrl) {
-      throw new Error('Web API base URL is required for API mode');
-    }
+  if (!config.webApi?.baseUrl) {
+    throw new Error('Web API base URL is required');
+  }
 
-    try {
-      new URL(config.webApi.baseUrl);
-    } catch {
-      throw new Error(`Invalid web API base URL: ${config.webApi.baseUrl}`);
-    }
+  try {
+    new URL(config.webApi.baseUrl);
+  } catch {
+    throw new Error(`Invalid web API base URL: ${config.webApi.baseUrl}`);
   }
 
   if (config.webApi?.timeout && config.webApi.timeout < 1000) {
@@ -100,18 +72,10 @@ export function validateMCPConfig(config: MCPServerConfig): void {
  */
 export function printConfigSummary(config: MCPServerConfig): void {
   console.log('\n=== MCP Server Configuration ===');
-  console.log(`Mode: ${config.mode}`);
   console.log(`Default Project: ${config.defaultProjectId}`);
-
-  if (config.mode === 'api' && config.webApi) {
-    console.log(`Web API URL: ${config.webApi.baseUrl}`);
-    console.log(`Timeout: ${config.webApi.timeout}ms`);
-    console.log(`Retries: ${config.webApi.retries}`);
-    console.log(`Auto-discover: ${config.webApi.autoDiscover}`);
-  } else if (config.mode === 'direct' && config.direct) {
-    console.log(`Workspace Config: ${config.direct.workspaceConfigPath || 'default'}`);
-    console.log(`Create Config: ${config.direct.createWorkspaceConfigIfMissing}`);
-    console.log(`Fallback to Env: ${config.direct.fallbackToEnvConfig}`);
-  }
+  console.log(`Web API URL: ${config.webApi.baseUrl}`);
+  console.log(`Timeout: ${config.webApi.timeout}ms`);
+  console.log(`Retries: ${config.webApi.retries}`);
+  console.log(`Auto-discover: ${config.webApi.autoDiscover}`);
   console.log('================================\n');
 }

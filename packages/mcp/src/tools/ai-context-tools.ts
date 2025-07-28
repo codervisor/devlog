@@ -32,43 +32,4 @@ export const aiContextTools: Tool[] = [
       required: ['id'],
     },
   },
-  {
-    name: 'update_ai_context',
-    description:
-      '[DEPRECATED] Update AI context for a devlog entry. Use update_devlog with AI context fields instead. This tool will be removed in v2.0.0.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: {
-          type: 'number',
-          description: 'Numeric ID of the devlog entry to update',
-        },
-        summary: {
-          type: 'string',
-          description: 'Updated summary of current understanding',
-        },
-        insights: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'New insights or key learnings',
-        },
-        questions: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Open questions that need resolution',
-        },
-        patterns: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Related patterns discovered from other projects',
-        },
-        nextSteps: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Suggested next steps based on current progress',
-        },
-      },
-      required: ['id'],
-    },
-  },
 ];

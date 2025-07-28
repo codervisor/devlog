@@ -1,6 +1,6 @@
 # Devlog Project - Copilot Instructions
 
-## 🚨 CRITICAL RULES (READ FIRST!)
+<!-- ## 🚨 CRITICAL RULES (READ FIRST!)
 
 ### ⚠️ MANDATORY FIRST STEP: Always Discover Before Creating
 
@@ -20,7 +20,7 @@
 2. **📖 REVIEW**: Analyze discovered entries to understand context and avoid overlaps
 3. **✅ CREATE ONLY IF NEEDED**: Create new devlog entry using MCP tools only if no overlapping work exists
 4. **📝 TRACK PROGRESS**: Update entries with notes and status changes via MCP functions
-5. **🔗 LINK WORK**: Reference devlog IDs in commits and documentation
+5. **🔗 LINK WORK**: Reference devlog IDs in commits and documentation -->
 
 ## Development Philosophy (Brief)
 
@@ -48,107 +48,6 @@ import type { DevlogEntry } from '../types/index.js';           // Type-only can
 // ❌ Avoid these patterns
 import { DevlogEntry } from '@/types';                          // Ambiguous self-reference
 import { StorageProvider } from '../storage/providers';         // Missing .js extension
-```
-
-## ⚠️ AUTOMATIC MIGRATION DETECTION
-
-### 🚨 **Contextual Migration Prompts**
-**These prompts trigger automatically based on file patterns being edited:**
-
-#### **When editing `packages/core/src/managers/**/*.ts`:**
-```
-⚠️  MIGRATION CHECK: Manager class changes often affect:
-- MCP adapter (packages/mcp/src/mcp-adapter.ts)
-- Web API routes (packages/web/app/api/*/route.ts)  
-- Web contexts (packages/web/app/contexts/*.tsx)
-
-Run: grep -r "ManagerClassName" packages/ --include="*.ts"
-```
-
-#### **When editing `packages/core/src/types/**/*.ts`:**
-```
-⚠️  MIGRATION CHECK: Type changes often affect:
-- All packages importing these types
-- MCP tool parameter validation
-- Web component prop types
-
-Run: grep -r "TypeName" packages/ --include="*.ts" --include="*.tsx"
-```
-
-#### **When editing `packages/core/src/storage/**/*.ts`:**
-```
-⚠️  MIGRATION CHECK: Storage changes often affect:
-- MCP storage tools (packages/mcp/src/tools/*)
-- Web API endpoints (packages/web/app/api/*)
-- Configuration and initialization code
-
-Run: grep -r "StorageInterface" packages/ --include="*.ts"
-```
-
-#### **When making any @codervisor/devlog-core changes:**
-```
-⚠️  AUTO-CHECK: After core changes, verify:
-1. pnpm detect-migration  # Automatic migration detection
-2. pnpm --filter @codervisor/devlog-mcp build
-3. pnpm --filter @codervisor/devlog-web build:test  
-4. Check for new compilation errors in dependent packages
-```
-
-#### **Before starting any development session:**
-```
-💡 PROACTIVE CHECK: Run automatic migration detection:
-pnpm detect-migration
-
-This scans recent changes and identifies potential cross-package impacts
-that require migration attention.
-```
-
-## 🔄 Architecture Migration Protocol
-
-### ⚠️ CRITICAL: For Major Architecture Changes
-
-**When modifying core classes, interfaces, or manager patterns:**
-
-### **MANDATORY Migration Steps:**
-1. **🔍 IMPACT ANALYSIS FIRST**: Map all dependent packages and components
-   - Search for usage across ALL packages (`grep -r "ClassName" packages/`)
-   - Identify adapters, API routes, tests, and integration points
-   - Document breaking changes and compatibility requirements
-
-2. **📋 MIGRATION PLAN**: Create systematic update sequence
-   - **Order**: Core → MCP → AI → Web (follow dependency chain)
-   - **Validation**: Build and test each package after updates
-   - **Integration**: Test cross-package functionality
-
-3. **✅ VALIDATION STRATEGY**: Define success criteria and checkpoints
-   - All packages build successfully
-   - All tests pass
-   - Integration workflows function correctly
-   - No runtime errors in dependent packages
-
-4. **🔙 ROLLBACK PLAN**: Document reversion procedures
-   - Backup state before migration
-   - Clear steps to restore previous version
-   - Dependency version compatibility matrix
-
-### **Cross-Package Dependency Map:**
-- **@codervisor/devlog-core changes** → ALWAYS update @codervisor/devlog-mcp, @codervisor/devlog-web APIs
-- **Manager class changes** → Update adapters, API routes, tests, web contexts
-- **Type/Interface changes** → Update ALL imports and usages across packages
-- **Storage provider changes** → Update web API endpoints and MCP tools
-
-### **Migration Validation Checklist:**
-```markdown
-□ Impact analysis completed across all packages
-□ Migration plan documented with specific steps
-□ Core package updated and builds successfully
-□ MCP package updated and builds successfully  
-□ Web package updated and builds successfully
-□ AI package updated and builds successfully (if affected)
-□ All cross-package tests pass
-□ Integration workflows validated
-□ Rollback procedure documented and tested
-□ Related devlog entries updated with migration status
 ```
 
 ## Essential SOPs

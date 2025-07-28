@@ -1,9 +1,8 @@
 /**
- * Factory for creating MCP adapters based on configuration
- * Supports both direct core access and HTTP API client modes
+ * Factory for creating MCP adapters
+ * Uses HTTP API client for secure and isolated access to devlog operations
  */
 
-import { MCPDevlogAdapter } from './mcp-adapter.js';
 import { MCPApiAdapter, type MCPApiAdapterConfig } from './mcp-api-adapter.js';
 import {
   loadMCPConfig,
@@ -12,10 +11,10 @@ import {
   type MCPServerConfig,
 } from '../config/mcp-config.js';
 
-export type MCPAdapter = MCPDevlogAdapter | MCPApiAdapter;
+export type MCPAdapter = MCPApiAdapter;
 
 /**
- * Create an MCP adapter based on configuration
+ * Create an MCP adapter using HTTP API client
  */
 export async function createMCPAdapter(config?: MCPServerConfig): Promise<MCPAdapter> {
   // Load configuration if not provided
@@ -27,33 +26,19 @@ export async function createMCPAdapter(config?: MCPServerConfig): Promise<MCPAda
   // Print configuration summary for debugging
   printConfigSummary(mcpConfig);
 
-  let adapter: MCPAdapter;
+  // Create API-based adapter
+  const apiConfig: MCPApiAdapterConfig = {
+    apiClient: {
+      baseUrl: mcpConfig.webApi.baseUrl,
+      timeout: mcpConfig.webApi.timeout,
+      retries: mcpConfig.webApi.retries,
+    },
+    defaultProjectId: mcpConfig.defaultProjectId,
+    autoDiscoverWebService: mcpConfig.webApi.autoDiscover,
+  };
 
-  if (mcpConfig.mode === 'api') {
-    // Create API-based adapter
-    if (!mcpConfig.webApi) {
-      throw new Error('Web API configuration is required for API mode');
-    }
-
-    const apiConfig: MCPApiAdapterConfig = {
-      apiClient: {
-        baseUrl: mcpConfig.webApi.baseUrl,
-        timeout: mcpConfig.webApi.timeout,
-        retries: mcpConfig.webApi.retries,
-      },
-      defaultWorkspaceId: mcpConfig.defaultWorkspaceId,
-      autoDiscoverWebService: mcpConfig.webApi.autoDiscover,
-    };
-
-    adapter = new MCPApiAdapter(apiConfig);
-    console.log('Created MCP API Adapter (HTTP client mode)');
-  } else {
-    // Create direct core access adapter (existing implementation)
-    const directConfig = mcpConfig.direct || {};
-
-    adapter = new MCPDevlogAdapter(mcpConfig.defaultWorkspaceId);
-    console.log('Created MCP Direct Adapter (core access mode)');
-  }
+  const adapter = new MCPApiAdapter(apiConfig);
+  console.log('Created MCP API Adapter (HTTP client mode)');
 
   // Initialize the adapter
   await adapter.initialize();
@@ -66,7 +51,7 @@ export async function createMCPAdapter(config?: MCPServerConfig): Promise<MCPAda
  */
 export async function checkWebApiAvailability(baseUrl: string): Promise<boolean> {
   try {
-    const response = await fetch(`${baseUrl}/api/workspaces`, {
+    const response = await fetch(`${baseUrl}/api/projects`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(5000), // 5 second timeout
@@ -106,8 +91,8 @@ export async function discoverWebApiUrl(): Promise<string | null> {
 export async function createMCPAdapterWithDiscovery(): Promise<MCPAdapter> {
   const config = loadMCPConfig();
 
-  // If in API mode and auto-discovery is enabled, try to find web API
-  if (config.mode === 'api' && config.webApi?.autoDiscover) {
+  // If auto-discovery is enabled, try to find web API
+  if (config.webApi.autoDiscover) {
     const discoveredUrl = await discoverWebApiUrl();
 
     if (discoveredUrl) {
@@ -115,8 +100,7 @@ export async function createMCPAdapterWithDiscovery(): Promise<MCPAdapter> {
       config.webApi.baseUrl = discoveredUrl;
       console.log(`Using discovered web API URL: ${discoveredUrl}`);
     } else {
-      console.warn('Could not discover web API, falling back to direct mode');
-      config.mode = 'direct';
+      console.warn('Could not discover web API, using configured URL:', config.webApi.baseUrl);
     }
   }
 
@@ -124,21 +108,7 @@ export async function createMCPAdapterWithDiscovery(): Promise<MCPAdapter> {
 }
 
 /**
- * Get adapter interface type for tools
- */
-export function getAdapterInterface(adapter: MCPAdapter): 'direct' | 'api' {
-  return adapter instanceof MCPApiAdapter ? 'api' : 'direct';
-}
-
-/**
- * Type guard for direct adapter
- */
-export function isDirectAdapter(adapter: MCPAdapter): adapter is MCPDevlogAdapter {
-  return adapter instanceof MCPDevlogAdapter;
-}
-
-/**
- * Type guard for API adapter
+ * Type guard for API adapter (always true now)
  */
 export function isApiAdapter(adapter: MCPAdapter): adapter is MCPApiAdapter {
   return adapter instanceof MCPApiAdapter;
