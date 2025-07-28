@@ -28,7 +28,8 @@
     "rehype-sanitize": "6.0.0",
     "remark-gfm": "4.0.1",
     "typeorm": "0.3.25",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@ant-design/icons": "^5.2.6",

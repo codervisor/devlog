@@ -1,64 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import { ApiValidator, ProjectIdParamSchema, DevlogListQuerySchema, CreateDevlogBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id]/devlogs - List devlogs for a project
-export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Validate project ID parameter
+    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
+    if (!paramValidation.success) {
+      return paramValidation.response;
+    }
+
+    // Validate query parameters
+    const url = new URL(request.url);
+    const queryValidation = ApiValidator.validateQuery(url.searchParams, DevlogListQuerySchema);
+    if (!queryValidation.success) {
+      return queryValidation.response;
+    }
+
     const projectService = ProjectService.getInstance();
     await projectService.initialize();
-    const project = await projectService.get(params.id);
+    const project = await projectService.get(paramValidation.data.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(params.id);
+    const devlogService = DevlogService.getInstance(paramValidation.data.id);
 
-    // Parse query parameters for filtering
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
-
+    const queryData = queryValidation.data;
     const filter: any = {};
 
-    // Status filter
-    const status = searchParams.get('status');
-    if (status) {
-      filter.status = status.split(',');
-    }
-
-    // Type filter
-    const type = searchParams.get('type');
-    if (type) {
-      filter.type = type.split(',');
-    }
-
-    // Priority filter
-    const priority = searchParams.get('priority');
-    if (priority) {
-      filter.priority = priority.split(',');
-    }
-
-    // Search query
-    const search = searchParams.get('search');
-
-    // Archived filter
-    const archived = searchParams.get('archived');
-    if (archived !== null) {
-      filter.archived = archived === 'true';
-    }
+    // Apply validated filters
+    if (queryData.status) filter.status = [queryData.status];
+    if (queryData.type) filter.type = [queryData.type];
+    if (queryData.priority) filter.priority = [queryData.priority];
+    if (queryData.assignee) filter.assignee = queryData.assignee;
+    if (queryData.archived !== undefined) filter.archived = queryData.archived;
 
     // Pagination
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-
-    filter.pagination = { page, limit };
+    if (queryData.limit || queryData.offset) {
+      filter.pagination = {
+        page: queryData.offset ? Math.floor(queryData.offset / (queryData.limit || 20)) + 1 : 1,
+        limit: queryData.limit || 20,
+      };
+    }
 
     let result;
-    if (search) {
-      result = await devlogService.search(search, filter);
+    if (queryData.search) {
+      result = await devlogService.search(queryData.search, filter);
     } else {
       result = await devlogService.list(filter);
     }
@@ -66,44 +59,51 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching devlogs:', error);
-    return NextResponse.json({ error: 'Failed to fetch devlogs' }, { status: 500 });
+    return ApiValidator.handleServiceError(error);
   }
 }
 
 // POST /api/projects/[id]/devlogs - Create new devlog entry
-export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // Validate project ID parameter
+    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
+    if (!paramValidation.success) {
+      return paramValidation.response;
+    }
+
+    // Validate request body
+    const bodyValidation = await ApiValidator.validateJsonBody(request, CreateDevlogBodySchema);
+    if (!bodyValidation.success) {
+      return bodyValidation.response;
+    }
+
     const projectService = ProjectService.getInstance();
-    const project = await projectService.get(params.id);
+    const project = await projectService.get(paramValidation.data.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const data = await request.json();
-
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(params.id);
+    const devlogService = DevlogService.getInstance(paramValidation.data.id);
 
-    // Add required fields if missing
+    // Add required fields and get next ID
     const now = new Date().toISOString();
+    const nextId = await devlogService.getNextId();
+    
     const devlogEntry = {
-      ...data,
+      id: nextId,
+      ...bodyValidation.data,
       createdAt: now,
       updatedAt: now,
-      projectId: params.id, // Ensure project context
+      projectId: paramValidation.data.id, // Ensure project context
     };
-
-    // Get next ID if not provided
-    if (!devlogEntry.id) {
-      devlogEntry.id = await devlogService.getNextId();
-    }
 
     await devlogService.save(devlogEntry);
 
     return NextResponse.json(devlogEntry, { status: 201 });
   } catch (error) {
     console.error('Error creating devlog:', error);
-    const message = error instanceof Error ? error.message : 'Failed to create devlog';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return ApiValidator.handleServiceError(error);
   }
 }

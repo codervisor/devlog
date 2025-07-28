@@ -12,3 +12,6 @@ export * from './utils/index.js';
 
 // Types
 export * from './types/index.js';
+
+// Validation
+export * from './validation/project-schemas.js';
