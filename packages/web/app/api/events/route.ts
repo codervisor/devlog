@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   console.log('[SSE Route] Starting SSE endpoint, initializing bridge...');
   const startTime = Date.now();
 
-  // Initialize the SSE event bridge to connect devlog events to SSE broadcasts
+  // Initialize SSE bridge for real-time events
   await sseEventBridge.initialize();
 
   const initDuration = Date.now() - startTime;

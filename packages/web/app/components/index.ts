@@ -1,7 +1,7 @@
 // UI Components
 export * from './ui';
 
-// Layout Components  
+// Layout Components
 export * from './layout';
 
 // Common Components
@@ -14,5 +14,5 @@ export * from './forms';
 export * from './features/dashboard';
 export * from './features/devlogs';
 
-// Workspace Components
-export * from './workspace';
+// Project Components
+export * from './project';

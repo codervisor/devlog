@@ -67,12 +67,12 @@
   flex-shrink: 0;
 }
 
-.workspaceSwitcherContainer {
+.projectSwitcherContainer {
   padding: 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.workspaceSwitcherContainerCollapsed {
+.projectSwitcherContainerCollapsed {
   padding: 0;
   border-bottom: 1px solid #f0f0f0;
 }

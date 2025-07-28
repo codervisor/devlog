@@ -7,7 +7,7 @@ export interface MCPServerConfig {
   /** Architecture mode: 'direct' uses core directly, 'api' uses HTTP client */
   mode: 'direct' | 'api';
   /** Default workspace ID */
-  defaultWorkspaceId?: string;
+  defaultProjectId?: string;
   /** Web API configuration (required for 'api' mode) */
   webApi?: {
     /** Base URL for the web API server */
@@ -35,11 +35,11 @@ export interface MCPServerConfig {
  */
 export function loadMCPConfig(): MCPServerConfig {
   const mode = (process.env.MCP_MODE || 'direct') as 'direct' | 'api';
-  const defaultWorkspaceId = process.env.MCP_DEFAULT_WORKSPACE || 'default';
+  const defaultProjectId = process.env.MCP_DEFAULT_PROJECT || 'default';
 
   const config: MCPServerConfig = {
     mode,
-    defaultWorkspaceId,
+    defaultProjectId,
   };
 
   if (mode === 'api') {
@@ -101,7 +101,7 @@ export function validateMCPConfig(config: MCPServerConfig): void {
 export function printConfigSummary(config: MCPServerConfig): void {
   console.log('\n=== MCP Server Configuration ===');
   console.log(`Mode: ${config.mode}`);
-  console.log(`Default Workspace: ${config.defaultWorkspaceId}`);
+  console.log(`Default Project: ${config.defaultProjectId}`);
 
   if (config.mode === 'api' && config.webApi) {
     console.log(`Web API URL: ${config.webApi.baseUrl}`);

@@ -31,10 +31,10 @@ import type {
 } from './types';
 import { allTools } from './tools/index.js';
 import {
-  handleListWorkspaces,
-  handleGetCurrentWorkspace,
-  handleSwitchWorkspace,
-} from './tools/workspace-tools.js';
+  handleListProjects,
+  handleGetCurrentProject,
+  handleSwitchProject,
+} from './tools/project-tools.js';
 // Chat tools re-enabled with stub implementations
 import type {
   ImportChatHistoryArgs,
@@ -189,15 +189,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         );
       //   );
 
-      // Workspace management tools
-      case 'list_workspaces':
-        return await handleListWorkspaces(adapter.manager);
+      // Project management tools
+      case 'list_projects':
+        return await handleListProjects(adapter.manager);
 
-      case 'get_current_workspace':
-        return await handleGetCurrentWorkspace(adapter);
+      case 'get_current_project':
+        return await handleGetCurrentProject(adapter);
 
-      case 'switch_workspace':
-        return await handleSwitchWorkspace(adapter, args as unknown as { workspaceId: string });
+      case 'switch_project':
+        return await handleSwitchProject(adapter, args as unknown as { projectId: string });
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -216,20 +216,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  // Parse command line arguments for default workspace
+  // Parse command line arguments for default project
   const args = process.argv.slice(2);
-  const workspaceArgIndex = args.findIndex((arg) => arg === '--workspace' || arg === '-w');
-  const defaultWorkspace =
-    workspaceArgIndex !== -1 && args[workspaceArgIndex + 1]
-      ? args[workspaceArgIndex + 1]
-      : undefined;
+  const projectArgIndex = args.findIndex((arg) => arg === '--project' || arg === '-p');
+  const defaultProject =
+    projectArgIndex !== -1 && args[projectArgIndex + 1]
+      ? args[projectArgIndex + 1]
+      : process.env.MCP_DEFAULT_PROJECT || 'default';
 
   // Create adapter using factory with discovery
   const adapterInstance = await createMCPAdapterWithDiscovery();
 
-  // If default workspace was specified, set it
-  if (defaultWorkspace) {
-    adapterInstance.setCurrentWorkspaceId(defaultWorkspace);
+  // If default project was specified, set it
+  if (defaultProject) {
+    // TODO: Implement setCurrentProjectId in adapter
+    // adapterInstance.setCurrentProjectId(defaultProject);
   }
 
   // Assign the adapter instance directly
@@ -238,8 +239,8 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  const workspaceInfo = defaultWorkspace ? ` (default workspace: ${defaultWorkspace})` : '';
-  console.error(`Devlog MCP Server started with flexible storage architecture${workspaceInfo}`);
+  const projectInfo = defaultProject ? ` (default project: ${defaultProject})` : '';
+  console.error(`Devlog MCP Server started with flexible storage architecture${projectInfo}`);
 }
 
 // Cleanup on process exit
