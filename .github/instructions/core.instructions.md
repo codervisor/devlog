@@ -146,7 +146,7 @@ import type { DevlogEvent } from './event';    // Missing .js
 - **Runtime imports**: Must include .js extensions for Node.js compatibility
 - **Type-only imports**: Should also include .js/.js for consistency
 - **Relative paths**: Provide explicit, unambiguous module resolution
-- **Cross-package boundaries**: Use @devlog/* aliases for inter-package references
+- **Cross-package boundaries**: Use @codervisor/devlog-* aliases for inter-package references
 
 ### Why These Rules Matter
 - **Node.js ESM**: Requires explicit file extensions for module resolution

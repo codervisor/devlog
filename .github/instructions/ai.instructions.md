@@ -9,7 +9,7 @@ applyTo: 'packages/ai/src/**/*.ts'
 ### ESM Import Patterns for AI Package
 - **ALWAYS use .js extensions** for all internal imports
 - **Use relative imports** for intra-package references
-- **Use @devlog/* aliases** for core package dependencies
+- **Use @codervisor/devlog-* aliases** for core package dependencies
 - **Standard npm imports** for external AI/ML libraries
 
 ### AI-Specific Import Examples

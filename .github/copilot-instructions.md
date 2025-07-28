@@ -35,7 +35,7 @@
 ### Import System Rules
 - **File extensions**: Always add `.js` to import paths for runtime imports
 - **Internal imports**: Use relative paths (`./`, `../`) within packages
-- **Cross-package imports**: Use `@devlog/*` aliases for inter-package references
+- **Cross-package imports**: Use `@codervisor/devlog-*` aliases for inter-package references
 - **Avoid self-reference aliases**: Don't use `@/` for intra-package imports (ambiguous)
 
 ### Examples
