@@ -1,12 +1,14 @@
 import React from 'react';
-import { Anchor } from 'antd';
 import { DevlogEntry } from '@codervisor/devlog-core';
+import { cn } from '@/lib/utils';
 
 interface DevlogAnchorNavProps {
   devlog: DevlogEntry;
 }
 
 export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
+  const [activeSection, setActiveSection] = React.useState('description');
+
   const items = React.useMemo(() => {
     const items: { key: string; href: string; title: string }[] = [];
 
@@ -65,30 +67,83 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     return items;
   }, [devlog]);
 
+  // Set up intersection observer to track active section
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: '-80px 0px -50% 0px', // Account for fixed header
+        threshold: 0.1,
+      }
+    );
+
+    items.forEach(({ key }) => {
+      const element = document.getElementById(key);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [items]);
+
   if (items.length <= 1) {
     return null; // Don't show anchor nav if only description exists
   }
 
+  const handleClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      const offsetTop = element.offsetTop - 80; // Account for fixed header
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
-    <div style={{ position: 'sticky', top: 20 }}>
-      <Anchor
-        direction="vertical"
-        items={items}
-        affix={false}
-        onClick={(e, link) => {
-          e.preventDefault();
-          // Scroll to the target element
-          const targetId = link.href.replace('#', '');
-          const element = document.getElementById(targetId);
-          if (element) {
-            const offsetTop = element.offsetTop - 80; // Account for fixed header
-            window.scrollTo({
-              top: offsetTop,
-              behavior: 'smooth',
-            });
-          }
-        }}
-      />
+    <div className="sticky top-5">
+      <nav className="space-y-1">
+        <div className="relative">
+          {/* Active indicator line */}
+          <div className="absolute left-0 top-0 w-0.5 bg-border h-full" />
+          <div 
+            className="absolute left-0 w-0.5 bg-primary transition-all duration-200 ease-in-out"
+            style={{
+              top: `${items.findIndex(item => item.key === activeSection) * 2}rem`,
+              height: '1.5rem',
+            }}
+          />
+          
+          {/* Navigation items */}
+          <div className="pl-4 space-y-1">
+            {items.map((item) => (
+              <a
+                key={item.key}
+                href={item.href}
+                onClick={(e) => handleClick(e, item.href)}
+                className={cn(
+                  "block py-1 text-sm leading-6 transition-colors hover:text-foreground",
+                  activeSection === item.key
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground"
+                )}
+              >
+                {item.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
     </div>
   );
 }

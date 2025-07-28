@@ -5,14 +5,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
-import { Typography } from 'antd';
-import styles from './MarkdownRenderer.module.css';
 import { StickyHeadings } from './StickyHeadings';
+import { cn } from '@/lib/utils';
 
 // Import highlight.js CSS theme
 import 'highlight.js/styles/github.css';
-
-const { Text } = Typography;
 
 // Custom sanitize schema that allows syntax highlighting attributes
 const sanitizeSchema = {
@@ -67,9 +64,9 @@ export function MarkdownRenderer({
   content,
   className,
   preserveLineBreaks = true,
-  maxHeight = 480, // Default max height
   enableStickyHeadings = false,
-  stickyHeadingsTopOffset = 48,
+  stickyHeadingsTopOffset = 64,
+  maxHeight,
   noPadding = false,
 }: MarkdownRendererProps) {
   if (!content || content.trim() === '') {
@@ -78,30 +75,35 @@ export function MarkdownRenderer({
 
   // Preprocess content to handle single line breaks
   const processedContent = preserveLineBreaks ? preprocessContent(content) : content;
-  const combinedClassName =
-    `${styles.markdownRenderer} ${noPadding ? styles.noPadding : ''} ${className || ''}`.trim();
-  const wrapperClassName = maxHeight
-    ? `${combinedClassName} ${styles.markdownRendererScrollable} thin-scrollbar-vertical`
-    : combinedClassName;
+  
+  const wrapperClassName = cn(
+    "prose prose-slate max-w-none",
+    !noPadding && "p-4",
+    maxHeight && "overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background",
+    className
+  );
 
   const markdownContent = (
-    <div className={wrapperClassName}>
+    <div 
+      className={wrapperClassName}
+      style={maxHeight && typeof maxHeight === 'number' ? { maxHeight: `${maxHeight}px` } : undefined}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
         components={{
-          // Use simple div and let CSS handle styling
-          p: ({ children }) => <p>{children}</p>,
-          h1: ({ children }) => <h1>{children}</h1>,
-          h2: ({ children }) => <h2>{children}</h2>,
-          h3: ({ children }) => <h3>{children}</h3>,
-          h4: ({ children }) => <h4>{children}</h4>,
-          h5: ({ children }) => <h5>{children}</h5>,
-          h6: ({ children }) => <h6>{children}</h6>,
+          // Use Tailwind-styled components
+          p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
+          h1: ({ children }) => <h1 className="text-3xl font-bold mb-6 mt-8 text-foreground border-b border-border pb-2">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-2xl font-semibold mb-4 mt-6 text-foreground">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-xl font-semibold mb-3 mt-5 text-foreground">{children}</h3>,
+          h4: ({ children }) => <h4 className="text-lg font-semibold mb-2 mt-4 text-foreground">{children}</h4>,
+          h5: ({ children }) => <h5 className="text-base font-semibold mb-2 mt-3 text-foreground">{children}</h5>,
+          h6: ({ children }) => <h6 className="text-sm font-semibold mb-2 mt-3 text-muted-foreground">{children}</h6>,
           code: ({ children, className: codeClassName, ...props }) => {
             const isInline = !codeClassName;
             if (isInline) {
-              return <Text code>{children}</Text>;
+              return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
             }
             // For code blocks, let ReactMarkdown handle the structure with rehypeHighlight
             return (
@@ -136,11 +138,11 @@ export function MarkdownRenderer({
 
             if (language) {
               return (
-                <div className={styles.codeBlockWrapper}>
-                  <div className={styles.codeBlockHeader}>
-                    <span className={styles.codeBlockLanguage}>{language}</span>
+                <div className="relative bg-muted rounded-lg overflow-hidden my-4">
+                  <div className="flex items-center justify-between px-4 py-2 bg-muted-foreground/10 border-b border-border">
+                    <span className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{language}</span>
                   </div>
-                  <pre className={className} {...props}>
+                  <pre className={cn("overflow-x-auto p-4 text-sm bg-transparent", className)} {...props}>
                     {children}
                   </pre>
                 </div>
@@ -149,28 +151,33 @@ export function MarkdownRenderer({
 
             // Fallback to regular pre if no language detected
             return (
-              <pre className={className} {...props}>
+              <pre className={cn("bg-muted rounded p-4 overflow-x-auto text-sm my-4", className)} {...props}>
                 {children}
               </pre>
             );
           },
-          blockquote: ({ children }) => <blockquote>{children}</blockquote>,
-          ul: ({ children }) => <ul>{children}</ul>,
-          ol: ({ children }) => <ol>{children}</ol>,
-          li: ({ children }) => <li>{children}</li>,
+          blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-muted-foreground">{children}</blockquote>,
+          ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-4 ml-4">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-4 ml-4">{children}</ol>,
+          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
           a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer">
+            <a 
+              href={href} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline transition-colors"
+            >
               {children}
             </a>
           ),
           table: ({ children }) => (
-            <div className={`${styles.tableWrapper} thin-scrollbar-horizontal`}>
-              <table>{children}</table>
+            <div className="overflow-x-auto my-4 border rounded-lg">
+              <table className="w-full border-collapse">{children}</table>
             </div>
           ),
-          th: ({ children }) => <th>{children}</th>,
-          td: ({ children }) => <td>{children}</td>,
-          hr: () => <hr />,
+          th: ({ children }) => <th className="border border-border bg-muted px-4 py-2 text-left font-semibold">{children}</th>,
+          td: ({ children }) => <td className="border border-border px-4 py-2">{children}</td>,
+          hr: () => <hr className="border-t border-border my-6" />,
         }}
       >
         {processedContent}
@@ -183,7 +190,7 @@ export function MarkdownRenderer({
       <>
         {markdownContent}
         <StickyHeadings
-          headingSelector=".markdownRenderer h1, .markdownRenderer h2, .markdownRenderer h3, .markdownRenderer h4, .markdownRenderer h5, .markdownRenderer h6"
+          headingSelector=".prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6"
           topOffset={stickyHeadingsTopOffset}
         />
       </>
