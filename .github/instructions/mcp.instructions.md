@@ -9,7 +9,7 @@ applyTo: 'packages/mcp/src/**/*.ts'
 ### Node.js ESM Compatibility
 - **ALWAYS use .js extensions** for all import statements
 - **Use relative imports** for internal MCP package modules
-- **Use @devlog/* aliases** for core package dependencies
+- **Use @codervisor/devlog-* aliases** for core package dependencies
 - **Follow strict ESM patterns** for Node.js compatibility
 
 ### MCP-Specific Import Patterns
