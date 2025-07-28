@@ -1,1 +1,1 @@
-export * from './workspace-devlog-manager.js';
+export * from './project-devlog-manager.js';
