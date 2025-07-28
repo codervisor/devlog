@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Web interface for devlog management",
   "scripts": {
-    "dev": "next dev --port 3000 --turbo",
+    "dev": "next dev --port 3000",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "build": "NEXT_BUILD_MODE=standalone next build",
     "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",
@@ -52,10 +52,10 @@
     "tailwindcss-animate": "1.0.7",
     "typeorm": "0.3.25",
     "ws": "^8.14.2",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "@tailwindcss/postcss": "4.1.11"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "4.1.11",
     "@types/node": "^20.10.6",
     "@types/pg": "^8.11.0",
     "@types/react": "^18.2.48",
