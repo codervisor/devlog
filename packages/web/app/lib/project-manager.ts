@@ -18,6 +18,7 @@ import { homedir } from 'os';
 
 let globalProjectManager: DatabaseProjectManager | null = null;
 let globalAppConfigManager: AppConfigManager | null = null;
+let projectManagerInitPromise: Promise<DatabaseProjectManager> | null = null;
 
 /**
  * Get or create the singleton application config manager
@@ -42,43 +43,68 @@ export async function getAppConfigManager(): Promise<AppConfigManager> {
  * Uses database storage directly with centralized configuration
  */
 export async function getProjectManager(): Promise<DatabaseProjectManager> {
-  if (!globalProjectManager) {
-    console.log('[ProjectManager] Creating new DatabaseProjectManager...');
-    console.log('[ProjectManager] Environment:', {
-      NODE_ENV: process.env.NODE_ENV,
-      POSTGRES_URL: !!process.env.POSTGRES_URL,
-      DEVLOG_STORAGE_TYPE: process.env.DEVLOG_STORAGE_TYPE,
-    });
-
-    // Create database connection
-    const typeormConfig = parseTypeORMConfig();
-    const dataSource = createDataSource(typeormConfig, [ProjectEntity]);
-
-    globalProjectManager = new DatabaseProjectManager({
-      database: dataSource,
-      createDefaultIfMissing: true,
-      maxProjects: 100,
-      defaultProjectConfig: {
-        name: 'Default Project',
-        description: 'Default devlog project',
-        settings: {
-          defaultPriority: 'medium',
-        },
-        tags: [],
-      },
-    });
-
-    console.log('[ProjectManager] Initializing project manager...');
-    try {
-      await globalProjectManager.initialize();
-      console.log('[ProjectManager] Project manager initialized successfully');
-    } catch (error) {
-      console.error('[ProjectManager] Failed to initialize:', error);
-      throw error;
-    }
+  // If already initialized, return the existing instance
+  if (globalProjectManager) {
+    return globalProjectManager;
   }
 
-  return globalProjectManager;
+  // If initialization is in progress, wait for it to complete
+  if (projectManagerInitPromise) {
+    console.log('[ProjectManager] Waiting for existing initialization to complete...');
+    return await projectManagerInitPromise;
+  }
+
+  // Start initialization process
+  console.log('[ProjectManager] Starting new DatabaseProjectManager initialization...');
+  projectManagerInitPromise = initializeProjectManager();
+
+  try {
+    globalProjectManager = await projectManagerInitPromise;
+    return globalProjectManager;
+  } catch (error) {
+    // Reset the promise on failure so we can retry
+    projectManagerInitPromise = null;
+    throw error;
+  }
+}
+
+/**
+ * Internal function to actually initialize the project manager
+ */
+async function initializeProjectManager(): Promise<DatabaseProjectManager> {
+  console.log('[ProjectManager] Creating new DatabaseProjectManager...');
+  console.log('[ProjectManager] Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    POSTGRES_URL: !!process.env.POSTGRES_URL ? 'configured' : 'not set',
+    DEVLOG_STORAGE_TYPE: process.env.DEVLOG_STORAGE_TYPE,
+  });
+
+  // Create database connection
+  const typeormConfig = parseTypeORMConfig();
+  const dataSource = createDataSource(typeormConfig, [ProjectEntity]);
+
+  const manager = new DatabaseProjectManager({
+    database: dataSource,
+    createDefaultIfMissing: true,
+    maxProjects: 100,
+    defaultProjectConfig: {
+      name: 'Default Project',
+      description: 'Default devlog project',
+      settings: {
+        defaultPriority: 'medium',
+      },
+    },
+  });
+
+  console.log('[ProjectManager] Initializing project manager...');
+  try {
+    await manager.initialize();
+    console.log('[ProjectManager] Project manager initialized successfully');
+    return manager;
+  } catch (error) {
+    console.error('[ProjectManager] Failed to initialize:', error);
+    throw error;
+  }
 }
 
 /**

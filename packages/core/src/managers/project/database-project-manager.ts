@@ -28,7 +28,7 @@ export interface DatabaseProjectManagerOptions {
  */
 export class DatabaseProjectManager implements ProjectManager {
   private repository: Repository<ProjectEntity>;
-  private currentProjectId: string | null = null;
+  private currentProjectId: number | null = null;
   private initialized = false;
 
   constructor(private options: DatabaseProjectManagerOptions) {
@@ -71,21 +71,32 @@ export class DatabaseProjectManager implements ProjectManager {
    * Create default project
    */
   private async createDefaultProject(): Promise<void> {
-    const defaultProject: Omit<ProjectMetadata, 'createdAt' | 'lastAccessedAt'> = {
-      id: 'default',
+    const defaultProject: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'> = {
       name: 'Default Project',
       description: 'Default devlog project',
       settings: {
         defaultPriority: 'medium',
       },
-      tags: [],
       ...this.options.defaultProjectConfig,
     };
 
-    // Force the ID to be 'default' even if overridden
-    defaultProject.id = 'default';
+    // Create project directly without initialization check since this is called during initialization
+    const existing = await this.repository.findOne({ where: { name: defaultProject.name } });
+    if (existing) {
+      return; // Default project already exists
+    }
 
-    await this.createProject(defaultProject);
+    // Check project limits
+    if (this.options.maxProjects) {
+      const projectCount = await this.repository.count();
+      if (projectCount >= this.options.maxProjects) {
+        throw new Error(`Maximum number of projects (${this.options.maxProjects}) reached`);
+      }
+    }
+
+    // Create and save new project entity
+    const entity = ProjectEntity.fromProjectData(defaultProject);
+    await this.repository.save(entity);
   }
 
   private ensureInitialized(): void {
@@ -102,7 +113,7 @@ export class DatabaseProjectManager implements ProjectManager {
     return entities.map((entity) => entity.toProjectMetadata());
   }
 
-  async getProject(id: string): Promise<ProjectMetadata | null> {
+  async getProject(id: number): Promise<ProjectMetadata | null> {
     this.ensureInitialized();
     const entity = await this.repository.findOne({ where: { id } });
 
@@ -118,15 +129,9 @@ export class DatabaseProjectManager implements ProjectManager {
   }
 
   async createProject(
-    project: Omit<ProjectMetadata, 'createdAt' | 'lastAccessedAt'>,
+    project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
   ): Promise<ProjectMetadata> {
     this.ensureInitialized();
-
-    // Check if project already exists
-    const existing = await this.repository.findOne({ where: { id: project.id } });
-    if (existing) {
-      throw new Error(`Project '${project.id}' already exists`);
-    }
 
     // Check project limits
     if (this.options.maxProjects) {
@@ -143,12 +148,12 @@ export class DatabaseProjectManager implements ProjectManager {
     return savedEntity.toProjectMetadata();
   }
 
-  async updateProject(id: string, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
+  async updateProject(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
     this.ensureInitialized();
 
     const entity = await this.repository.findOne({ where: { id } });
     if (!entity) {
-      throw new Error(`Project '${id}' not found`);
+      throw new Error(`Project with ID '${id}' not found`);
     }
 
     // Prevent changing project ID
@@ -163,54 +168,54 @@ export class DatabaseProjectManager implements ProjectManager {
     return savedEntity.toProjectMetadata();
   }
 
-  async deleteProject(id: string): Promise<void> {
+  async deleteProject(id: number): Promise<void> {
     this.ensureInitialized();
-
-    // Prevent deleting the default project
-    if (id === 'default') {
-      throw new Error('Cannot delete the default project');
-    }
 
     const result = await this.repository.delete({ id });
     if (result.affected === 0) {
-      throw new Error(`Project '${id}' not found`);
+      throw new Error(`Project with ID '${id}' not found`);
     }
 
-    // If this was the current project, reset to default
+    // If this was the current project, reset to null
     if (this.currentProjectId === id) {
       this.currentProjectId = null;
     }
   }
 
-  async getDefaultProject(): Promise<string> {
+  async getDefaultProject(): Promise<number> {
     this.ensureInitialized();
-    // For now, we'll use a simple default project approach
-    // In the future, this could be stored in a settings table
-    return 'default';
+    // Get the first project (lowest ID) as the default
+    const defaultProject = await this.repository.findOne({
+      order: { id: 'ASC' },
+    });
+
+    if (!defaultProject) {
+      throw new Error('No projects found');
+    }
+
+    return defaultProject.id;
   }
 
-  async setDefaultProject(id: string): Promise<void> {
+  async setDefaultProject(id: number): Promise<void> {
     this.ensureInitialized();
 
     // Verify project exists
     const project = await this.repository.findOne({ where: { id } });
     if (!project) {
-      throw new Error(`Project '${id}' not found`);
+      throw new Error(`Project with ID '${id}' not found`);
     }
 
-    // For now, we'll keep the default as 'default'
+    // For now, we'll consider the first project (lowest ID) as default
     // In the future, this could be stored in a settings table
-    if (id !== 'default') {
-      throw new Error('Setting custom default project not yet supported in database mode');
-    }
+    // This is a no-op for now since we determine default by ID ordering
   }
 
-  async switchToProject(id: string): Promise<ProjectContext> {
+  async switchToProject(id: number): Promise<ProjectContext> {
     this.ensureInitialized();
 
     const entity = await this.repository.findOne({ where: { id } });
     if (!entity) {
-      throw new Error(`Project '${id}' not found`);
+      throw new Error(`Project with ID '${id}' not found`);
     }
 
     // Update last accessed time
@@ -221,10 +226,11 @@ export class DatabaseProjectManager implements ProjectManager {
     this.currentProjectId = id;
 
     const project = entity.toProjectMetadata();
+    const defaultProjectId = await this.getDefaultProject();
     return {
       projectId: id,
       project,
-      isDefault: id === 'default',
+      isDefault: id === defaultProjectId,
     };
   }
 
@@ -235,7 +241,11 @@ export class DatabaseProjectManager implements ProjectManager {
 
     // Fall back to default project if no current project set
     if (!projectId) {
-      projectId = await this.getDefaultProject();
+      try {
+        projectId = await this.getDefaultProject();
+      } catch {
+        return null; // No projects exist
+      }
     }
 
     const entity = await this.repository.findOne({ where: { id: projectId } });
@@ -244,10 +254,11 @@ export class DatabaseProjectManager implements ProjectManager {
     }
 
     const project = entity.toProjectMetadata();
+    const defaultProjectId = await this.getDefaultProject();
     return {
       projectId,
       project,
-      isDefault: projectId === 'default',
+      isDefault: projectId === defaultProjectId,
     };
   }
 }

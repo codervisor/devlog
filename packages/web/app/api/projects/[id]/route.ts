@@ -5,7 +5,7 @@ import { getProjectManager } from '../../../lib/project-manager';
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id] - Get specific project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const manager = await getProjectManager();
     const project = await manager.getProject(params.id);
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/projects/[id] - Update project
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const manager = await getProjectManager();
     const updates = await request.json();
@@ -38,7 +38,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/projects/[id] - Delete project
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const manager = await getProjectManager();
     await manager.deleteProject(params.id);
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 }
 
 // POST /api/projects/[id]/switch - Switch to project
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const manager = await getProjectManager();
     const projectContext = await manager.switchToProject(params.id);

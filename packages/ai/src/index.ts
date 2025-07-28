@@ -23,5 +23,5 @@ export * from './automation/index.js';
 export {
   MessageData as Message,
   ChatSessionData as ChatSession,
-  ProjectDataContainer as ProjectData,
+  WorkspaceDataContainer as ProjectData,
 } from './models/index.js';
