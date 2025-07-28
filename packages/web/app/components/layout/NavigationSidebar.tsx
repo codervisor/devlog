@@ -15,6 +15,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { DevlogStats } from '@codervisor/devlog-core';
 import { OverviewStats, ProjectSwitcher } from '@/components';
+import { useProject } from '@/contexts/ProjectContext';
 import styles from './NavigationSidebar.module.css';
 
 const { Sider } = Layout;
@@ -37,6 +38,7 @@ export function NavigationSidebar({
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { currentProject } = useProject();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -47,10 +49,11 @@ export function NavigationSidebar({
   const getSelectedKey = () => {
     if (!mounted) return 'dashboard'; // Fallback during SSR
     if (pathname === '/') return 'dashboard';
-    if (pathname === '/devlogs') return 'list';
-    if (pathname === '/devlogs/create') return 'create';
     if (pathname === '/projects') return 'projects';
-    if (pathname.startsWith('/devlogs/')) return 'list'; // For individual devlog pages
+    if (pathname.startsWith('/projects/') && pathname.endsWith('/devlogs')) return 'list';
+    if (pathname.startsWith('/projects/') && pathname.includes('/devlogs/create')) return 'create';
+    if (pathname.startsWith('/projects/') && pathname.includes('/devlogs/')) return 'list';
+    if (pathname.startsWith('/projects/') && !pathname.includes('/devlogs')) return 'projects';
     return 'dashboard';
   };
 
@@ -62,7 +65,7 @@ export function NavigationSidebar({
     },
     {
       key: 'list',
-      label: 'All Devlogs',
+      label: currentProject ? 'Project Devlogs' : 'Devlogs',
       icon: <FileTextOutlined />,
     },
     {
@@ -85,10 +88,22 @@ export function NavigationSidebar({
         router.push('/');
         break;
       case 'list':
-        router.push('/devlogs');
+        // Always use hierarchical routing - require project selection
+        if (currentProject) {
+          router.push(`/projects/${currentProject.projectId}/devlogs`);
+        } else {
+          // If no project selected, redirect to projects page
+          router.push('/projects');
+        }
         break;
       case 'create':
-        router.push('/devlogs/create');
+        // Always use hierarchical routing - require project selection
+        if (currentProject) {
+          router.push(`/projects/${currentProject.projectId}/devlogs/create`);
+        } else {
+          // If no project selected, redirect to projects page
+          router.push('/projects');
+        }
         break;
       case 'projects':
         router.push('/projects');
