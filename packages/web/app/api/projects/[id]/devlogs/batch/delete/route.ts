@@ -6,7 +6,7 @@ import { ProjectDevlogManager } from '@codervisor/devlog-core';
 export const dynamic = 'force-dynamic';
 
 // POST /api/projects/[id]/devlogs/batch/delete - Batch delete devlog entries
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectManager = await getProjectManager();
     const project = await projectManager.getProject(params.id);
@@ -38,7 +38,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 

@@ -32,7 +32,6 @@ export interface ProjectDevlogManagerOptions {
  */
 export class ProjectDevlogManager {
   private storageProvider: StorageProvider | null = null;
-  private initialized = false;
   private initPromise: Promise<void> | null = null;
 
   constructor(private options: ProjectDevlogManagerOptions) {}
@@ -42,12 +41,6 @@ export class ProjectDevlogManager {
    * Protects against race conditions during concurrent initialization
    */
   async initialize(): Promise<void> {
-    // If already initialized, return immediately
-    if (this.initialized) {
-      console.log('🔄 ProjectDevlogManager already initialized, skipping...');
-      return;
-    }
-
     // If initialization is in progress, wait for it
     if (this.initPromise) {
       console.log('⏳ ProjectDevlogManager initialization in progress, waiting...');
@@ -81,10 +74,8 @@ export class ProjectDevlogManager {
 
       console.log(`💾 Storage type: ${this.options.storageConfig.type}`);
 
+      // StorageProviderFactory.create() already initializes the provider
       this.storageProvider = await StorageProviderFactory.create(this.options.storageConfig);
-      await this.storageProvider.initialize();
-
-      this.initialized = true;
       console.log('✅ ProjectDevlogManager initialized successfully');
     } catch (error) {
       console.error('❌ ProjectDevlogManager initialization failed:', error);
@@ -100,7 +91,6 @@ export class ProjectDevlogManager {
       await this.storageProvider.cleanup();
       this.storageProvider = null;
     }
-    this.initialized = false;
   }
 
   /**
@@ -117,9 +107,9 @@ export class ProjectDevlogManager {
     return this.options.projectContext;
   }
 
-  private ensureInitialized(): void {
-    if (!this.initialized || !this.storageProvider) {
-      throw new Error('ProjectDevlogManager not initialized. Call initialize() first.');
+  private async ensureInitialized(): Promise<void> {
+    if (!this.storageProvider) {
+      await this.initialize();
     }
   }
 
@@ -154,12 +144,12 @@ export class ProjectDevlogManager {
   // Delegate all operations to storage provider with project filtering
 
   async exists(id: DevlogId): Promise<boolean> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.exists(id);
   }
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const entry = await this.storageProvider!.get(id);
 
     // Verify entry belongs to current project if project context is set
@@ -173,108 +163,108 @@ export class ProjectDevlogManager {
   }
 
   async save(entry: DevlogEntry): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const projectEntry = this.addProjectId(entry);
     return this.storageProvider!.save(projectEntry);
   }
 
   async delete(id: DevlogId): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.delete(id);
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
     return this.storageProvider!.list(projectFilter);
   }
 
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
     return this.storageProvider!.search(query, projectFilter);
   }
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     const projectFilter = this.addProjectFilter(filter);
     return this.storageProvider!.getStats(projectFilter);
   }
 
   async getTimeSeriesStats(request?: TimeSeriesRequest): Promise<TimeSeriesStats> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getTimeSeriesStats(request);
   }
 
   async getNextId(): Promise<DevlogId> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getNextId();
   }
 
   // Delegate chat operations (these are not project-specific for now)
 
   async saveChatSession(session: any): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.saveChatSession(session);
   }
 
   async getChatSession(id: string): Promise<any> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getChatSession(id);
   }
 
   async listChatSessions(filter?: any, offset?: number, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.listChatSessions(filter, offset, limit);
   }
 
   async deleteChatSession(id: string): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.deleteChatSession(id);
   }
 
   async saveChatMessages(messages: any[]): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.saveChatMessages(messages);
   }
 
   async getChatMessages(sessionId: string, offset?: number, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getChatMessages(sessionId, offset, limit);
   }
 
   async searchChatContent(query: string, filter?: any, limit?: number): Promise<any[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.searchChatContent(query, filter, limit);
   }
 
   async getChatStats(filter?: any): Promise<any> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getChatStats(filter);
   }
 
   async saveChatDevlogLink(link: any): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.saveChatDevlogLink(link);
   }
 
   async getChatDevlogLinks(sessionId?: string, devlogId?: DevlogId): Promise<any[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getChatDevlogLinks(sessionId, devlogId);
   }
 
   async removeChatDevlogLink(sessionId: string, devlogId: DevlogId): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.removeChatDevlogLink(sessionId, devlogId);
   }
 
   async getChatWorkspaces(): Promise<any[]> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.getChatWorkspaces();
   }
 
   async saveChatWorkspace(workspace: any): Promise<void> {
-    this.ensureInitialized();
+    await this.ensureInitialized();
     return this.storageProvider!.saveChatWorkspace(workspace);
   }
 }

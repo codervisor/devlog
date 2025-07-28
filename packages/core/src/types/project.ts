@@ -61,9 +61,6 @@ export interface ProjectContext {
 
   /** Current project metadata */
   project: ProjectMetadata;
-
-  /** Whether this is the default project */
-  isDefault: boolean;
 }
 
 /**

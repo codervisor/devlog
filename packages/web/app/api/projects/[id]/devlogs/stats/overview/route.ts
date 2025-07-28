@@ -6,7 +6,7 @@ import { ProjectDevlogManager } from '@codervisor/devlog-core';
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id]/devlogs/stats/overview - Get overview statistics
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectManager = await getProjectManager();
     const project = await projectManager.getProject(params.id);
@@ -29,7 +29,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       projectContext: {
         projectId: params.id,
         project,
-        isDefault: params.id === 'default',
       },
     });
 

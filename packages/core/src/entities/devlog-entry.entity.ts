@@ -89,4 +89,95 @@ export class DevlogEntryEntity {
 
   @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'acceptance_criteria' })
   acceptanceCriteria!: string[];
+
+  /**
+   * Convert entity to DevlogEntry interface
+   */
+  toDevlogEntry(): import('../types/index.js').DevlogEntry {
+    return {
+      id: this.id,
+      key: this.key,
+      title: this.title,
+      type: this.type,
+      description: this.description,
+      status: this.status,
+      priority: this.priority,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      closedAt: this.closedAt?.toISOString(),
+      archived: this.archived,
+      assignee: this.assignee,
+      projectId: this.projectId,
+      acceptanceCriteria: this.parseJsonField(this.acceptanceCriteria, []),
+      businessContext: this.businessContext,
+      technicalContext: this.technicalContext,
+      // Related entities will be loaded separately when needed
+      notes: [],
+      dependencies: [],
+    };
+  }
+
+  /**
+   * Create entity from DevlogEntry interface
+   */
+  static fromDevlogEntry(entry: import('../types/index.js').DevlogEntry): DevlogEntryEntity {
+    const entity = new DevlogEntryEntity();
+
+    if (entry.id) entity.id = entry.id;
+    entity.key = entry.key || '';
+    entity.title = entry.title;
+    entity.type = entry.type;
+    entity.description = entry.description;
+    entity.status = entry.status;
+    entity.priority = entry.priority;
+    entity.createdAt = new Date(entry.createdAt);
+    entity.updatedAt = new Date(entry.updatedAt);
+    if (entry.closedAt) entity.closedAt = new Date(entry.closedAt);
+    entity.archived = entry.archived || false;
+    entity.assignee = entry.assignee;
+    entity.projectId = entry.projectId;
+    entity.acceptanceCriteria = entity.stringifyJsonField(entry.acceptanceCriteria || []);
+    entity.businessContext = entry.businessContext;
+    entity.technicalContext = entry.technicalContext;
+
+    return entity;
+  }
+
+  /**
+   * Helper method for JSON field parsing (database-specific)
+   */
+  private parseJsonField<T>(value: any, defaultValue: T): T {
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+
+    // For SQLite, values are stored as text and need parsing
+    if (getStorageType() === 'sqlite' && typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return defaultValue;
+      }
+    }
+
+    // For PostgreSQL and MySQL, JSON fields are handled natively
+    return value;
+  }
+
+  /**
+   * Helper method for JSON field stringification (database-specific)
+   */
+  private stringifyJsonField(value: any): any {
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    // For SQLite, we need to stringify JSON data
+    if (getStorageType() === 'sqlite') {
+      return typeof value === 'string' ? value : JSON.stringify(value);
+    }
+
+    // For PostgreSQL and MySQL, return the object directly
+    return value;
+  }
 }
