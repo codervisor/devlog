@@ -15,7 +15,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
 
     const project = await projectService.get(paramValidation.data.id);
 
@@ -46,9 +45,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
 
-    const updatedProject = await projectService.update(paramValidation.data.id, bodyValidation.data);
+    const updatedProject = await projectService.update(
+      paramValidation.data.id,
+      bodyValidation.data,
+    );
 
     return NextResponse.json(updatedProject);
   } catch (error) {
@@ -67,7 +68,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
 
     await projectService.delete(paramValidation.data.id);
 

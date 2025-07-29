@@ -17,7 +17,7 @@ import type {
   TimeSeriesStats,
 } from '../types/index.js';
 import { DevlogDependencyEntity, DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
-import { createDataSource } from '../utils/typeorm-config.js';
+import { getDataSource } from '../utils/typeorm-config.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
 
 interface DevlogServiceInstance {
@@ -32,18 +32,29 @@ export class DevlogService {
   private devlogRepository: Repository<DevlogEntryEntity>;
 
   private constructor(private projectId?: number) {
-    this.database = createDataSource({
-      entities: [DevlogEntryEntity, DevlogNoteEntity, DevlogDependencyEntity],
-    });
-    this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
+    // Database initialization will happen in ensureInitialized()
+    this.database = null as any; // Temporary placeholder
+    this.devlogRepository = null as any; // Temporary placeholder
   }
 
   /**
    * Initialize the database connection if not already initialized
    */
   private async ensureInitialized(): Promise<void> {
-    if (!this.database.isInitialized) {
-      await this.database.initialize();
+    try {
+      if (!this.database || !this.database.isInitialized) {
+        console.log('[DevlogService] Getting initialized DataSource...');
+        this.database = await getDataSource();
+        this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
+        console.log(
+          '[DevlogService] DataSource ready with entities:',
+          this.database.entityMetadatas.length,
+        );
+        console.log('[DevlogService] Repository initialized:', !!this.devlogRepository);
+      }
+    } catch (error) {
+      console.error('[DevlogService] Failed to initialize:', error);
+      throw error;
     }
   }
 
@@ -69,7 +80,7 @@ export class DevlogService {
 
   async get(id: DevlogId): Promise<DevlogEntry | null> {
     await this.ensureInitialized();
-    
+
     // Validate devlog ID
     const idValidation = DevlogValidator.validateDevlogId(id);
     if (!idValidation.success) {
@@ -87,7 +98,7 @@ export class DevlogService {
 
   async save(entry: DevlogEntry): Promise<void> {
     await this.ensureInitialized();
-    
+
     // Validate devlog entry data
     const validation = DevlogValidator.validateDevlogEntry(entry);
     if (!validation.success) {
@@ -138,7 +149,7 @@ export class DevlogService {
 
   async delete(id: DevlogId): Promise<void> {
     await this.ensureInitialized();
-    
+
     // Validate devlog ID
     const idValidation = DevlogValidator.validateDevlogId(id);
     if (!idValidation.success) {
@@ -153,7 +164,7 @@ export class DevlogService {
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
-    
+
     // Validate filter if provided
     if (filter) {
       const filterValidation = DevlogValidator.validateFilter(filter);
@@ -174,7 +185,7 @@ export class DevlogService {
 
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
-    
+
     // Validate search query
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
       throw new Error('Search query is required and must be a non-empty string');
@@ -206,7 +217,7 @@ export class DevlogService {
 
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
     await this.ensureInitialized();
-    
+
     // Validate filter if provided
     if (filter) {
       const filterValidation = DevlogValidator.validateFilter(filter);
@@ -295,7 +306,7 @@ export class DevlogService {
     request?: TimeSeriesRequest,
   ): Promise<TimeSeriesStats> {
     await this.ensureInitialized();
-    
+
     // Calculate date range
     const days = request?.days || 30;
     const to = request?.to ? new Date(request.to) : new Date();
@@ -341,7 +352,7 @@ export class DevlogService {
 
   async getNextId(): Promise<DevlogId> {
     await this.ensureInitialized();
-    
+
     const result = await this.devlogRepository
       .createQueryBuilder('devlog')
       .select('MAX(devlog.id)', 'maxId')

@@ -14,7 +14,6 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
 
     const coreProjects = await projectService.list();
 
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
     );
 
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
 
     // Create project (service layer will perform business logic validation)
     const coreProject = await projectService.create(serviceData);

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { ApiValidator, ProjectIdParamSchema, DevlogListQuerySchema, CreateDevlogBodySchema } from '@/schemas';
+import {
+  ApiValidator,
+  ProjectIdParamSchema,
+  DevlogListQuerySchema,
+  CreateDevlogBodySchema,
+} from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -22,7 +27,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
     const project = await projectService.get(paramValidation.data.id);
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     // Add required fields and get next ID
     const now = new Date().toISOString();
     const nextId = await devlogService.getNextId();
-    
+
     const devlogEntry = {
       id: nextId,
       ...bodyValidation.data,

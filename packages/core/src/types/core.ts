@@ -180,7 +180,7 @@ export interface DevlogEntry {
   closedAt?: string; // ISO timestamp when status changed to 'done' or 'cancelled'
   assignee?: string;
   archived?: boolean; // For long-term management and performance
-  projectId?: number; // Project context for multi-project isolation
+  projectId: number; // Project context for multi-project isolation - REQUIRED
 
   // Flattened context fields
   acceptanceCriteria?: string[];

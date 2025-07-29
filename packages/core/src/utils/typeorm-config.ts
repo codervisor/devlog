@@ -34,6 +34,49 @@ export interface TypeORMStorageOptions {
   ssl?: boolean;
 }
 
+// Singleton DataSource instance
+let singletonDataSource: DataSource | null = null;
+let initializationPromise: Promise<DataSource> | null = null;
+
+/**
+ * Get or create the singleton DataSource instance
+ * All services should use this to ensure they share the same database connection
+ * Handles race conditions by ensuring only one initialization happens
+ */
+export async function getDataSource(): Promise<DataSource> {
+  if (singletonDataSource?.isInitialized) {
+    return singletonDataSource;
+  }
+
+  // If initialization is already in progress, wait for it
+  if (initializationPromise) {
+    return initializationPromise;
+  }
+
+  // Start initialization
+  initializationPromise = (async () => {
+    if (!singletonDataSource) {
+      console.log('[DataSource] Creating singleton DataSource instance...');
+      const options = parseTypeORMConfig();
+      singletonDataSource = createDataSource({ options });
+    }
+
+    // Initialize the DataSource if not already initialized
+    if (!singletonDataSource.isInitialized) {
+      console.log('[DataSource] Initializing singleton DataSource...');
+      await singletonDataSource.initialize();
+      console.log(
+        '[DataSource] Singleton DataSource initialized with entities:',
+        singletonDataSource.entityMetadatas.length,
+      );
+    }
+
+    return singletonDataSource;
+  })();
+
+  return initializationPromise;
+}
+
 /**
  * Create TypeORM DataSource based on storage options
  * Uses caching to prevent duplicate connections in development
@@ -62,6 +105,8 @@ export function createDataSource({
     synchronize: options.synchronize ?? false, // Default to false for production safety
     logging: options.logging ?? false,
   };
+
+  console.log('[DataSource] Creating DataSource with', baseConfig.entities?.length, 'entities');
 
   let config: DataSourceOptions;
 
