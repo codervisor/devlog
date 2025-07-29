@@ -11,7 +11,12 @@
     "preview": "next start --port 3010",
     "clean": "rimraf .next .next-build out *.tsbuildinfo",
     "clean:dev": "rimraf .next",
-    "clean:build": "rimraf .next-build"
+    "clean:build": "rimraf .next-build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "RUN_INTEGRATION_TESTS=true vitest run tests/api-integration.test.ts"
   },
   "dependencies": {
     "@codervisor/devlog-ai": "workspace:*",
