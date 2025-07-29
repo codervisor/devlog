@@ -25,33 +25,10 @@ jobs:
           run_install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: ./.github/scripts/setup-node.sh
 
-      - name: Type check all packages
-        run: |
-          echo "🔍 Type-checking packages..."
-          pnpm -r exec tsc --noEmit --skipLibCheck
-
-      - name: Quick build test
-        run: |
-          echo "🔨 Quick build test..."
-          pnpm --filter @codervisor/devlog-core build
-          pnpm --filter @codervisor/devlog-ai build
-          pnpm --filter @codervisor/devlog-mcp build
-
-      - name: Run tests
-        run: |
-          echo "🧪 Running tests..."
-          pnpm -r test
-
-      - name: Validate import structure
-        run: |
-          echo "📦 Validating import structure..."
-          if [ -f "scripts/validate-imports.js" ]; then
-            node scripts/validate-imports.js
-          else
-            echo "⚠️  Import validation script not found"
-          fi
+      - name: Run PR validation
+        run: ./.github/scripts/validate-pr.sh
 
       - name: PR Summary
         run: |
