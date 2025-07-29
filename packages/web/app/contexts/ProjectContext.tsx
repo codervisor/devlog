@@ -14,7 +14,6 @@ export interface ProjectMetadata {
 export interface ProjectContext {
   projectId: number; // Changed from string to number to match API
   project: ProjectMetadata;
-  isDefault: boolean;
 }
 
 interface ProjectContextValue {
@@ -60,7 +59,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         setCurrentProject({
           projectId: firstProject.id,
           project: firstProject,
-          isDefault: firstProject.id === 1, // Assume project with ID 1 is the default
         });
       }
     } catch (err) {
@@ -87,7 +85,6 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
           setCurrentProject({
             projectId: savedProject.id,
             project: savedProject,
-            isDefault: savedProject.id === 1, // Assume project with ID 1 is the default
           });
         }
       }

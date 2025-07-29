@@ -77,7 +77,6 @@ export function NavigationBreadcrumb() {
       setCurrentProject({
         projectId,
         project: targetProject,
-        isDefault: projectId === 'default',
       });
 
       toast.success(`Switched to project: ${targetProject.name}`);
