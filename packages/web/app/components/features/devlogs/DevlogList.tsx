@@ -466,7 +466,7 @@ export function DevlogList({
             </div>
           ) : (
             <Table>
-              <TableHeader className="sticky top-[140px] z-10 bg-background">
+              <TableHeader className="z-10 bg-transparent">
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
