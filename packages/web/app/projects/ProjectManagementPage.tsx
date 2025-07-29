@@ -5,10 +5,23 @@ import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,7 +50,7 @@ export function ProjectManagementPage() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast.error('Project name is required');
       return;
@@ -72,18 +85,18 @@ export function ProjectManagementPage() {
     }
   };
 
-  const handleViewProject = (projectId: string) => {
+  const handleViewProject = (projectId: number) => {
     router.push(`/projects/${projectId}`);
   };
 
-  const getProjectStatusColor = (projectId: string) => {
-    if (projectId === 'default') return 'blue';
+  const getProjectStatusColor = (projectId: number) => {
+    if (projectId === 1) return 'blue'; // Default project
     if (currentProject?.projectId === projectId) return 'green';
     return 'default';
   };
 
-  const getProjectStatusText = (projectId: string) => {
-    if (projectId === 'default') return 'Default';
+  const getProjectStatusText = (projectId: number) => {
+    if (projectId === 1) return 'Default'; // Default project
     if (currentProject?.projectId === projectId) return 'Active';
     return 'Available';
   };
@@ -116,7 +129,7 @@ export function ProjectManagementPage() {
   return (
     <PageLayout
       actions={
-        <Button 
+        <Button
           size="lg"
           onClick={() => setIsModalVisible(true)}
           className="flex items-center gap-2"
@@ -138,7 +151,7 @@ export function ProjectManagementPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="px-6 py-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
@@ -146,8 +159,8 @@ export function ProjectManagementPage() {
                 <Card
                   key={project.id}
                   className={`cursor-pointer transition-all hover:shadow-lg ${
-                    currentProject?.projectId === project.id 
-                      ? 'border-primary shadow-primary/20' 
+                    currentProject?.projectId === project.id
+                      ? 'border-primary shadow-primary/20'
                       : ''
                   }`}
                   onClick={() => handleViewProject(project.id)}
@@ -159,7 +172,11 @@ export function ProjectManagementPage() {
                         <CardTitle className="text-lg">{project.name}</CardTitle>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={getProjectStatusColor(project.id) === 'green' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            getProjectStatusColor(project.id) === 'green' ? 'default' : 'secondary'
+                          }
+                        >
                           {getProjectStatusText(project.id)}
                         </Badge>
                         <Button
@@ -175,16 +192,22 @@ export function ProjectManagementPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="pb-3">
                     <CardDescription className="line-clamp-2 mb-4">
                       {project.description || 'No description provided'}
                     </CardDescription>
 
                     <div className="text-xs text-muted-foreground space-y-1 mb-4">
-                      <div><strong>ID:</strong> {project.id}</div>
-                      <div><strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}</div>
-                      <div><strong>Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}</div>
+                      <div>
+                        <strong>ID:</strong> {project.id}
+                      </div>
+                      <div>
+                        <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
+                      </div>
+                      <div>
+                        <strong>Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}
+                      </div>
                     </div>
 
                     {project.tags && project.tags.length > 0 && (
@@ -238,7 +261,7 @@ export function ProjectManagementPage() {
                   <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
                     Create your first project to get started with organizing your development work.
                   </p>
-                  <Button 
+                  <Button
                     size="lg"
                     onClick={() => setIsModalVisible(true)}
                     className="flex items-center gap-2 px-8 py-3"

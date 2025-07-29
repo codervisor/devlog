@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface ProjectMetadata {
-  id: string;
+  id: number; // Changed from string to number to match API
   name: string;
   description?: string;
   tags?: string[];
@@ -12,7 +12,7 @@ export interface ProjectMetadata {
 }
 
 export interface ProjectContext {
-  projectId: string;
+  projectId: number; // Changed from string to number to match API
   project: ProjectMetadata;
   isDefault: boolean;
 }
@@ -50,16 +50,17 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       }
 
       const data = await response.json();
-      setProjects(data.projects || []);
+      // Handle both old and new response formats for backward compatibility
+      const projectsList = data.success ? data.data : data.projects || data || [];
+      setProjects(projectsList);
 
-      // If no current project is set, set the default project
-      if (!currentProject && data.projects?.length > 0) {
-        const defaultProject =
-          data.projects.find((p: ProjectMetadata) => p.id === 'default') || data.projects[0];
+      // If no current project is set, set the first project as default
+      if (!currentProject && projectsList?.length > 0) {
+        const firstProject = projectsList[0];
         setCurrentProject({
-          projectId: defaultProject.id,
-          project: defaultProject,
-          isDefault: defaultProject.id === 'default',
+          projectId: firstProject.id,
+          project: firstProject,
+          isDefault: firstProject.id === 1, // Assume project with ID 1 is the default
         });
       }
     } catch (err) {
@@ -81,12 +82,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     if (typeof window !== 'undefined') {
       const savedProjectId = localStorage.getItem('devlog-current-project');
       if (savedProjectId && projects.length > 0) {
-        const savedProject = projects.find((p) => p.id === savedProjectId);
+        const savedProject = projects.find((p) => p.id === parseInt(savedProjectId, 10));
         if (savedProject) {
           setCurrentProject({
             projectId: savedProject.id,
             project: savedProject,
-            isDefault: savedProject.id === 'default',
+            isDefault: savedProject.id === 1, // Assume project with ID 1 is the default
           });
         }
       }
@@ -96,7 +97,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   // Save current project to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && currentProject) {
-      localStorage.setItem('devlog-current-project', currentProject.projectId);
+      localStorage.setItem('devlog-current-project', currentProject.projectId.toString());
     }
   }, [currentProject]);
 
