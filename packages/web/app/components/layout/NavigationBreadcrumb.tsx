@@ -37,16 +37,16 @@ export function NavigationBreadcrumb() {
 
   const getProjectColor = (name: string) => {
     const colors = [
-      '#1890ff',
-      '#52c41a',
-      '#faad14',
-      '#f5222d',
-      '#722ed1',
-      '#13c2c2',
-      '#eb2f96',
-      '#fa8c16',
-      '#a0d911',
-      '#2f54eb',
+      'bg-blue-500',
+      'bg-green-500',
+      'bg-yellow-500',
+      'bg-red-500',
+      'bg-purple-500',
+      'bg-cyan-500',
+      'bg-pink-500',
+      'bg-orange-500',
+      'bg-lime-500',
+      'bg-indigo-500',
     ];
 
     let hash = 0;
@@ -120,8 +120,7 @@ export function NavigationBreadcrumb() {
                 className="flex items-center gap-3 p-3 cursor-pointer"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
-                  style={{ backgroundColor: getProjectColor(project.name) }}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${getProjectColor(project.name)}`}
                 >
                   {getProjectInitials(project.name)}
                 </div>
