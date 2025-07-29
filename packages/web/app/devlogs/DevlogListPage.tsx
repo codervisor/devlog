@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { DevlogList, PageLayout, OverviewStats, Pagination } from '@/components';
+import { DevlogList, PageLayout, Pagination } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
-import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -20,12 +19,7 @@ export function DevlogListPage() {
     batchAddNote,
     goToPage,
     changePageSize,
-    handleStatusFilter,
   } = useDevlogs();
-
-  // Use server-side stats that are independent of current filter state
-  // Stats should represent the overall system state, not the filtered view
-  const { stats, loading: isLoadingStats, refetch: refetchStats } = useStats();
 
   const router = useRouter();
 
@@ -36,8 +30,6 @@ export function DevlogListPage() {
   const handleDeleteDevlog = async (id: DevlogId) => {
     try {
       await deleteDevlog(id);
-      // Refresh stats after delete operation
-      await refetchStats();
     } catch (error) {
       console.error('Failed to delete devlog:', error);
     }
@@ -46,8 +38,6 @@ export function DevlogListPage() {
   const handleBatchUpdate = async (ids: DevlogId[], updates: any) => {
     try {
       await batchUpdate(ids, updates);
-      // Refresh stats after batch update operation
-      await refetchStats();
     } catch (error) {
       console.error('Failed to batch update devlogs:', error);
       throw error;
@@ -57,8 +47,6 @@ export function DevlogListPage() {
   const handleBatchDelete = async (ids: DevlogId[]) => {
     try {
       await batchDelete(ids);
-      // Refresh stats after batch delete operation
-      await refetchStats();
     } catch (error) {
       console.error('Failed to batch delete devlogs:', error);
       throw error;
@@ -75,35 +63,8 @@ export function DevlogListPage() {
     }
   };
 
-  // Refresh stats when returning to this page (e.g., after creating/editing devlogs)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        refetchStats();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [refetchStats]);
-
-  const actions = (
-    <div className="flex items-center gap-6 flex-wrap">
-      <OverviewStats
-        stats={stats}
-        loading={isLoadingStats}
-        variant="detailed"
-        currentFilters={filters}
-        onFilterToggle={handleStatusFilter}
-      />
-    </div>
-  );
-
   return (
-    <PageLayout actions={actions}>
+    <PageLayout>
       <DevlogList
         devlogs={devlogs}
         loading={loading}

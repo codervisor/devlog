@@ -320,86 +320,88 @@ export function DevlogList({
 
   return (
     <div className="space-y-4">
-      {/* Header with search and filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Devlogs ({devlogs.length})</CardTitle>
-            <div className="flex items-center space-x-2">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search devlogs..."
-                  value={searchText}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-8 w-64"
-                />
+      {/* Header with search and filters - Sticky */}
+      <div className="sticky top-0 z-20 bg-background border-b pb-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Devlogs ({devlogs.length})</CardTitle>
+              <div className="flex items-center space-x-2">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search devlogs..."
+                    value={searchText}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-8 w-64"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <Select
+                  value={currentFilters?.status?.[0] || 'all'}
+                  onValueChange={(value) =>
+                    handleFilterChange('status', value === 'all' ? undefined : value)
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Priority Filter */}
+                <Select
+                  value={currentFilters?.priority?.[0] || 'all'}
+                  onValueChange={(value) =>
+                    handleFilterChange('priority', value === 'all' ? undefined : value)
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priority</SelectItem>
+                    {priorityOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Type Filter */}
+                <Select
+                  value={currentFilters?.type?.[0] || 'all'}
+                  onValueChange={(value) =>
+                    handleFilterChange('type', value === 'all' ? undefined : value)
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {typeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-
-              {/* Status Filter */}
-              <Select
-                value={currentFilters?.status?.[0] || 'all'}
-                onValueChange={(value) =>
-                  handleFilterChange('status', value === 'all' ? undefined : value)
-                }
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Priority Filter */}
-              <Select
-                value={currentFilters?.priority?.[0] || 'all'}
-                onValueChange={(value) =>
-                  handleFilterChange('priority', value === 'all' ? undefined : value)
-                }
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priority</SelectItem>
-                  {priorityOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Type Filter */}
-              <Select
-                value={currentFilters?.type?.[0] || 'all'}
-                onValueChange={(value) =>
-                  handleFilterChange('type', value === 'all' ? undefined : value)
-                }
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {typeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
-          </div>
-        </CardHeader>
-      </Card>
+          </CardHeader>
+        </Card>
+      </div>
 
       {/* Batch Operations */}
       {selectedRowKeys.length > 0 && (
@@ -464,7 +466,7 @@ export function DevlogList({
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-[140px] z-10 bg-background">
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
