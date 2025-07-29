@@ -1,30 +1,29 @@
-name: Publish to NPM
+name: Auto Publish to NPM
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main, develop]
+    paths:
+      - 'packages/*/package.json'
+      - 'packages/*/src/**'
+      - 'packages/*/build/**'
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to publish (patch, minor, major, or specific version like 1.2.3)'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
+      force_publish:
+        description: 'Force publish packages even if versions match'
+        required: false
+        default: false
+        type: boolean
       packages:
-        description: 'Packages to publish (comma-separated: mcp,types or leave empty for all)'
+        description: 'Specific packages to check (comma-separated: mcp,core,ai,cli or leave empty for all)'
         required: false
         type: string
 
 jobs:
-  publish:
+  check-and-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
     
     steps:
@@ -32,18 +31,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.12.1
+          version: 10.13.1
           run_install: false
 
       - name: Get pnpm store directory
@@ -66,116 +64,156 @@ jobs:
         run: pnpm build
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm test && pnpm test:packages
 
-      - name: Configure git
+      - name: Check versions and determine what to publish
+        id: check_versions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-      - name: Determine version bump
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION="${{ github.ref_name }}"
-            VERSION="${VERSION#v}" # Remove 'v' prefix
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "bump=false" >> $GITHUB_OUTPUT
-          else
-            VERSION="${{ github.event.inputs.version }}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "bump=true" >> $GITHUB_OUTPUT
+          PACKAGES_TO_PUBLISH=""
+          FORCE_PUBLISH="${{ github.event.inputs.force_publish }}"
+          SPECIFIED_PACKAGES="${{ github.event.inputs.packages }}"
+          
+          # Define all publishable packages
+          declare -A PACKAGE_MAP=(
+            ["mcp"]="packages/mcp"
+            ["core"]="packages/core" 
+            ["ai"]="packages/ai"
+            ["cli"]="packages/cli"
+          )
+          
+          # If specific packages specified, filter to those
+          if [ -n "$SPECIFIED_PACKAGES" ]; then
+            IFS=',' read -ra SPECIFIED_ARRAY <<< "$SPECIFIED_PACKAGES"
+            declare -A FILTERED_MAP
+            for pkg in "${SPECIFIED_ARRAY[@]}"; do
+              pkg=$(echo "$pkg" | xargs) # trim whitespace
+              if [[ -n "${PACKAGE_MAP[$pkg]}" ]]; then
+                FILTERED_MAP[$pkg]="${PACKAGE_MAP[$pkg]}"
+              fi
+            done
+            PACKAGE_MAP=()
+            for key in "${!FILTERED_MAP[@]}"; do
+              PACKAGE_MAP[$key]="${FILTERED_MAP[$key]}"
+            done
           fi
-
-      - name: Determine packages to publish
-        id: packages
-        run: |
-          if [ -n "${{ github.event.inputs.packages }}" ]; then
-            PACKAGES="${{ github.event.inputs.packages }}"
-          else
-            PACKAGES="mcp,types"
-          fi
-          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-
-      - name: Version bump packages
-        if: steps.version.outputs.bump == 'true'
-        run: |
-          IFS=',' read -ra PACKAGE_ARRAY <<< "${{ steps.packages.outputs.packages }}"
-          for pkg in "${PACKAGE_ARRAY[@]}"; do
-            pkg=$(echo "$pkg" | xargs) # trim whitespace
-            if [ "$pkg" == "mcp" ]; then
-              cd packages/mcp
-              npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-              cd ../..
-            elif [ "$pkg" == "types" ]; then
-              cd packages/types
-              npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-              cd ../..
+          
+          for pkg_key in "${!PACKAGE_MAP[@]}"; do
+            pkg_dir="${PACKAGE_MAP[$pkg_key]}"
+            
+            if [ -f "$pkg_dir/package.json" ]; then
+              PKG_NAME=$(jq -r '.name' "$pkg_dir/package.json")
+              LOCAL_VERSION=$(jq -r '.version' "$pkg_dir/package.json")
+              
+              echo "Checking $PKG_NAME@$LOCAL_VERSION..."
+              
+              # Check if package exists on npm and get published version
+              NPM_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null || echo "0.0.0")
+              
+              echo "Local: $LOCAL_VERSION, NPM: $NPM_VERSION"
+              
+              # Compare versions using node semver logic
+              SHOULD_PUBLISH=$(node -e "
+                const semver = require('semver');
+                const local = '$LOCAL_VERSION';
+                const npm = '$NPM_VERSION';
+                const force = '$FORCE_PUBLISH' === 'true';
+                
+                if (force) {
+                  console.log('true');
+                } else if (npm === '0.0.0') {
+                  // Package doesn't exist on npm
+                  console.log('true');
+                } else {
+                  // Check if local version is greater than npm version
+                  console.log(semver.gt(local, npm) ? 'true' : 'false');
+                }
+              ")
+              
+              if [ "$SHOULD_PUBLISH" = "true" ]; then
+                echo "✅ Will publish $PKG_NAME@$LOCAL_VERSION (npm has $NPM_VERSION)"
+                PACKAGES_TO_PUBLISH="$PACKAGES_TO_PUBLISH$pkg_key,"
+              else
+                echo "⏭️  Skipping $PKG_NAME@$LOCAL_VERSION (same as or older than npm version $NPM_VERSION)"
+              fi
             fi
           done
-
-      - name: Set specific version for packages
-        if: steps.version.outputs.bump == 'false'
-        run: |
-          IFS=',' read -ra PACKAGE_ARRAY <<< "${{ steps.packages.outputs.packages }}"
-          for pkg in "${PACKAGE_ARRAY[@]}"; do
-            pkg=$(echo "$pkg" | xargs) # trim whitespace
-            if [ "$pkg" == "mcp" ]; then
-              cd packages/mcp
-              npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
-              cd ../..
-            elif [ "$pkg" == "types" ]; then
-              cd packages/types
-              npm version ${{ steps.version.outputs.version }} --no-git-tag-version --allow-same-version
-              cd ../..
-            fi
-          done
-
-      - name: Rebuild after version update
-        run: pnpm build
+          
+          # Remove trailing comma
+          PACKAGES_TO_PUBLISH=${PACKAGES_TO_PUBLISH%,}
+          
+          echo "packages_to_publish=$PACKAGES_TO_PUBLISH" >> $GITHUB_OUTPUT
+          
+          if [ -z "$PACKAGES_TO_PUBLISH" ]; then
+            echo "has_packages_to_publish=false" >> $GITHUB_OUTPUT
+            echo "No packages need to be published."
+          else
+            echo "has_packages_to_publish=true" >> $GITHUB_OUTPUT
+            echo "Packages to publish: $PACKAGES_TO_PUBLISH"
+          fi
 
       - name: Publish packages
+        id: publish
+        if: steps.check_versions.outputs.has_packages_to_publish == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          IFS=',' read -ra PACKAGE_ARRAY <<< "${{ steps.packages.outputs.packages }}"
+          PACKAGES="${{ steps.check_versions.outputs.packages_to_publish }}"
+          IFS=',' read -ra PACKAGE_ARRAY <<< "$PACKAGES"
+          
+          PUBLISHED_PACKAGES=""
+          
           for pkg in "${PACKAGE_ARRAY[@]}"; do
-            pkg=$(echo "$pkg" | xargs) # trim whitespace
-            if [ "$pkg" == "mcp" ]; then
-              echo "Publishing @codervisor/devlog-mcp..."
-              cd packages/mcp
-              npm publish --access public
-              cd ../..
-            elif [ "$pkg" == "types" ]; then
-              echo "Publishing @codervisor/devlog-types..."
-              cd packages/types
-              npm publish --access public
-              cd ../..
-            fi
+            case $pkg in
+              "mcp")
+                echo "Publishing @codervisor/devlog-mcp..."
+                cd packages/mcp
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-mcp@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "core")
+                echo "Publishing @codervisor/devlog-core..."
+                cd packages/core
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-core@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "ai")
+                echo "Publishing @codervisor/devlog-ai..."
+                cd packages/ai
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "cli")
+                echo "Publishing @codervisor/devlog-cli..."
+                cd packages/cli
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+            esac
           done
+          
+          echo "published_packages=$PUBLISHED_PACKAGES" >> $GITHUB_OUTPUT
+          echo "Successfully published: $PUBLISHED_PACKAGES"
 
-      - name: Commit version changes
-        if: steps.version.outputs.bump == 'true'
+      - name: Create summary
+        if: always()
         run: |
-          git add .
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || echo "No changes to commit"
-          git push origin main
-
-      - name: Create GitHub release
-        if: steps.version.outputs.bump == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
-          body: |
-            ## Changes
-            
-            Published packages: ${{ steps.packages.outputs.packages }}
-            
-            ### Packages
-            - @codervisor/devlog-mcp@${{ steps.version.outputs.version }}
-            - @codervisor/devlog-types@${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
+          echo "## 📦 NPM Publish Results" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check_versions.outputs.has_packages_to_publish }}" == "true" ]; then
+            echo "### ✅ Successfully Published" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.publish.outputs.published_packages }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ No Packages to Publish" >> $GITHUB_STEP_SUMMARY
+            echo "All package versions are up to date with npmjs.org" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
