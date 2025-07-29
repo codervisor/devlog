@@ -8,18 +8,18 @@
 import { DataSource, Repository } from 'typeorm';
 import type { ProjectMetadata } from '../types/project.js';
 import { ProjectEntity } from '../entities/project.entity.js';
-import { createDataSource } from '../utils/typeorm-config.js';
+import { getDataSource } from '../utils/typeorm-config.js';
 import { ProjectValidator } from '../validation/project-schemas.js';
 
 export class ProjectService {
   private static instance: ProjectService | null = null;
   private database: DataSource;
   private repository: Repository<ProjectEntity>;
-  private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.database = createDataSource({ entities: [ProjectEntity] });
-    this.repository = this.database.getRepository(ProjectEntity);
+    // Database initialization will happen in ensureInitialized()
+    this.database = null as any; // Temporary placeholder
+    this.repository = null as any; // Temporary placeholder
   }
 
   static getInstance(): ProjectService {
@@ -29,23 +29,28 @@ export class ProjectService {
     return ProjectService.instance;
   }
 
-  async initialize(): Promise<void> {
-    if (this.initPromise) {
-      return this.initPromise; // Return existing initialization promise
+  /**
+   * Initialize the database connection if not already initialized
+   */
+  private async ensureInitialized(): Promise<void> {
+    try {
+      if (!this.database || !this.database.isInitialized) {
+        console.log('[ProjectService] Getting initialized DataSource...');
+        this.database = await getDataSource();
+        this.repository = this.database.getRepository(ProjectEntity);
+        console.log(
+          '[ProjectService] DataSource ready with entities:',
+          this.database.entityMetadatas.length,
+        );
+        console.log('[ProjectService] Repository initialized:', !!this.repository);
+
+        // Create default project if it doesn't exist
+        await this.createDefaultProject();
+      }
+    } catch (error) {
+      console.error('[ProjectService] Failed to initialize:', error);
+      throw error;
     }
-
-    this.initPromise = this._initialize();
-    return this.initPromise;
-  }
-
-  private async _initialize(): Promise<void> {
-    // Initialize the DataSource first
-    if (!this.database.isInitialized) {
-      await this.database.initialize();
-    }
-
-    // Create default project if it doesn't exist
-    await this.createDefaultProject();
   }
 
   /**
@@ -72,6 +77,8 @@ export class ProjectService {
   }
 
   async list(): Promise<ProjectMetadata[]> {
+    await this.ensureInitialized(); // Ensure initialization
+
     const entities = await this.repository.find({
       order: { lastAccessedAt: 'DESC' },
     });
@@ -79,6 +86,8 @@ export class ProjectService {
   }
 
   async get(id: number): Promise<ProjectMetadata | null> {
+    await this.ensureInitialized(); // Ensure initialization
+
     const entity = await this.repository.findOne({ where: { id } });
 
     if (!entity) {
@@ -95,6 +104,8 @@ export class ProjectService {
   async create(
     project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
   ): Promise<ProjectMetadata> {
+    await this.ensureInitialized(); // Ensure initialization
+
     // Validate input data
     const validation = ProjectValidator.validateCreateRequest(project);
     if (!validation.success) {
@@ -125,6 +136,8 @@ export class ProjectService {
   }
 
   async update(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
+    await this.ensureInitialized(); // Ensure initialization
+
     // Validate project ID
     const idValidation = ProjectValidator.validateProjectId(id);
     if (!idValidation.success) {
@@ -170,6 +183,8 @@ export class ProjectService {
   }
 
   async delete(id: number): Promise<void> {
+    await this.ensureInitialized(); // Ensure initialization
+
     // Validate project ID
     const idValidation = ProjectValidator.validateProjectId(id);
     if (!idValidation.success) {

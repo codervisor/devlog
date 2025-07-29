@@ -77,8 +77,8 @@ export class DevlogEntryEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   assignee?: string;
 
-  @Column({ type: 'int', nullable: true, name: 'project_id' })
-  projectId?: number;
+  @Column({ type: 'int', name: 'project_id' })
+  projectId!: number;
 
   // Flattened DevlogContext fields (simple strings and arrays)
   @Column({ type: 'text', nullable: true, name: 'business_context' })

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
   try {
     const projectService = ProjectService.getInstance();
-    await projectService.initialize();
+
     const project = await projectService.get(params.id);
 
     if (!project) {
