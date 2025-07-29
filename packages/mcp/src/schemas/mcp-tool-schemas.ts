@@ -12,12 +12,11 @@ import {
   UpdateDevlogEntrySchema,
   DevlogIdSchema,
   DevlogFilterSchema,
-} from '@codervisor/devlog-core/validation/devlog-schemas.js';
-import {
+
   CreateProjectRequestSchema,
   UpdateProjectRequestSchema,
   ProjectIdSchema,
-} from '@codervisor/devlog-core/validation/project-schemas.js';
+} from '@codervisor/devlog-core';
 
 /**
  * Devlog tool argument schemas

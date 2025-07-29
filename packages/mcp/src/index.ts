@@ -65,26 +65,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   try {
     switch (name) {
-      case 'list_devlogs': {
-        const validation = validateToolArgs(ListDevlogsArgsSchema, args, 'list_devlogs');
+      case 'devlog_list': {
+        const validation = validateToolArgs(ListDevlogsArgsSchema, args, 'devlog_list');
         if (!validation.success) return validation.result;
         return await adapter.listDevlogs(validation.data);
       }
 
-      case 'search_devlogs': {
-        const validation = validateToolArgs(SearchDevlogsArgsSchema, args, 'search_devlogs');
+      case 'devlog_search': {
+        const validation = validateToolArgs(SearchDevlogsArgsSchema, args, 'devlog_search');
         if (!validation.success) return validation.result;
         return await adapter.searchDevlogs(validation.data);
       }
 
-      case 'discover_related_devlogs': {
-        const validation = validateToolArgs(DiscoverRelatedDevlogsArgsSchema, args, 'discover_related_devlogs');
+      case 'devlog_discover_related': {
+        const validation = validateToolArgs(DiscoverRelatedDevlogsArgsSchema, args, 'devlog_discover_related');
         if (!validation.success) return validation.result;
         return await adapter.discoverRelatedDevlogs(validation.data);
       }
 
-      case 'create_devlog': {
-        const validation = validateToolArgs(CreateDevlogArgsSchema, args, 'create_devlog');
+      case 'devlog_create': {
+        const validation = validateToolArgs(CreateDevlogArgsSchema, args, 'devlog_create');
         if (!validation.success) return validation.result;
         
         // Apply defaults
@@ -96,20 +96,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await adapter.createDevlog(validatedArgs);
       }
 
-      case 'update_devlog': {
-        const validation = validateToolArgs(UpdateDevlogArgsSchema, args, 'update_devlog');
+      case 'devlog_update': {
+        const validation = validateToolArgs(UpdateDevlogArgsSchema, args, 'devlog_update');
         if (!validation.success) return validation.result;
         return await adapter.updateDevlog(validation.data);
       }
 
-      case 'get_devlog': {
-        const validation = validateToolArgs(GetDevlogArgsSchema, args, 'get_devlog');
+      case 'devlog_get': {
+        const validation = validateToolArgs(GetDevlogArgsSchema, args, 'devlog_get');
         if (!validation.success) return validation.result;
         return await adapter.getDevlog(validation.data);
       }
 
-      case 'add_devlog_note': {
-        const validation = validateToolArgs(AddDevlogNoteArgsSchema, args, 'add_devlog_note');
+      case 'devlog_add_note': {
+        const validation = validateToolArgs(AddDevlogNoteArgsSchema, args, 'devlog_add_note');
         if (!validation.success) return validation.result;
         
         // Apply defaults
@@ -121,8 +121,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await adapter.addDevlogNote(validatedArgs);
       }
 
-      case 'update_devlog_with_note': {
-        const validation = validateToolArgs(UpdateDevlogWithNoteArgsSchema, args, 'update_devlog_with_note');
+      case 'devlog_update_with_note': {
+        const validation = validateToolArgs(UpdateDevlogWithNoteArgsSchema, args, 'devlog_update_with_note');
         if (!validation.success) return validation.result;
         
         // Apply defaults
@@ -134,39 +134,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await adapter.updateDevlogWithNote(validatedArgs);
       }
 
-      case 'complete_devlog': {
-        const validation = validateToolArgs(CompleteDevlogArgsSchema, args, 'complete_devlog');
+      case 'devlog_complete': {
+        const validation = validateToolArgs(CompleteDevlogArgsSchema, args, 'devlog_complete');
         if (!validation.success) return validation.result;
         return await adapter.completeDevlog(validation.data);
       }
 
-      case 'close_devlog': {
-        const validation = validateToolArgs(CloseDevlogArgsSchema, args, 'close_devlog');
+      case 'devlog_close': {
+        const validation = validateToolArgs(CloseDevlogArgsSchema, args, 'devlog_close');
         if (!validation.success) return validation.result;
         return await adapter.closeDevlog(validation.data);
       }
 
-      case 'archive_devlog': {
-        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'archive_devlog');
+      case 'devlog_archive': {
+        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'devlog_archive');
         if (!validation.success) return validation.result;
         return await adapter.archiveDevlog(validation.data);
       }
 
-      case 'unarchive_devlog': {
-        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'unarchive_devlog');
+      case 'devlog_unarchive': {
+        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'devlog_unarchive');
         if (!validation.success) return validation.result;
         return await adapter.unarchiveDevlog(validation.data);
       }
 
       // Project management tools
-      case 'list_projects':
+      case 'project_list':
         return await handleListProjects(adapter.manager);
 
-      case 'get_current_project':
+      case 'project_get_current':
         return await handleGetCurrentProject(adapter);
 
-      case 'switch_project': {
-        const validation = validateToolArgs(SwitchProjectArgsSchema, args, 'switch_project');
+      case 'project_switch': {
+        const validation = validateToolArgs(SwitchProjectArgsSchema, args, 'project_switch');
         if (!validation.success) return validation.result;
         return await handleSwitchProject(adapter, validation.data);
       }
@@ -191,18 +191,29 @@ async function main() {
   // Parse command line arguments for default project
   const args = process.argv.slice(2);
   const projectArgIndex = args.findIndex((arg) => arg === '--project' || arg === '-p');
-  const defaultProject =
+  const defaultProjectStr =
     projectArgIndex !== -1 && args[projectArgIndex + 1]
       ? args[projectArgIndex + 1]
-      : process.env.MCP_DEFAULT_PROJECT || 'default';
+      : process.env.MCP_DEFAULT_PROJECT || '1';
+
+  // Convert to number, defaulting to 1 if invalid
+  let defaultProjectId = 1;
+  try {
+    const parsed = parseInt(defaultProjectStr, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      defaultProjectId = parsed;
+    }
+  } catch {
+    console.error(`Invalid project ID '${defaultProjectStr}', using default project 1`);
+  }
 
   // Create adapter using factory with discovery
   const adapterInstance = await createMCPAdapterWithDiscovery();
 
-  // If default project was specified, set it
-  if (defaultProject) {
-    // TODO: Implement setCurrentProjectId in adapter
-    // adapterInstance.setCurrentProjectId(defaultProject);
+  // Set the default project ID
+  if (adapterInstance.setCurrentProjectId) {
+    adapterInstance.setCurrentProjectId(defaultProjectId);
+    console.error(`Set current project to: ${defaultProjectId}`);
   }
 
   // Assign the adapter instance directly
@@ -211,8 +222,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  const projectInfo = defaultProject ? ` (default project: ${defaultProject})` : '';
-  console.error(`Devlog MCP Server started with flexible storage architecture${projectInfo}`);
+  console.error(`Devlog MCP Server started with project: ${defaultProjectId}`);
 }
 
 // Cleanup on process exit
