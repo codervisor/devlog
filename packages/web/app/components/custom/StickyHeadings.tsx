@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import styles from './StickyHeadings.module.css';
 
 interface HeadingInfo {
   id: string;
@@ -240,14 +239,6 @@ export function StickyHeadings({
     }
   }, []);
 
-  // Get CSS class for top offset
-  const getTopOffsetClass = useCallback((offset: number): string => {
-    if (offset <= 0) return styles.topOffset0;
-    if (offset <= 48) return styles.topOffset48;
-    if (offset <= 64) return styles.topOffset64;
-    return styles.topOffset80;
-  }, []);
-
   if (!enabled || !isVisible || activeHeadings.length === 0) {
     return null;
   }
@@ -255,12 +246,20 @@ export function StickyHeadings({
   return (
     <div
       ref={containerRef}
-      className={`${styles.stickyHeadings} ${getTopOffsetClass(topOffset)} ${className}`}
+      className={`fixed left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm z-[1000] transition-all duration-200 animate-in slide-in-from-top-2 ${className}`}
+      style={{ top: `${topOffset}px` }}
     >
       {activeHeadings.map((heading, index) => (
         <div
           key={heading.id}
-          className={`${styles.stickyHeading} ${styles[`level${heading.level}`]}`}
+          className={`flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 focus:outline-2 focus:outline-blue-500 last:border-b-0
+            ${heading.level === 1 ? 'bg-white border-l-4 border-l-blue-500 pl-6' : ''}
+            ${heading.level === 2 ? 'bg-gray-50 border-l-4 border-l-green-500 pl-8' : ''}
+            ${heading.level === 3 ? 'bg-gray-100 border-l-4 border-l-yellow-500 pl-10' : ''}
+            ${heading.level === 4 ? 'bg-gray-50 border-l-4 border-l-orange-500 pl-12' : ''}
+            ${heading.level === 5 ? 'bg-gray-100 border-l-4 border-l-purple-500 pl-14' : ''}
+            ${heading.level === 6 ? 'bg-gray-50 border-l-4 border-l-pink-500 pl-16' : ''}
+          `}
           onClick={() => handleHeadingClick(heading.id)}
           role="button"
           tabIndex={0}
@@ -271,9 +270,32 @@ export function StickyHeadings({
               handleHeadingClick(heading.id);
             }
           }}
+          style={{ zIndex: 1006 - index }}
         >
-          <span className={styles.headingText}>{heading.text}</span>
-          <span className={styles.headingLevel}>H{heading.level}</span>
+          <span 
+            className={`font-semibold text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap flex-1 mr-3
+              ${heading.level === 1 ? 'text-base text-blue-600 font-bold' : ''}
+              ${heading.level === 2 ? 'text-sm text-green-600 font-semibold' : ''}
+              ${heading.level === 3 ? 'text-sm text-yellow-600 font-semibold' : ''}
+              ${heading.level === 4 ? 'text-sm text-orange-600 font-medium' : ''}
+              ${heading.level === 5 ? 'text-xs text-purple-600 font-medium' : ''}
+              ${heading.level === 6 ? 'text-xs text-pink-600 font-medium' : ''}
+            `}
+          >
+            {heading.text}
+          </span>
+          <span 
+            className={`text-xs font-medium px-2 py-1 rounded-sm uppercase tracking-wide
+              ${heading.level === 1 ? 'bg-blue-100 text-blue-600' : ''}
+              ${heading.level === 2 ? 'bg-green-100 text-green-600' : ''}
+              ${heading.level === 3 ? 'bg-yellow-100 text-yellow-600' : ''}
+              ${heading.level === 4 ? 'bg-orange-100 text-orange-600' : ''}  
+              ${heading.level === 5 ? 'bg-purple-100 text-purple-600' : ''}
+              ${heading.level === 6 ? 'bg-pink-100 text-pink-600' : ''}
+            `}
+          >
+            H{heading.level}
+          </span>
         </div>
       ))}
     </div>

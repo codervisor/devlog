@@ -11,9 +11,19 @@ export async function GET(request: NextRequest) {
     const projectService = ProjectService.getInstance();
     await projectService.initialize();
 
-    const result = await projectService.list();
+    const coreProjects = await projectService.list();
+    
+    // Transform core project data to web interface format
+    const projects = coreProjects.map(project => ({
+      id: project.id.toString(), // Convert number to string
+      name: project.name,
+      description: project.description,
+      tags: [], // Add empty tags array for compatibility
+      createdAt: project.createdAt.toISOString(), // Convert Date to string
+      updatedAt: project.lastAccessedAt.toISOString(), // Map lastAccessedAt to updatedAt
+    }));
 
-    return NextResponse.json(result);
+    return NextResponse.json({ projects });
   } catch (error) {
     console.error('Error fetching projects:', error);
     return ApiValidator.handleServiceError(error);
@@ -39,7 +49,17 @@ export async function POST(request: NextRequest) {
     await projectService.initialize();
 
     // Create project (service layer will perform business logic validation)
-    const createdProject = await projectService.create(serviceData);
+    const coreProject = await projectService.create(serviceData);
+
+    // Transform core project data to web interface format
+    const createdProject = {
+      id: coreProject.id.toString(), // Convert number to string
+      name: coreProject.name,
+      description: coreProject.description,
+      tags: [], // Add empty tags array for compatibility
+      createdAt: coreProject.createdAt.toISOString(), // Convert Date to string
+      updatedAt: coreProject.lastAccessedAt.toISOString(), // Map lastAccessedAt to updatedAt
+    };
 
     return NextResponse.json(createdProject, { status: 201 });
   } catch (error) {

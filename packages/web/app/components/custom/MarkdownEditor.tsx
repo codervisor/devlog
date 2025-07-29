@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import CodeEditor from '@uiw/react-textarea-code-editor';
-import styles from './MarkdownEditor.module.css';
 
 interface MarkdownEditorProps {
   value: string;
@@ -57,7 +56,7 @@ export function MarkdownEditor({
   const processedValue = value.replace(/\\n/g, '\n');
 
   return (
-    <div className={styles.markdownEditor}>
+    <div className="w-full rounded-md overflow-hidden bg-white [&_.w-tc-editor]:!p-4 [&_.w-tc-editor_.w-tc-editor-text]:!p-0 [&_.w-tc-editor_.w-tc-editor-text]:!bg-transparent [&_.w-tc-editor_.w-tc-editor-text]:!text-sm [&_.w-tc-editor_.w-tc-editor-preview]:!p-0 [&_.w-tc-editor_.w-tc-editor-preview]:!text-sm">
       <CodeEditor
         ref={editorRef}
         value={processedValue}
