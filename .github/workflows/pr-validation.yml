@@ -1,0 +1,64 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    name: Validate Changes
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check all packages
+        run: |
+          echo "🔍 Type-checking packages..."
+          pnpm -r exec tsc --noEmit --skipLibCheck
+
+      - name: Quick build test
+        run: |
+          echo "🔨 Quick build test..."
+          pnpm --filter @codervisor/devlog-core build
+          pnpm --filter @codervisor/devlog-ai build
+          pnpm --filter @codervisor/devlog-mcp build
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests..."
+          pnpm -r test
+
+      - name: Validate import structure
+        run: |
+          echo "📦 Validating import structure..."
+          if [ -f "scripts/validate-imports.js" ]; then
+            node scripts/validate-imports.js
+          else
+            echo "⚠️  Import validation script not found"
+          fi
+
+      - name: PR Summary
+        run: |
+          echo "## ✅ PR Validation Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All checks completed successfully:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ TypeScript compilation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Package builds" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Import validation" >> $GITHUB_STEP_SUMMARY

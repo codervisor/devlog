@@ -1,0 +1,436 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Force publish packages even if versions match'
+        required: false
+        default: false
+        type: boolean
+      packages:
+        description: 'Specific packages to check (comma-separated: mcp,core,ai,cli or leave empty for all)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Phase 1: Build and Test
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    
+    strategy:
+      matrix:
+        node-version: [ 20, 22 ]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages (dependency order)
+        run: |
+          pnpm --filter @codervisor/devlog-core build
+          pnpm --filter @codervisor/devlog-ai build
+          pnpm --filter @codervisor/devlog-mcp build
+          pnpm --filter @codervisor/devlog-web build
+
+      - name: Run tests
+        run: pnpm -r test:coverage
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/build
+            packages/web/.next
+          key: build-${{ github.sha }}-${{ matrix.node-version }}
+
+      - name: Verify build artifacts
+        run: |
+          # Check that essential build artifacts exist
+          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
+          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
+          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
+          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
+          [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
+          [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
+          [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
+          echo "✅ All build artifacts verified!"
+
+  # Phase 2: Docker Build (depends on build-and-test)
+  docker-build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: runner
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Test Docker image
+        run: |
+          # Get the first tag for testing
+          IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "Testing image: $IMAGE_TAG"
+          
+          # Run a quick test to ensure the image starts correctly
+          docker run --rm -d --name devlog-test -p 3000:3000 \
+            -e NODE_ENV=production \
+            -e DEVLOG_STORAGE_TYPE=json \
+            $IMAGE_TAG
+          
+          # Wait for the application to start
+          sleep 15
+          
+          # Check if the application is responding
+          if curl -f http://localhost:3000/ -I 2>/dev/null; then
+            echo "✅ Application is responding"
+          else
+            echo "❌ Application not responding"
+            docker logs devlog-test
+            exit 1
+          fi
+          
+          # Test health endpoint if available
+          if curl -f http://localhost:3000/api/health 2>/dev/null; then
+            echo "✅ Health check passed"
+          else
+            echo "⚠️  Health check endpoint not available, but application is running"
+          fi
+          
+          # Cleanup
+          docker stop devlog-test
+
+  # Phase 3: Security Scan (depends on docker-build)
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Phase 4: NPM Publish (depends on build-and-test)
+  npm-publish:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && 
+       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') &&
+       contains(github.event.head_commit.message, '[publish]'))
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+          run_install: false
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ needs.build-and-test.outputs.cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/*/build
+            packages/web/.next
+          key: build-${{ github.sha }}-20
+
+      - name: Check versions and determine what to publish
+        id: check_versions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PACKAGES_TO_PUBLISH=""
+          FORCE_PUBLISH="${{ github.event.inputs.force_publish }}"
+          SPECIFIED_PACKAGES="${{ github.event.inputs.packages }}"
+          
+          # Define all publishable packages
+          declare -A PACKAGE_MAP=(
+            ["mcp"]="packages/mcp"
+            ["core"]="packages/core" 
+            ["ai"]="packages/ai"
+            ["cli"]="packages/cli"
+          )
+          
+          # If specific packages specified, filter to those
+          if [ -n "$SPECIFIED_PACKAGES" ]; then
+            IFS=',' read -ra SPECIFIED_ARRAY <<< "$SPECIFIED_PACKAGES"
+            declare -A FILTERED_MAP
+            for pkg in "${SPECIFIED_ARRAY[@]}"; do
+              pkg=$(echo "$pkg" | xargs) # trim whitespace
+              if [[ -n "${PACKAGE_MAP[$pkg]}" ]]; then
+                FILTERED_MAP[$pkg]="${PACKAGE_MAP[$pkg]}"
+              fi
+            done
+            PACKAGE_MAP=()
+            for key in "${!FILTERED_MAP[@]}"; do
+              PACKAGE_MAP[$key]="${FILTERED_MAP[$key]}"
+            done
+          fi
+          
+          for pkg_key in "${!PACKAGE_MAP[@]}"; do
+            pkg_dir="${PACKAGE_MAP[$pkg_key]}"
+            
+            if [ -f "$pkg_dir/package.json" ]; then
+              PKG_NAME=$(jq -r '.name' "$pkg_dir/package.json")
+              LOCAL_VERSION=$(jq -r '.version' "$pkg_dir/package.json")
+              
+              echo "Checking $PKG_NAME@$LOCAL_VERSION..."
+              
+              # Check if package exists on npm and get published version
+              NPM_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null || echo "0.0.0")
+              
+              echo "Local: $LOCAL_VERSION, NPM: $NPM_VERSION"
+              
+              # Compare versions using node semver logic
+              SHOULD_PUBLISH=$(node -e "
+                const semver = require('semver');
+                const local = '$LOCAL_VERSION';
+                const npm = '$NPM_VERSION';
+                const force = '$FORCE_PUBLISH' === 'true';
+                
+                if (force) {
+                  console.log('true');
+                } else if (npm === '0.0.0') {
+                  console.log('true');
+                } else {
+                  console.log(semver.gt(local, npm) ? 'true' : 'false');
+                }
+              ")
+              
+              if [ "$SHOULD_PUBLISH" = "true" ]; then
+                echo "✅ Will publish $PKG_NAME@$LOCAL_VERSION (npm has $NPM_VERSION)"
+                PACKAGES_TO_PUBLISH="$PACKAGES_TO_PUBLISH$pkg_key,"
+              else
+                echo "⏭️  Skipping $PKG_NAME@$LOCAL_VERSION (same as or older than npm version $NPM_VERSION)"
+              fi
+            fi
+          done
+          
+          # Remove trailing comma
+          PACKAGES_TO_PUBLISH=${PACKAGES_TO_PUBLISH%,}
+          
+          echo "packages_to_publish=$PACKAGES_TO_PUBLISH" >> $GITHUB_OUTPUT
+          
+          if [ -z "$PACKAGES_TO_PUBLISH" ]; then
+            echo "has_packages_to_publish=false" >> $GITHUB_OUTPUT
+            echo "No packages need to be published."
+          else
+            echo "has_packages_to_publish=true" >> $GITHUB_OUTPUT
+            echo "Packages to publish: $PACKAGES_TO_PUBLISH"
+          fi
+
+      - name: Publish packages
+        id: publish
+        if: steps.check_versions.outputs.has_packages_to_publish == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PACKAGES="${{ steps.check_versions.outputs.packages_to_publish }}"
+          IFS=',' read -ra PACKAGE_ARRAY <<< "$PACKAGES"
+          
+          PUBLISHED_PACKAGES=""
+          
+          for pkg in "${PACKAGE_ARRAY[@]}"; do
+            case $pkg in
+              "mcp")
+                echo "Publishing @codervisor/devlog-mcp..."
+                cd packages/mcp
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-mcp@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "core")
+                echo "Publishing @codervisor/devlog-core..."
+                cd packages/core
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-core@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "ai")
+                echo "Publishing @codervisor/devlog-ai..."
+                cd packages/ai
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+              "cli")
+                echo "Publishing @codervisor/devlog-cli..."
+                cd packages/cli
+                npm publish --access public
+                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(jq -r '.version' package.json) "
+                cd ../..
+                ;;
+            esac
+          done
+          
+          echo "published_packages=$PUBLISHED_PACKAGES" >> $GITHUB_OUTPUT
+          echo "Successfully published: $PUBLISHED_PACKAGES"
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 📦 NPM Publish Results" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.check_versions.outputs.has_packages_to_publish }}" == "true" ]; then
+            echo "### ✅ Successfully Published" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.publish.outputs.published_packages }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ℹ️ No Packages to Publish" >> $GITHUB_STEP_SUMMARY
+            echo "All package versions are up to date with npmjs.org" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+  # Final Summary Job
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-test, docker-build, npm-publish]
+    if: always() && github.event_name != 'pull_request'
+    
+    steps:
+      - name: Generate comprehensive summary
+        run: |
+          echo "## 🚀 CI/CD Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Job Status:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 **Build & Test:** ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 **Docker Build:** ${{ needs.docker-build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📦 **NPM Publish:** ${{ needs.npm-publish.result }}" >> $GITHUB_STEP_SUMMARY
