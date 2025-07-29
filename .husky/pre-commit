@@ -1,8 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-exit 0 # TEMPORARY: Remove this line to enable pre-commit checks
-
 echo "🔍 Running pre-commit validations..."
 
 # Run lint-staged for efficient checking of staged files
