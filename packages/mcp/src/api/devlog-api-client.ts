@@ -223,7 +223,7 @@ export class DevlogApiClient {
   }
 
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    const params = new URLSearchParams({ q: query });
+    const params = new URLSearchParams({ search: query });
 
     if (filter) {
       if (filter.status?.length) params.append('status', filter.status.join(','));
@@ -232,9 +232,7 @@ export class DevlogApiClient {
       if (filter.archived !== undefined) params.append('archived', String(filter.archived));
     }
 
-    const response = await this.get(
-      `${this.getProjectEndpoint()}/devlogs/search?${params.toString()}`,
-    );
+    const response = await this.get(`${this.getProjectEndpoint()}/devlogs?${params.toString()}`);
     return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
   }
 
