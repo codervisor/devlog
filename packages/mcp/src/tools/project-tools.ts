@@ -9,19 +9,19 @@ import {
 
 // Project management tools for MCP server
 export const listProjectsTool: Tool = {
-  name: 'list_projects',
+  name: 'project_list',
   description: 'List all available projects with their configurations',
   inputSchema: zodToJsonSchema(ListProjectsArgsSchema),
 };
 
 export const getCurrentProjectTool: Tool = {
-  name: 'get_current_project',
+  name: 'project_get_current',
   description: 'Get the currently active project information',
   inputSchema: zodToJsonSchema(GetCurrentProjectArgsSchema),
 };
 
 export const switchProjectTool: Tool = {
-  name: 'switch_project',
+  name: 'project_switch',
   description: 'Switch to a different project by ID',
   inputSchema: zodToJsonSchema(SwitchProjectArgsSchema),
 };

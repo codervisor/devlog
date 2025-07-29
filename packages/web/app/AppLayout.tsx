@@ -33,9 +33,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <ErrorBoundary>
       <SidebarProvider>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background w-full">
           <TopNavbar />
-          <div className="flex flex-1">
+          <div className="flex flex-1 w-full">
             <NavigationSidebar
               stats={stats}
               statsLoading={isLoadingStats}
@@ -43,9 +43,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               connected={connected}
               onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
             />
-            <div className="flex-1 flex flex-col">
-              <main className="flex-1 p-6">
-                <div className="max-w-full">
+            <div className="flex-1 flex flex-col w-full">
+              <main className="flex-1 p-6 w-full">
+                <div className="w-full">
                   {error && (
                     <Alert className="mb-4">
                       <AlertTriangle className="h-4 w-4" />

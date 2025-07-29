@@ -92,6 +92,13 @@ export class MCPApiAdapter {
   }
 
   /**
+   * Get the current project ID
+   */
+  getCurrentProjectId(): number {
+    return this.currentProjectId;
+  }
+
+  /**
    * Get the underlying API client (for project tools)
    */
   get manager(): DevlogApiClient {
