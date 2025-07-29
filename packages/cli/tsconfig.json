@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "./build",
     "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],

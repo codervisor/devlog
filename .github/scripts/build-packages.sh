@@ -16,6 +16,10 @@ pnpm --filter @codervisor/devlog-ai build
 echo "Building @codervisor/devlog-mcp..."
 pnpm --filter @codervisor/devlog-mcp build
 
+# Build cli package (depends on core and ai)
+echo "Building @codervisor/devlog-cli..."
+pnpm --filter @codervisor/devlog-cli build
+
 # Build web package (depends on core)
 echo "Building @codervisor/devlog-web..."
 pnpm --filter @codervisor/devlog-web build
