@@ -7,8 +7,6 @@ import { useStats } from '@/hooks/useStats';
 import { useProject } from '@/contexts/ProjectContext';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
 
 interface ProjectDevlogListPageProps {
   projectId: number;
@@ -94,10 +92,6 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     }
   };
 
-  const handleCreateDevlog = () => {
-    router.push(`/projects/${projectId}/devlogs/create`);
-  };
-
   // Refresh stats when returning to this page (e.g., after creating/editing devlogs)
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -131,10 +125,6 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
       />
-      <Button onClick={handleCreateDevlog} className="flex items-center gap-2">
-        <PlusIcon size={16} />
-        Create Devlog
-      </Button>
     </div>
   );
 

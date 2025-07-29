@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -144,7 +142,9 @@ export function Dashboard({
                 <CardContent>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="text-muted-foreground mb-2">📊</div>
-                    <p className="text-sm text-muted-foreground">No development activity data available yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      No development activity data available yet
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -155,7 +155,9 @@ export function Dashboard({
                 <CardContent>
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="text-muted-foreground mb-2">📈</div>
-                    <p className="text-sm text-muted-foreground">No status distribution data available yet</p>
+                    <p className="text-sm text-muted-foreground">
+                      No status distribution data available yet
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -259,9 +261,7 @@ export function Dashboard({
                       <Legend
                         verticalAlign="bottom"
                         height={36}
-                        formatter={(value: string) => (
-                          <span className="text-sm">{value}</span>
-                        )}
+                        formatter={(value: string) => <span className="text-sm">{value}</span>}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -281,7 +281,10 @@ export function Dashboard({
               {isLoadingDevlogs ? (
                 <div className="space-y-4">
                   {Array.from({ length: 10 }).map((_, index) => (
-                    <div key={`skeleton-${index}`} className="flex items-start space-x-4 p-4 border-b border-border">
+                    <div
+                      key={`skeleton-${index}`}
+                      className="flex items-start space-x-4 p-4 border-b border-border"
+                    >
                       <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
                         <Skeleton className="w-6 h-6" />
                       </div>
@@ -327,7 +330,7 @@ export function Dashboard({
                               <DevlogTypeTag type={devlog.type} />
                             </div>
                           </div>
-                          <span 
+                          <span
                             className="text-xs text-muted-foreground ml-4 flex-shrink-0"
                             title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
                           >
@@ -343,16 +346,6 @@ export function Dashboard({
           </CardContent>
         </Card>
       </div>
-
-      {/* Floating Action Button */}
-      <Button
-        size="lg"
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg"
-        onClick={() => router.push('/devlogs/create')}
-        title="Create new devlog"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
     </div>
   );
 }

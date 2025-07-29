@@ -6,8 +6,6 @@ import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
 
 export function DevlogListPage() {
   const {
@@ -77,10 +75,6 @@ export function DevlogListPage() {
     }
   };
 
-  const handleCreateDevlog = () => {
-    router.push('/devlogs/create');
-  };
-
   // Refresh stats when returning to this page (e.g., after creating/editing devlogs)
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -105,10 +99,6 @@ export function DevlogListPage() {
         currentFilters={filters}
         onFilterToggle={handleStatusFilter}
       />
-      <Button onClick={handleCreateDevlog} className="flex items-center gap-2">
-        <PlusIcon size={16} />
-        Create Devlog
-      </Button>
     </div>
   );
 
