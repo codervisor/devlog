@@ -20,8 +20,8 @@ import {
 import { toast } from 'sonner';
 
 interface ProjectDevlogDetailsPageProps {
-  projectId: string;
-  devlogId: string;
+  projectId: number;
+  devlogId: number;
 }
 
 export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogDetailsPageProps) {
@@ -30,9 +30,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
 
   // Set the current project based on the route parameter
   useEffect(() => {
-    const numericProjectId = parseInt(projectId, 10);
-    const project = projects.find((p) => p.id === numericProjectId);
-    if (project && (!currentProject || currentProject.projectId !== numericProjectId)) {
+    const project = projects.find((p) => p.id === projectId);
+    if (project && (!currentProject || currentProject.projectId !== projectId)) {
       setCurrentProject({
         projectId: project.id,
         project,
@@ -80,16 +79,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
 
   const handleDelete = async () => {
     try {
-      const numericId = parseInt(devlogId);
-
       // Call both delete functions to ensure proper state synchronization:
       // 1. Delete from details hook (updates local state immediately)
-      await deleteDevlogFromDetails(numericId);
+      await deleteDevlogFromDetails(devlogId);
 
       // 2. Delete from list context (ensures list state is updated even if SSE is delayed)
       // Note: This is a safety measure in case there are timing issues with real-time events
       try {
-        await deleteDevlogFromList(numericId);
+        await deleteDevlogFromList(devlogId);
       } catch (error) {
         // This might fail if the item is already deleted, which is fine
         console.debug('List deletion failed (likely already removed by SSE):', error);
@@ -107,8 +104,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   };
 
   // Don't render until we have the correct project context
-  const numericProjectId = parseInt(projectId, 10);
-  if (!currentProject || currentProject.projectId !== numericProjectId) {
+  if (!currentProject || currentProject.projectId !== projectId) {
     return (
       <PageLayout>
         <div>Loading project...</div>

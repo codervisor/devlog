@@ -1,4 +1,5 @@
 import { ProjectDevlogDetailsPage } from './ProjectDevlogDetailsPage';
+import { RouteParamParsers } from '@/lib/route-params';
 
 // Disable static generation for this page since it uses client-side features
 export const dynamic = 'force-dynamic';
@@ -11,5 +12,6 @@ interface ProjectDevlogPageProps {
 }
 
 export default function ProjectDevlogPage({ params }: ProjectDevlogPageProps) {
-  return <ProjectDevlogDetailsPage projectId={params.id} devlogId={params.devlogId} />;
+  const { projectId, devlogId } = RouteParamParsers.parseDevlogParams(params);
+  return <ProjectDevlogDetailsPage projectId={projectId} devlogId={devlogId} />;
 }

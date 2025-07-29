@@ -126,7 +126,7 @@ describe('API Utilities Test Suite', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           const responseJson = await result.response.json();
-          expect(responseJson.error).toContain('Invalid id: must be a positive integer');
+          expect(responseJson.error).toContain('Invalid project ID: must be a positive integer');
         }
       });
     });
@@ -383,7 +383,7 @@ describe('Route Handler Integration Tests', () => {
 
       expect(result.status).toBe(400);
       const json = await result.json();
-      expect(json.error).toContain('Invalid id: must be a positive integer');
+      expect(json.error).toContain('Invalid project ID: must be a positive integer');
     });
 
     it('should handle nonexistent project', async () => {
@@ -462,7 +462,7 @@ describe('Route Handler Integration Tests', () => {
 
       expect(result.status).toBe(400);
       const json = await result.json();
-      expect(json.error).toContain('Invalid devlogId: must be a positive integer');
+      expect(json.error).toContain('Invalid devlog ID: must be a positive integer');
     });
   });
 
