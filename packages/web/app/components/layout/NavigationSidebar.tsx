@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { AppWindowIcon, LayoutDashboardIcon, FileTextIcon, PlusIcon } from 'lucide-react';
+import { AppWindowIcon, LayoutDashboardIcon, FileTextIcon } from 'lucide-react';
 
 interface NavigationSidebarProps {
   // No props needed - using built-in sidebar state
@@ -34,8 +34,8 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
   // Check if sidebar should be hidden
   const shouldHideSidebar = () => {
     if (!mounted) return false;
-    // Hide sidebar on /projects page
-    return pathname === '/projects';
+    // No pages currently hide the sidebar
+    return false;
   };
 
   // Get contextual menu items based on current path
@@ -55,23 +55,29 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
       ];
     }
 
+    // Projects page (/projects)
+    if (pathname === '/projects') {
+      return [
+        {
+          key: 'projects',
+          label: 'Projects',
+          icon: <AppWindowIcon size={16} />,
+        },
+      ];
+    }
+
     // Project detail page (/projects/[id])
     if (pathParts.length === 2 && pathParts[0] === 'projects') {
       return [
         {
           key: 'dashboard',
-          label: 'Dashboard',
+          label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'list',
           label: 'Devlogs',
           icon: <FileTextIcon size={16} />,
-        },
-        {
-          key: 'create',
-          label: 'New Devlog',
-          icon: <PlusIcon size={16} />,
         },
       ];
     }
@@ -81,13 +87,13 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
       return [
         {
           key: 'dashboard',
-          label: 'Dashboard',
+          label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
         {
-          key: 'create',
-          label: 'New Devlog',
-          icon: <PlusIcon size={16} />,
+          key: 'list',
+          label: 'Devlogs',
+          icon: <FileTextIcon size={16} />,
         },
       ];
     }
@@ -97,33 +103,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
       return [
         {
           key: 'dashboard',
-          label: 'Dashboard',
+          label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
         {
           key: 'list',
-          label: 'Back to Devlogs',
-          icon: <FileTextIcon size={16} />,
-        },
-        {
-          key: 'create',
-          label: 'New Devlog',
-          icon: <PlusIcon size={16} />,
-        },
-      ];
-    }
-
-    // Devlog create page (/projects/[id]/devlogs/create)
-    if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[3] === 'create') {
-      return [
-        {
-          key: 'dashboard',
-          label: 'Dashboard',
-          icon: <LayoutDashboardIcon size={16} />,
-        },
-        {
-          key: 'list',
-          label: 'Back to Devlogs',
+          label: 'Devlogs',
           icon: <FileTextIcon size={16} />,
         },
       ];
@@ -133,7 +118,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
     return [
       {
         key: 'dashboard',
-        label: 'Dashboard',
+        label: 'Overview',
         icon: <LayoutDashboardIcon size={16} />,
       },
       {
@@ -150,10 +135,9 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
 
     const pathParts = pathname.split('/').filter(Boolean);
 
-    if (pathname === '/') return 'projects';
+    if (pathname === '/' || pathname === '/projects') return 'projects';
     if (pathParts.length === 2 && pathParts[0] === 'projects') return 'dashboard';
     if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
-    if (pathParts.length === 4 && pathParts[3] === 'create') return 'create';
     if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
 
     return 'dashboard';
@@ -162,9 +146,19 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
   const handleMenuClick = ({ key }: { key: string }) => {
     if (!mounted) return;
 
+    const pathParts = pathname.split('/').filter(Boolean);
+    const isInProjectContext = pathParts.length >= 2 && pathParts[0] === 'projects' && pathParts[1];
+    const projectId = isInProjectContext ? pathParts[1] : null;
+
     switch (key) {
       case 'dashboard':
-        router.push('/');
+        if (projectId) {
+          // We're in a project context, go to the project dashboard
+          router.push(`/projects/${projectId}`);
+        } else {
+          // We're not in a project context, go to the main dashboard (which redirects to projects)
+          router.push('/');
+        }
         break;
       case 'projects':
         router.push('/projects');
@@ -174,15 +168,9 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         // Otherwise, redirect to projects to select one first
         if (currentProject) {
           router.push(`/projects/${currentProject.projectId}/devlogs`);
-        } else {
-          router.push('/projects');
-        }
-        break;
-      case 'create':
-        // If a project is selected, create within that project
-        // Otherwise, redirect to projects to select one first
-        if (currentProject) {
-          router.push(`/projects/${currentProject.projectId}/devlogs/create`);
+        } else if (projectId) {
+          // Use project from URL if currentProject is not available
+          router.push(`/projects/${projectId}/devlogs`);
         } else {
           router.push('/projects');
         }

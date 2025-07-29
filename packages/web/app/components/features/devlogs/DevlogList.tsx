@@ -75,7 +75,6 @@ import {
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface DevlogListProps {
@@ -462,9 +461,6 @@ export function DevlogList({
           {devlogs.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">No devlogs found</p>
-              <Link href="/devlogs/create">
-                <Button>Create your first devlog</Button>
-              </Link>
             </div>
           ) : (
             <Table>
@@ -491,8 +487,12 @@ export function DevlogList({
               </TableHeader>
               <TableBody>
                 {devlogs.map((devlog) => (
-                  <TableRow key={devlog.id} className="hover:bg-muted/50">
-                    <TableCell>
+                  <TableRow
+                    key={devlog.id}
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => onViewDevlog(devlog)}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
                         onCheckedChange={(checked) =>
@@ -527,16 +527,11 @@ export function DevlogList({
                         {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex space-x-1">
                         <Button size="sm" variant="ghost" onClick={() => onViewDevlog(devlog)}>
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Link href={`/devlogs/${devlog.id}/edit`}>
-                          <Button size="sm" variant="ghost">
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </Link>
                         <Button
                           size="sm"
                           variant="ghost"
