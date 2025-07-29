@@ -69,23 +69,23 @@ export class DevlogEntryEntity {
   updatedAt!: Date;
 
   @TimestampColumn({ nullable: true, name: 'closed_at' })
-  closedAt?: Date;
+  closedAt?: Date | null;
 
   @Column({ type: 'boolean', default: false })
   archived!: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  assignee?: string;
+  assignee?: string | null;
 
   @Column({ type: 'int', name: 'project_id' })
   projectId!: number;
 
   // Flattened DevlogContext fields (simple strings and arrays)
   @Column({ type: 'text', nullable: true, name: 'business_context' })
-  businessContext?: string;
+  businessContext?: string | null;
 
   @Column({ type: 'text', nullable: true, name: 'technical_context' })
-  technicalContext?: string;
+  technicalContext?: string | null;
 
   @JsonColumn({ default: getStorageType() === 'sqlite' ? '[]' : [], name: 'acceptance_criteria' })
   acceptanceCriteria!: string[];

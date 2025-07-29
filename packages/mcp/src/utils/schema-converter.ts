@@ -1,6 +1,6 @@
 /**
  * Zod to JSON Schema converter for MCP tools
- * 
+ *
  * This module converts Zod schemas to JSON Schema format
  * required by MCP tool definitions.
  */
@@ -18,7 +18,7 @@ function zodToJsonSchemaRecursive(def: any): any {
   switch (def.typeName) {
     case 'ZodString':
       const stringSchema: any = { type: 'string' };
-      
+
       // Handle string validations
       if (def.checks) {
         for (const check of def.checks) {
@@ -35,12 +35,12 @@ function zodToJsonSchemaRecursive(def: any): any {
           }
         }
       }
-      
+
       return stringSchema;
 
     case 'ZodNumber':
       const numberSchema: any = { type: 'number' };
-      
+
       // Handle number validations
       if (def.checks) {
         for (const check of def.checks) {
@@ -57,7 +57,7 @@ function zodToJsonSchemaRecursive(def: any): any {
           }
         }
       }
-      
+
       return numberSchema;
 
     case 'ZodBoolean':
@@ -78,26 +78,26 @@ function zodToJsonSchemaRecursive(def: any): any {
     case 'ZodObject':
       const properties: any = {};
       const required: string[] = [];
-      
+
       for (const [key, value] of Object.entries(def.shape())) {
         const fieldDef = (value as any)._def;
         properties[key] = zodToJsonSchemaRecursive(fieldDef);
-        
+
         // Check if field is optional
         if (fieldDef.typeName !== 'ZodOptional' && fieldDef.typeName !== 'ZodDefault') {
           required.push(key);
         }
       }
-      
+
       const objectSchema: any = {
         type: 'object',
         properties,
       };
-      
+
       if (required.length > 0) {
         objectSchema.required = required;
       }
-      
+
       return objectSchema;
 
     case 'ZodOptional':
@@ -111,6 +111,20 @@ function zodToJsonSchemaRecursive(def: any): any {
     case 'ZodTransform':
       // For transforms, just use the input schema
       return zodToJsonSchemaRecursive(def.schema._def);
+
+    case 'ZodEffects':
+      // For effects (including transforms), use the underlying schema
+      return zodToJsonSchemaRecursive(def.schema._def);
+
+    case 'ZodNullable':
+      // Handle nullable types
+      const nullableSchema = zodToJsonSchemaRecursive(def.innerType._def);
+      if (Array.isArray(nullableSchema.type)) {
+        nullableSchema.type.push('null');
+      } else {
+        nullableSchema.type = [nullableSchema.type, 'null'];
+      }
+      return nullableSchema;
 
     default:
       // Fallback for unsupported types
