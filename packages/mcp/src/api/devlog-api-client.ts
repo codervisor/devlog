@@ -107,6 +107,19 @@ export class DevlogApiClient {
   }
 
   /**
+   * Unwrap standardized API response
+   */
+  private unwrapApiResponse<T>(response: any): T {
+    // Handle standardized API response format
+    if (response && response.success === true) {
+      return response.data;
+    }
+
+    // Handle legacy direct response (during transition)
+    return response;
+  }
+
+  /**
    * GET request helper
    */
   private async get(endpoint: string): Promise<any> {
@@ -154,33 +167,40 @@ export class DevlogApiClient {
 
   // Project Management
   async listProjects(): Promise<any[]> {
-    return this.get('/api/projects');
+    const response = await this.get('/api/projects');
+    return this.unwrapApiResponse<any[]>(response);
   }
 
   async getProject(projectId?: number): Promise<any> {
     const id = projectId || this.currentProjectId || 0;
-    return this.get(`/api/projects/${id}`);
+    const response = await this.get(`/api/projects/${id}`);
+    return this.unwrapApiResponse<any>(response);
   }
 
   async createProject(data: any): Promise<any> {
-    return this.post('/api/projects', data);
+    const response = await this.post('/api/projects', data);
+    return this.unwrapApiResponse<any>(response);
   }
 
   // Devlog Operations
   async createDevlog(data: CreateDevlogRequest): Promise<DevlogEntry> {
-    return this.post(`${this.getProjectEndpoint()}/devlogs`, data);
+    const response = await this.post(`${this.getProjectEndpoint()}/devlogs`, data);
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   async getDevlog(id: number): Promise<DevlogEntry> {
-    return this.get(`${this.getProjectEndpoint()}/devlogs/${id}`);
+    const response = await this.get(`${this.getProjectEndpoint()}/devlogs/${id}`);
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   async updateDevlog(id: number, data: UpdateDevlogRequest): Promise<DevlogEntry> {
-    return this.put(`${this.getProjectEndpoint()}/devlogs/${id}`, data);
+    const response = await this.put(`${this.getProjectEndpoint()}/devlogs/${id}`, data);
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   async deleteDevlog(id: number): Promise<void> {
-    return this.delete(`${this.getProjectEndpoint()}/devlogs/${id}`);
+    const response = await this.delete(`${this.getProjectEndpoint()}/devlogs/${id}`);
+    return this.unwrapApiResponse<void>(response);
   }
 
   async listDevlogs(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -198,7 +218,8 @@ export class DevlogApiClient {
     }
 
     const query = params.toString() ? `?${params.toString()}` : '';
-    return this.get(`${this.getProjectEndpoint()}/devlogs${query}`);
+    const response = await this.get(`${this.getProjectEndpoint()}/devlogs${query}`);
+    return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
   }
 
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -211,7 +232,10 @@ export class DevlogApiClient {
       if (filter.archived !== undefined) params.append('archived', String(filter.archived));
     }
 
-    return this.get(`${this.getProjectEndpoint()}/devlogs/search?${params.toString()}`);
+    const response = await this.get(
+      `${this.getProjectEndpoint()}/devlogs/search?${params.toString()}`,
+    );
+    return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
   }
 
   async addDevlogNote(
@@ -221,24 +245,28 @@ export class DevlogApiClient {
     files?: string[],
     codeChanges?: string,
   ): Promise<DevlogEntry> {
-    return this.post(`${this.getProjectEndpoint()}/devlogs/${devlogId}/notes`, {
+    const response = await this.post(`${this.getProjectEndpoint()}/devlogs/${devlogId}/notes`, {
       note,
       category,
       files,
       codeChanges,
     });
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   async archiveDevlog(id: number): Promise<DevlogEntry> {
-    return this.put(`${this.getProjectEndpoint()}/devlogs/${id}/archive`, {});
+    const response = await this.put(`${this.getProjectEndpoint()}/devlogs/${id}/archive`, {});
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   async unarchiveDevlog(id: number): Promise<DevlogEntry> {
-    return this.put(`${this.getProjectEndpoint()}/devlogs/${id}/unarchive`, {});
+    const response = await this.put(`${this.getProjectEndpoint()}/devlogs/${id}/unarchive`, {});
+    return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    return this.get('/api/health');
+    const response = await this.get('/api/health');
+    return this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
   }
 }
