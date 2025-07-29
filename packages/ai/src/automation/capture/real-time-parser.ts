@@ -7,6 +7,27 @@
 import { EventEmitter } from 'events';
 import type { CopilotInteraction } from '../types/index.js';
 
+interface TelemetryData {
+  timestamp?: number;
+  trigger?: string;
+  fileName?: string;
+  fileContent?: string;
+  line?: number;
+  character?: number;
+  precedingText?: string;
+  followingText?: string;
+  suggestion?: {
+    text: string;
+    confidence: number;
+    accepted?: boolean;
+    alternatives?: string[];
+  };
+  accepted?: boolean;
+  responseTime?: number;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export class RealTimeCaptureParser extends EventEmitter {
   private isCapturing = false;
   private interactions: CopilotInteraction[] = [];
@@ -58,10 +79,10 @@ export class RealTimeCaptureParser extends EventEmitter {
   /**
    * Create interaction from VS Code telemetry data
    */
-  createInteractionFromTelemetry(telemetryData: any): CopilotInteraction {
+  createInteractionFromTelemetry(telemetryData: TelemetryData): CopilotInteraction {
     return {
       timestamp: new Date(telemetryData.timestamp || Date.now()),
-      trigger: this.mapTriggerType(telemetryData.trigger),
+      trigger: this.mapTriggerType(telemetryData.trigger || 'unknown'),
       context: {
         fileName: telemetryData.fileName || 'unknown',
         fileContent: telemetryData.fileContent || '',

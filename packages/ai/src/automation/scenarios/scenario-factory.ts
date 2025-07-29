@@ -7,6 +7,12 @@
 import { CodeGenerationScenario } from './code-generation-scenario.js';
 import type { TestScenario } from '../types/index.js';
 
+interface LanguagePattern {
+  name: string;
+  initialCode: string;
+  expectedPrompts: string[];
+}
+
 export class ScenarioFactory {
   /**
    * Create a custom scenario
@@ -64,8 +70,8 @@ export class ScenarioFactory {
   /**
    * Get common patterns for different languages
    */
-  private static getLanguagePatterns(language: string) {
-    const patterns: Record<string, any[]> = {
+  private static getLanguagePatterns(language: string): LanguagePattern[] {
+    const patterns: Record<string, LanguagePattern[]> = {
       python: [
         {
           name: 'Class Definition',

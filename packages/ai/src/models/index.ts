@@ -3,9 +3,19 @@
  *
  * TypeScript interfaces and classes for representing chat histories
  * focused on core chat functionality.
+ *
+ * Note: These models are for internal AI package use. For devlog integration,
+ * use the types from @codervisor/devlog-core/types/chat.
  */
 
 import { z } from 'zod';
+import type {
+  ChatSession as CoreChatSession,
+  ChatMessage as CoreChatMessage,
+  AgentType,
+  ChatRole,
+  ChatStatus,
+} from '@codervisor/devlog-core';
 
 // Specific metadata type definitions
 export interface MessageMetadata {

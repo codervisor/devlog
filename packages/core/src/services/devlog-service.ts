@@ -335,7 +335,7 @@ export class DevlogService {
     const entries = await queryBuilder
       .select('DATE(devlog.createdAt)', 'date')
       .addSelect('COUNT(*)', 'count')
-      .where('devlog.createdAt >= :from', { from: from.toISOString() })
+      .andWhere('devlog.createdAt >= :from', { from: from.toISOString() })
       .andWhere('devlog.createdAt <= :to', { to: to.toISOString() })
       .groupBy('DATE(devlog.createdAt)')
       .orderBy('DATE(devlog.createdAt)', 'ASC')
