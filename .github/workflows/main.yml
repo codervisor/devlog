@@ -66,37 +66,24 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: ./.github/scripts/setup-node.sh
 
       - name: Build packages (dependency order)
-        run: |
-          pnpm --filter @codervisor/devlog-core build
-          pnpm --filter @codervisor/devlog-ai build
-          pnpm --filter @codervisor/devlog-mcp build
-          pnpm --filter @codervisor/devlog-web build
+        run: ./.github/scripts/build-packages.sh
 
       - name: Run tests
-        run: pnpm -r test:coverage
+        run: ./.github/scripts/run-tests.sh
 
       - name: Cache build artifacts
         uses: actions/cache@v4
         with:
           path: |
             packages/*/build
-            packages/web/.next
+            packages/web/.next-build
           key: build-${{ github.sha }}-${{ matrix.node-version }}
 
       - name: Verify build artifacts
-        run: |
-          # Check that essential build artifacts exist
-          [ -f "packages/core/build/index.js" ] || { echo "❌ Core build failed"; exit 1; }
-          [ -f "packages/core/build/index.d.ts" ] || { echo "❌ Core type declarations failed"; exit 1; }
-          [ -f "packages/ai/build/index.js" ] || { echo "❌ AI build failed"; exit 1; }
-          [ -f "packages/ai/build/index.d.ts" ] || { echo "❌ AI type declarations failed"; exit 1; }
-          [ -f "packages/mcp/build/index.js" ] || { echo "❌ MCP server build failed"; exit 1; }
-          [ -f "packages/mcp/build/index.d.ts" ] || { echo "❌ MCP type declarations failed"; exit 1; }
-          [ -d "packages/web/.next" ] || { echo "❌ Web package build failed"; exit 1; }
-          echo "✅ All build artifacts verified!"
+        run: ./.github/scripts/verify-build.sh
 
   # Phase 2: Docker Build (depends on build-and-test)
   docker-build:
@@ -153,35 +140,7 @@ jobs:
         run: |
           # Get the first tag for testing
           IMAGE_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          echo "Testing image: $IMAGE_TAG"
-          
-          # Run a quick test to ensure the image starts correctly
-          docker run --rm -d --name devlog-test -p 3000:3000 \
-            -e NODE_ENV=production \
-            -e DEVLOG_STORAGE_TYPE=json \
-            $IMAGE_TAG
-          
-          # Wait for the application to start
-          sleep 15
-          
-          # Check if the application is responding
-          if curl -f http://localhost:3000/ -I 2>/dev/null; then
-            echo "✅ Application is responding"
-          else
-            echo "❌ Application not responding"
-            docker logs devlog-test
-            exit 1
-          fi
-          
-          # Test health endpoint if available
-          if curl -f http://localhost:3000/api/health 2>/dev/null; then
-            echo "✅ Health check passed"
-          else
-            echo "⚠️  Health check endpoint not available, but application is running"
-          fi
-          
-          # Cleanup
-          docker stop devlog-test
+          ./.github/scripts/test-docker.sh "$IMAGE_TAG"
 
   # Phase 3: Security Scan (depends on docker-build)
   security-scan:
@@ -252,14 +211,14 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: ./.github/scripts/setup-node.sh
 
       - name: Restore build artifacts
         uses: actions/cache@v4
         with:
           path: |
             packages/*/build
-            packages/web/.next
+            packages/web/.next-build
           key: build-${{ github.sha }}-20
 
       - name: Check versions and determine what to publish
@@ -267,85 +226,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          PACKAGES_TO_PUBLISH=""
-          FORCE_PUBLISH="${{ github.event.inputs.force_publish }}"
-          SPECIFIED_PACKAGES="${{ github.event.inputs.packages }}"
-          
-          # Define all publishable packages
-          declare -A PACKAGE_MAP=(
-            ["mcp"]="packages/mcp"
-            ["core"]="packages/core" 
-            ["ai"]="packages/ai"
-            ["cli"]="packages/cli"
-          )
-          
-          # If specific packages specified, filter to those
-          if [ -n "$SPECIFIED_PACKAGES" ]; then
-            IFS=',' read -ra SPECIFIED_ARRAY <<< "$SPECIFIED_PACKAGES"
-            declare -A FILTERED_MAP
-            for pkg in "${SPECIFIED_ARRAY[@]}"; do
-              pkg=$(echo "$pkg" | xargs) # trim whitespace
-              if [[ -n "${PACKAGE_MAP[$pkg]}" ]]; then
-                FILTERED_MAP[$pkg]="${PACKAGE_MAP[$pkg]}"
-              fi
-            done
-            PACKAGE_MAP=()
-            for key in "${!FILTERED_MAP[@]}"; do
-              PACKAGE_MAP[$key]="${FILTERED_MAP[$key]}"
-            done
-          fi
-          
-          for pkg_key in "${!PACKAGE_MAP[@]}"; do
-            pkg_dir="${PACKAGE_MAP[$pkg_key]}"
-            
-            if [ -f "$pkg_dir/package.json" ]; then
-              PKG_NAME=$(jq -r '.name' "$pkg_dir/package.json")
-              LOCAL_VERSION=$(jq -r '.version' "$pkg_dir/package.json")
-              
-              echo "Checking $PKG_NAME@$LOCAL_VERSION..."
-              
-              # Check if package exists on npm and get published version
-              NPM_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null || echo "0.0.0")
-              
-              echo "Local: $LOCAL_VERSION, NPM: $NPM_VERSION"
-              
-              # Compare versions using node semver logic
-              SHOULD_PUBLISH=$(node -e "
-                const semver = require('semver');
-                const local = '$LOCAL_VERSION';
-                const npm = '$NPM_VERSION';
-                const force = '$FORCE_PUBLISH' === 'true';
-                
-                if (force) {
-                  console.log('true');
-                } else if (npm === '0.0.0') {
-                  console.log('true');
-                } else {
-                  console.log(semver.gt(local, npm) ? 'true' : 'false');
-                }
-              ")
-              
-              if [ "$SHOULD_PUBLISH" = "true" ]; then
-                echo "✅ Will publish $PKG_NAME@$LOCAL_VERSION (npm has $NPM_VERSION)"
-                PACKAGES_TO_PUBLISH="$PACKAGES_TO_PUBLISH$pkg_key,"
-              else
-                echo "⏭️  Skipping $PKG_NAME@$LOCAL_VERSION (same as or older than npm version $NPM_VERSION)"
-              fi
-            fi
-          done
-          
-          # Remove trailing comma
-          PACKAGES_TO_PUBLISH=${PACKAGES_TO_PUBLISH%,}
-          
-          echo "packages_to_publish=$PACKAGES_TO_PUBLISH" >> $GITHUB_OUTPUT
-          
-          if [ -z "$PACKAGES_TO_PUBLISH" ]; then
-            echo "has_packages_to_publish=false" >> $GITHUB_OUTPUT
-            echo "No packages need to be published."
-          else
-            echo "has_packages_to_publish=true" >> $GITHUB_OUTPUT
-            echo "Packages to publish: $PACKAGES_TO_PUBLISH"
-          fi
+          ./.github/scripts/check-versions.sh "${{ github.event.inputs.force_publish }}" "${{ github.event.inputs.packages }}"
 
       - name: Publish packages
         id: publish
@@ -353,46 +234,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          PACKAGES="${{ steps.check_versions.outputs.packages_to_publish }}"
-          IFS=',' read -ra PACKAGE_ARRAY <<< "$PACKAGES"
-          
-          PUBLISHED_PACKAGES=""
-          
-          for pkg in "${PACKAGE_ARRAY[@]}"; do
-            case $pkg in
-              "mcp")
-                echo "Publishing @codervisor/devlog-mcp..."
-                cd packages/mcp
-                npm publish --access public
-                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-mcp@$(jq -r '.version' package.json) "
-                cd ../..
-                ;;
-              "core")
-                echo "Publishing @codervisor/devlog-core..."
-                cd packages/core
-                npm publish --access public
-                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-core@$(jq -r '.version' package.json) "
-                cd ../..
-                ;;
-              "ai")
-                echo "Publishing @codervisor/devlog-ai..."
-                cd packages/ai
-                npm publish --access public
-                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(jq -r '.version' package.json) "
-                cd ../..
-                ;;
-              "cli")
-                echo "Publishing @codervisor/devlog-cli..."
-                cd packages/cli
-                npm publish --access public
-                PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(jq -r '.version' package.json) "
-                cd ../..
-                ;;
-            esac
-          done
-          
-          echo "published_packages=$PUBLISHED_PACKAGES" >> $GITHUB_OUTPUT
-          echo "Successfully published: $PUBLISHED_PACKAGES"
+          ./.github/scripts/publish-packages.sh "${{ steps.check_versions.outputs.packages_to_publish }}"
 
       - name: Create summary
         if: always()
