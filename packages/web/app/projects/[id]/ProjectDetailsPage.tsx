@@ -22,12 +22,12 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
   // Set the current project based on the route parameter
   useEffect(() => {
-    const project = projects.find(p => p.id === projectId);
-    if (project && (!currentProject || currentProject.projectId !== projectId)) {
+    const numericProjectId = parseInt(projectId, 10);
+    const project = projects.find((p) => p.id === numericProjectId);
+    if (project && (!currentProject || currentProject.projectId !== numericProjectId)) {
       setCurrentProject({
         projectId: project.id,
         project,
-        isDefault: project.id === 'default',
       });
     }
   }, [projectId, projects, currentProject, setCurrentProject]);
@@ -37,7 +37,8 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   };
 
   // Don't render until we have the correct project context
-  if (!currentProject || currentProject.projectId !== projectId) {
+  const numericProjectId = parseInt(projectId, 10);
+  if (!currentProject || currentProject.projectId !== numericProjectId) {
     return (
       <PageLayout>
         <div>Loading project...</div>

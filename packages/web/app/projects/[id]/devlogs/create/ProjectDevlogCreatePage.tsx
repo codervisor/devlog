@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from 'lucide-react';
 
 interface ProjectDevlogCreatePageProps {
-  projectId: string;
+  projectId: number;
 }
 
 export function ProjectDevlogCreatePage({ projectId }: ProjectDevlogCreatePageProps) {
@@ -19,12 +19,11 @@ export function ProjectDevlogCreatePage({ projectId }: ProjectDevlogCreatePagePr
 
   // Set the current project based on the route parameter
   useEffect(() => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
       setCurrentProject({
         projectId: project.id,
         project,
-        isDefault: project.id === 'default',
       });
     }
   }, [projectId, projects, currentProject, setCurrentProject]);
@@ -62,10 +61,7 @@ export function ProjectDevlogCreatePage({ projectId }: ProjectDevlogCreatePagePr
 
   return (
     <PageLayout actions={actions}>
-      <DevlogForm 
-        onSubmit={handleSubmit} 
-        onCancel={handleCancel} 
-      />
+      <DevlogForm onSubmit={handleSubmit} onCancel={handleCancel} />
     </PageLayout>
   );
 }

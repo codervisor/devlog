@@ -10,5 +10,5 @@ interface ProjectCreateDevlogPageProps {
 }
 
 export default function ProjectCreateDevlogPage({ params }: ProjectCreateDevlogPageProps) {
-  return <ProjectDevlogCreatePage projectId={params.id} />;
+  return <ProjectDevlogCreatePage projectId={parseInt(params.id, 10)} />;
 }

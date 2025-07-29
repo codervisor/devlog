@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 
 interface ProjectDevlogListPageProps {
-  projectId: string;
+  projectId: number;
 }
 
 export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps) {
@@ -20,12 +20,11 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
 
   // Set the current project based on the route parameter
   useEffect(() => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
       setCurrentProject({
         projectId: project.id,
         project,
-        isDefault: project.id === 'default',
       });
     }
   }, [projectId, projects, currentProject, setCurrentProject]);
