@@ -19,29 +19,38 @@ import {
 } from 'lucide-react';
 
 /**
- * Maps Ant Design color names to their corresponding hex values
- * Based on Ant Design's default color palette
+ * Maps status colors to Tailwind CSS color classes that work with themes
+ * These classes automatically adapt to light/dark themes
  */
-const antColorMap: Record<string, string> = {
-  blue: '#1890ff',
-  orange: '#fa8c16',
-  red: '#ff4d4f',
-  purple: '#722ed1',
-  cyan: '#13c2c2',
-  green: '#52c41a',
-  geekblue: '#2f54eb',
-  magenta: '#eb2f96',
-  volcano: '#fa541c',
-  gold: '#faad14',
-  lime: '#a0d911',
-  default: '#8c8c8c',
+const antColorToTailwindMap: Record<string, string> = {
+  blue: 'blue-500',
+  orange: 'orange-500',
+  red: 'red-500',
+  purple: 'purple-500',
+  cyan: 'cyan-500',
+  green: 'green-500',
+  geekblue: 'indigo-500',
+  magenta: 'pink-500',
+  volcano: 'red-600',
+  gold: 'amber-500',
+  lime: 'lime-500',
+  default: 'muted-foreground',
 };
 
 /**
- * Converts an Ant Design color name to its hex value
+ * Converts an Ant Design color name to its Tailwind CSS class
+ */
+export const getColorClass = (antColorName: string): string => {
+  return antColorToTailwindMap[antColorName] || antColorToTailwindMap['default'];
+};
+
+/**
+ * @deprecated Use getColorClass instead for theme-aware colors
+ * Converts an Ant Design color name to its theme-aware color value
  */
 export const getColorHex = (antColorName: string): string => {
-  return antColorMap[antColorName] || antColorMap['default'];
+  // For backwards compatibility, return the Tailwind class
+  return `text-${getColorClass(antColorName)}`;
 };
 
 /**

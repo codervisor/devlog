@@ -50,37 +50,40 @@ export function StickyHeadings({
   const extractTextContent = useCallback((element: Element): string => {
     // Try to get text content directly first
     let text = element.textContent || '';
-    
+
     // If empty, try to get from data attributes that might be set by React
     if (!text) {
       text = element.getAttribute('title') || element.getAttribute('aria-label') || '';
     }
-    
+
     return text.trim();
   }, []);
 
   // Generate or get ID for heading element
-  const getHeadingId = useCallback((element: Element, index: number): string => {
-    // Check if element already has an ID
-    if (element.id) {
-      return element.id;
-    }
-    
-    // Generate ID from text content
-    const text = extractTextContent(element);
-    const baseId = text
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .substring(0, 50);
-    
-    const id = baseId || `heading-${index}`;
-    
-    // Set the ID on the element for future reference
-    element.id = id;
-    
-    return id;
-  }, [extractTextContent]);
+  const getHeadingId = useCallback(
+    (element: Element, index: number): string => {
+      // Check if element already has an ID
+      if (element.id) {
+        return element.id;
+      }
+
+      // Generate ID from text content
+      const text = extractTextContent(element);
+      const baseId = text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 50);
+
+      const id = baseId || `heading-${index}`;
+
+      // Set the ID on the element for future reference
+      element.id = id;
+
+      return id;
+    },
+    [extractTextContent],
+  );
 
   // Discover headings in the document
   const discoverHeadings = useCallback(() => {
@@ -91,13 +94,13 @@ export function StickyHeadings({
 
     const container = scrollContainer || document;
     const headingElements = container.querySelectorAll(headingSelector);
-    
+
     const discoveredHeadings: HeadingInfo[] = Array.from(headingElements).map((element, index) => {
       const tagName = element.tagName.toLowerCase();
       const level = parseInt(tagName.charAt(1), 10);
       const text = extractTextContent(element);
       const id = getHeadingId(element, index);
-      
+
       return {
         id,
         text,
@@ -111,54 +114,57 @@ export function StickyHeadings({
   }, [enabled, scrollContainer, headingSelector, extractTextContent, getHeadingId]);
 
   // Update active headings based on scroll position
-  const updateActiveHeadings = useCallback((visibleHeadings: Set<string>) => {
-    if (headings.length === 0) {
-      setActiveHeadings([]);
-      setIsVisible(false);
-      return;
-    }
-
-    // Find the currently active heading (last visible heading)
-    let activeHeading: HeadingInfo | null = null;
-    
-    // Go through headings in document order to find the last visible one
-    for (const heading of headings) {
-      if (visibleHeadings.has(heading.id)) {
-        activeHeading = heading;
+  const updateActiveHeadings = useCallback(
+    (visibleHeadings: Set<string>) => {
+      if (headings.length === 0) {
+        setActiveHeadings([]);
+        setIsVisible(false);
+        return;
       }
-    }
 
-    if (!activeHeading) {
-      setActiveHeadings([]);
-      setIsVisible(false);
-      return;
-    }
+      // Find the currently active heading (last visible heading)
+      let activeHeading: HeadingInfo | null = null;
 
-    // Build hierarchy: collect all parent headings
-    const hierarchy: HeadingInfo[] = [];
-    
-    // Find all parent headings (headings with lower level numbers that come before this one)
-    const activeIndex = headings.findIndex(h => h.id === activeHeading!.id);
-    
-    for (let i = activeIndex - 1; i >= 0; i--) {
-      const heading = headings[i];
-      if (heading.level < activeHeading!.level) {
-        // This is a parent heading
-        hierarchy.unshift(heading);
-        // Update active heading to continue looking for its parents
-        activeHeading = heading;
+      // Go through headings in document order to find the last visible one
+      for (const heading of headings) {
+        if (visibleHeadings.has(heading.id)) {
+          activeHeading = heading;
+        }
       }
-    }
-    
-    // Add the original active heading back
-    const originalActive = headings[activeIndex];
-    if (!hierarchy.find(h => h.id === originalActive.id)) {
-      hierarchy.push(originalActive);
-    }
 
-    setActiveHeadings(hierarchy);
-    setIsVisible(hierarchy.length > 0);
-  }, [headings]);
+      if (!activeHeading) {
+        setActiveHeadings([]);
+        setIsVisible(false);
+        return;
+      }
+
+      // Build hierarchy: collect all parent headings
+      const hierarchy: HeadingInfo[] = [];
+
+      // Find all parent headings (headings with lower level numbers that come before this one)
+      const activeIndex = headings.findIndex((h) => h.id === activeHeading!.id);
+
+      for (let i = activeIndex - 1; i >= 0; i--) {
+        const heading = headings[i];
+        if (heading.level < activeHeading!.level) {
+          // This is a parent heading
+          hierarchy.unshift(heading);
+          // Update active heading to continue looking for its parents
+          activeHeading = heading;
+        }
+      }
+
+      // Add the original active heading back
+      const originalActive = headings[activeIndex];
+      if (!hierarchy.find((h) => h.id === originalActive.id)) {
+        hierarchy.push(originalActive);
+      }
+
+      setActiveHeadings(hierarchy);
+      setIsVisible(hierarchy.length > 0);
+    },
+    [headings],
+  );
 
   // Set up intersection observer to track heading visibility
   useEffect(() => {
@@ -178,14 +184,14 @@ export function StickyHeadings({
             visibleHeadings.delete(headingId);
           }
         });
-        
+
         updateActiveHeadings(visibleHeadings);
       },
       {
         root: scrollContainer,
         rootMargin: `-${topOffset}px 0px -50% 0px`, // Trigger when heading is at the top
         threshold: 0,
-      }
+      },
     );
 
     // Observe all heading elements
@@ -246,19 +252,19 @@ export function StickyHeadings({
   return (
     <div
       ref={containerRef}
-      className={`fixed left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm z-[1000] transition-all duration-200 animate-in slide-in-from-top-2 ${className}`}
+      className={`fixed left-0 right-0 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm z-[1000] transition-all duration-200 animate-in slide-in-from-top-2 ${className}`}
       style={{ top: `${topOffset}px` }}
     >
       {activeHeadings.map((heading, index) => (
         <div
           key={heading.id}
-          className={`flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 focus:outline-2 focus:outline-blue-500 last:border-b-0
-            ${heading.level === 1 ? 'bg-white border-l-4 border-l-blue-500 pl-6' : ''}
-            ${heading.level === 2 ? 'bg-gray-50 border-l-4 border-l-green-500 pl-8' : ''}
-            ${heading.level === 3 ? 'bg-gray-100 border-l-4 border-l-yellow-500 pl-10' : ''}
-            ${heading.level === 4 ? 'bg-gray-50 border-l-4 border-l-orange-500 pl-12' : ''}
-            ${heading.level === 5 ? 'bg-gray-100 border-l-4 border-l-purple-500 pl-14' : ''}
-            ${heading.level === 6 ? 'bg-gray-50 border-l-4 border-l-pink-500 pl-16' : ''}
+          className={`flex items-center justify-between p-4 border-b border-border cursor-pointer transition-colors hover:bg-accent focus:outline-2 focus:outline-ring last:border-b-0
+            ${heading.level === 1 ? 'bg-background border-l-4 border-l-blue-500 pl-6' : ''}
+            ${heading.level === 2 ? 'bg-muted/50 border-l-4 border-l-green-500 pl-8' : ''}
+            ${heading.level === 3 ? 'bg-muted border-l-4 border-l-yellow-500 pl-10' : ''}
+            ${heading.level === 4 ? 'bg-muted/50 border-l-4 border-l-orange-500 pl-12' : ''}
+            ${heading.level === 5 ? 'bg-muted border-l-4 border-l-purple-500 pl-14' : ''}
+            ${heading.level === 6 ? 'bg-muted/50 border-l-4 border-l-pink-500 pl-16' : ''}
           `}
           onClick={() => handleHeadingClick(heading.id)}
           role="button"
@@ -272,8 +278,8 @@ export function StickyHeadings({
           }}
           style={{ zIndex: 1006 - index }}
         >
-          <span 
-            className={`font-semibold text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap flex-1 mr-3
+          <span
+            className={`font-semibold text-foreground overflow-hidden text-ellipsis whitespace-nowrap flex-1 mr-3
               ${heading.level === 1 ? 'text-base text-blue-600 font-bold' : ''}
               ${heading.level === 2 ? 'text-sm text-green-600 font-semibold' : ''}
               ${heading.level === 3 ? 'text-sm text-yellow-600 font-semibold' : ''}
@@ -284,7 +290,7 @@ export function StickyHeadings({
           >
             {heading.text}
           </span>
-          <span 
+          <span
             className={`text-xs font-medium px-2 py-1 rounded-sm uppercase tracking-wide
               ${heading.level === 1 ? 'bg-blue-100 text-blue-600' : ''}
               ${heading.level === 2 ? 'bg-green-100 text-green-600' : ''}

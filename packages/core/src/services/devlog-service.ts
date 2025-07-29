@@ -19,6 +19,7 @@ import type {
 import { DevlogDependencyEntity, DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
 import { getDataSource } from '../utils/typeorm-config.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
+import { generateDevlogKey } from '../utils/key-generator.js';
 
 interface DevlogServiceInstance {
   service: DevlogService;
@@ -106,6 +107,15 @@ export class DevlogService {
     }
 
     const validatedEntry = validation.data;
+
+    // Generate a semantic key if not provided
+    if (!validatedEntry.key) {
+      validatedEntry.key = generateDevlogKey(
+        validatedEntry.title,
+        validatedEntry.type,
+        validatedEntry.description,
+      );
+    }
 
     // If this is an update (entry has ID), validate status transition
     if (validatedEntry.id) {

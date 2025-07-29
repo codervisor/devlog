@@ -29,50 +29,48 @@ export interface NoteCategoryConfig {
  */
 export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
   progress: {
-    icon: <TrophyIcon size={16} className="text-green-500" />,
+    icon: <TrophyIcon size={16} className="text-green-600" />,
     label: 'Progress',
     description: 'Work progress updates, milestones, and status changes',
-    color: '#52c41a',
+    color: 'green-600',
   },
   issue: {
-    icon: <BugIcon size={16} className="text-red-500" />,
+    icon: <BugIcon size={16} className="text-red-600" />,
     label: 'Issue',
     description: 'Problems encountered, bugs found, or obstacles discovered',
-    color: '#f5222d',
+    color: 'red-600',
   },
   solution: {
-    icon: <CheckCircleIcon size={16} className="text-blue-500" />,
+    icon: <CheckCircleIcon size={16} className="text-blue-600" />,
     label: 'Solution',
     description: 'Solutions implemented, fixes applied, or workarounds found',
-    color: '#1890ff',
+    color: 'blue-600',
   },
   idea: {
-    icon: <LightbulbIcon size={16} className="text-yellow-500" />,
+    icon: <LightbulbIcon size={16} className="text-yellow-600" />,
     label: 'Idea',
     description: 'New ideas, suggestions, or potential improvements',
-    color: '#faad14',
+    color: 'yellow-600',
   },
   reminder: {
-    icon: <BellIcon size={16} className="text-orange-500" />,
+    icon: <BellIcon size={16} className="text-orange-600" />,
     label: 'Reminder',
     description: 'Important reminders, action items, or follow-up tasks',
-    color: '#fa8c16',
+    color: 'orange-600',
   },
   feedback: {
-    icon: <MessageCircleIcon size={16} className="text-purple-500" />,
+    icon: <MessageCircleIcon size={16} className="text-purple-600" />,
     label: 'Feedback',
     description: 'External feedback from users, customers, stakeholders, or usability testing',
-    color: '#722ed1',
+    color: 'purple-600',
   },
   'acceptance-criteria': {
-    icon: <CheckCircleIcon size={16} className="text-cyan-500" />,
+    icon: <CheckCircleIcon size={16} className="text-cyan-600" />,
     label: 'Acceptance Criteria',
     description: 'Updates on acceptance criteria validation and completion status',
-    color: '#13c2c2',
+    color: 'cyan-600',
   },
-};
-
-/**
+}; /**
  * Get the icon for a note category with tooltip
  * @param category - The note category
  * @returns React node containing the appropriate icon with color and tooltip
@@ -85,13 +83,9 @@ export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="cursor-default">
-          {icon}
-        </div>
+        <div className="cursor-default">{icon}</div>
       </TooltipTrigger>
-      <TooltipContent side="left">
-        {label}
-      </TooltipContent>
+      <TooltipContent side="left">{label}</TooltipContent>
     </Tooltip>
   );
 };
@@ -103,7 +97,7 @@ export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
  */
 export const getCategoryIconRaw = (category: NoteCategory): React.ReactNode => {
   const config = noteCategoryConfig[category];
-  return config?.icon || <MessageCircleIcon size={16} className="text-gray-500" />;
+  return config?.icon || <MessageCircleIcon size={16} className="text-muted-foreground" />;
 };
 
 /**
@@ -127,10 +121,10 @@ export const getCategoryDescription = (category: NoteCategory): string => {
 /**
  * Get the color for a note category
  * @param category - The note category
- * @returns Hex color code for the category
+ * @returns Tailwind color class for the category
  */
 export const getCategoryColor = (category: NoteCategory): string => {
-  return noteCategoryConfig[category]?.color || '#8c8c8c';
+  return noteCategoryConfig[category]?.color || 'muted-foreground';
 };
 
 /**
