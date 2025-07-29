@@ -2,23 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton, TopNavbar } from '@/components';
-import { useDevlogContext } from './contexts/DevlogContext';
-import { useStats } from '@/hooks/useStats';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
-  const { error, connected } = useDevlogContext();
-  const { stats, loading: isLoadingStats } = useStats();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -32,33 +23,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <ErrorBoundary>
-      <SidebarProvider>
-        <div className="min-h-screen bg-background w-full">
-          <TopNavbar />
-          <div className="flex flex-1 w-full">
-            <NavigationSidebar
-              stats={stats}
-              statsLoading={isLoadingStats}
-              collapsed={sidebarCollapsed}
-              connected={connected}
-              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-            />
+      <div className="min-h-screen bg-background w-full">
+        <TopNavbar />
+        <SidebarProvider>
+          <div className="flex w-full h-[calc(100vh-3rem)]">
+            <NavigationSidebar />
             <div className="flex-1 flex flex-col w-full">
-              <main className="flex-1 p-6 w-full">
-                <div className="w-full">
-                  {error && (
-                    <Alert className="mb-4">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  {children}
-                </div>
+              <main className="flex-1 p-6 w-full overflow-auto">
+                <div className="w-full">{children}</div>
               </main>
             </div>
           </div>
-        </div>
-      </SidebarProvider>
+        </SidebarProvider>
+      </div>
     </ErrorBoundary>
   );
 }
