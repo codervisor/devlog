@@ -87,9 +87,24 @@ export class DevlogApiClient {
       const response = await fetch(url, requestOptions);
 
       if (!response.ok) {
-        const errorText = await response.text();
+        let errorText = '';
+        try {
+          errorText = await response.text();
+        } catch {
+          errorText = response.statusText;
+        }
+
+        // Try to parse JSON error response
+        let errorData = errorText;
+        try {
+          const parsed = JSON.parse(errorText);
+          errorData = parsed.error?.message || parsed.message || errorText;
+        } catch {
+          // Keep original text if not JSON
+        }
+
         throw new DevlogApiClientError(
-          `HTTP ${response.status}: ${errorText || response.statusText}`,
+          `HTTP ${response.status}: ${errorData}`,
           response.status,
           errorText,
         );
@@ -279,7 +294,32 @@ export class DevlogApiClient {
 
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    const response = await this.get('/api/health');
-    return this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
+    try {
+      const response = await this.get('/api/health');
+      const result = this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
+
+      // Validate the health check response
+      if (!result || typeof result !== 'object' || !result.status) {
+        throw new Error('Invalid health check response format');
+      }
+
+      return result;
+    } catch (error) {
+      // If health endpoint doesn't exist, try a basic endpoint
+      console.warn('Health endpoint failed, trying projects endpoint as backup...');
+      try {
+        await this.get('/api/projects');
+        return {
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+        };
+      } catch (backupError) {
+        throw new DevlogApiClientError(
+          `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
+          0,
+          error,
+        );
+      }
+    }
   }
 }

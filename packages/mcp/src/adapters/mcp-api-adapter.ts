@@ -358,10 +358,11 @@ export class MCPApiAdapter {
       };
       const entry = await this.apiClient.updateDevlog(args.id, updateRequest);
 
-      // Add completion note if provided
-      if (args.summary) {
-        await this.apiClient.addDevlogNote(args.id, `Completed: ${args.summary}`, 'progress');
-      }
+      // Add completion note if provided (skip for now since notes API doesn't exist)
+      // TODO: Re-enable when notes API is implemented
+      // if (args.summary) {
+      //   await this.apiClient.addDevlogNote(args.id, `Completed: ${args.summary}`, 'progress');
+      // }
 
       return {
         content: [
@@ -390,10 +391,11 @@ export class MCPApiAdapter {
       };
       const entry = await this.apiClient.updateDevlog(args.id, updateRequest);
 
-      // Add closure note if provided
-      if (args.reason) {
-        await this.apiClient.addDevlogNote(args.id, `Closed: ${args.reason}`, 'feedback');
-      }
+      // Add closure note if provided (skip for now since notes API doesn't exist)
+      // TODO: Re-enable when notes API is implemented
+      // if (args.reason) {
+      //   await this.apiClient.addDevlogNote(args.id, `Closed: ${args.reason}`, 'feedback');
+      // }
 
       return {
         content: [

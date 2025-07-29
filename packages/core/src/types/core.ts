@@ -177,15 +177,15 @@ export interface DevlogEntry {
   priority: DevlogPriority;
   createdAt: string;
   updatedAt: string;
-  closedAt?: string; // ISO timestamp when status changed to 'done' or 'cancelled'
-  assignee?: string;
+  closedAt?: string | null; // ISO timestamp when status changed to 'done' or 'cancelled'
+  assignee?: string | null;
   archived?: boolean; // For long-term management and performance
   projectId: number; // Project context for multi-project isolation - REQUIRED
 
   // Flattened context fields
   acceptanceCriteria?: string[];
-  businessContext?: string;
-  technicalContext?: string;
+  businessContext?: string | null;
+  technicalContext?: string | null;
 
   // Related entities (loaded separately, not stored as JSON)
   notes?: DevlogNote[];
@@ -205,7 +205,7 @@ export interface DevlogFilter {
   status?: DevlogStatus[];
   type?: DevlogType[];
   priority?: DevlogPriority[];
-  assignee?: string;
+  assignee?: string | null;
   fromDate?: string;
   toDate?: string;
   search?: string;

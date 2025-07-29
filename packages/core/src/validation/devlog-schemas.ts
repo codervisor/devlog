@@ -24,13 +24,13 @@ export const DevlogEntrySchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'critical']),
   createdAt: z.string().datetime('Invalid createdAt timestamp'),
   updatedAt: z.string().datetime('Invalid updatedAt timestamp'),
-  closedAt: z.string().datetime('Invalid closedAt timestamp').optional(),
-  assignee: z.string().optional(),
+  closedAt: z.string().datetime('Invalid closedAt timestamp').nullable().optional(),
+  assignee: z.string().nullable().optional(),
   archived: z.boolean().optional(),
   projectId: z.number().int().positive(),
   acceptanceCriteria: z.array(z.string()).optional(),
-  businessContext: z.string().max(1000, 'Business context too long').optional(),
-  technicalContext: z.string().max(1000, 'Technical context too long').optional(),
+  businessContext: z.string().max(10000, 'Business context too long').nullable().optional(),
+  technicalContext: z.string().max(10000, 'Technical context too long').nullable().optional(),
   notes: z.array(z.any()).optional(), // Notes have their own validation
   dependencies: z.array(z.any()).optional(), // Dependencies have their own validation
 }) satisfies z.ZodType<DevlogEntry>;
@@ -50,12 +50,12 @@ export const CreateDevlogEntrySchema = z.object({
     .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
     .default('new'),
   priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
-  assignee: z.string().optional(),
+  assignee: z.string().nullable().optional(),
   archived: z.boolean().default(false).optional(),
   projectId: z.number().int().positive().optional(),
   acceptanceCriteria: z.array(z.string()).optional(),
-  businessContext: z.string().max(1000, 'Business context too long').optional(),
-  technicalContext: z.string().max(1000, 'Technical context too long').optional(),
+  businessContext: z.string().max(10000, 'Business context too long').nullable().optional(),
+  technicalContext: z.string().max(10000, 'Technical context too long').nullable().optional(),
 });
 
 /**
@@ -78,11 +78,11 @@ export const UpdateDevlogEntrySchema = z.object({
     .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
     .optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  assignee: z.string().optional(),
+  assignee: z.string().nullable().optional(),
   archived: z.boolean().optional(),
   acceptanceCriteria: z.array(z.string()).optional(),
-  businessContext: z.string().max(1000, 'Business context too long').optional(),
-  technicalContext: z.string().max(1000, 'Technical context too long').optional(),
+  businessContext: z.string().max(10000, 'Business context too long').nullable().optional(),
+  technicalContext: z.string().max(10000, 'Technical context too long').nullable().optional(),
 });
 
 /**
@@ -113,7 +113,7 @@ export const DevlogFilterSchema = z.object({
     .optional(),
   type: z.array(z.enum(['feature', 'bugfix', 'task', 'refactor', 'docs'])).optional(),
   priority: z.array(z.enum(['low', 'medium', 'high', 'critical'])).optional(),
-  assignee: z.string().optional(),
+  assignee: z.string().nullable().optional(),
   fromDate: z.string().datetime().optional(),
   toDate: z.string().datetime().optional(),
   search: z.string().optional(),
