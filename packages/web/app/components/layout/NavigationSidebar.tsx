@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { DevlogStats } from '@codervisor/devlog-core';
-import { OverviewStats } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
 import {
   Sidebar,
@@ -15,38 +13,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AppWindowIcon,
   LayoutDashboardIcon,
   FileTextIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   PlusIcon,
-  WifiIcon,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react';
 
 interface NavigationSidebarProps {
-  stats?: DevlogStats | null;
-  statsLoading?: boolean;
-  collapsed?: boolean;
-  connected: boolean;
-  onToggle?: () => void;
+  // No props needed - using built-in sidebar state
 }
 
-export function NavigationSidebar({
-  stats,
-  statsLoading = false,
-  collapsed = false,
-  connected,
-  onToggle,
-}: NavigationSidebarProps) {
+export function NavigationSidebar(_props: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const { currentProject } = useProject();
+  const { state } = useSidebar();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -63,9 +51,9 @@ export function NavigationSidebar({
   // Get contextual menu items based on current path
   const getMenuItems = () => {
     if (!mounted) return [];
-    
+
     const pathParts = pathname.split('/').filter(Boolean);
-    
+
     // Dashboard page (/)
     if (pathname === '/') {
       return [
@@ -76,7 +64,7 @@ export function NavigationSidebar({
         },
       ];
     }
-    
+
     // Project detail page (/projects/[id])
     if (pathParts.length === 2 && pathParts[0] === 'projects') {
       return [
@@ -97,7 +85,7 @@ export function NavigationSidebar({
         },
       ];
     }
-    
+
     // Project devlogs page (/projects/[id]/devlogs)
     if (pathParts.length === 3 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
       return [
@@ -113,7 +101,7 @@ export function NavigationSidebar({
         },
       ];
     }
-    
+
     // Devlog detail page (/projects/[id]/devlogs/[devlogId])
     if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
       return [
@@ -134,7 +122,7 @@ export function NavigationSidebar({
         },
       ];
     }
-    
+
     // Devlog create page (/projects/[id]/devlogs/create)
     if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[3] === 'create') {
       return [
@@ -150,7 +138,7 @@ export function NavigationSidebar({
         },
       ];
     }
-    
+
     // Default fallback
     return [
       {
@@ -169,15 +157,15 @@ export function NavigationSidebar({
   // Determine selected key based on current pathname and menu items
   const getSelectedKey = () => {
     if (!mounted) return 'dashboard';
-    
+
     const pathParts = pathname.split('/').filter(Boolean);
-    
+
     if (pathname === '/') return 'projects';
     if (pathParts.length === 2 && pathParts[0] === 'projects') return 'dashboard';
     if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
     if (pathParts.length === 4 && pathParts[3] === 'create') return 'create';
     if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
-    
+
     return 'dashboard';
   };
 
@@ -221,7 +209,7 @@ export function NavigationSidebar({
 
   return (
     <Sidebar className="border-r bg-background">
-      <SidebarContent>
+      <SidebarContent className="bg-background">
         <SidebarMenu className="space-y-2 px-4 py-2">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.key}>
@@ -238,39 +226,10 @@ export function NavigationSidebar({
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-6 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-default">
-                  <WifiIcon
-                    size={16}
-                    className={connected ? 'text-green-500' : 'text-red-500'}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-              </TooltipContent>
-            </Tooltip>
-
-            {(stats || statsLoading) && (
-              <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
-            )}
-          </div>
-
-          {onToggle && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggle}
-              className="h-8 w-8 p-0"
-            >
-              {collapsed ? <ChevronRightIcon size={16} /> : <ChevronLeftIcon size={16} />}
-            </Button>
-          )}
-        </div>
+      <SidebarFooter className="p-4">
+        <SidebarTrigger className="h-8 w-8 p-0 justify-center">
+          {state === 'collapsed' ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
+        </SidebarTrigger>
       </SidebarFooter>
     </Sidebar>
   );
