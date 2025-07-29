@@ -1,26 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import {
+  RouteParams,
+  ServiceHelper,
+  ApiErrors,
+  ApiResponses,
+  withErrorHandling,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id]/devlogs/stats/overview - Get overview statistics
-export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
-  try {
-    const projectService = ProjectService.getInstance();
-
-    const project = await projectService.get(params.id);
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+export const GET = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
 
-    const devlogService = DevlogService.getInstance(params.id);
+    const { projectId } = paramResult.data;
+
+    // Ensure project exists
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
+    }
+
+    // Get devlog service and stats
+    const devlogService = await ServiceHelper.getDevlogService(projectId);
     const stats = await devlogService.getStats();
 
     return NextResponse.json(stats);
-  } catch (error) {
-    console.error('Error fetching devlog stats:', error);
-    return NextResponse.json({ error: 'Failed to fetch devlog statistics' }, { status: 500 });
-  }
-}
+  },
+);

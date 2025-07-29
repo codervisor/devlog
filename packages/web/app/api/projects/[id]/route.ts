@@ -1,79 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
-import { ApiValidator, ProjectIdParamSchema, UpdateProjectBodySchema } from '@/schemas';
+import {
+  RouteParams,
+  ServiceHelper,
+  ApiErrors,
+  ApiResponses,
+  withErrorHandling,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id] - Get specific project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+export const GET = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
 
-    const projectService = ProjectService.getInstance();
+    const { projectId } = paramResult.data;
 
-    const project = await projectService.get(paramValidation.data.id);
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
-    return NextResponse.json(project);
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    return ApiValidator.handleServiceError(error);
-  }
-}
+    return NextResponse.json(projectResult.data.project);
+  },
+);
 
 // PUT /api/projects/[id] - Update project
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+export const PUT = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
 
-    // Validate request body
-    const bodyValidation = await ApiValidator.validateJsonBody(request, UpdateProjectBodySchema);
-    if (!bodyValidation.success) {
-      return bodyValidation.response;
+    const { projectId } = paramResult.data;
+
+    // Get project and service
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
-    const projectService = ProjectService.getInstance();
+    // Parse request body
+    const data = await request.json();
 
-    const updatedProject = await projectService.update(
-      paramValidation.data.id,
-      bodyValidation.data,
-    );
+    // Update project
+    const updatedProject = await projectResult.data.projectService.update(projectId, data);
 
     return NextResponse.json(updatedProject);
-  } catch (error) {
-    console.error('Error updating project:', error);
-    return ApiValidator.handleServiceError(error);
-  }
-}
+  },
+);
 
 // DELETE /api/projects/[id] - Delete project
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+export const DELETE = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
 
-    const projectService = ProjectService.getInstance();
+    const { projectId } = paramResult.data;
 
-    await projectService.delete(paramValidation.data.id);
+    // Get project service
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
+    }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    return ApiValidator.handleServiceError(error);
-  }
-}
+    // Delete project
+    await projectResult.data.projectService.delete(projectId);
+
+    return ApiResponses.success();
+  },
+);

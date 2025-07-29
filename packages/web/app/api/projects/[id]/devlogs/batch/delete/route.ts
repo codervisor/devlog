@@ -1,30 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import {
+  RouteParams,
+  ServiceHelper,
+  ApiErrors,
+  ApiResponses,
+  withErrorHandling,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 // POST /api/projects/[id]/devlogs/batch/delete - Batch delete devlog entries
-export async function POST(request: NextRequest, { params }: { params: { id: number } }) {
-  try {
-    const projectService = ProjectService.getInstance();
-
-    const project = await projectService.get(params.id);
-
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+export const POST = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
 
+    const { projectId } = paramResult.data;
+
+    // Ensure project exists
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
+    }
+
+    // Parse request body
     const { ids } = await request.json();
 
     if (!Array.isArray(ids) || ids.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid request: ids (non-empty array) is required' },
-        { status: 400 },
-      );
+      return ApiErrors.invalidRequest('ids (non-empty array) is required');
     }
 
-    const devlogService = DevlogService.getInstance(params.id);
+    // Get devlog service
+    const devlogService = await ServiceHelper.getDevlogService(projectId);
 
     const deletedIds = [];
     const errors = [];
@@ -33,8 +44,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
     for (const id of ids) {
       try {
         const devlogId = parseInt(id);
-        const existingEntry = await devlogService.get(devlogId);
+        if (isNaN(devlogId)) {
+          errors.push({ id, error: 'Invalid devlog ID' });
+          continue;
+        }
 
+        const existingEntry = await devlogService.get(devlogId);
         if (!existingEntry) {
           errors.push({ id, error: 'Entry not found' });
           continue;
@@ -55,9 +70,5 @@ export async function POST(request: NextRequest, { params }: { params: { id: num
       deleted: deletedIds,
       errors: errors.length > 0 ? errors : undefined,
     });
-  } catch (error) {
-    console.error('Error batch deleting devlogs:', error);
-    const message = error instanceof Error ? error.message : 'Failed to batch delete devlogs';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
+  },
+);

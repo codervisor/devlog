@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import {
+  RouteParams,
+  ServiceHelper,
+  ApiErrors,
+  ApiResponses,
+  withErrorHandling,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[id]/devlogs/stats/timeseries - Get time series statistics
-export async function GET(request: NextRequest, { params }: { params: { id: number } }) {
-  try {
-    const projectService = ProjectService.getInstance();
+export const GET = withErrorHandling(
+  async (request: NextRequest, { params }: { params: { id: string } }) => {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
+    }
 
-    const project = await projectService.get(params.id);
+    const { projectId } = paramResult.data;
 
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    // Ensure project exists
+    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
     // Parse query parameters
@@ -23,22 +35,22 @@ export async function GET(request: NextRequest, { params }: { params: { id: numb
     const from = searchParams.get('from');
     const to = searchParams.get('to');
 
+    // Validate days parameter
+    if (isNaN(days) || days <= 0) {
+      return ApiErrors.invalidRequest('days parameter must be a positive integer');
+    }
+
     const timeSeriesRequest = {
       days,
       ...(from && { from }),
       ...(to && { to }),
-      projectId: params.id,
+      projectId,
     };
 
-    const devlogService = DevlogService.getInstance(params.id);
-    const stats = await devlogService.getTimeSeriesStats(params.id, timeSeriesRequest);
+    // Get devlog service and time series stats
+    const devlogService = await ServiceHelper.getDevlogService(projectId);
+    const stats = await devlogService.getTimeSeriesStats(projectId, timeSeriesRequest);
 
     return NextResponse.json(stats);
-  } catch (error) {
-    console.error('Error fetching devlog time series stats:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch devlog time series statistics' },
-      { status: 500 },
-    );
-  }
-}
+  },
+);
