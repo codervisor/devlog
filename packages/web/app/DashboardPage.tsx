@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Dashboard, PageLayout, OverviewStats } from '@/components';
+import { Dashboard, PageLayout } from '@/components';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
 import { useTimeSeriesStats } from '@/hooks/useTimeSeriesStats';
@@ -9,7 +9,7 @@ import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const { devlogs, filters, handleStatusFilter, loading: isLoadingDevlogs } = useDevlogs();
+  const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
   const { stats, loading: isLoadingStats } = useStats();
   const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats();
   const router = useRouter();
@@ -18,18 +18,8 @@ export function DashboardPage() {
     router.push(`/devlogs/${devlog.id}`);
   };
 
-  const actions = (
-    <OverviewStats
-      stats={stats}
-      loading={isLoadingStats}
-      variant="detailed"
-      currentFilters={filters}
-      onFilterToggle={handleStatusFilter}
-    />
-  );
-
   return (
-    <PageLayout actions={actions}>
+    <PageLayout>
       <Dashboard
         stats={stats}
         timeSeriesData={timeSeriesData}

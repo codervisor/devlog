@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Dashboard, PageLayout, OverviewStats } from '@/components';
+import { Dashboard, PageLayout } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogs } from '@/hooks/useDevlogs';
 import { useStats } from '@/hooks/useStats';
@@ -15,7 +15,7 @@ interface ProjectDetailsPageProps {
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const { currentProject, projects, setCurrentProject } = useProject();
-  const { devlogs, filters, handleStatusFilter, loading: isLoadingDevlogs } = useDevlogs();
+  const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
   const { stats, loading: isLoadingStats } = useStats();
   const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats();
   const router = useRouter();
@@ -44,18 +44,8 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     );
   }
 
-  const actions = (
-    <OverviewStats
-      stats={stats}
-      loading={isLoadingStats}
-      variant="detailed"
-      currentFilters={filters}
-      onFilterToggle={handleStatusFilter}
-    />
-  );
-
   return (
-    <PageLayout actions={actions}>
+    <PageLayout>
       <Dashboard
         stats={stats}
         timeSeriesData={timeSeriesData}
