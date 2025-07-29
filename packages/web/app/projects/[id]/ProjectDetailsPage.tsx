@@ -10,7 +10,7 @@ import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 interface ProjectDetailsPageProps {
-  projectId: string;
+  projectId: number;
 }
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
@@ -22,9 +22,8 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
   // Set the current project based on the route parameter
   useEffect(() => {
-    const numericProjectId = parseInt(projectId, 10);
-    const project = projects.find((p) => p.id === numericProjectId);
-    if (project && (!currentProject || currentProject.projectId !== numericProjectId)) {
+    const project = projects.find((p) => p.id === projectId);
+    if (project && (!currentProject || currentProject.projectId !== projectId)) {
       setCurrentProject({
         projectId: project.id,
         project,
@@ -37,8 +36,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   };
 
   // Don't render until we have the correct project context
-  const numericProjectId = parseInt(projectId, 10);
-  if (!currentProject || currentProject.projectId !== numericProjectId) {
+  if (!currentProject || currentProject.projectId !== projectId) {
     return (
       <PageLayout>
         <div>Loading project...</div>

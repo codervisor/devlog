@@ -7,23 +7,19 @@ import { useDevlogs } from '@/hooks/useDevlogs';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { 
-  ArrowLeftIcon, 
-  TrashIcon, 
-  SaveIcon, 
-  UndoIcon, 
+  ArrowLeftIcon,
+  TrashIcon,
+  SaveIcon,
+  UndoIcon,
   AlertTriangleIcon,
-  InfoIcon
+  InfoIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DevlogDetailsPageProps {
-  id: string;
+  id: number;
 }
 
 export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
@@ -68,16 +64,14 @@ export function DevlogDetailsPage({ id }: DevlogDetailsPageProps) {
 
   const handleDelete = async () => {
     try {
-      const numericId = parseInt(id);
-
       // Call both delete functions to ensure proper state synchronization:
       // 1. Delete from details hook (updates local state immediately)
-      await deleteDevlogFromDetails(numericId);
+      await deleteDevlogFromDetails(id);
 
       // 2. Delete from list context (ensures list state is updated even if SSE is delayed)
       // Note: This is a safety measure in case there are timing issues with real-time events
       try {
-        await deleteDevlogFromList(numericId);
+        await deleteDevlogFromList(id);
       } catch (error) {
         // This might fail if the item is already deleted, which is fine
         console.debug('List deletion failed (likely already removed by SSE):', error);

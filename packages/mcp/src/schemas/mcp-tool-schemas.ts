@@ -1,6 +1,6 @@
 /**
  * MCP Tool validation schemas
- * 
+ *
  * This module defines Zod schemas for validating MCP tool arguments.
  * It reuses business logic schemas from @codervisor/devlog-core and adds
  * MCP-specific validation layers.
@@ -12,7 +12,6 @@ import {
   UpdateDevlogEntrySchema,
   DevlogIdSchema,
   DevlogFilterSchema,
-
   CreateProjectRequestSchema,
   UpdateProjectRequestSchema,
   ProjectIdSchema,
@@ -21,25 +20,29 @@ import {
 /**
  * Devlog tool argument schemas
  */
-export const CreateDevlogArgsSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  type: z.enum(['feature', 'bugfix', 'task', 'refactor', 'docs']),
-  description: z.string().min(1, 'Description is required').max(2000, 'Description too long'),
-  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  businessContext: z.string().max(1000).optional(),
-  technicalContext: z.string().max(1000).optional(),
-  acceptanceCriteria: z.array(z.string()).optional(),
-}).transform(data => ({
-  ...data,
-  priority: data.priority ?? 'medium' as const,
-}));
+export const CreateDevlogArgsSchema = z
+  .object({
+    title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+    type: z.enum(['feature', 'bugfix', 'task', 'refactor', 'docs']),
+    description: z.string().min(1, 'Description is required'),
+    priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+    businessContext: z.string().optional(),
+    technicalContext: z.string().optional(),
+    acceptanceCriteria: z.array(z.string()).optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    priority: data.priority ?? ('medium' as const),
+  }));
 
 export const UpdateDevlogArgsSchema = z.object({
   id: DevlogIdSchema,
-  status: z.enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled']).optional(),
+  status: z
+    .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
+    .optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  businessContext: z.string().max(1000).optional(),
-  technicalContext: z.string().max(1000).optional(),
+  businessContext: z.string().optional(),
+  technicalContext: z.string().optional(),
   acceptanceCriteria: z.array(z.string()).optional(),
 });
 
@@ -48,7 +51,9 @@ export const GetDevlogArgsSchema = z.object({
 });
 
 export const ListDevlogsArgsSchema = z.object({
-  status: z.enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled']).optional(),
+  status: z
+    .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
+    .optional(),
   type: z.enum(['feature', 'bugfix', 'task', 'refactor', 'docs']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   archived: z.boolean().optional(),
@@ -60,35 +65,43 @@ export const ListDevlogsArgsSchema = z.object({
 
 export const SearchDevlogsArgsSchema = z.object({
   query: z.string().min(1, 'Search query is required'),
-  status: z.enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled']).optional(),
+  status: z
+    .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
+    .optional(),
   type: z.enum(['feature', 'bugfix', 'task', 'refactor', 'docs']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   archived: z.boolean().optional(),
 });
 
-export const AddDevlogNoteArgsSchema = z.object({
-  id: DevlogIdSchema,
-  note: z.string().min(1, 'Note content is required'),
-  category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
-  files: z.array(z.string()).optional(),
-  codeChanges: z.string().optional(),
-}).transform(data => ({
-  ...data,
-  category: data.category ?? 'progress' as const,
-}));
+export const AddDevlogNoteArgsSchema = z
+  .object({
+    id: DevlogIdSchema,
+    note: z.string().min(1, 'Note content is required'),
+    category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
+    files: z.array(z.string()).optional(),
+    codeChanges: z.string().optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    category: data.category ?? ('progress' as const),
+  }));
 
-export const UpdateDevlogWithNoteArgsSchema = z.object({
-  id: DevlogIdSchema,
-  status: z.enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled']).optional(),
-  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  note: z.string().min(1, 'Note content is required'),
-  category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
-  files: z.array(z.string()).optional(),
-  codeChanges: z.string().optional(),
-}).transform(data => ({
-  ...data,
-  category: data.category ?? 'progress' as const,
-}));
+export const UpdateDevlogWithNoteArgsSchema = z
+  .object({
+    id: DevlogIdSchema,
+    status: z
+      .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
+      .optional(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+    note: z.string().min(1, 'Note content is required'),
+    category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
+    files: z.array(z.string()).optional(),
+    codeChanges: z.string().optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    category: data.category ?? ('progress' as const),
+  }));
 
 export const CompleteDevlogArgsSchema = z.object({
   id: DevlogIdSchema,
@@ -153,17 +166,17 @@ export class McpToolValidator {
    */
   static validate<T>(
     schema: z.ZodSchema<T>,
-    data: unknown
+    data: unknown,
   ): { success: true; data: T } | { success: false; errors: string[] } {
     const result = schema.safeParse(data);
-    
+
     if (result.success) {
       return { success: true, data: result.data };
     }
 
     return {
       success: false,
-      errors: result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`),
+      errors: result.error.errors.map((err) => `${err.path.join('.')}: ${err.message}`),
     };
   }
 

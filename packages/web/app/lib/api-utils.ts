@@ -35,7 +35,7 @@ export function parseParams<T extends Record<string, string>>(
 }
 
 /**
- * Type-safe parameter parser for specific route patterns
+ * Type-safe parameter parser for API routes
  */
 export const RouteParams = {
   /**
@@ -43,13 +43,28 @@ export const RouteParams = {
    * Usage: /api/projects/[id]
    */
   parseProjectId(params: { id: string }) {
-    const result = parseParams(params);
-    if (!result.success) return result;
+    try {
+      const projectId = parseInt(params.id, 10);
+      if (isNaN(projectId) || projectId <= 0) {
+        return {
+          success: false as const,
+          response: NextResponse.json(
+            { error: 'Invalid project ID: must be a positive integer' },
+            { status: 400 },
+          ),
+        };
+      }
 
-    return {
-      success: true as const,
-      data: { projectId: result.data.id },
-    };
+      return {
+        success: true as const,
+        data: { projectId },
+      };
+    } catch (error) {
+      return {
+        success: false as const,
+        response: NextResponse.json({ error: 'Invalid project ID format' }, { status: 400 }),
+      };
+    }
   },
 
   /**
@@ -57,16 +72,40 @@ export const RouteParams = {
    * Usage: /api/projects/[id]/devlogs/[devlogId]
    */
   parseProjectAndDevlogId(params: { id: string; devlogId: string }) {
-    const result = parseParams(params);
-    if (!result.success) return result;
+    try {
+      const projectId = parseInt(params.id, 10);
+      const devlogId = parseInt(params.devlogId, 10);
 
-    return {
-      success: true as const,
-      data: {
-        projectId: result.data.id,
-        devlogId: result.data.devlogId,
-      },
-    };
+      if (isNaN(projectId) || projectId <= 0) {
+        return {
+          success: false as const,
+          response: NextResponse.json(
+            { error: 'Invalid project ID: must be a positive integer' },
+            { status: 400 },
+          ),
+        };
+      }
+
+      if (isNaN(devlogId) || devlogId <= 0) {
+        return {
+          success: false as const,
+          response: NextResponse.json(
+            { error: 'Invalid devlog ID: must be a positive integer' },
+            { status: 400 },
+          ),
+        };
+      }
+
+      return {
+        success: true as const,
+        data: { projectId, devlogId },
+      };
+    } catch (error) {
+      return {
+        success: false as const,
+        response: NextResponse.json({ error: 'Invalid parameter format' }, { status: 400 }),
+      };
+    }
   },
 };
 
