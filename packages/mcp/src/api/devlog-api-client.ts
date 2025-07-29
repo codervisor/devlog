@@ -110,12 +110,27 @@ export class DevlogApiClient {
    * Unwrap standardized API response
    */
   private unwrapApiResponse<T>(response: any): T {
-    // Handle standardized API response format
-    if (response && response.success === true) {
+    // Handle standardized API response format with success/data wrapper (projects API)
+    if (
+      response &&
+      typeof response === 'object' &&
+      response.success === true &&
+      'data' in response
+    ) {
       return response.data;
     }
 
-    // Handle legacy direct response (during transition)
+    // Handle paginated response format (devlogs list API)
+    if (
+      response &&
+      typeof response === 'object' &&
+      'items' in response &&
+      'pagination' in response
+    ) {
+      return response as T;
+    }
+
+    // Handle direct response (individual devlog, etc.)
     return response;
   }
 
