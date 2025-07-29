@@ -13,17 +13,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-  useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import {
-  AppWindowIcon,
-  LayoutDashboardIcon,
-  FileTextIcon,
-  PlusIcon,
-  PanelRightClose,
-  PanelRightOpen,
-} from 'lucide-react';
+import { AppWindowIcon, LayoutDashboardIcon, FileTextIcon, PlusIcon } from 'lucide-react';
 
 interface NavigationSidebarProps {
   // No props needed - using built-in sidebar state
@@ -34,7 +25,6 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const { currentProject } = useProject();
-  const { state } = useSidebar();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -226,10 +216,8 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <SidebarTrigger className="h-8 w-8 p-0 justify-center">
-          {state === 'collapsed' ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
-        </SidebarTrigger>
+      <SidebarFooter className="p-4 bg-background border-t-0">
+        <SidebarTrigger className="h-8 w-8 p-0" />
       </SidebarFooter>
     </Sidebar>
   );

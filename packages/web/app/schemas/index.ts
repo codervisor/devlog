@@ -1,6 +1,6 @@
 /**
  * Centralized schema exports for web API validation
- * 
+ *
  * This module provides a single entry point for all validation schemas
  * used across the web application's API endpoints.
  */
@@ -10,6 +10,7 @@ export * from './project';
 export * from './devlog';
 export * from './validation';
 export * from './bridge';
+export * from './responses';
 
 // Common schemas that might be used across multiple endpoints
 import { z } from 'zod';

@@ -78,6 +78,7 @@ export async function handleGetCurrentProject(adapter: any) {
   try {
     const currentProjectId = adapter.getCurrentProjectId();
     const projects = await adapter.apiClient.listProjects();
+    // Both should be numbers now
     const currentProject = projects.find((p: any) => p.id === currentProjectId);
 
     if (!currentProject) {
@@ -96,7 +97,7 @@ export async function handleGetCurrentProject(adapter: any) {
 ID: ${currentProject.id}
 Description: ${currentProject.description || 'No description'}
 Created: ${new Date(currentProject.createdAt).toLocaleDateString()}
-Updated: ${new Date(currentProject.lastAccessedAt).toLocaleDateString()}
+Updated: ${new Date(currentProject.updatedAt).toLocaleDateString()}
 
 Note: This is the MCP server's in-memory current project. Web app project may differ.`;
 
@@ -123,9 +124,23 @@ Note: This is the MCP server's in-memory current project. Web app project may di
 
 export async function handleSwitchProject(adapter: any, args: { projectId: string }) {
   try {
+    // Convert string argument to number for consistency
+    const targetProjectId = parseInt(args.projectId, 10);
+    if (isNaN(targetProjectId)) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Invalid project ID '${args.projectId}'. Must be a valid number.`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
     // Validate that the project exists
     const projects = await adapter.apiClient.listProjects();
-    const targetProject = projects.find((p: any) => p.id === args.projectId);
+    const targetProject = projects.find((p: any) => p.id === targetProjectId);
 
     if (!targetProject) {
       return {
@@ -140,13 +155,13 @@ export async function handleSwitchProject(adapter: any, args: { projectId: strin
     }
 
     // Switch current project in memory only
-    adapter.setCurrentProjectId(args.projectId);
+    adapter.setCurrentProjectId(targetProjectId);
 
     const switchInfo = `Successfully switched MCP server to project: **${targetProject.name}**
 ID: ${targetProject.id}
 Description: ${targetProject.description || 'No description'}
 Created: ${new Date(targetProject.createdAt).toLocaleDateString()}
-Updated: ${new Date(targetProject.lastAccessedAt).toLocaleDateString()}
+Updated: ${new Date(targetProject.updatedAt).toLocaleDateString()}
 
 Note: This only affects the MCP server's current project. Web app project is managed separately.`;
 

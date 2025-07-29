@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
 import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
+import {
+  createSimpleCollectionResponse,
+  createSuccessResponse,
+  ResponseTransformer,
+} from '@/utils/api-responses';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -12,18 +17,12 @@ export async function GET(request: NextRequest) {
     await projectService.initialize();
 
     const coreProjects = await projectService.list();
-    
-    // Transform core project data to web interface format
-    const projects = coreProjects.map(project => ({
-      id: project.id.toString(), // Convert number to string
-      name: project.name,
-      description: project.description,
-      tags: [], // Add empty tags array for compatibility
-      createdAt: project.createdAt.toISOString(), // Convert Date to string
-      updatedAt: project.lastAccessedAt.toISOString(), // Map lastAccessedAt to updatedAt
-    }));
 
-    return NextResponse.json({ projects });
+    // Transform core project data to web interface format
+    const projects = ResponseTransformer.transformProjects(coreProjects);
+
+    // Return new standardized format
+    return createSimpleCollectionResponse(projects);
   } catch (error) {
     console.error('Error fetching projects:', error);
     return ApiValidator.handleServiceError(error);
@@ -41,8 +40,8 @@ export async function POST(request: NextRequest) {
 
     // Transform to service layer type (with additional validation)
     const serviceData = ApiValidator.transformForService(
-      bodyValidation.data, 
-      WebToServiceProjectCreateSchema
+      bodyValidation.data,
+      WebToServiceProjectCreateSchema,
     );
 
     const projectService = ProjectService.getInstance();
@@ -52,16 +51,9 @@ export async function POST(request: NextRequest) {
     const coreProject = await projectService.create(serviceData);
 
     // Transform core project data to web interface format
-    const createdProject = {
-      id: coreProject.id.toString(), // Convert number to string
-      name: coreProject.name,
-      description: coreProject.description,
-      tags: [], // Add empty tags array for compatibility
-      createdAt: coreProject.createdAt.toISOString(), // Convert Date to string
-      updatedAt: coreProject.lastAccessedAt.toISOString(), // Map lastAccessedAt to updatedAt
-    };
+    const createdProject = ResponseTransformer.transformProject(coreProject);
 
-    return NextResponse.json(createdProject, { status: 201 });
+    return createSuccessResponse(createdProject, { status: 201 });
   } catch (error) {
     console.error('Error creating project:', error);
     return ApiValidator.handleServiceError(error);
