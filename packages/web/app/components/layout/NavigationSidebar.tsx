@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { DevlogStats } from '@codervisor/devlog-core';
 import { OverviewStats } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
-import styles from './NavigationSidebar.module.css';
 import {
   Sidebar,
   SidebarContent,
@@ -221,15 +220,15 @@ export function NavigationSidebar({
   const menuItems = getMenuItems();
 
   return (
-    <Sidebar className="w-72 border-r bg-background">
+    <Sidebar className="border-r bg-background">
       <SidebarContent>
-        <SidebarMenu className="space-y-1 px-2">
+        <SidebarMenu className="space-y-2 px-4 py-2">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.key}>
               <SidebarMenuButton
                 onClick={() => handleMenuClick({ key: item.key })}
                 isActive={getSelectedKey() === item.key}
-                className="flex items-center gap-3 px-3 py-2 text-sm font-medium"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium min-h-[44px] rounded-md"
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -239,7 +238,7 @@ export function NavigationSidebar({
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-6 border-t">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Tooltip>
