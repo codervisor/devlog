@@ -4,30 +4,64 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Filter, 
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
   MessageSquare,
   X,
   ChevronDown,
   MoreHorizontal,
   CheckSquare,
-  Square
+  Square,
 } from 'lucide-react';
 import {
   DevlogEntry,
@@ -101,11 +135,11 @@ export function DevlogList({
   // Handle batch operations
   const handleBatchUpdate = async () => {
     if (!selectedRowKeys.length || !onBatchUpdate) return;
-    
+
     const updates = Object.fromEntries(
-      Object.entries(batchUpdateForm).filter(([_, value]) => value !== undefined)
+      Object.entries(batchUpdateForm).filter(([_, value]) => value !== undefined),
     );
-    
+
     if (Object.keys(updates).length === 0) {
       toast.warning('Please select at least one field to update');
       return;
@@ -115,15 +149,15 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Updating devlogs...'
+      operation: 'Updating devlogs...',
     });
 
     try {
       // Simulate progress updates
       for (let i = 0; i <= selectedRowKeys.length; i++) {
-        setBatchOperationProgress(prev => ({ ...prev, current: i }));
+        setBatchOperationProgress((prev) => ({ ...prev, current: i }));
         if (i < selectedRowKeys.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
@@ -131,9 +165,16 @@ export function DevlogList({
       toast.success(`Successfully updated ${selectedRowKeys.length} devlog(s)`);
       setSelectedRowKeys([]);
       setBatchOperationModal({ visible: false, type: 'update', title: '' });
-      setBatchUpdateForm({ status: undefined, priority: undefined, type: undefined, assignee: undefined });
+      setBatchUpdateForm({
+        status: undefined,
+        priority: undefined,
+        type: undefined,
+        assignee: undefined,
+      });
     } catch (error) {
-      toast.error(`Failed to update devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     } finally {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
     }
@@ -141,19 +182,19 @@ export function DevlogList({
 
   const handleBatchDelete = async () => {
     if (!selectedRowKeys.length || !onBatchDelete) return;
-    
+
     setBatchOperationProgress({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Deleting devlogs...'
+      operation: 'Deleting devlogs...',
     });
 
     try {
       for (let i = 0; i <= selectedRowKeys.length; i++) {
-        setBatchOperationProgress(prev => ({ ...prev, current: i }));
+        setBatchOperationProgress((prev) => ({ ...prev, current: i }));
         if (i < selectedRowKeys.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
@@ -162,7 +203,9 @@ export function DevlogList({
       setSelectedRowKeys([]);
       setBatchOperationModal({ visible: false, type: 'delete', title: '' });
     } catch (error) {
-      toast.error(`Failed to delete devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     } finally {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
     }
@@ -170,7 +213,7 @@ export function DevlogList({
 
   const handleBatchAddNote = async () => {
     if (!selectedRowKeys.length || !onBatchAddNote) return;
-    
+
     if (!batchNoteForm.content.trim()) {
       toast.warning('Please enter note content');
       return;
@@ -180,14 +223,14 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Adding notes...'
+      operation: 'Adding notes...',
     });
 
     try {
       for (let i = 0; i <= selectedRowKeys.length; i++) {
-        setBatchOperationProgress(prev => ({ ...prev, current: i }));
+        setBatchOperationProgress((prev) => ({ ...prev, current: i }));
         if (i < selectedRowKeys.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
@@ -197,7 +240,9 @@ export function DevlogList({
       setBatchOperationModal({ visible: false, type: 'note', title: '' });
       setBatchNoteForm({ content: '', category: 'progress' });
     } catch (error) {
-      toast.error(`Failed to add notes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to add notes: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     } finally {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
     }
@@ -227,7 +272,7 @@ export function DevlogList({
   // Selection handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRowKeys(devlogs.map(d => d.id).filter(Boolean) as DevlogId[]);
+      setSelectedRowKeys(devlogs.map((d) => d.id).filter(Boolean) as DevlogId[]);
     } else {
       setSelectedRowKeys([]);
     }
@@ -237,7 +282,7 @@ export function DevlogList({
     if (checked) {
       setSelectedRowKeys([...selectedRowKeys, id]);
     } else {
-      setSelectedRowKeys(selectedRowKeys.filter(key => key !== id));
+      setSelectedRowKeys(selectedRowKeys.filter((key) => key !== id));
     }
   };
 
@@ -292,15 +337,20 @@ export function DevlogList({
                   className="pl-8 w-64"
                 />
               </div>
-              
+
               {/* Status Filter */}
-              <Select value={currentFilters?.status?.[0] || ''} onValueChange={(value) => handleFilterChange('status', value || undefined)}>
+              <Select
+                value={currentFilters?.status?.[0] || 'all'}
+                onValueChange={(value) =>
+                  handleFilterChange('status', value === 'all' ? undefined : value)
+                }
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Status</SelectItem>
-                  {statusOptions.map(option => (
+                  <SelectItem value="all">All Status</SelectItem>
+                  {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -309,13 +359,18 @@ export function DevlogList({
               </Select>
 
               {/* Priority Filter */}
-              <Select value={currentFilters?.priority?.[0] || ''} onValueChange={(value) => handleFilterChange('priority', value || undefined)}>
+              <Select
+                value={currentFilters?.priority?.[0] || 'all'}
+                onValueChange={(value) =>
+                  handleFilterChange('priority', value === 'all' ? undefined : value)
+                }
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Priority</SelectItem>
-                  {priorityOptions.map(option => (
+                  <SelectItem value="all">All Priority</SelectItem>
+                  {priorityOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -324,13 +379,18 @@ export function DevlogList({
               </Select>
 
               {/* Type Filter */}
-              <Select value={currentFilters?.type?.[0] || ''} onValueChange={(value) => handleFilterChange('type', value || undefined)}>
+              <Select
+                value={currentFilters?.type?.[0] || 'all'}
+                onValueChange={(value) =>
+                  handleFilterChange('type', value === 'all' ? undefined : value)
+                }
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
-                  {typeOptions.map(option => (
+                  <SelectItem value="all">All Types</SelectItem>
+                  {typeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -354,7 +414,9 @@ export function DevlogList({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })}
+                  onClick={() =>
+                    setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })
+                  }
                   disabled={!onBatchUpdate}
                 >
                   <Edit className="h-3 w-3 mr-1" />
@@ -363,7 +425,13 @@ export function DevlogList({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setBatchOperationModal({ visible: true, type: 'note', title: 'Add Note to Selected' })}
+                  onClick={() =>
+                    setBatchOperationModal({
+                      visible: true,
+                      type: 'note',
+                      title: 'Add Note to Selected',
+                    })
+                  }
                   disabled={!onBatchAddNote}
                 >
                   <MessageSquare className="h-3 w-3 mr-1" />
@@ -378,11 +446,7 @@ export function DevlogList({
                   <Trash2 className="h-3 w-3 mr-1" />
                   Delete
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedRowKeys([])}
-                >
+                <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
                   <X className="h-3 w-3 mr-1" />
                   Clear
                 </Button>
@@ -410,7 +474,10 @@ export function DevlogList({
                     <Checkbox
                       checked={isAllSelected}
                       onCheckedChange={handleSelectAll}
-                      className={cn(isIndeterminate && "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground")}
+                      className={cn(
+                        isIndeterminate &&
+                          'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+                      )}
                     />
                   </TableHead>
                   <TableHead className="w-16">ID</TableHead>
@@ -428,7 +495,9 @@ export function DevlogList({
                     <TableCell>
                       <Checkbox
                         checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
-                        onCheckedChange={(checked) => devlog.id && handleSelectRow(devlog.id, checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          devlog.id && handleSelectRow(devlog.id, checked as boolean)
+                        }
                         disabled={!devlog.id}
                       />
                     </TableCell>
@@ -436,7 +505,9 @@ export function DevlogList({
                     <TableCell>
                       <div className="max-w-md">
                         <div className="font-medium truncate">{devlog.title}</div>
-                        <div className="text-sm text-muted-foreground truncate">{devlog.description}</div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {devlog.description}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -449,7 +520,7 @@ export function DevlogList({
                       <DevlogTypeTag type={devlog.type} />
                     </TableCell>
                     <TableCell>
-                      <span 
+                      <span
                         className="text-sm text-muted-foreground"
                         title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
                       >
@@ -495,24 +566,38 @@ export function DevlogList({
       )}
 
       {/* Batch Update Modal */}
-      <Dialog open={batchOperationModal.visible && batchOperationModal.type === 'update'} onOpenChange={(open) => !open && setBatchOperationModal({ visible: false, type: 'update', title: '' })}>
+      <Dialog
+        open={batchOperationModal.visible && batchOperationModal.type === 'update'}
+        onOpenChange={(open) =>
+          !open && setBatchOperationModal({ visible: false, type: 'update', title: '' })
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Batch Update Devlogs</DialogTitle>
             <DialogDescription>
-              Update {selectedRowKeys.length} selected devlog(s). Leave fields empty to keep current values.
+              Update {selectedRowKeys.length} selected devlog(s). Leave fields empty to keep current
+              values.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="batch-status">Status</Label>
-              <Select value={batchUpdateForm.status || ''} onValueChange={(value) => setBatchUpdateForm(prev => ({ ...prev, status: value || undefined }))}>
+              <Select
+                value={batchUpdateForm.status || 'keep'}
+                onValueChange={(value) =>
+                  setBatchUpdateForm((prev) => ({
+                    ...prev,
+                    status: value === 'keep' ? undefined : value,
+                  }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Keep current status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Keep current status</SelectItem>
-                  {statusOptions.map(option => (
+                  <SelectItem value="keep">Keep current status</SelectItem>
+                  {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -522,13 +607,21 @@ export function DevlogList({
             </div>
             <div>
               <Label htmlFor="batch-priority">Priority</Label>
-              <Select value={batchUpdateForm.priority || ''} onValueChange={(value) => setBatchUpdateForm(prev => ({ ...prev, priority: value || undefined }))}>
+              <Select
+                value={batchUpdateForm.priority || 'keep'}
+                onValueChange={(value) =>
+                  setBatchUpdateForm((prev) => ({
+                    ...prev,
+                    priority: value === 'keep' ? undefined : value,
+                  }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Keep current priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Keep current priority</SelectItem>
-                  {priorityOptions.map(option => (
+                  <SelectItem value="keep">Keep current priority</SelectItem>
+                  {priorityOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -538,13 +631,21 @@ export function DevlogList({
             </div>
             <div>
               <Label htmlFor="batch-type">Type</Label>
-              <Select value={batchUpdateForm.type || ''} onValueChange={(value) => setBatchUpdateForm(prev => ({ ...prev, type: value || undefined }))}>
+              <Select
+                value={batchUpdateForm.type || 'keep'}
+                onValueChange={(value) =>
+                  setBatchUpdateForm((prev) => ({
+                    ...prev,
+                    type: value === 'keep' ? undefined : value,
+                  }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Keep current type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Keep current type</SelectItem>
-                  {typeOptions.map(option => (
+                  <SelectItem value="keep">Keep current type</SelectItem>
+                  {typeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -554,18 +655,24 @@ export function DevlogList({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBatchOperationModal({ visible: false, type: 'update', title: '' })}>
+            <Button
+              variant="outline"
+              onClick={() => setBatchOperationModal({ visible: false, type: 'update', title: '' })}
+            >
               Cancel
             </Button>
-            <Button onClick={handleBatchUpdate}>
-              Update {selectedRowKeys.length} Devlog(s)
-            </Button>
+            <Button onClick={handleBatchUpdate}>Update {selectedRowKeys.length} Devlog(s)</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Batch Add Note Modal */}
-      <Dialog open={batchOperationModal.visible && batchOperationModal.type === 'note'} onOpenChange={(open) => !open && setBatchOperationModal({ visible: false, type: 'note', title: '' })}>
+      <Dialog
+        open={batchOperationModal.visible && batchOperationModal.type === 'note'}
+        onOpenChange={(open) =>
+          !open && setBatchOperationModal({ visible: false, type: 'note', title: '' })
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Note to Selected Devlogs</DialogTitle>
@@ -576,7 +683,12 @@ export function DevlogList({
           <div className="space-y-4">
             <div>
               <Label htmlFor="note-category">Category</Label>
-              <Select value={batchNoteForm.category} onValueChange={(value) => setBatchNoteForm(prev => ({ ...prev, category: value }))}>
+              <Select
+                value={batchNoteForm.category}
+                onValueChange={(value) =>
+                  setBatchNoteForm((prev) => ({ ...prev, category: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -593,14 +705,17 @@ export function DevlogList({
               <Textarea
                 id="note-content"
                 value={batchNoteForm.content}
-                onChange={(e) => setBatchNoteForm(prev => ({ ...prev, content: e.target.value }))}
+                onChange={(e) => setBatchNoteForm((prev) => ({ ...prev, content: e.target.value }))}
                 placeholder="Enter note content..."
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBatchOperationModal({ visible: false, type: 'note', title: '' })}>
+            <Button
+              variant="outline"
+              onClick={() => setBatchOperationModal({ visible: false, type: 'note', title: '' })}
+            >
               Cancel
             </Button>
             <Button onClick={handleBatchAddNote}>
@@ -616,12 +731,19 @@ export function DevlogList({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Selected Devlogs</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedRowKeys.length} selected devlog(s)? This action cannot be undone.
+              Are you sure you want to delete {selectedRowKeys.length} selected devlog(s)? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { handleBatchDelete(); setDeleteConfirmVisible(false); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={() => {
+                handleBatchDelete();
+                setDeleteConfirmVisible(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete {selectedRowKeys.length} Devlog(s)
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -635,9 +757,9 @@ export function DevlogList({
             <DialogTitle>{batchOperationProgress.operation}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Progress 
-              value={(batchOperationProgress.current / batchOperationProgress.total) * 100} 
-              className="w-full" 
+            <Progress
+              value={(batchOperationProgress.current / batchOperationProgress.total) * 100}
+              className="w-full"
             />
             <p className="text-sm text-muted-foreground text-center">
               {batchOperationProgress.current} of {batchOperationProgress.total} completed

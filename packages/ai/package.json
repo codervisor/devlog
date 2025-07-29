@@ -9,7 +9,7 @@
     "build": "tsc",
     "clean": "rimraf build",
     "dev": "tsc --watch",
-    "test": "vitest",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch"
   },

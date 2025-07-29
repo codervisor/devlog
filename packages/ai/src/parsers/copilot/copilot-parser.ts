@@ -347,7 +347,7 @@ export class CopilotParser extends AIAssistantParser {
           for (const [key, value] of Object.entries(data.metadata)) {
             if (key in allData.metadata) {
               if (Array.isArray(allData.metadata[key]) && Array.isArray(value)) {
-                (allData.metadata[key] as any[]).push(...value);
+                (allData.metadata[key] as unknown[]).push(...value);
               } else {
                 allData.metadata[`${key}_${basePath.split('/').pop()}`] = value;
               }

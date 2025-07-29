@@ -1,7 +1,5 @@
 # @codervisor/devlog-ai
 
-# @codervisor/devlog-ai
-
 AI Chat History Extractor & Docker-based Automation - TypeScript implementation for GitHub Copilot and other AI coding assistants in the devlog ecosystem.
 
 ## Features
@@ -14,6 +12,7 @@ AI Chat History Extractor & Docker-based Automation - TypeScript implementation 
 - **Multiple Export Formats**: Export to JSON and Markdown
 - **Search Functionality**: Search through chat content to find specific conversations
 - **Statistics**: View usage statistics and patterns
+- **Devlog Integration**: Seamlessly integrates with the devlog core system for enhanced project management
 
 ### 🤖 Docker-based Automation (NEW!)
 
@@ -30,6 +29,8 @@ AI Chat History Extractor & Docker-based Automation - TypeScript implementation 
 - **ESM Support**: Modern ES modules with proper .js extensions for runtime compatibility
 - **Extensible Architecture**: Plugin-based parser system for adding new AI assistants
 - **Performance Optimized**: Streaming and batch processing for large datasets
+- **Type Safety**: Strict TypeScript with minimal `any` usage and proper error handling
+- **Comprehensive Testing**: Full test coverage with vitest
 
 ## Installation
 
@@ -94,11 +95,17 @@ npx @codervisor/devlog-ai automation run --scenarios testing --language python
 #### Chat History Analysis
 
 ```typescript
-import { CopilotParser, JSONExporter, MarkdownExporter } from '@codervisor/devlog-ai';
+import {
+  CopilotParser,
+  JSONExporter,
+  MarkdownExporter,
+  DefaultChatImportService,
+  ChatHubService,
+} from '@codervisor/devlog-ai';
 
 // Parse chat data
 const parser = new CopilotParser();
-const data = await parser.discoverVSCodeCopilotData();
+const data = await parser.discoverChatData();
 
 // Get statistics
 const stats = parser.getChatStatistics(data);
@@ -126,6 +133,10 @@ await mdExporter.exportChatData(
   },
   'report.md',
 );
+
+// Import to devlog system
+const importService = new DefaultChatImportService(storageProvider);
+const progress = await importService.importFromCopilot();
 ```
 
 #### 🤖 Docker Automation

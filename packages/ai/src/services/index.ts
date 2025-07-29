@@ -3,3 +3,4 @@
  */
 
 export { ChatHubService, type IChatHubService } from './chat-hub-service.js';
+export { DefaultChatImportService, type ChatImportService } from './chat-import-service.js';

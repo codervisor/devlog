@@ -18,6 +18,18 @@ import type {
   StorageProvider,
 } from '@codervisor/devlog-core';
 
+// Define workspace info type instead of using any
+interface WorkspaceInfo {
+  id: string;
+  name: string;
+  path?: string;
+  source: string;
+  firstSeen: string;
+  lastSeen: string;
+  sessionCount: number;
+  metadata: Record<string, unknown>;
+}
+
 export interface IChatHubService {
   /**
    * Ingest chat sessions from external clients
@@ -36,7 +48,7 @@ export interface IChatHubService {
     sessions: ChatSession[];
     messages: ChatMessage[];
     source: ChatSource;
-    workspaceInfo?: any;
+    workspaceInfo?: WorkspaceInfo;
   }): Promise<ChatImportProgress>;
 
   /**
@@ -107,13 +119,13 @@ export class ChatHubService implements IChatHubService {
 
       console.log(`[ChatHub] Successfully ingested ${sessions.length} sessions`);
       return progress;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[ChatHub] Error ingesting sessions:', error);
       progress.status = 'failed';
       progress.completedAt = new Date().toISOString();
       progress.error = {
-        message: error.message,
-        details: { stack: error.stack },
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: { stack: error instanceof Error ? error.stack : undefined },
       };
       throw error;
     }
@@ -124,7 +136,7 @@ export class ChatHubService implements IChatHubService {
       console.log(`[ChatHub] Ingesting ${messages.length} chat messages`);
       await this.storageProvider.saveChatMessages(messages);
       console.log(`[ChatHub] Successfully ingested ${messages.length} messages`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[ChatHub] Error ingesting messages:', error);
       throw error;
     }
@@ -134,7 +146,7 @@ export class ChatHubService implements IChatHubService {
     sessions: ChatSession[];
     messages: ChatMessage[];
     source: ChatSource;
-    workspaceInfo?: any;
+    workspaceInfo?: WorkspaceInfo;
   }): Promise<ChatImportProgress> {
     const importId = this.generateImportId();
     const progress: ChatImportProgress = {
@@ -189,13 +201,13 @@ export class ChatHubService implements IChatHubService {
 
       console.log(`[ChatHub] Successfully processed bulk data from ${data.source}`);
       return progress;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[ChatHub] Error processing bulk data:', error);
       progress.status = 'failed';
       progress.completedAt = new Date().toISOString();
       progress.error = {
-        message: error.message,
-        details: { stack: error.stack },
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: { stack: error instanceof Error ? error.stack : undefined },
       };
       throw error;
     }
