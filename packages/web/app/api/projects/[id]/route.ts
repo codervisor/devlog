@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProjectService } from '@codervisor/devlog-core';
-import {
-  RouteParams,
-  ServiceHelper,
-  ApiErrors,
-  ApiResponses,
-  withErrorHandling,
-} from '@/lib/api-utils';
+import { ApiResponses, RouteParams, ServiceHelper, withErrorHandling } from '@/lib/api-utils';
+import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -42,6 +36,12 @@ export const PUT = withErrorHandling(
     }
 
     const { projectId } = paramResult.data;
+
+    // Validate request body (HTTP layer validation)
+    const bodyValidation = await ApiValidator.validateJsonBody(request, UpdateProjectBodySchema);
+    if (!bodyValidation.success) {
+      return bodyValidation.response;
+    }
 
     // Get project and service
     const projectResult = await ServiceHelper.getProjectOrFail(projectId);

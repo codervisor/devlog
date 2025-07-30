@@ -60,9 +60,6 @@ export class ProjectService {
     const defaultProject: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'> = {
       name: 'Default Project',
       description: 'Default devlog project',
-      settings: {
-        defaultPriority: 'medium',
-      },
     };
 
     // Create project directly without initialization check since this is called during initialization
