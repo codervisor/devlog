@@ -187,7 +187,7 @@ export class MCPAdapter {
         }
 
         // Then add the note
-        await this.apiClient.addDevlogNote(args.id, args.note, 'progress', args.files);
+        await this.apiClient.addDevlogNote(args.id, args.note, 'progress');
 
         return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id} with note`);
       } else {
@@ -249,7 +249,7 @@ export class MCPAdapter {
     await this.ensureInitialized();
 
     try {
-      await this.apiClient.addDevlogNote(args.id, args.note, args.category, args.files);
+      await this.apiClient.addDevlogNote(args.id, args.note, args.category);
 
       return this.toStandardResponse(
         true,

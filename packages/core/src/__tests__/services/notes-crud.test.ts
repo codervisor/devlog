@@ -55,8 +55,6 @@ describe('DevlogService - Note CRUD Operations', () => {
       const noteData = {
         content: 'This is a test note',
         category: 'progress' as const,
-        files: ['test-file.ts'],
-        codeChanges: 'Added test functionality',
       };
 
       const note = await devlogService.addNote(testDevlog.id!, noteData);
@@ -65,8 +63,6 @@ describe('DevlogService - Note CRUD Operations', () => {
       expect(note.id).toMatch(/^note-\d+-\d+-[a-z0-9]+$/);
       expect(note.content).toBe(noteData.content);
       expect(note.category).toBe(noteData.category);
-      expect(note.files).toEqual(noteData.files);
-      expect(note.codeChanges).toBe(noteData.codeChanges);
       expect(note.timestamp).toBeDefined();
     });
 
@@ -91,8 +87,6 @@ describe('DevlogService - Note CRUD Operations', () => {
 
       expect(note.content).toBe(noteData.content);
       expect(note.category).toBe(noteData.category);
-      expect(note.files).toEqual([]);
-      expect(note.codeChanges).toBeUndefined();
     });
   });
 
@@ -140,7 +134,6 @@ describe('DevlogService - Note CRUD Operations', () => {
       const addedNote = await devlogService.addNote(testDevlog.id!, {
         content: 'Specific note',
         category: 'solution',
-        files: ['solution.ts'],
       });
 
       const retrievedNote = await devlogService.getNote(addedNote.id);
@@ -149,7 +142,6 @@ describe('DevlogService - Note CRUD Operations', () => {
       expect(retrievedNote!.id).toBe(addedNote.id);
       expect(retrievedNote!.content).toBe(addedNote.content);
       expect(retrievedNote!.category).toBe(addedNote.category);
-      expect(retrievedNote!.files).toEqual(addedNote.files);
     });
 
     it('should return null for non-existent note', async () => {
@@ -179,20 +171,15 @@ describe('DevlogService - Note CRUD Operations', () => {
       const originalNote = await devlogService.addNote(testDevlog.id!, {
         content: 'Original content',
         category: 'progress',
-        files: ['old-file.ts'],
       });
 
       const updatedNote = await devlogService.updateNote(originalNote.id, {
         content: 'New content',
         category: 'solution',
-        files: ['new-file.ts', 'another-file.ts'],
-        codeChanges: 'Refactored implementation',
       });
 
       expect(updatedNote.content).toBe('New content');
       expect(updatedNote.category).toBe('solution');
-      expect(updatedNote.files).toEqual(['new-file.ts', 'another-file.ts']);
-      expect(updatedNote.codeChanges).toBe('Refactored implementation');
     });
 
     it('should throw error for non-existent note', async () => {

@@ -5,12 +5,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  FileText, 
-  Info, 
-  Link as LinkIcon, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  FileText,
+  Info,
+  Link as LinkIcon,
+  CheckCircle,
+  AlertTriangle,
   MessageSquare,
   Settings,
   Wrench,
@@ -18,13 +18,15 @@ import {
   HelpCircle,
   Network,
   Bot,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
-import { DevlogEntry } from '@codervisor/devlog-core';
+import { DevlogEntry, DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import { useNotes } from '@/hooks/useNotes';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
+import { getCategoryIconRaw } from '@/lib/note-utils';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
@@ -55,6 +57,17 @@ export function DevlogDetails({
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
   const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry | undefined>(devlog);
 
+  // Use the notes hook to manage notes data separately
+  const {
+    notes,
+    loading: notesLoading,
+    error: notesError,
+    refreshNotes,
+  } = useNotes({
+    devlogId: devlog?.id?.toString() || '',
+    initialNotes: [],
+  });
+
   // State for tracking note animations
   const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());
   const [newNoteIds, setNewNoteIds] = useState<Set<string>>(new Set());
@@ -66,6 +79,13 @@ export function DevlogDetails({
     topOffset: 96, // Account for the main devlog header
     dependencies: [devlog?.id], // Re-run when devlog changes
   });
+
+  // Refresh notes when devlog changes
+  useEffect(() => {
+    if (devlog?.id) {
+      refreshNotes();
+    }
+  }, [devlog?.id, refreshNotes]);
 
   // Reset local changes when devlog prop changes (e.g., after save)
   useEffect(() => {
@@ -84,11 +104,17 @@ export function DevlogDetails({
       setLocalChanges({});
       setOriginalDevlog(devlog);
     }
-  }, [devlog?.id, devlog?.updatedAt, originalDevlog?.id, originalDevlog?.updatedAt, hasUnsavedChanges]);
+  }, [
+    devlog?.id,
+    devlog?.updatedAt,
+    originalDevlog?.id,
+    originalDevlog?.updatedAt,
+    hasUnsavedChanges,
+  ]);
 
   // Track new notes for animation
   useEffect(() => {
-    if (!devlog?.notes || devlog.notes.length === 0) {
+    if (!notes || notes.length === 0) {
       // For empty notes, just reset the seen notes if they exist
       if (seenNoteIds.size > 0) {
         setSeenNoteIds(new Set());
@@ -96,7 +122,7 @@ export function DevlogDetails({
       return;
     }
 
-    const currentNoteIds = new Set(devlog.notes.map((note) => note.id));
+    const currentNoteIds = new Set(notes.map((note) => note.id));
 
     // On first load, mark all existing notes as seen without animation
     if (seenNoteIds.size === 0) {
@@ -120,7 +146,7 @@ export function DevlogDetails({
     }
 
     return undefined;
-  }, [devlog?.notes?.length, devlog?.id, seenNoteIds.size]);
+  }, [notes?.length, devlog?.id, seenNoteIds.size]);
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
@@ -152,49 +178,52 @@ export function DevlogDetails({
     [localChanges],
   );
 
-  const handleFieldChange = useCallback((field: string, value: any) => {
-    const originalValue = getOriginalValue(field);
-    const newChanges = { ...localChanges };
+  const handleFieldChange = useCallback(
+    (field: string, value: any) => {
+      const originalValue = getOriginalValue(field);
+      const newChanges = { ...localChanges };
 
-    // If the value matches the original, remove it from local changes
-    if (value === originalValue) {
-      delete newChanges[field];
-    } else {
-      // Otherwise, track the change
-      newChanges[field] = value;
-    }
+      // If the value matches the original, remove it from local changes
+      if (value === originalValue) {
+        delete newChanges[field];
+      } else {
+        // Otherwise, track the change
+        newChanges[field] = value;
+      }
 
-    setLocalChanges(newChanges);
+      setLocalChanges(newChanges);
 
-    // Check if there are any actual changes from the original devlog with the new changes
-    const allPossibleFields = [
-      'title',
-      'description',
-      'status',
-      'priority',
-      'type',
-      'businessContext',
-      'technicalContext',
-    ];
+      // Check if there are any actual changes from the original devlog with the new changes
+      const allPossibleFields = [
+        'title',
+        'description',
+        'status',
+        'priority',
+        'type',
+        'businessContext',
+        'technicalContext',
+      ];
 
-    const actualChanges = allPossibleFields.some((checkField) => {
-      const currentValue =
-        newChanges[checkField] !== undefined
-          ? newChanges[checkField]
-          : getOriginalValue(checkField);
-      const originalFieldValue = getOriginalValue(checkField);
-      return currentValue !== originalFieldValue;
-    });
+      const actualChanges = allPossibleFields.some((checkField) => {
+        const currentValue =
+          newChanges[checkField] !== undefined
+            ? newChanges[checkField]
+            : getOriginalValue(checkField);
+        const originalFieldValue = getOriginalValue(checkField);
+        return currentValue !== originalFieldValue;
+      });
 
-    // Notify parent about changes instead of managing state locally
-    if (onUnsavedChangesChange) {
-      onUnsavedChangesChange(actualChanges, handleSave, handleDiscard);
-    }
-  }, [localChanges, getOriginalValue, onUnsavedChangesChange]);
+      // Notify parent about changes instead of managing state locally
+      if (onUnsavedChangesChange) {
+        onUnsavedChangesChange(actualChanges, handleSave, handleDiscard);
+      }
+    },
+    [localChanges, getOriginalValue, onUnsavedChangesChange],
+  );
 
   const handleSave = useCallback(async () => {
     if (!devlog) return;
-    
+
     try {
       // Build update data from local changes
       const updateData: any = { id: devlog.id };
@@ -225,24 +254,6 @@ export function DevlogDetails({
       onUnsavedChangesChange(hasUnsavedChanges, handleSave, handleDiscard);
     }
   }, [hasUnsavedChanges, handleSave, handleDiscard, onUnsavedChangesChange]);
-
-  const getCategoryIconComponent = (category: string) => {
-    const iconProps = { className: "h-4 w-4" };
-    switch (category) {
-      case 'progress': return <CheckCircle {...iconProps} />;
-      case 'technical': return <Wrench {...iconProps} />;
-      case 'business': return <Lightbulb {...iconProps} />;
-      case 'meeting': return <MessageSquare {...iconProps} />;
-      case 'decision': return <HelpCircle {...iconProps} />;
-      case 'issue': return <AlertTriangle {...iconProps} />;
-      case 'idea': return <Lightbulb {...iconProps} />;
-      case 'question': return <HelpCircle {...iconProps} />;
-      case 'link': return <LinkIcon {...iconProps} />;
-      case 'reference': return <FileText {...iconProps} />;
-      case 'ai': return <Bot {...iconProps} />;
-      default: return <Info {...iconProps} />;
-    }
-  };
 
   // If loading, show skeleton
   if (loading || !devlog) {
@@ -294,7 +305,7 @@ export function DevlogDetails({
               </Card>
             ))}
           </div>
-          
+
           {/* Side Navigation Skeleton */}
           <div className="w-64 flex-shrink-0">
             <Card>
@@ -330,8 +341,8 @@ export function DevlogDetails({
                   onSave={(value: any) => handleFieldChange('title', value)}
                   placeholder="Enter title"
                   className={cn(
-                    "text-3xl font-bold",
-                    isFieldChanged('title') && "ring-2 ring-primary/20 bg-primary/5"
+                    'text-3xl font-bold',
+                    isFieldChanged('title') && 'ring-2 ring-primary/20 bg-primary/5',
                   )}
                 >
                   <h1 className="text-3xl font-bold" title={getCurrentValue('title')}>
@@ -343,8 +354,8 @@ export function DevlogDetails({
                   <EditableField
                     key={`status-${getCurrentValue('status')}`}
                     className={cn(
-                      "inline-block",
-                      isFieldChanged('status') && "ring-2 ring-primary/20 bg-primary/5 rounded"
+                      'inline-block',
+                      isFieldChanged('status') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
                     )}
                     type="select"
                     value={getCurrentValue('status')}
@@ -353,12 +364,12 @@ export function DevlogDetails({
                   >
                     <DevlogStatusTag status={getCurrentValue('status')} />
                   </EditableField>
-                  
+
                   <EditableField
                     key={`priority-${getCurrentValue('priority')}`}
                     className={cn(
-                      "inline-block",
-                      isFieldChanged('priority') && "ring-2 ring-primary/20 bg-primary/5 rounded"
+                      'inline-block',
+                      isFieldChanged('priority') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
                     )}
                     type="select"
                     value={getCurrentValue('priority')}
@@ -367,12 +378,12 @@ export function DevlogDetails({
                   >
                     <DevlogPriorityTag priority={getCurrentValue('priority')} />
                   </EditableField>
-                  
+
                   <EditableField
                     key={`type-${getCurrentValue('type')}`}
                     className={cn(
-                      "inline-block",
-                      isFieldChanged('type') && "ring-2 ring-primary/20 bg-primary/5 rounded"
+                      'inline-block',
+                      isFieldChanged('type') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
                     )}
                     type="select"
                     value={getCurrentValue('type')}
@@ -412,7 +423,8 @@ export function DevlogDetails({
                 placeholder="Enter description"
                 emptyText="Click to add description..."
                 className={cn(
-                  isFieldChanged('description') && "ring-2 ring-primary/20 bg-primary/5 rounded p-2"
+                  isFieldChanged('description') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
                 borderless={false}
               >
@@ -437,7 +449,8 @@ export function DevlogDetails({
                 placeholder="Why this work matters and what problem it solves"
                 emptyText="Click to add business context..."
                 className={cn(
-                  isFieldChanged('businessContext') && "ring-2 ring-primary/20 bg-primary/5 rounded p-2"
+                  isFieldChanged('businessContext') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
                 borderless={false}
               >
@@ -462,7 +475,8 @@ export function DevlogDetails({
                 placeholder="Architecture decisions, constraints, assumptions"
                 emptyText="Click to add technical context..."
                 className={cn(
-                  isFieldChanged('technicalContext') && "ring-2 ring-primary/20 bg-primary/5 rounded p-2"
+                  isFieldChanged('technicalContext') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
                 borderless={false}
               >
@@ -505,7 +519,10 @@ export function DevlogDetails({
               <CardContent>
                 <div className="space-y-3">
                   {devlog.dependencies.map((dependency, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 border border-border rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 p-3 border border-border rounded-lg"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
                           <Badge variant="outline">#{dependency.id}</Badge>
@@ -521,29 +538,50 @@ export function DevlogDetails({
           )}
 
           {/* Notes */}
-          {devlog.notes && devlog.notes.length > 0 && (
-            <Card id="notes">
-              <CardHeader>
-                <CardTitle className="section-header flex items-center">
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  Notes ({devlog.notes.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card id="notes">
+            <CardHeader>
+              <CardTitle className="section-header flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Notes ({notes?.length || 0})
+                {notesLoading && (
+                  <span className="ml-2 text-sm text-muted-foreground">(Loading...)</span>
+                )}
+                {notesError && <span className="ml-2 text-sm text-red-500">({notesError})</span>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {notesLoading && notes.length === 0 ? (
+                // Show skeleton loading state when initially loading notes
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="border-l-4 border-primary/20 pl-4 py-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : notes && notes.length > 0 ? (
                 <div className="space-y-6">
-                  {[...devlog.notes].reverse().map((note) => {
+                  {[...notes].reverse().map((note) => {
                     const isNewNote = newNoteIds.has(note.id);
-                    
+
                     return (
                       <div
                         key={note.id}
                         className={cn(
-                          "border-l-4 border-primary/20 pl-4 py-3 transition-all duration-500",
-                          isNewNote && "animate-in slide-in-from-top-2 duration-400 bg-primary/5"
+                          'border-l-4 border-primary/20 pl-4 py-3 transition-all duration-500',
+                          isNewNote && 'animate-in slide-in-from-top-2 duration-400 bg-primary/5',
                         )}
                       >
                         <div className="flex items-center space-x-2 mb-3">
-                          {getCategoryIconComponent(note.category)}
+                          {getCategoryIconRaw(note.category as NoteCategory)}
                           <Badge variant="secondary" className="text-xs">
                             {note.category}
                           </Badge>
@@ -553,8 +591,8 @@ export function DevlogDetails({
                             </span>
                           </span>
                         </div>
-                        <MarkdownRenderer 
-                          content={note.content} 
+                        <MarkdownRenderer
+                          content={note.content}
                           className="prose prose-sm max-w-none"
                           maxHeight={false}
                           noPadding
@@ -563,14 +601,20 @@ export function DevlogDetails({
                     );
                   })}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No notes yet</p>
+                  <p className="text-sm">Notes will appear here as they are added</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Side Navigation */}
         <div className="w-64 flex-shrink-0">
-          <DevlogAnchorNav devlog={devlog} />
+          <DevlogAnchorNav devlog={devlog} notesCount={notes?.length || 0} />
         </div>
       </div>
     </div>

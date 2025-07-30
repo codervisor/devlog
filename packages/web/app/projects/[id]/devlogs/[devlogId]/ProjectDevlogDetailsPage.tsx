@@ -2,8 +2,8 @@
 
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { DevlogDetails, PageLayout } from '@/components';
-import { useDevlogDetails } from '@/hooks/useDevlogDetails';
-import { useDevlogs } from '@/hooks/useDevlogs';
+import { useProjectIndependentDevlogDetails } from '@/hooks/useProjectIndependentDevlogDetails';
+import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const { currentProject, projects, setCurrentProject } = useProject();
   const router = useRouter();
 
-  // Set the current project based on the route parameter
+  // Set the current project based on the route parameter when projects are available
+  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
@@ -45,8 +46,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     error: fetchError,
     updateDevlog,
     deleteDevlog: deleteDevlogFromDetails,
-  } = useDevlogDetails(devlogId);
-  const { deleteDevlog: deleteDevlogFromList } = useDevlogs();
+  } = useProjectIndependentDevlogDetails(projectId, devlogId);
+  const { deleteDevlog: deleteDevlogFromList } = useProjectIndependentDevlogs(projectId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -102,15 +103,6 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const handleBack = () => {
     router.push(`/projects/${projectId}/devlogs`);
   };
-
-  // Don't render until we have the correct project context
-  if (!currentProject || currentProject.projectId !== projectId) {
-    return (
-      <PageLayout>
-        <div>Loading project...</div>
-      </PageLayout>
-    );
-  }
 
   if (loading) {
     return (

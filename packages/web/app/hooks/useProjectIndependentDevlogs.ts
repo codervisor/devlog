@@ -1,14 +1,4 @@
-'use client';
-
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  useEffect,
-  useRef,
-} from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   DevlogEntry,
   DevlogId,
@@ -17,38 +7,19 @@ import {
   PaginationMeta,
   DevlogStatus,
   FilterType,
-  DevlogStats,
-  TimeSeriesStats,
 } from '@codervisor/devlog-core';
-import { useServerSentEvents } from '../hooks/useServerSentEvents';
-import { useProject } from './ProjectContext';
-import { NoteApiClient } from '@/lib/note-api-client';
+import { useServerSentEvents } from './useServerSentEvents';
 
-interface DevlogContextType {
-  // Devlogs state
+interface UseProjectIndependentDevlogsResult {
   devlogs: DevlogEntry[];
+  filteredDevlogs: DevlogEntry[];
   pagination: PaginationMeta | null;
   loading: boolean;
   error: string | null;
   filters: DevlogFilter;
-  filteredDevlogs: DevlogEntry[];
   connected: boolean;
-
-  // Stats state
-  stats: DevlogStats | null;
-  statsLoading: boolean;
-  statsError: string | null;
-
-  // Time series stats state
-  timeSeriesStats: TimeSeriesStats | null;
-  timeSeriesLoading: boolean;
-  timeSeriesError: string | null;
-
-  // Actions
   setFilters: (filters: DevlogFilter | ((prev: DevlogFilter) => DevlogFilter)) => void;
   fetchDevlogs: () => Promise<void>;
-  fetchStats: () => Promise<void>;
-  fetchTimeSeriesStats: () => Promise<void>;
   createDevlog: (data: Partial<DevlogEntry>) => Promise<any>;
   updateDevlog: (data: Partial<DevlogEntry> & { id: DevlogId }) => Promise<any>;
   deleteDevlog: (id: DevlogId) => Promise<void>;
@@ -60,13 +31,13 @@ interface DevlogContextType {
   handleStatusFilter: (filterValue: FilterType | DevlogStatus) => void;
 }
 
-const DevlogContext = createContext<DevlogContextType | undefined>(undefined);
-
-export function DevlogProvider({ children }: { children: React.ReactNode }) {
-  // Project context
-  const { currentProject } = useProject();
-
-  // Devlogs state
+/**
+ * Hook for managing devlogs data independently of project context
+ * This hook directly uses the projectId without waiting for the project context to load
+ */
+export function useProjectIndependentDevlogs(
+  projectId: number,
+): UseProjectIndependentDevlogsResult {
   const [devlogs, setDevlogs] = useState<DevlogEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,18 +50,6 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       sortOrder: 'desc',
     },
   });
-
-  // Stats state
-  const [stats, setStats] = useState<DevlogStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState<string | null>(null);
-  const hasStatsFetched = useRef(false);
-
-  // Time series stats state
-  const [timeSeriesStats, setTimeSeriesStats] = useState<TimeSeriesStats | null>(null);
-  const [timeSeriesLoading, setTimeSeriesLoading] = useState(true);
-  const [timeSeriesError, setTimeSeriesError] = useState<string | null>(null);
-  const hasTimeSeriesFetched = useRef(false);
 
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
 
@@ -143,15 +102,9 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   }, [filters]);
 
   const fetchDevlogs = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      const url = `/api/projects/${currentProject.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
+      const url = `/api/projects/${projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch devlogs');
@@ -172,65 +125,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [queryString, currentProject]);
-
-  const fetchStats = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
-      setStatsLoading(false);
-      return;
-    }
-
-    try {
-      setStatsLoading(true);
-      setStatsError(null);
-      const response = await fetch(
-        `/api/projects/${currentProject.projectId}/devlogs/stats/overview`,
-      );
-      if (response.ok) {
-        const statsData = await response.json();
-        setStats(statsData);
-      } else {
-        throw new Error(`Failed to fetch stats: ${response.status} ${response.statusText}`);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats';
-      console.error('Failed to fetch stats:', err);
-      setStatsError(errorMessage);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [currentProject]);
-
-  const fetchTimeSeriesStats = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
-      setTimeSeriesLoading(false);
-      return;
-    }
-
-    try {
-      setTimeSeriesLoading(true);
-      setTimeSeriesError(null);
-      const response = await fetch(
-        `/api/projects/${currentProject.projectId}/devlogs/stats/timeseries?days=30`,
-      );
-      if (response.ok) {
-        const timeSeriesData = await response.json();
-        setTimeSeriesStats(timeSeriesData);
-      } else {
-        throw new Error(
-          `Failed to fetch time series stats: ${response.status} ${response.statusText}`,
-        );
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time series stats';
-      console.error('Failed to fetch time series stats:', err);
-      setTimeSeriesError(errorMessage);
-    } finally {
-      setTimeSeriesLoading(false);
-    }
-  }, [currentProject]);
+  }, [queryString, projectId]);
 
   // Client-side filtered devlogs
   const filteredDevlogs = useMemo(() => {
@@ -273,8 +168,9 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       filtered = filtered.filter((devlog) => {
         const titleMatch = devlog.title.toLowerCase().includes(searchQuery);
         const descriptionMatch = devlog.description.toLowerCase().includes(searchQuery);
-        // Note: Search in notes is handled separately by the notes API
-        return titleMatch || descriptionMatch;
+        const notesMatch =
+          devlog.notes?.some((note) => note.content.toLowerCase().includes(searchQuery)) || false;
+        return titleMatch || descriptionMatch || notesMatch;
       });
     }
 
@@ -283,11 +179,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
-    }
-
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs`, {
+    const response = await fetch(`/api/projects/${projectId}/devlogs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -303,11 +195,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
-    }
-
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, {
+    const response = await fetch(`/api/projects/${projectId}/devlogs/${data.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -323,16 +211,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteDevlog = async (id: DevlogId) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
-    }
-
     // Optimistically remove from state immediately to prevent race conditions
-    // This ensures the UI updates immediately, even if SSE events are delayed
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${id}`, {
+      const response = await fetch(`/api/projects/${projectId}/devlogs/${id}`, {
         method: 'DELETE',
       });
 
@@ -350,11 +233,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // Batch operations
   const batchUpdate = async (ids: DevlogId[], updates: any) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
-    }
-
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/batch/update`, {
+    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/update`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -371,11 +250,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
-    }
-
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/batch/delete`, {
+    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -391,25 +266,20 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   };
 
   const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/note`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids, content, category }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to batch add notes');
     }
 
-    const noteApiClient = new NoteApiClient(currentProject.projectId.toString());
-
-    try {
-      await noteApiClient.batchAddNote(
-        ids.map((id) => id.toString()),
-        content,
-        category as any,
-      );
-
-      // Don't need to refresh devlogs since notes are loaded separately now
-      // Individual DevlogDetails components will refresh their notes via real-time updates
-    } catch (error) {
-      console.error('Failed to batch add notes:', error);
-      throw error;
-    }
+    await fetchDevlogs();
+    return await response.json();
   };
 
   // Pagination actions
@@ -456,22 +326,6 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     fetchDevlogs();
   }, [fetchDevlogs]);
 
-  // Fetch stats when project changes
-  useEffect(() => {
-    if (currentProject) {
-      fetchStats();
-      hasStatsFetched.current = true;
-    }
-  }, [fetchStats, currentProject]);
-
-  // Fetch time series stats when project changes
-  useEffect(() => {
-    if (currentProject) {
-      fetchTimeSeriesStats();
-      hasTimeSeriesFetched.current = true;
-    }
-  }, [fetchTimeSeriesStats, currentProject]);
-
   // Set up real-time event listeners
   useEffect(() => {
     const handleDevlogCreated = (newDevlog: DevlogEntry) => {
@@ -506,24 +360,16 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     };
   }, [subscribe, unsubscribe, fetchDevlogs]);
 
-  const value: DevlogContextType = {
+  return {
     devlogs,
+    filteredDevlogs,
     pagination,
     loading,
     error,
     filters,
-    filteredDevlogs,
     connected,
-    stats,
-    statsLoading,
-    statsError,
-    timeSeriesStats,
-    timeSeriesLoading,
-    timeSeriesError,
     setFilters,
     fetchDevlogs,
-    fetchStats,
-    fetchTimeSeriesStats,
     createDevlog,
     updateDevlog,
     deleteDevlog,
@@ -534,14 +380,4 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     changePageSize,
     handleStatusFilter,
   };
-
-  return <DevlogContext.Provider value={value}>{children}</DevlogContext.Provider>;
-}
-
-export function useDevlogContext() {
-  const context = useContext(DevlogContext);
-  if (context === undefined) {
-    throw new Error('useDevlogContext must be used within a DevlogProvider');
-  }
-  return context;
 }

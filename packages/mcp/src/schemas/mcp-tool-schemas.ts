@@ -78,8 +78,6 @@ export const AddDevlogNoteArgsSchema = z
     id: DevlogIdSchema,
     note: z.string().min(1, 'Note content is required'),
     category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
-    files: z.array(z.string()).optional(),
-    codeChanges: z.string().optional(),
   })
   .transform((data) => ({
     ...data,
@@ -95,8 +93,6 @@ export const UpdateDevlogWithNoteArgsSchema = z
     priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
     note: z.string().min(1, 'Note content is required'),
     category: z.enum(['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback']).optional(),
-    files: z.array(z.string()).optional(),
-    codeChanges: z.string().optional(),
   })
   .transform((data) => ({
     ...data,

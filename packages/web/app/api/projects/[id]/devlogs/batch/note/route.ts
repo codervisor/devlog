@@ -53,8 +53,6 @@ export const POST = withErrorHandling(
         const newNote = await devlogService.addNote(devlogId, {
           content: note.content,
           category: note.category || 'progress',
-          files: note.files || [],
-          codeChanges: note.codeChanges || undefined,
         });
 
         // Get the updated entry for response

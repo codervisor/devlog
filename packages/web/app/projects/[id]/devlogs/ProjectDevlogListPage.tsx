@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { DevlogList, PageLayout, Pagination } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
+import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
 import { useProject } from '@/contexts/ProjectContext';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,8 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   const { currentProject, projects, setCurrentProject } = useProject();
   const router = useRouter();
 
-  // Set the current project based on the route parameter
+  // Set the current project based on the route parameter when projects are available
+  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
@@ -27,7 +28,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   }, [projectId, projects, currentProject, setCurrentProject]);
 
   const {
-    devlogs,
+    filteredDevlogs,
     pagination,
     loading,
     filters,
@@ -38,7 +39,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     batchAddNote,
     goToPage,
     changePageSize,
-  } = useDevlogs();
+  } = useProjectIndependentDevlogs(projectId);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
@@ -80,19 +81,10 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     }
   };
 
-  // Don't render until we have the correct project context
-  if (!currentProject || currentProject.projectId !== projectId) {
-    return (
-      <PageLayout>
-        <div>Loading project...</div>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout>
       <DevlogList
-        devlogs={devlogs}
+        devlogs={filteredDevlogs}
         loading={loading}
         onViewDevlog={handleViewDevlog}
         onDeleteDevlog={handleDeleteDevlog}
