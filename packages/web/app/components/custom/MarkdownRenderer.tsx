@@ -200,12 +200,12 @@ export function MarkdownRenderer({
             </blockquote>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc list-outside space-y-1 my-4 ml-6 text-foreground">
+            <ul className="list-disc list-outside space-y-1 my-4 ml-4 text-foreground">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-outside space-y-1 my-4 ml-6 text-foreground">
+            <ol className="list-decimal list-outside space-y-1 my-4 ml-4 text-foreground">
               {children}
             </ol>
           ),
