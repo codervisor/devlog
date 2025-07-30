@@ -53,43 +53,49 @@ async function validateAndHandle<T>(
 }
 
 /**
- * Tool handlers mapping
+ * Tool handlers mapping with devlog-specific naming
  */
 export const toolHandlers = {
   // Devlog operations
-  create: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<CreateDevlogArgs>(CreateDevlogSchema, args, 'create', (validArgs) =>
+  create_devlog: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<CreateDevlogArgs>(CreateDevlogSchema, args, 'create_devlog', (validArgs) =>
       adapter.create(validArgs),
     ),
 
-  get: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<GetDevlogArgs>(GetDevlogSchema, args, 'get', (validArgs) =>
+  get_devlog: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<GetDevlogArgs>(GetDevlogSchema, args, 'get_devlog', (validArgs) =>
       adapter.get(validArgs),
     ),
 
-  update: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<UpdateDevlogArgs>(UpdateDevlogSchema, args, 'update', (validArgs) =>
+  update_devlog: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<UpdateDevlogArgs>(UpdateDevlogSchema, args, 'update_devlog', (validArgs) =>
       adapter.update(validArgs),
     ),
 
-  list: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<ListDevlogArgs>(ListDevlogSchema, args, 'list', (validArgs) =>
+  list_devlogs: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<ListDevlogArgs>(ListDevlogSchema, args, 'list_devlogs', (validArgs) =>
       adapter.list(validArgs),
     ),
 
-  add_note: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<AddNoteArgs>(AddNoteSchema, args, 'add_note', (validArgs) =>
+  add_devlog_note: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<AddNoteArgs>(AddNoteSchema, args, 'add_devlog_note', (validArgs) =>
       adapter.addNote(validArgs),
     ),
 
-  complete: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<CompleteDevlogArgs>(CompleteDevlogSchema, args, 'complete', (validArgs) =>
-      adapter.complete(validArgs),
+  complete_devlog: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<CompleteDevlogArgs>(
+      CompleteDevlogSchema,
+      args,
+      'complete_devlog',
+      (validArgs) => adapter.complete(validArgs),
     ),
 
-  find_related: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<FindRelatedArgs>(FindRelatedSchema, args, 'find_related', (validArgs) =>
-      adapter.findRelated(validArgs),
+  find_related_devlogs: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<FindRelatedArgs>(
+      FindRelatedSchema,
+      args,
+      'find_related_devlogs',
+      (validArgs) => adapter.findRelated(validArgs),
     ),
 
   // Project operations
