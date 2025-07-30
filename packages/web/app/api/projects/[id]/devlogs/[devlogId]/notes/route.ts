@@ -7,6 +7,63 @@ import type { NoteCategory } from '@codervisor/devlog-core';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
+// GET /api/projects/[id]/devlogs/[devlogId]/notes - List notes for a devlog entry
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string; devlogId: string } },
+) {
+  try {
+    // Parse and validate parameters
+    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
+    }
+
+    const { projectId, devlogId } = paramResult.data;
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
+    const category = searchParams.get('category');
+
+    // Validate limit if provided
+    if (limit !== undefined && (isNaN(limit) || limit < 1 || limit > 1000)) {
+      return ApiErrors.invalidRequest('Limit must be a number between 1 and 1000');
+    }
+
+    // Ensure project exists
+    const projectService = ProjectService.getInstance();
+    const project = await projectService.get(projectId);
+    if (!project) {
+      return ApiErrors.projectNotFound();
+    }
+
+    // Create project-aware devlog service
+    const devlogService = DevlogService.getInstance(projectId);
+
+    // Verify devlog exists
+    const devlogEntry = await devlogService.get(devlogId, false); // Don't load notes yet
+    if (!devlogEntry) {
+      return ApiErrors.devlogNotFound();
+    }
+
+    // Get notes for this devlog
+    const notes = await devlogService.getNotes(devlogId, limit);
+
+    // Filter by category if specified
+    const filteredNotes = category ? notes.filter((note) => note.category === category) : notes;
+
+    return NextResponse.json({
+      devlogId,
+      total: filteredNotes.length,
+      notes: filteredNotes,
+    });
+  } catch (error) {
+    console.error('Error listing devlog notes:', error);
+    return ApiErrors.internalError('Failed to list notes for devlog entry');
+  }
+}
+
 // Schema for adding notes
 const AddNoteBodySchema = z.object({
   note: z.string().min(1, 'Note is required'),

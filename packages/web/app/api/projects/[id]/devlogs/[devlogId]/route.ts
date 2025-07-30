@@ -19,6 +19,13 @@ export async function GET(
 
     const { projectId, devlogId } = paramResult.data;
 
+    // Parse query parameters for notes
+    const { searchParams } = new URL(request.url);
+    const includeNotes = searchParams.get('includeNotes') !== 'false'; // Include by default
+    const notesLimit = searchParams.get('notesLimit')
+      ? parseInt(searchParams.get('notesLimit')!)
+      : undefined;
+
     const projectService = ProjectService.getInstance();
     const project = await projectService.get(projectId);
     if (!project) {
@@ -26,10 +33,15 @@ export async function GET(
     }
 
     const devlogService = DevlogService.getInstance(projectId);
-    const entry = await devlogService.get(devlogId);
+    const entry = await devlogService.get(devlogId, includeNotes);
 
     if (!entry) {
       return ApiErrors.devlogNotFound();
+    }
+
+    // If notesLimit is specified and we have notes, limit them to the most recent
+    if (entry.notes && notesLimit && entry.notes.length > notesLimit) {
+      entry.notes = entry.notes.slice(0, notesLimit);
     }
 
     return NextResponse.json(entry);
