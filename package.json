@@ -19,7 +19,11 @@
     "start:web": "pnpm --filter @codervisor/devlog-web start",
     "preview:web": "pnpm --filter @codervisor/devlog-web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "validate": "node scripts/validate-imports.js",
+    "validate": "node scripts/validate-all.js",
+    "validate:imports": "node scripts/validate-imports.js",
+    "validate:api": "node scripts/validate-api-standardization-ast.js",
+    "validate:envelopes": "node scripts/validate-response-envelopes-ast.js",
+    "validate:quick": "node scripts/validate-all.js --no-build --no-types",
     "detect-migration": "node scripts/detect-migration.js",
     "pre-commit": "lint-staged && node scripts/validate-imports.js",
     "prepare": "husky"
