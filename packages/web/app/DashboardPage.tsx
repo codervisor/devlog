@@ -2,16 +2,15 @@
 
 import React from 'react';
 import { Dashboard, PageLayout } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
-import { useStats } from '@/hooks/useStats';
-import { useTimeSeriesStats } from '@/hooks/useTimeSeriesStats';
+import { useDevlogData } from '@/hooks/useDevlogData';
+import { useStats, useTimeSeriesStats } from '@/hooks/useStatsData';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
-  const { stats, loading: isLoadingStats } = useStats();
-  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats();
+  const { filteredDevlogs, loading: isLoadingDevlogs } = useDevlogData({ useContext: true });
+  const { stats, loading: isLoadingStats } = useStats({ useContext: true });
+  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats({ useContext: true });
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
@@ -24,7 +23,7 @@ export function DashboardPage() {
         stats={stats}
         timeSeriesData={timeSeriesData}
         isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={devlogs.slice(0, 10)}
+        recentDevlogs={filteredDevlogs.slice(0, 10)}
         isLoadingDevlogs={isLoadingDevlogs}
         onViewDevlog={handleViewDevlog}
       />

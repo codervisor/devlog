@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   DevlogEntry,
   DevlogId,
@@ -9,8 +9,25 @@ import {
   FilterType,
 } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
+import { useProject } from '@/contexts/ProjectContext';
+import { useDevlogContext } from '@/contexts/DevlogContext';
 
-interface UseProjectIndependentDevlogsResult {
+interface UseDevlogDataOptions {
+  /**
+   * Project ID to use. If not provided, will use the current project from context.
+   * If provided, will bypass context and use the explicit project ID.
+   */
+  projectId?: number;
+
+  /**
+   * Whether to use the DevlogContext for shared state management.
+   * Only works when projectId is not provided.
+   * @default true
+   */
+  useContext?: boolean;
+}
+
+interface UseDevlogDataResult {
   devlogs: DevlogEntry[];
   filteredDevlogs: DevlogEntry[];
   pagination: PaginationMeta | null;
@@ -32,12 +49,44 @@ interface UseProjectIndependentDevlogsResult {
 }
 
 /**
- * Hook for managing devlogs data independently of project context
- * This hook directly uses the projectId without waiting for the project context to load
+ * Unified hook for managing devlogs data.
+ * Can work with or without DevlogContext, and with explicit project IDs.
  */
-export function useProjectIndependentDevlogs(
-  projectId: number,
-): UseProjectIndependentDevlogsResult {
+export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogDataResult {
+  const { projectId: explicitProjectId, useContext = true } = options;
+
+  // Try to get context data
+  const { currentProject } = useProject();
+  const contextData = useContext && !explicitProjectId ? useDevlogContext() : null;
+
+  // Determine the actual project ID to use
+  const projectId = explicitProjectId || currentProject?.projectId;
+
+  // If we should use context and have context data, return it
+  if (contextData && !explicitProjectId) {
+    return {
+      devlogs: contextData.devlogs,
+      filteredDevlogs: contextData.filteredDevlogs,
+      pagination: contextData.pagination,
+      loading: contextData.loading,
+      error: contextData.error,
+      filters: contextData.filters,
+      connected: contextData.connected,
+      setFilters: contextData.setFilters,
+      fetchDevlogs: contextData.fetchDevlogs,
+      createDevlog: contextData.createDevlog,
+      updateDevlog: contextData.updateDevlog,
+      deleteDevlog: contextData.deleteDevlog,
+      batchUpdate: contextData.batchUpdate,
+      batchDelete: contextData.batchDelete,
+      batchAddNote: contextData.batchAddNote,
+      goToPage: contextData.goToPage,
+      changePageSize: contextData.changePageSize,
+      handleStatusFilter: contextData.handleStatusFilter,
+    };
+  }
+
+  // Otherwise, implement standalone logic
   const [devlogs, setDevlogs] = useState<DevlogEntry[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +151,12 @@ export function useProjectIndependentDevlogs(
   }, [filters]);
 
   const fetchDevlogs = useCallback(async () => {
+    if (!projectId) {
+      setError('No project ID available');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const url = `/api/projects/${projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
@@ -179,6 +234,10 @@ export function useProjectIndependentDevlogs(
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/devlogs`, {
       method: 'POST',
       headers: {
@@ -195,6 +254,10 @@ export function useProjectIndependentDevlogs(
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/devlogs/${data.id}`, {
       method: 'PUT',
       headers: {
@@ -211,6 +274,10 @@ export function useProjectIndependentDevlogs(
   };
 
   const deleteDevlog = async (id: DevlogId) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     // Optimistically remove from state immediately to prevent race conditions
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
@@ -233,6 +300,10 @@ export function useProjectIndependentDevlogs(
 
   // Batch operations
   const batchUpdate = async (ids: DevlogId[], updates: any) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/devlogs/batch/update`, {
       method: 'POST',
       headers: {
@@ -250,6 +321,10 @@ export function useProjectIndependentDevlogs(
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/devlogs/batch/delete`, {
       method: 'POST',
       headers: {
@@ -266,6 +341,10 @@ export function useProjectIndependentDevlogs(
   };
 
   const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
+    if (!projectId) {
+      throw new Error('No project ID available');
+    }
+
     const response = await fetch(`/api/projects/${projectId}/devlogs/batch/note`, {
       method: 'POST',
       headers: {
@@ -321,13 +400,17 @@ export function useProjectIndependentDevlogs(
     }
   }, []);
 
-  // Fetch data on mount and filter changes
+  // Fetch data on mount and filter changes (only if not using context)
   useEffect(() => {
-    fetchDevlogs();
-  }, [fetchDevlogs]);
+    if (!contextData) {
+      fetchDevlogs();
+    }
+  }, [fetchDevlogs, contextData]);
 
-  // Set up real-time event listeners
+  // Set up real-time event listeners (only if not using context)
   useEffect(() => {
+    if (contextData) return;
+
     const handleDevlogCreated = (newDevlog: DevlogEntry) => {
       fetchDevlogs();
     };
@@ -358,7 +441,7 @@ export function useProjectIndependentDevlogs(
       unsubscribe('devlog-updated');
       unsubscribe('devlog-deleted');
     };
-  }, [subscribe, unsubscribe, fetchDevlogs]);
+  }, [subscribe, unsubscribe, fetchDevlogs, contextData]);
 
   return {
     devlogs,
