@@ -1,6 +1,6 @@
 {
   "name": "@codervisor/devlog-cli",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Command-line interface for devlog - Extract and stream chat history to devlog server",
   "type": "module",
   "main": "./build/index.js",
@@ -8,6 +8,15 @@
   "bin": {
     "devlog": "./build/index.js",
     "devlog-automation": "./build/automation.js"
+  },
+  "files": [
+    "build/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsc",
