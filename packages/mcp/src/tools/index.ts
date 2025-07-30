@@ -3,36 +3,24 @@ import { devlogTools } from './devlog-tools.js';
 import { projectTools } from './project-tools.js';
 
 /**
- * All available MCP tools organized by functionality
+ * All available MCP tools - simplified and AI-friendly
+ *
+ * Total: 10 tools (down from 15)
+ * - 7 devlog tools: create, get, update, list, add_note, complete, find_related
+ * - 3 project tools: list_projects, get_current_project, switch_project
  */
 export const allTools: Tool[] = [...devlogTools, ...projectTools];
 
-// Re-export individual tool groups for specific use cases
+// Re-export tool groups
 export { devlogTools, projectTools };
 
-// Legacy exports for backward compatibility and test compatibility
+// Simplified tool categories
 export const coreTools = devlogTools.filter((tool) =>
-  ['devlog_create', 'devlog_get', 'devlog_update', 'devlog_list', 'devlog_close'].includes(
-    tool.name,
-  ),
+  ['create', 'get', 'update', 'list'].includes(tool.name),
 );
 
-export const searchTools = devlogTools.filter((tool) =>
-  ['devlog_search', 'devlog_discover_related'].includes(tool.name),
+export const actionTools = devlogTools.filter((tool) =>
+  ['add_note', 'complete', 'find_related'].includes(tool.name),
 );
 
-export const progressTools = devlogTools.filter((tool) =>
-  [
-    'devlog_add_note',
-    'devlog_update_with_note',
-    'devlog_complete',
-    'devlog_archive',
-    'devlog_unarchive',
-  ].includes(tool.name),
-);
-
-export const aiContextTools: Tool[] = []; // Currently no AI context specific tools
-
-export const chatTools: Tool[] = []; // Currently no chat specific tools
-
-export const workspaceTools = projectTools; // Projects are the new workspaces
+export const contextTools = projectTools; // Project tools provide AI agent context
