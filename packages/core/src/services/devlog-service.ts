@@ -138,10 +138,115 @@ export class DevlogService {
       timestamp: entity.timestamp.toISOString(),
       category: entity.category,
       content: entity.content,
-      files: entity.files || [],
-      codeChanges: entity.codeChanges,
-      metadata: entity.metadata,
     }));
+  }
+
+  /**
+   * Add a note to a devlog entry
+   */
+  async addNote(
+    devlogId: DevlogId,
+    noteData: Omit<import('../types/index.js').DevlogNote, 'id' | 'timestamp'>,
+  ): Promise<import('../types/index.js').DevlogNote> {
+    await this.ensureInitialized();
+
+    // Validate devlog ID
+    const idValidation = DevlogValidator.validateDevlogId(devlogId);
+    if (!idValidation.success) {
+      throw new Error(`Invalid devlog ID: ${idValidation.errors.join(', ')}`);
+    }
+
+    // Verify devlog exists
+    const devlogExists = await this.devlogRepository.findOne({
+      where: { id: idValidation.data },
+      select: ['id'],
+    });
+    if (!devlogExists) {
+      throw new Error(`Devlog with ID '${devlogId}' not found`);
+    }
+
+    // Generate consistent note ID
+    const noteId = `note-${devlogId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = new Date();
+
+    // Create note entity
+    const noteEntity = new DevlogNoteEntity();
+    noteEntity.id = noteId;
+    noteEntity.devlogId = idValidation.data;
+    noteEntity.timestamp = timestamp;
+    noteEntity.category = noteData.category;
+    noteEntity.content = noteData.content;
+
+    // Save note
+    const savedEntity = await this.noteRepository.save(noteEntity);
+
+    return {
+      id: savedEntity.id,
+      timestamp: savedEntity.timestamp.toISOString(),
+      category: savedEntity.category,
+      content: savedEntity.content,
+    };
+  }
+
+  /**
+   * Update a note
+   */
+  async updateNote(
+    noteId: string,
+    updates: Partial<Omit<import('../types/index.js').DevlogNote, 'id' | 'timestamp'>>,
+  ): Promise<import('../types/index.js').DevlogNote> {
+    await this.ensureInitialized();
+
+    // Find existing note
+    const existingNote = await this.noteRepository.findOne({ where: { id: noteId } });
+    if (!existingNote) {
+      throw new Error(`Note with ID '${noteId}' not found`);
+    }
+
+    // Apply updates
+    if (updates.category !== undefined) existingNote.category = updates.category;
+    if (updates.content !== undefined) existingNote.content = updates.content;
+
+    // Save updated note
+    const savedEntity = await this.noteRepository.save(existingNote);
+
+    return {
+      id: savedEntity.id,
+      timestamp: savedEntity.timestamp.toISOString(),
+      category: savedEntity.category,
+      content: savedEntity.content,
+    };
+  }
+
+  /**
+   * Delete a note
+   */
+  async deleteNote(noteId: string): Promise<void> {
+    await this.ensureInitialized();
+
+    const result = await this.noteRepository.delete({ id: noteId });
+    if (result.affected === 0) {
+      throw new Error(`Note with ID '${noteId}' not found`);
+    }
+  }
+
+  /**
+   * Get a specific note by ID
+   */
+  async getNote(noteId: string): Promise<import('../types/index.js').DevlogNote | null> {
+    await this.ensureInitialized();
+
+    const noteEntity = await this.noteRepository.findOne({ where: { id: noteId } });
+    if (!noteEntity) {
+      return null;
+    }
+
+    return {
+      id: noteEntity.id,
+      timestamp: noteEntity.timestamp.toISOString(),
+      category: noteEntity.category,
+      content: noteEntity.content,
+    };
   }
 
   async save(entry: DevlogEntry): Promise<void> {
@@ -186,55 +291,12 @@ export class DevlogService {
       }
     }
 
-    // Handle notes separately - save to DevlogNoteEntity table
-    const notesToSave = validatedEntry.notes || [];
-
-    // Convert to entity and save (without notes in JSON)
+    // Remove notes from entry - they should be managed separately using addNote/updateNote/deleteNote
     const entryWithoutNotes = { ...validatedEntry };
-    delete entryWithoutNotes.notes; // Remove notes from the main entity
+    delete entryWithoutNotes.notes; // Notes are handled via separate CRUD methods
 
     const entity = DevlogEntryEntity.fromDevlogEntry(entryWithoutNotes);
-    const savedEntity = await this.devlogRepository.save(entity);
-
-    // Save notes to separate table if entry has an ID
-    if (savedEntity.id && notesToSave.length > 0) {
-      await this.saveNotes(savedEntity.id, notesToSave);
-    }
-  }
-
-  /**
-   * Save notes for a devlog entry to the notes table
-   */
-  private async saveNotes(
-    devlogId: number,
-    notes: import('../types/index.js').DevlogNote[],
-  ): Promise<void> {
-    // Get existing notes to determine which are new
-    const existingNotes = await this.noteRepository.find({
-      where: { devlogId },
-      select: ['id'],
-    });
-    const existingNoteIds = new Set(existingNotes.map((n) => n.id));
-
-    // Only save new notes (ones that don't exist in DB)
-    const newNotes = notes.filter((note) => !existingNoteIds.has(note.id));
-
-    if (newNotes.length > 0) {
-      const noteEntities = newNotes.map((note) => {
-        const entity = new DevlogNoteEntity();
-        entity.id = note.id;
-        entity.devlogId = devlogId;
-        entity.timestamp = new Date(note.timestamp);
-        entity.category = note.category;
-        entity.content = note.content;
-        entity.files = note.files || [];
-        entity.codeChanges = note.codeChanges;
-        entity.metadata = note.metadata;
-        return entity;
-      });
-
-      await this.noteRepository.save(noteEntities);
-    }
+    await this.devlogRepository.save(entity);
   }
 
   async delete(id: DevlogId): Promise<void> {
@@ -250,6 +312,7 @@ export class DevlogService {
     if (result.affected === 0) {
       throw new Error(`Devlog with ID '${id}' not found`);
     }
+    // Note: Notes will be cascade deleted due to foreign key constraint
   }
 
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {

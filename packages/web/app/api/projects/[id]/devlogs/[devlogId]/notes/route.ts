@@ -68,16 +68,12 @@ export async function GET(
 const AddNoteBodySchema = z.object({
   note: z.string().min(1, 'Note is required'),
   category: z.string().optional().default('progress'),
-  files: z.array(z.string()).optional(),
-  codeChanges: z.string().optional(),
 });
 
 // Schema for updating devlog with note
 const UpdateWithNoteBodySchema = z.object({
   note: z.string().min(1, 'Note is required'),
   category: z.string().optional().default('progress'),
-  files: z.array(z.string()).optional(),
-  codeChanges: z.string().optional(),
   // Optional update fields
   status: z
     .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
@@ -110,7 +106,7 @@ export async function POST(
       return ApiErrors.invalidRequest(validationResult.error.errors[0].message);
     }
 
-    const { note, category, files, codeChanges } = validationResult.data;
+    const { note, category } = validationResult.data;
 
     // Ensure project exists
     const projectService = ProjectService.getInstance();
@@ -122,32 +118,13 @@ export async function POST(
     // Create project-aware devlog service
     const devlogService = DevlogService.getInstance(projectId);
 
-    // Get the existing devlog entry
-    const existingEntry = await devlogService.get(devlogId);
-    if (!existingEntry) {
-      return ApiErrors.devlogNotFound();
-    }
-
-    // Create the new note
-    const newNote = {
-      id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    // Add the note directly using the new addNote method
+    const newNote = await devlogService.addNote(devlogId, {
       content: note,
       category: (category || 'progress') as NoteCategory,
-      timestamp: new Date().toISOString(),
-      files: files || [],
-      codeChanges: codeChanges || undefined,
-    };
+    });
 
-    // Add the note to the entry's notes array and save
-    const updatedEntry = {
-      ...existingEntry,
-      notes: [...(existingEntry.notes || []), newNote],
-      updatedAt: new Date().toISOString(),
-    };
-
-    await devlogService.save(updatedEntry);
-
-    return NextResponse.json(updatedEntry);
+    return NextResponse.json(newNote);
   } catch (error) {
     console.error('Error adding devlog note:', error);
     return ApiErrors.internalError('Failed to add note to devlog entry');
@@ -175,7 +152,7 @@ export async function PUT(
       return ApiErrors.invalidRequest(validationResult.error.errors[0].message);
     }
 
-    const { note, category, files, codeChanges, ...updateFields } = validationResult.data;
+    const { note, category, ...updateFields } = validationResult.data;
 
     // Ensure project exists
     const projectService = ProjectService.getInstance();
@@ -188,33 +165,30 @@ export async function PUT(
     const devlogService = DevlogService.getInstance(projectId);
 
     // Get the existing devlog entry
-    const existingEntry = await devlogService.get(devlogId);
+    const existingEntry = await devlogService.get(devlogId, false); // Don't load notes
     if (!existingEntry) {
       return ApiErrors.devlogNotFound();
     }
 
-    // Create the new note
-    const newNote = {
-      id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    // Update devlog fields if provided
+    if (Object.keys(updateFields).length > 0) {
+      const updatedEntry = {
+        ...existingEntry,
+        ...updateFields,
+        updatedAt: new Date().toISOString(),
+      };
+      await devlogService.save(updatedEntry);
+    }
+
+    // Add the note using the dedicated method
+    const newNote = await devlogService.addNote(devlogId, {
       content: note,
       category: (category || 'progress') as NoteCategory,
-      timestamp: new Date().toISOString(),
-      files: files || [],
-      codeChanges: codeChanges || undefined,
-    };
+    });
 
-    // Prepare the update data with both the note and any field updates
-    const updatedEntry = {
-      ...existingEntry,
-      ...updateFields,
-      notes: [...(existingEntry.notes || []), newNote],
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Save the updated entry
-    await devlogService.save(updatedEntry);
-
-    return NextResponse.json(updatedEntry);
+    // Return the updated entry with the note
+    const finalEntry = await devlogService.get(devlogId, true); // Load with notes
+    return NextResponse.json(finalEntry);
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

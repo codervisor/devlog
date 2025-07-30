@@ -16,11 +16,9 @@ import type {
  * Extract change records from devlog notes
  */
 export function extractChangeRecords(entry: DevlogEntry): ChangeRecord[] {
-  if (!entry.notes) return [];
-
-  return entry.notes
-    .map((note) => (note.metadata as ChangeTrackingMetadata)?.changeRecord)
-    .filter(Boolean) as ChangeRecord[];
+  // TODO: Change tracking functionality removed with metadata simplification
+  // This could be reimplemented using note content parsing or separate change log
+  return [];
 }
 
 /**
