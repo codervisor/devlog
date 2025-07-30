@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 
 interface DevlogAnchorNavProps {
   devlog: DevlogEntry;
+  notesCount?: number;
 }
 
-export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
+export function DevlogAnchorNav({ devlog, notesCount }: DevlogAnchorNavProps) {
   const [activeSection, setActiveSection] = React.useState('description');
 
   const items = React.useMemo(() => {
@@ -55,14 +56,12 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
       });
     }
 
-    // Notes
-    if (devlog.notes && devlog.notes.length > 0) {
-      items.push({
-        key: 'notes',
-        href: '#notes',
-        title: 'Notes',
-      });
-    }
+    // Notes - always show the notes section now since notes are loaded separately
+    items.push({
+      key: 'notes',
+      href: '#notes',
+      title: `Notes${notesCount !== undefined ? ` (${notesCount})` : ''}`,
+    });
 
     return items;
   }, [devlog]);
@@ -80,7 +79,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
       {
         rootMargin: '-80px 0px -50% 0px', // Account for fixed header
         threshold: 0.1,
-      }
+      },
     );
 
     items.forEach(({ key }) => {
@@ -116,14 +115,14 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
         <div className="relative">
           {/* Active indicator line */}
           <div className="absolute left-0 top-0 w-0.5 bg-border h-full" />
-          <div 
+          <div
             className="absolute left-0 w-0.5 bg-primary transition-all duration-200 ease-in-out"
             style={{
-              top: `${items.findIndex(item => item.key === activeSection) * 2}rem`,
+              top: `${items.findIndex((item) => item.key === activeSection) * 2}rem`,
               height: '1.5rem',
             }}
           />
-          
+
           {/* Navigation items */}
           <div className="pl-4 space-y-1">
             {items.map((item) => (
@@ -132,10 +131,8 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
                 href={item.href}
                 onClick={(e) => handleClick(e, item.href)}
                 className={cn(
-                  "block py-1 text-sm leading-6 transition-colors hover:text-foreground",
-                  activeSection === item.key
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground"
+                  'block py-1 text-sm leading-6 transition-colors hover:text-foreground',
+                  activeSection === item.key ? 'text-primary font-medium' : 'text-muted-foreground',
                 )}
               >
                 {item.title}

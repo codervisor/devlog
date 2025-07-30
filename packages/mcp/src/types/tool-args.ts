@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces for MCP tool arguments
- * 
+ *
  * These types are derived from the Zod schemas but with proper defaults applied.
  */
 
@@ -53,8 +53,6 @@ export interface AddDevlogNoteArgs {
   id: DevlogId;
   note: string;
   category: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback'; // Required with default 'progress' applied by schema
-  files?: string[];
-  codeChanges?: string;
 }
 
 export interface UpdateDevlogWithNoteArgs {
@@ -63,8 +61,6 @@ export interface UpdateDevlogWithNoteArgs {
   priority?: DevlogPriority;
   note: string;
   category: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback'; // Required with default 'progress' applied by schema
-  files?: string[];
-  codeChanges?: string;
 }
 
 export interface CompleteDevlogArgs {

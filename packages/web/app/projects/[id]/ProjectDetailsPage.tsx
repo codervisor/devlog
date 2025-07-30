@@ -3,9 +3,9 @@
 import React, { useEffect } from 'react';
 import { Dashboard, PageLayout } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
-import { useDevlogs } from '@/hooks/useDevlogs';
-import { useStats } from '@/hooks/useStats';
-import { useTimeSeriesStats } from '@/hooks/useTimeSeriesStats';
+import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
+import { useProjectIndependentStats } from '@/hooks/useProjectIndependentStats';
+import { useProjectIndependentTimeSeriesStats } from '@/hooks/useProjectIndependentTimeSeriesStats';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -15,12 +15,14 @@ interface ProjectDetailsPageProps {
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const { currentProject, projects, setCurrentProject } = useProject();
-  const { devlogs, loading: isLoadingDevlogs } = useDevlogs();
-  const { stats, loading: isLoadingStats } = useStats();
-  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats();
+  const { filteredDevlogs, loading: isLoadingDevlogs } = useProjectIndependentDevlogs(projectId);
+  const { stats, loading: isLoadingStats } = useProjectIndependentStats(projectId);
+  const { timeSeriesData, loading: isLoadingTimeSeries } =
+    useProjectIndependentTimeSeriesStats(projectId);
   const router = useRouter();
 
-  // Set the current project based on the route parameter
+  // Set the current project based on the route parameter when projects are available
+  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
@@ -35,22 +37,13 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
   };
 
-  // Don't render until we have the correct project context
-  if (!currentProject || currentProject.projectId !== projectId) {
-    return (
-      <PageLayout>
-        <div>Loading project...</div>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout>
       <Dashboard
         stats={stats}
         timeSeriesData={timeSeriesData}
         isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={devlogs.slice(0, 10)}
+        recentDevlogs={filteredDevlogs.slice(0, 10)}
         isLoadingDevlogs={isLoadingDevlogs}
         onViewDevlog={handleViewDevlog}
       />

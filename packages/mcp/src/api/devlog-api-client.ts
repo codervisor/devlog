@@ -266,18 +266,10 @@ export class DevlogApiClient {
     return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
   }
 
-  async addDevlogNote(
-    devlogId: number,
-    note: string,
-    category?: string,
-    files?: string[],
-    codeChanges?: string,
-  ): Promise<DevlogEntry> {
+  async addDevlogNote(devlogId: number, note: string, category?: string): Promise<DevlogEntry> {
     const response = await this.post(`${this.getProjectEndpoint()}/devlogs/${devlogId}/notes`, {
       note,
       category,
-      files,
-      codeChanges,
     });
     return this.unwrapApiResponse<DevlogEntry>(response);
   }
