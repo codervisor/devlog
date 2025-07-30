@@ -117,21 +117,8 @@ export class DevlogService {
       );
     }
 
-    // If this is an update (entry has ID), validate status transition
-    if (validatedEntry.id) {
-      const existingEntity = await this.devlogRepository.findOne({
-        where: { id: validatedEntry.id },
-      });
-      if (existingEntity && existingEntity.status !== validatedEntry.status) {
-        const statusTransition = DevlogValidator.validateStatusTransition(
-          existingEntity.status,
-          validatedEntry.status,
-        );
-        if (!statusTransition.success) {
-          throw new Error(statusTransition.error!);
-        }
-      }
-    }
+    // Note: Status transition validation removed for workflow flexibility
+    // Any status transition is now allowed
 
     // Validate unique key within project if key is provided
     if (validatedEntry.key && validatedEntry.projectId) {

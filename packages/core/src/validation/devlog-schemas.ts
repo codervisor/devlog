@@ -252,43 +252,6 @@ export class DevlogValidator {
   }
 
   /**
-   * Business rule validation - status transition validation
-   */
-  static validateStatusTransition(
-    currentStatus: string,
-    newStatus: string,
-  ): {
-    success: boolean;
-    error?: string;
-  } {
-    // Define valid status transitions
-    const validTransitions: Record<string, string[]> = {
-      new: ['in-progress', 'cancelled'],
-      'in-progress': ['blocked', 'in-review', 'cancelled'],
-      blocked: ['in-progress', 'cancelled'],
-      'in-review': ['testing', 'in-progress', 'cancelled'],
-      testing: ['done', 'in-progress', 'cancelled'],
-      done: [], // Final state
-      cancelled: [], // Final state
-    };
-
-    const allowedTransitions = validTransitions[currentStatus] || [];
-
-    if (currentStatus === newStatus) {
-      return { success: true }; // No change is always valid
-    }
-
-    if (!allowedTransitions.includes(newStatus)) {
-      return {
-        success: false,
-        error: `Invalid status transition from '${currentStatus}' to '${newStatus}'. Allowed transitions: ${allowedTransitions.join(', ') || 'none'}`,
-      };
-    }
-
-    return { success: true };
-  }
-
-  /**
    * Business rule validation - check for duplicate keys within project
    */
   static async validateUniqueKey(

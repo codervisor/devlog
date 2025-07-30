@@ -1,11 +1,14 @@
 # Devlog Status Workflow Guide
 
 **Version**: 1.0  
-**Created**: July 18, 2025
+**Created**: July 18, 2025  
+**Updated**: July 30, 2025
 
 ## Overview
 
 This document explains the devlog status system, providing guidance on when to use each status and how they fit into typical development workflows. Understanding these statuses helps ensure consistent project tracking across teams and AI agents.
+
+**Note**: As of v0.0.1, status transition restrictions have been removed to provide maximum workflow flexibility. Teams can transition between any statuses as their workflow requires.
 
 ## Status Categories
 
@@ -22,6 +25,8 @@ This document explains the devlog status system, providing guidance on when to u
 
 ## Typical Workflow Progression
 
+**Flexible Status Transitions**: Any status can transition to any other status to support diverse workflows.
+
 ```mermaid
 flowchart TD
     A[new] --> B[in-progress]
@@ -37,7 +42,19 @@ flowchart TD
     A --> G[cancelled]
     B --> G
     F --> G
+    
+    %% New flexible transitions
+    E --> B
+    E --> C
+    G --> B
+    G --> A
+    
+    style A fill:#e1f5fe
+    style E fill:#c8e6c9
+    style G fill:#ffcdd2
 ```
+
+*Note: While any transition is allowed, the above shows common patterns.*
 
 ## Status Definitions & Usage
 
