@@ -1,26 +1,20 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  FileText,
-  Info,
-  Link as LinkIcon,
+  Briefcase,
   CheckCircle,
-  AlertTriangle,
-  MessageSquare,
-  Settings,
-  Wrench,
-  Lightbulb,
-  HelpCircle,
-  Network,
-  Bot,
   ChevronRight,
+  FileText,
+  MessageSquare,
+  Network,
+  Wrench,
 } from 'lucide-react';
-import { DevlogEntry, DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
 import { useNotes } from '@/hooks/useNotes';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
@@ -437,7 +431,7 @@ export function DevlogDetails({
           <Card id="business-context">
             <CardHeader>
               <CardTitle className="section-header flex items-center">
-                <Info className="h-5 w-5 mr-2" />
+                <Briefcase className="h-5 w-5 mr-2" />
                 Business Context
               </CardTitle>
             </CardHeader>

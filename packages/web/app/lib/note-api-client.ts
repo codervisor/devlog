@@ -1,4 +1,5 @@
 import type { DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import { apiClient } from './api-client';
 
 export interface CreateNoteRequest {
   content: string;
@@ -17,126 +18,58 @@ export class NoteApiClient {
    * Add a note to a devlog
    */
   async addNote(devlogId: string, data: CreateNoteRequest): Promise<DevlogNote> {
-    const response = await fetch(`/api/projects/${this.projectId}/devlogs/${devlogId}/notes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to add note: ${error}`);
-    }
-
-    return await response.json();
+    return apiClient.post<DevlogNote>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes`,
+      data,
+    );
   }
 
   /**
    * Get a specific note by ID
    */
   async getNote(devlogId: string, noteId: string): Promise<DevlogNote> {
-    const response = await fetch(
+    return apiClient.get<DevlogNote>(
       `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
     );
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Note not found');
-      }
-      const error = await response.text();
-      throw new Error(`Failed to get note: ${error}`);
-    }
-
-    return await response.json();
   }
 
   /**
    * Update a specific note
    */
   async updateNote(devlogId: string, noteId: string, data: UpdateNoteRequest): Promise<DevlogNote> {
-    const response = await fetch(
+    return apiClient.put<DevlogNote>(
       `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      },
+      data,
     );
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Note not found');
-      }
-      const error = await response.text();
-      throw new Error(`Failed to update note: ${error}`);
-    }
-
-    return await response.json();
   }
 
   /**
    * Delete a specific note
    */
   async deleteNote(devlogId: string, noteId: string): Promise<void> {
-    const response = await fetch(
+    return apiClient.delete<void>(
       `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
-      {
-        method: 'DELETE',
-      },
     );
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Note not found');
-      }
-      const error = await response.text();
-      throw new Error(`Failed to delete note: ${error}`);
-    }
   }
 
   /**
    * Get all notes for a devlog
    */
   async getNotes(devlogId: string, limit?: number): Promise<DevlogNote[]> {
-    const url = new URL(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes`,
-      window.location.origin,
+    const params = limit ? `?limit=${limit}` : '';
+    return apiClient.get<DevlogNote[]>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
     );
-    if (limit) {
-      url.searchParams.set('limit', limit.toString());
-    }
-
-    const response = await fetch(url.toString());
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to get notes: ${error}`);
-    }
-
-    return await response.json();
   }
 
   /**
    * Batch add notes to multiple devlogs
    */
   async batchAddNote(devlogIds: string[], content: string, category?: NoteCategory): Promise<any> {
-    const response = await fetch(`/api/projects/${this.projectId}/devlogs/batch/note`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids: devlogIds, content, category }),
+    return apiClient.post<any>(`/api/projects/${this.projectId}/devlogs/batch/note`, {
+      ids: devlogIds,
+      content,
+      category,
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to batch add notes: ${error}`);
-    }
-
-    return await response.json();
   }
 }
