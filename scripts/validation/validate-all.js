@@ -39,7 +39,7 @@ function runImportValidation() {
   console.log('='.repeat(50));
   
   try {
-    execSync('node scripts/validate-imports.js', { stdio: 'inherit' });
+    execSync('node scripts/validation/validate-imports.js', { stdio: 'inherit' });
     console.log(`✅ Import Pattern Validation completed successfully`);
   } catch (error) {
     totalErrors++;
