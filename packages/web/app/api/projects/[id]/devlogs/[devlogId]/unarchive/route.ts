@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors } from '@/lib/api-utils';
+import {
+  RouteParams,
+  ApiErrors,
+  createSuccessResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -42,7 +47,9 @@ export async function PUT(
 
     await devlogService.save(unarchivedEntry);
 
-    return NextResponse.json(unarchivedEntry);
+    // Transform and return unarchived entry
+    const transformedEntry = ResponseTransformer.transformDevlog(unarchivedEntry);
+    return createSuccessResponse(transformedEntry);
   } catch (error) {
     console.error('Error unarchiving devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to unarchive devlog';

@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiResponses, RouteParams, ServiceHelper, withErrorHandling } from '@/lib/api-utils';
+import {
+  ApiResponses,
+  RouteParams,
+  ServiceHelper,
+  withErrorHandling,
+  createSuccessResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
@@ -22,7 +29,9 @@ export const GET = withErrorHandling(
       return projectResult.response;
     }
 
-    return NextResponse.json(projectResult.data.project);
+    // Transform and return project data
+    const transformedProject = ResponseTransformer.transformProject(projectResult.data.project);
+    return createSuccessResponse(transformedProject);
   },
 );
 
@@ -54,8 +63,9 @@ export const PUT = withErrorHandling(
 
     // Update project
     const updatedProject = await projectResult.data.projectService.update(projectId, data);
+    const transformedProject = ResponseTransformer.transformProject(updatedProject);
 
-    return NextResponse.json(updatedProject);
+    return createSuccessResponse(transformedProject);
   },
 );
 
@@ -79,6 +89,6 @@ export const DELETE = withErrorHandling(
     // Delete project
     await projectResult.data.projectService.delete(projectId);
 
-    return ApiResponses.success();
+    return createSuccessResponse({ deleted: true, projectId });
   },
 );

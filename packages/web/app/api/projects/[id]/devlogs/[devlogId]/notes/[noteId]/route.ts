@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors } from '@/lib/api-utils';
+import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib/api-utils';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 
@@ -41,10 +41,10 @@ export async function GET(
     // Get the note
     const note = await devlogService.getNote(noteId);
     if (!note) {
-      return ApiErrors.notFound('Note not found');
+      return ApiErrors.noteNotFound();
     }
 
-    return NextResponse.json(note);
+    return createSuccessResponse(note);
   } catch (error) {
     console.error('Error getting note:', error);
     return ApiErrors.internalError('Failed to get note');
@@ -91,11 +91,11 @@ export async function PUT(
       category: updates.category as NoteCategory | undefined,
     });
 
-    return NextResponse.json(updatedNote);
+    return createSuccessResponse(updatedNote);
   } catch (error) {
     console.error('Error updating note:', error);
     if (error instanceof Error && error.message.includes('not found')) {
-      return ApiErrors.notFound('Note not found');
+      return ApiErrors.noteNotFound();
     }
     return ApiErrors.internalError('Failed to update note');
   }
@@ -129,11 +129,11 @@ export async function DELETE(
     // Delete the note
     await devlogService.deleteNote(noteId);
 
-    return NextResponse.json({ success: true });
+    return createSuccessResponse({ deleted: true, noteId });
   } catch (error) {
     console.error('Error deleting note:', error);
     if (error instanceof Error && error.message.includes('not found')) {
-      return ApiErrors.notFound('Note not found');
+      return ApiErrors.noteNotFound();
     }
     return ApiErrors.internalError('Failed to delete note');
   }

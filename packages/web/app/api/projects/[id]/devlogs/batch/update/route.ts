@@ -3,8 +3,9 @@ import {
   RouteParams,
   ServiceHelper,
   ApiErrors,
-  ApiResponses,
+  createSuccessResponse,
   withErrorHandling,
+  ResponseTransformer,
 } from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
@@ -73,10 +74,13 @@ export const POST = withErrorHandling(
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      updated: updatedEntries,
+    // Transform results and return standardized response
+    const transformedEntries = ResponseTransformer.transformDevlogs(updatedEntries);
+    const result = {
+      updated: transformedEntries,
       errors: errors.length > 0 ? errors : undefined,
-    });
+    };
+
+    return createSuccessResponse(result);
   },
 );

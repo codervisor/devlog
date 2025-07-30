@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors } from '@/lib/api-utils';
+import {
+  RouteParams,
+  ApiErrors,
+  createSuccessResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -44,7 +49,9 @@ export async function GET(
       entry.notes = entry.notes.slice(0, notesLimit);
     }
 
-    return NextResponse.json(entry);
+    // Transform and return entry
+    const transformedEntry = ResponseTransformer.transformDevlog(entry);
+    return createSuccessResponse(transformedEntry);
   } catch (error) {
     console.error('Error fetching devlog:', error);
     return ApiErrors.internalError('Failed to fetch devlog');
@@ -92,7 +99,9 @@ export async function PUT(
 
     await devlogService.save(updatedEntry);
 
-    return NextResponse.json(updatedEntry);
+    // Transform and return updated entry
+    const transformedEntry = ResponseTransformer.transformDevlog(updatedEntry);
+    return createSuccessResponse(transformedEntry);
   } catch (error) {
     console.error('Error updating devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to update devlog';
@@ -131,7 +140,7 @@ export async function DELETE(
 
     await devlogService.delete(devlogId);
 
-    return NextResponse.json({ success: true });
+    return createSuccessResponse({ deleted: true, devlogId });
   } catch (error) {
     console.error('Error deleting devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to delete devlog';

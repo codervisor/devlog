@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors } from '@/lib/api-utils';
+import {
+  RouteParams,
+  ApiErrors,
+  createSuccessResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -42,7 +47,9 @@ export async function PUT(
 
     await devlogService.save(archivedEntry);
 
-    return NextResponse.json(archivedEntry);
+    // Transform and return archived entry
+    const transformedEntry = ResponseTransformer.transformDevlog(archivedEntry);
+    return createSuccessResponse(transformedEntry);
   } catch (error) {
     console.error('Error archiving devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to archive devlog';

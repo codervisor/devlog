@@ -5,7 +5,8 @@ import {
   createSimpleCollectionResponse,
   createSuccessResponse,
   ResponseTransformer,
-} from '@/utils/api-responses';
+  ApiErrors,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     return createSimpleCollectionResponse(projects);
   } catch (error) {
     console.error('Error fetching projects:', error);
-    return ApiValidator.handleServiceError(error);
+    return ApiErrors.internalError('Failed to fetch projects');
   }
 }
 
@@ -54,6 +55,6 @@ export async function POST(request: NextRequest) {
     return createSuccessResponse(createdProject, { status: 201 });
   } catch (error) {
     console.error('Error creating project:', error);
-    return ApiValidator.handleServiceError(error);
+    return ApiErrors.internalError('Failed to create project');
   }
 }
