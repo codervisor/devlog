@@ -20,6 +20,23 @@ const server = new Server(
   {
     name: 'devlog-mcp',
     version: '1.0.0',
+    description: `Devlog Management Server - AI-native work item tracking system
+
+TERMINOLOGY & CONTEXT:
+• "Devlog" = Work item, task, ticket, issue, or entry - a unit of work with rich context
+• Devlog entries represent trackable work with AI-enhanced metadata and context
+• Types: task, feature, bugfix, refactor, docs
+• Statuses: new, in-progress, blocked, in-review, testing, done, cancelled  
+• Priorities: low, medium, high, critical
+
+FEATURES:
+• Create, read, update, and manage devlog entries
+• Rich context tracking (business context, technical context, notes)
+• AI-friendly progress tracking and status workflows
+• Project-based organization with multi-project support
+• Duplicate detection and relationship management
+
+This server provides 10 tools: 7 devlog operations + 3 project management tools.`,
   },
   {
     capabilities: {
