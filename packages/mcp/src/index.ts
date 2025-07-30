@@ -1,45 +1,20 @@
 #!/usr/bin/env node
 
 /**
- * MCP Server with HTTP API architecture
- * Uses secure HTTP API client for all devlog operations
+ * MCP Server - Clean, simplified implementation
+ * Uses single adapter with standardized responses
  */
 
-// Load environment variables from root .env file
+// Load environment variables
 import { loadRootEnv } from '@codervisor/devlog-core';
-
 loadRootEnv();
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { createMCPAdapterWithDiscovery, type MCPAdapter } from './adapters/index.js';
-import type {
-  CreateDevlogArgs,
-  AddDevlogNoteArgs,
-  UpdateDevlogWithNoteArgs,
-} from './types/index.js';
+import { MCPAdapter, type MCPAdapterConfig } from './adapters/index.js';
 import { allTools } from './tools/index.js';
-import {
-  handleListProjects,
-  handleGetCurrentProject,
-  handleSwitchProject,
-} from './tools/project-tools.js';
-import { validateToolArgs } from './utils/validation.js';
-import {
-  CreateDevlogArgsSchema,
-  UpdateDevlogArgsSchema,
-  GetDevlogArgsSchema,
-  ListDevlogsArgsSchema,
-  SearchDevlogsArgsSchema,
-  AddDevlogNoteArgsSchema,
-  UpdateDevlogWithNoteArgsSchema,
-  CompleteDevlogArgsSchema,
-  CloseDevlogArgsSchema,
-  ArchiveDevlogArgsSchema,
-  DiscoverRelatedDevlogsArgsSchema,
-  SwitchProjectArgsSchema,
-} from './schemas/mcp-tool-schemas.js';
+import { toolHandlers } from './handlers/tool-handlers.js';
 
 const server = new Server(
   {
@@ -53,7 +28,7 @@ const server = new Server(
   },
 );
 
-// Initialize the adapter - will be set in main()
+// Initialize the adapter
 let adapter: MCPAdapter;
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -64,116 +39,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
-    switch (name) {
-      case 'devlog_list': {
-        const validation = validateToolArgs(ListDevlogsArgsSchema, args, 'devlog_list');
-        if (!validation.success) return validation.result;
-        return await adapter.listDevlogs(validation.data);
-      }
+    // Get handler for the tool
+    const handler = toolHandlers[name as keyof typeof toolHandlers];
 
-      case 'devlog_search': {
-        const validation = validateToolArgs(SearchDevlogsArgsSchema, args, 'devlog_search');
-        if (!validation.success) return validation.result;
-        return await adapter.searchDevlogs(validation.data);
-      }
-
-      case 'devlog_discover_related': {
-        const validation = validateToolArgs(DiscoverRelatedDevlogsArgsSchema, args, 'devlog_discover_related');
-        if (!validation.success) return validation.result;
-        return await adapter.discoverRelatedDevlogs(validation.data);
-      }
-
-      case 'devlog_create': {
-        const validation = validateToolArgs(CreateDevlogArgsSchema, args, 'devlog_create');
-        if (!validation.success) return validation.result;
-        
-        // Apply defaults
-        const validatedArgs: CreateDevlogArgs = {
-          ...validation.data,
-          priority: validation.data.priority ?? 'medium',
-        };
-        
-        return await adapter.createDevlog(validatedArgs);
-      }
-
-      case 'devlog_update': {
-        const validation = validateToolArgs(UpdateDevlogArgsSchema, args, 'devlog_update');
-        if (!validation.success) return validation.result;
-        return await adapter.updateDevlog(validation.data);
-      }
-
-      case 'devlog_get': {
-        const validation = validateToolArgs(GetDevlogArgsSchema, args, 'devlog_get');
-        if (!validation.success) return validation.result;
-        return await adapter.getDevlog(validation.data);
-      }
-
-      case 'devlog_add_note': {
-        const validation = validateToolArgs(AddDevlogNoteArgsSchema, args, 'devlog_add_note');
-        if (!validation.success) return validation.result;
-        
-        // Apply defaults
-        const validatedArgs: AddDevlogNoteArgs = {
-          ...validation.data,
-          category: validation.data.category ?? 'progress',
-        };
-        
-        return await adapter.addDevlogNote(validatedArgs);
-      }
-
-      case 'devlog_update_with_note': {
-        const validation = validateToolArgs(UpdateDevlogWithNoteArgsSchema, args, 'devlog_update_with_note');
-        if (!validation.success) return validation.result;
-        
-        // Apply defaults
-        const validatedArgs: UpdateDevlogWithNoteArgs = {
-          ...validation.data,
-          category: validation.data.category ?? 'progress',
-        };
-        
-        return await adapter.updateDevlogWithNote(validatedArgs);
-      }
-
-      case 'devlog_complete': {
-        const validation = validateToolArgs(CompleteDevlogArgsSchema, args, 'devlog_complete');
-        if (!validation.success) return validation.result;
-        return await adapter.completeDevlog(validation.data);
-      }
-
-      case 'devlog_close': {
-        const validation = validateToolArgs(CloseDevlogArgsSchema, args, 'devlog_close');
-        if (!validation.success) return validation.result;
-        return await adapter.closeDevlog(validation.data);
-      }
-
-      case 'devlog_archive': {
-        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'devlog_archive');
-        if (!validation.success) return validation.result;
-        return await adapter.archiveDevlog(validation.data);
-      }
-
-      case 'devlog_unarchive': {
-        const validation = validateToolArgs(ArchiveDevlogArgsSchema, args, 'devlog_unarchive');
-        if (!validation.success) return validation.result;
-        return await adapter.unarchiveDevlog(validation.data);
-      }
-
-      // Project management tools
-      case 'project_list':
-        return await handleListProjects(adapter.manager);
-
-      case 'project_get_current':
-        return await handleGetCurrentProject(adapter);
-
-      case 'project_switch': {
-        const validation = validateToolArgs(SwitchProjectArgsSchema, args, 'project_switch');
-        if (!validation.success) return validation.result;
-        return await handleSwitchProject(adapter, validation.data);
-      }
-
-      default:
-        throw new Error(`Unknown tool: ${name}`);
+    if (!handler) {
+      throw new Error(`Unknown tool: ${name}`);
     }
+
+    // Execute the handler
+    return await handler(adapter, args);
   } catch (error) {
     return {
       content: [
@@ -207,17 +81,21 @@ async function main() {
     console.error(`Invalid project ID '${defaultProjectStr}', using default project 1`);
   }
 
-  // Create adapter using factory with discovery
-  const adapterInstance = await createMCPAdapterWithDiscovery();
+  // Create adapter configuration
+  const config: MCPAdapterConfig = {
+    apiClient: {
+      baseUrl: process.env.MCP_WEB_API_URL || 'http://localhost:3200',
+      timeout: 30000,
+      retries: 3,
+    },
+    defaultProjectId,
+  };
 
-  // Set the default project ID
-  if (adapterInstance.setCurrentProjectId) {
-    adapterInstance.setCurrentProjectId(defaultProjectId);
-    console.error(`Set current project to: ${defaultProjectId}`);
-  }
+  // Create and initialize adapter
+  adapter = new MCPAdapter(config);
+  await adapter.initialize();
 
-  // Assign the adapter instance directly
-  adapter = adapterInstance;
+  console.error(`Set current project to: ${defaultProjectId}`);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

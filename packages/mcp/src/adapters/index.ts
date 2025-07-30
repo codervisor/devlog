@@ -1,13 +1,5 @@
 /**
- * Adapter exports for MCP package
+ * MCP Adapter - Clean, single implementation
  */
 
-export { MCPApiAdapter } from './mcp-api-adapter.js';
-export {
-  createMCPAdapter,
-  createMCPAdapterWithDiscovery,
-  checkWebApiAvailability,
-  discoverWebApiUrl,
-  isApiAdapter,
-  type MCPAdapter,
-} from './adapter-factory.js';
+export { MCPAdapter, type StandardResponse, type MCPAdapterConfig } from './mcp-adapter.js';
