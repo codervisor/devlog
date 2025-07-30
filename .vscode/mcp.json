@@ -1,19 +1,5 @@
 {
 	"servers": {
-		"devlog": {
-			"type": "stdio",
-			"command": "pnpm",
-			"args": [
-				"--filter",
-				"@codervisor/devlog-mcp",
-				"dev:nodemon"
-			],
-			"cwd": ".",
-			"env": {
-				"NODE_ENV": "development",
-				"MCP_MODE": "direct"
-			}
-		},
 		"playwright": {
 			"command": "npx",
 			"args": [
@@ -21,14 +7,15 @@
 			],
 			"type": "stdio"
 		},
-		// "jetbrains": {
-		// 	"command": "npx",
-		// 	"args": [
-		// 		"-y",
-		// 		"@jetbrains/mcp-proxy"
-		// 	],
-		// 	"type": "stdio"
-		// }
+		"devlog": {
+			"type": "stdio",
+			"command": "node",
+			"args": [
+				"packages/mcp/build/index.js"
+			],
+			"env": {},
+			"cwd": "${workspaceFolder}"
+		}
 	},
 	"inputs": []
 }

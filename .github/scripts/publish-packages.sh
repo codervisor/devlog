@@ -20,29 +20,29 @@ for pkg in "${PACKAGE_ARRAY[@]}"; do
         "mcp")
             echo "📤 Publishing @codervisor/devlog-mcp..."
             cd packages/mcp
-            npm publish --access public
-            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-mcp@$(jq -r '.version' package.json) "
+            pnpm publish --access public --no-git-checks
+            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-mcp@$(grep '"version"' package.json | cut -d'"' -f4) "
             cd ../..
             ;;
         "core")
             echo "📤 Publishing @codervisor/devlog-core..."
             cd packages/core
-            npm publish --access public
-            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-core@$(jq -r '.version' package.json) "
+            pnpm publish --access public --no-git-checks
+            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-core@$(grep '"version"' package.json | cut -d'"' -f4) "
             cd ../..
             ;;
         "ai")
             echo "📤 Publishing @codervisor/devlog-ai..."
             cd packages/ai
-            npm publish --access public
-            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(jq -r '.version' package.json) "
+            pnpm publish --access public --no-git-checks
+            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(grep '"version"' package.json | cut -d'"' -f4) "
             cd ../..
             ;;
         "cli")
             echo "📤 Publishing @codervisor/devlog-cli..."
             cd packages/cli
-            npm publish --access public
-            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(jq -r '.version' package.json) "
+            pnpm publish --access public --no-git-checks
+            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(grep '"version"' package.json | cut -d'"' -f4) "
             cd ../..
             ;;
         *)
