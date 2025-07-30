@@ -3,6 +3,13 @@ import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
 
+interface UseDevlogDetailsOptions {
+  /**
+   * Project ID to use. If not provided, will use the current project from context.
+   */
+  projectId?: number;
+}
+
 interface UseDevlogDetailsResult {
   devlog: DevlogEntry | null;
   loading: boolean;
@@ -12,7 +19,15 @@ interface UseDevlogDetailsResult {
   deleteDevlog: (id: DevlogId) => Promise<void>;
 }
 
-export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
+/**
+ * Unified hook for fetching and managing devlog details.
+ * Can work with explicit project IDs or use project context.
+ */
+export function useDevlogDetails(
+  id: string | number,
+  options: UseDevlogDetailsOptions = {},
+): UseDevlogDetailsResult {
+  const { projectId: explicitProjectId } = options;
   const [devlog, setDevlog] = useState<DevlogEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +35,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   const { currentProject } = useProject();
 
   const devlogId = typeof id === 'string' ? parseInt(id, 10) : id;
+  const projectId = explicitProjectId || currentProject?.projectId;
 
   const fetchDevlog = useCallback(async () => {
     if (isNaN(devlogId)) {
@@ -28,8 +44,8 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       return;
     }
 
-    if (!currentProject) {
-      setError('No project selected');
+    if (!projectId) {
+      setError('No project ID available');
       setLoading(false);
       return;
     }
@@ -38,7 +54,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${devlogId}`);
+      const response = await fetch(`/api/projects/${projectId}/devlogs/${devlogId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -91,11 +107,11 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   // CRUD operations for this specific devlog
   const updateDevlog = useCallback(
     async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      if (!currentProject) {
-        throw new Error('No project selected');
+      if (!projectId) {
+        throw new Error('No project ID available');
       }
 
-      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, {
+      const response = await fetch(`/api/projects/${projectId}/devlogs/${data.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -111,16 +127,16 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       setDevlog(updatedDevlog);
       return updatedDevlog;
     },
-    [currentProject],
+    [projectId],
   );
 
   const deleteDevlog = useCallback(
     async (id: DevlogId) => {
-      if (!currentProject) {
-        throw new Error('No project selected');
+      if (!projectId) {
+        throw new Error('No project ID available');
       }
 
-      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${id}`, {
+      const response = await fetch(`/api/projects/${projectId}/devlogs/${id}`, {
         method: 'DELETE',
       });
 
@@ -130,7 +146,7 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
 
       setDevlog(null);
     },
-    [currentProject],
+    [projectId],
   );
 
   return {

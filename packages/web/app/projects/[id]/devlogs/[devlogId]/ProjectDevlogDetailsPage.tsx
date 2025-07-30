@@ -2,8 +2,8 @@
 
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { DevlogDetails, PageLayout } from '@/components';
-import { useProjectIndependentDevlogDetails } from '@/hooks/useProjectIndependentDevlogDetails';
-import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
+import { useDevlogDetails } from '@/hooks/useDevlogDetails';
+import { useDevlogData } from '@/hooks/useDevlogData';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -46,8 +46,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     error: fetchError,
     updateDevlog,
     deleteDevlog: deleteDevlogFromDetails,
-  } = useProjectIndependentDevlogDetails(projectId, devlogId);
-  const { deleteDevlog: deleteDevlogFromList } = useProjectIndependentDevlogs(projectId);
+  } = useDevlogDetails(devlogId, { projectId });
+  const { deleteDevlog: deleteDevlogFromList } = useDevlogData({ projectId, useContext: false });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 

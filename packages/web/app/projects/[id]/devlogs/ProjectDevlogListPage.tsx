@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { DevlogList, PageLayout, Pagination } from '@/components';
-import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
+import { useDevlogData } from '@/hooks/useDevlogData';
 import { useProject } from '@/contexts/ProjectContext';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
@@ -39,7 +39,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     batchAddNote,
     goToPage,
     changePageSize,
-  } = useProjectIndependentDevlogs(projectId);
+  } = useDevlogData({ projectId, useContext: false });
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);

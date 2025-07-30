@@ -3,9 +3,8 @@
 import React, { useEffect } from 'react';
 import { Dashboard, PageLayout } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
-import { useProjectIndependentDevlogs } from '@/hooks/useProjectIndependentDevlogs';
-import { useProjectIndependentStats } from '@/hooks/useProjectIndependentStats';
-import { useProjectIndependentTimeSeriesStats } from '@/hooks/useProjectIndependentTimeSeriesStats';
+import { useDevlogData } from '@/hooks/useDevlogData';
+import { useStats, useTimeSeriesStats } from '@/hooks/useStatsData';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -15,10 +14,15 @@ interface ProjectDetailsPageProps {
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const { currentProject, projects, setCurrentProject } = useProject();
-  const { filteredDevlogs, loading: isLoadingDevlogs } = useProjectIndependentDevlogs(projectId);
-  const { stats, loading: isLoadingStats } = useProjectIndependentStats(projectId);
-  const { timeSeriesData, loading: isLoadingTimeSeries } =
-    useProjectIndependentTimeSeriesStats(projectId);
+  const { filteredDevlogs, loading: isLoadingDevlogs } = useDevlogData({
+    projectId,
+    useContext: false,
+  });
+  const { stats, loading: isLoadingStats } = useStats({ projectId, useContext: false });
+  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats({
+    projectId,
+    useContext: false,
+  });
   const router = useRouter();
 
   // Set the current project based on the route parameter when projects are available
