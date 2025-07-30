@@ -156,15 +156,6 @@ export interface DevlogNote {
   timestamp: string;
   category: NoteCategory;
   content: string;
-  files?: string[];
-  codeChanges?: string;
-  // Metadata for special note types (e.g., acceptance-criteria changes)
-  metadata?: {
-    // For acceptance-criteria category
-    previousCriteria?: string[];
-    newCriteria?: string[];
-    changeType?: 'added' | 'removed' | 'modified' | 'reordered';
-  };
 }
 
 export interface DevlogEntry {

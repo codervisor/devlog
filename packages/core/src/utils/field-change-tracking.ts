@@ -241,7 +241,6 @@ export function createFieldChangeNote(
   return {
     category,
     content,
-    metadata,
   };
 }
 

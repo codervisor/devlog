@@ -40,7 +40,7 @@ export const POST = withErrorHandling(
     const updatedEntries = [];
     const errors = [];
 
-    // Process each ID
+    // Process each ID using the new addNote method
     for (const id of ids) {
       try {
         const devlogId = parseInt(id);
@@ -49,28 +49,19 @@ export const POST = withErrorHandling(
           continue;
         }
 
-        const existingEntry = await devlogService.get(devlogId);
-        if (!existingEntry) {
-          errors.push({ id, error: 'Entry not found' });
-          continue;
+        // Add note directly using DevlogService.addNote()
+        const newNote = await devlogService.addNote(devlogId, {
+          content: note.content,
+          category: note.category || 'progress',
+          files: note.files || [],
+          codeChanges: note.codeChanges || undefined,
+        });
+
+        // Get the updated entry for response
+        const updatedEntry = await devlogService.get(devlogId, true);
+        if (updatedEntry) {
+          updatedEntries.push(updatedEntry);
         }
-
-        // Add the note to the entry's notes array
-        const updatedEntry = {
-          ...existingEntry,
-          notes: [
-            ...(existingEntry.notes || []),
-            {
-              ...note,
-              createdAt: new Date().toISOString(),
-              devlogId: devlogId,
-            },
-          ],
-          updatedAt: new Date().toISOString(),
-        };
-
-        await devlogService.save(updatedEntry);
-        updatedEntries.push(updatedEntry);
       } catch (error) {
         errors.push({
           id,
