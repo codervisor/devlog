@@ -6,16 +6,16 @@ echo "🔍 Running pre-commit validations..."
 # Run lint-staged for efficient checking of staged files
 npx lint-staged
 
-# Run custom import pattern validation (most important for catching issues)
+# Run custom import pattern validation
 echo "🔗 Validating import patterns..."
-node scripts/validate-imports.js
+node scripts/validation/validate-imports.js
 
 # Run API response standardization validation (AST-based)
 echo "📡 Validating API response standardization..."
-node scripts/validate-api-standardization-ast.js
+node scripts/validation/validate-api-standardization-ast.js
 
 # Run response envelope format validation (AST-based)
 echo "📦 Validating response envelope format..."
-node scripts/validate-response-envelopes-ast.js
+node scripts/validation/validate-response-envelopes-ast.js
 
 echo "✅ Pre-commit checks passed!"
