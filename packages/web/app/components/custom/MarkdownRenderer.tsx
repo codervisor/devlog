@@ -75,35 +75,65 @@ export function MarkdownRenderer({
 
   // Preprocess content to handle single line breaks
   const processedContent = preserveLineBreaks ? preprocessContent(content) : content;
-  
+
   const wrapperClassName = cn(
-    "prose prose-slate max-w-none",
-    !noPadding && "p-4",
-    maxHeight && "overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background",
-    className
+    'prose prose-slate max-w-none dark:prose-invert',
+    'prose-headings:text-foreground prose-strong:text-foreground',
+    'prose-p:text-foreground prose-li:text-foreground',
+    'prose-blockquote:text-muted-foreground prose-code:text-foreground',
+    'prose-pre:bg-muted prose-pre:text-foreground',
+    'prose-th:text-foreground prose-td:text-foreground',
+    'prose-a:text-primary hover:prose-a:text-primary/80',
+    // Fix list item paragraphs - make them inline and remove margins
+    '[&_li>p]:inline [&_li>p]:!m-0 [&_li>p]:!p-0',
+    '[&_ul_li>p]:inline [&_ul_li>p]:!m-0 [&_ul_li>p]:!p-0',
+    '[&_ol_li>p]:inline [&_ol_li>p]:!m-0 [&_ol_li>p]:!p-0',
+    !noPadding && 'p-4',
+    maxHeight && 'overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-background',
+    className,
   );
 
   const markdownContent = (
-    <div 
+    <div
       className={wrapperClassName}
-      style={maxHeight && typeof maxHeight === 'number' ? { maxHeight: `${maxHeight}px` } : undefined}
+      style={
+        maxHeight && typeof maxHeight === 'number' ? { maxHeight: `${maxHeight}px` } : undefined
+      }
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
         components={{
-          // Use Tailwind-styled components
-          p: ({ children }) => <p className="mb-4 leading-relaxed">{children}</p>,
-          h1: ({ children }) => <h1 className="text-3xl font-bold mb-6 mt-8 text-foreground border-b border-border pb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-2xl font-semibold mb-4 mt-6 text-foreground">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-xl font-semibold mb-3 mt-5 text-foreground">{children}</h3>,
-          h4: ({ children }) => <h4 className="text-lg font-semibold mb-2 mt-4 text-foreground">{children}</h4>,
-          h5: ({ children }) => <h5 className="text-base font-semibold mb-2 mt-3 text-foreground">{children}</h5>,
-          h6: ({ children }) => <h6 className="text-sm font-semibold mb-2 mt-3 text-muted-foreground">{children}</h6>,
+          // Use Tailwind-styled components with improved dark mode support
+          p: ({ children }) => <p className="mb-4 leading-relaxed text-foreground">{children}</p>,
+          h1: ({ children }) => (
+            <h1 className="text-3xl font-bold mb-6 mt-8 text-foreground border-b border-border pb-2">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-2xl font-semibold mb-4 mt-6 text-foreground">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-xl font-semibold mb-3 mt-5 text-foreground">{children}</h3>
+          ),
+          h4: ({ children }) => (
+            <h4 className="text-lg font-semibold mb-2 mt-4 text-foreground">{children}</h4>
+          ),
+          h5: ({ children }) => (
+            <h5 className="text-base font-semibold mb-2 mt-3 text-foreground">{children}</h5>
+          ),
+          h6: ({ children }) => (
+            <h6 className="text-sm font-semibold mb-2 mt-3 text-muted-foreground">{children}</h6>
+          ),
           code: ({ children, className: codeClassName, ...props }) => {
             const isInline = !codeClassName;
             if (isInline) {
-              return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
+              return (
+                <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground">
+                  {children}
+                </code>
+              );
             }
             // For code blocks, let ReactMarkdown handle the structure with rehypeHighlight
             return (
@@ -140,9 +170,14 @@ export function MarkdownRenderer({
               return (
                 <div className="relative bg-muted rounded-lg overflow-hidden my-4">
                   <div className="flex items-center justify-between px-4 py-2 bg-muted-foreground/10 border-b border-border">
-                    <span className="text-xs font-mono text-muted-foreground uppercase tracking-wide">{language}</span>
+                    <span className="text-xs font-mono text-muted-foreground uppercase tracking-wide">
+                      {language}
+                    </span>
                   </div>
-                  <pre className={cn("overflow-x-auto p-4 text-sm bg-transparent", className)} {...props}>
+                  <pre
+                    className={cn('overflow-x-auto p-4 text-sm bg-transparent', className)}
+                    {...props}
+                  >
                     {children}
                   </pre>
                 </div>
@@ -151,19 +186,45 @@ export function MarkdownRenderer({
 
             // Fallback to regular pre if no language detected
             return (
-              <pre className={cn("bg-muted rounded p-4 overflow-x-auto text-sm my-4", className)} {...props}>
+              <pre
+                className={cn('bg-muted rounded p-4 overflow-x-auto text-sm my-4', className)}
+                {...props}
+              >
                 {children}
               </pre>
             );
           },
-          blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-muted-foreground">{children}</blockquote>,
-          ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-4 ml-4">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-4 ml-4">{children}</ol>,
-          li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-primary pl-4 my-4 italic text-muted-foreground">
+              {children}
+            </blockquote>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc list-outside space-y-1 my-4 ml-6 text-foreground">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-outside space-y-1 my-4 ml-6 text-foreground">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => {
+            // If the children contains a single paragraph, unwrap it
+            if (React.Children.count(children) === 1) {
+              const child = React.Children.only(children);
+              if (React.isValidElement(child) && child.type === 'p') {
+                return (
+                  <li className="leading-relaxed text-foreground pl-1">{child.props.children}</li>
+                );
+              }
+            }
+            return <li className="leading-relaxed text-foreground pl-1">{children}</li>;
+          },
           a: ({ href, children }) => (
-            <a 
-              href={href} 
-              target="_blank" 
+            <a
+              href={href}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:text-primary/80 underline transition-colors"
             >
@@ -175,8 +236,14 @@ export function MarkdownRenderer({
               <table className="w-full border-collapse">{children}</table>
             </div>
           ),
-          th: ({ children }) => <th className="border border-border bg-muted px-4 py-2 text-left font-semibold">{children}</th>,
-          td: ({ children }) => <td className="border border-border px-4 py-2">{children}</td>,
+          th: ({ children }) => (
+            <th className="border border-border bg-muted px-4 py-2 text-left font-semibold text-foreground">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-border px-4 py-2 text-foreground">{children}</td>
+          ),
           hr: () => <hr className="border-t border-border my-6" />,
         }}
       >
