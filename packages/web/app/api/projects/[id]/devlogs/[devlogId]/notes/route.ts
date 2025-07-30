@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors } from '@/lib/api-utils';
+import {
+  RouteParams,
+  ApiErrors,
+  createSuccessResponse,
+  createSimpleCollectionResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 
@@ -53,11 +59,13 @@ export async function GET(
     // Filter by category if specified
     const filteredNotes = category ? notes.filter((note) => note.category === category) : notes;
 
-    return NextResponse.json({
+    const notesData = {
       devlogId,
       total: filteredNotes.length,
       notes: filteredNotes,
-    });
+    };
+
+    return createSuccessResponse(notesData);
   } catch (error) {
     console.error('Error listing devlog notes:', error);
     return ApiErrors.internalError('Failed to list notes for devlog entry');
@@ -124,7 +132,7 @@ export async function POST(
       category: (category || 'progress') as NoteCategory,
     });
 
-    return NextResponse.json(newNote);
+    return createSuccessResponse(newNote, { status: 201 });
   } catch (error) {
     console.error('Error adding devlog note:', error);
     return ApiErrors.internalError('Failed to add note to devlog entry');
@@ -188,7 +196,8 @@ export async function PUT(
 
     // Return the updated entry with the note
     const finalEntry = await devlogService.get(devlogId, true); // Load with notes
-    return NextResponse.json(finalEntry);
+    const transformedEntry = ResponseTransformer.transformDevlog(finalEntry);
+    return createSuccessResponse(transformedEntry);
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

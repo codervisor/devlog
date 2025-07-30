@@ -3,7 +3,7 @@ import {
   RouteParams,
   ServiceHelper,
   ApiErrors,
-  ApiResponses,
+  createSuccessResponse,
   withErrorHandling,
 } from '@/lib/api-utils';
 
@@ -51,6 +51,6 @@ export const GET = withErrorHandling(
     const devlogService = await ServiceHelper.getDevlogService(projectId);
     const stats = await devlogService.getTimeSeriesStats(projectId, timeSeriesRequest);
 
-    return NextResponse.json(stats);
+    return createSuccessResponse(stats);
   },
 );

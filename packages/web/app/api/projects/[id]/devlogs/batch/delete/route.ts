@@ -3,7 +3,7 @@ import {
   RouteParams,
   ServiceHelper,
   ApiErrors,
-  ApiResponses,
+  createSuccessResponse,
   withErrorHandling,
 } from '@/lib/api-utils';
 
@@ -65,8 +65,7 @@ export const POST = withErrorHandling(
       }
     }
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       deleted: deletedIds,
       errors: errors.length > 0 ? errors : undefined,
     });

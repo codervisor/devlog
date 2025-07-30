@@ -6,6 +6,13 @@ import {
   DevlogListQuerySchema,
   CreateDevlogBodySchema,
 } from '@/schemas';
+import {
+  ApiErrors,
+  createSuccessResponse,
+  createSimpleCollectionResponse,
+  createCollectionResponse,
+  ResponseTransformer,
+} from '@/lib/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -29,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const projectService = ProjectService.getInstance();
     const project = await projectService.get(paramValidation.data.id);
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+      return ApiErrors.projectNotFound();
     }
 
     // Create project-aware devlog service
@@ -60,10 +67,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       result = await devlogService.list(filter);
     }
 
-    return NextResponse.json(result);
+    // Check if result has pagination metadata
+    if (result.pagination) {
+      return createCollectionResponse(result.items, result.pagination);
+    } else {
+      // Transform devlogs and return as simple collection
+      const transformedDevlogs = ResponseTransformer.transformDevlogs(result.items || result);
+      return createSimpleCollectionResponse(transformedDevlogs);
+    }
   } catch (error) {
     console.error('Error fetching devlogs:', error);
-    return ApiValidator.handleServiceError(error);
+    return ApiErrors.internalError('Failed to fetch devlogs');
   }
 }
 
@@ -85,7 +99,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const projectService = ProjectService.getInstance();
     const project = await projectService.get(paramValidation.data.id);
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+      return ApiErrors.projectNotFound();
     }
 
     // Create project-aware devlog service
@@ -105,9 +119,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     await devlogService.save(devlogEntry);
 
-    return NextResponse.json(devlogEntry, { status: 201 });
+    // Transform and return created devlog
+    const transformedDevlog = ResponseTransformer.transformDevlog(devlogEntry);
+    return createSuccessResponse(transformedDevlog, { status: 201 });
   } catch (error) {
     console.error('Error creating devlog:', error);
-    return ApiValidator.handleServiceError(error);
+    return ApiErrors.internalError('Failed to create devlog');
   }
 }
