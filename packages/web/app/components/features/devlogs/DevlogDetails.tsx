@@ -108,7 +108,7 @@ export function DevlogDetails({
 
   // Track new notes for animation
   useEffect(() => {
-    if (!notes || notes.length === 0) {
+    if (!notes || !Array.isArray(notes) || notes.length === 0) {
       // For empty notes, just reset the seen notes if they exist
       if (seenNoteIds.size > 0) {
         setSeenNoteIds(new Set());
@@ -561,7 +561,7 @@ export function DevlogDetails({
                     </div>
                   ))}
                 </div>
-              ) : notes && notes.length > 0 ? (
+              ) : notes && Array.isArray(notes) && notes.length > 0 ? (
                 <div className="space-y-6">
                   {[...notes].reverse().map((note) => {
                     const isNewNote = newNoteIds.has(note.id);
