@@ -9,12 +9,10 @@
 		},
 		"devlog": {
 			"type": "stdio",
-			"command": "node",
+			"command": "npx",
 			"args": [
-				"packages/mcp/build/index.js"
-			],
-			"env": {},
-			"cwd": "${workspaceFolder}"
+				"@codervisor/devlog-mcp@dev"
+			]
 		}
 	},
 	"inputs": []
