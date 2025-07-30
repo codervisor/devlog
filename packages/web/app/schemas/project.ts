@@ -1,6 +1,6 @@
 /**
  * Project-related validation schemas for web API
- * 
+ *
  * This module provides Zod schemas specifically for HTTP API validation.
  * It focuses on request/response format validation and HTTP-specific concerns.
  */
@@ -10,9 +10,11 @@ import { z } from 'zod';
 /**
  * Project ID parameter validation (from URL params)
  */
-export const ProjectIdParamSchema = z.object({
-  id: z.string().regex(/^\d+$/, 'Project ID must be a valid number'),
-}).transform(data => ({ id: Number(data.id) }));
+export const ProjectIdParamSchema = z
+  .object({
+    id: z.string().regex(/^\d+$/, 'Project ID must be a valid number'),
+  })
+  .transform((data) => ({ id: Number(data.id) }));
 
 /**
  * Project creation request body schema
@@ -21,13 +23,15 @@ export const CreateProjectBodySchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
   repositoryUrl: z.string().optional(),
-  settings: z.object({
-    defaultPriority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-    theme: z.string().optional(),
-    autoArchiveDays: z.number().optional(),
-    availableTags: z.array(z.string()).optional(),
-    customSettings: z.record(z.any()).optional(),
-  }).optional(),
+  settings: z
+    .object({
+      defaultPriority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+      theme: z.string().optional(),
+      autoArchiveDays: z.number().optional(),
+      availableTags: z.array(z.string()).optional(),
+      customSettings: z.record(z.any()).optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -45,11 +49,3 @@ export const ProjectListQuerySchema = z.object({
   sortBy: z.enum(['name', 'createdAt', 'lastAccessedAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
-
-/**
- * Type exports for TypeScript usage
- */
-export type ProjectIdParam = z.infer<typeof ProjectIdParamSchema>;
-export type CreateProjectBody = z.infer<typeof CreateProjectBodySchema>;
-export type UpdateProjectBody = z.infer<typeof UpdateProjectBodySchema>;
-export type ProjectListQuery = z.infer<typeof ProjectListQuerySchema>;
