@@ -570,11 +570,11 @@ export function DevlogDetails({
                       <div
                         key={note.id}
                         className={cn(
-                          'border-l-4 border-primary/20 pl-4 py-3 transition-all duration-500',
+                          'border-l-4 border-primary/20 pl-4 py-1 transition-all duration-500',
                           isNewNote && 'animate-in slide-in-from-top-2 duration-400 bg-primary/5',
                         )}
                       >
-                        <div className="flex items-center space-x-2 mb-3">
+                        <div className="flex items-center space-x-2 mb-4">
                           {getCategoryIconRaw(note.category as NoteCategory)}
                           <Badge variant="secondary" className="text-xs">
                             {note.category}
