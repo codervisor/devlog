@@ -18,9 +18,16 @@
 			"type": "http",
 			"url": "https://api.githubcopilot.com/mcp/",
       "headers": {
-        "Authorization": "Bearer ${env:GITHUB_TOKEN}"
+        "Authorization": "Bearer ${input:github-pat}"
       }
 		}
 	},
-	"inputs": []
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "github-pat",
+			"description": "GitHub Personal Access Token",
+			"password": true
+		}
+	]
 }
