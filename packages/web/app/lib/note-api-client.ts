@@ -57,9 +57,10 @@ export class NoteApiClient {
    */
   async getNotes(devlogId: string, limit?: number): Promise<DevlogNote[]> {
     const params = limit ? `?limit=${limit}` : '';
-    return apiClient.get<DevlogNote[]>(
+    const response = await apiClient.get<{ devlogId: number; total: number; notes: DevlogNote[] }>(
       `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
     );
+    return response.notes;
   }
 
   /**
