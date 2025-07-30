@@ -45,6 +45,7 @@ COPY packages/core ./packages/core
 COPY packages/ai ./packages/ai
 COPY packages/web ./packages/web
 COPY tsconfig.json ./
+COPY vitest.config.base.ts ./
 
 # Build packages in dependency order (core packages needed for web)
 RUN pnpm --filter @codervisor/devlog-core build
