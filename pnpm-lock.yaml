@@ -196,7 +196,7 @@ importers:
   packages/mcp:
     dependencies:
       '@codervisor/devlog-core':
-        specifier: workspace:^1.0.0
+        specifier: workspace:*
         version: link:../core
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
