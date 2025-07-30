@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
+import { apiClient, handleApiError } from '@/lib/api-client';
 
 interface UseStatsOptions {
   /**
@@ -64,15 +65,13 @@ export function useStats(options: UseStatsOptions = {}): UseStatsResult {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/projects/${projectId}/devlogs/stats/overview`);
-      if (response.ok) {
-        const statsData = await response.json();
-        setStats(statsData);
-      } else {
-        throw new Error(`Failed to fetch stats: ${response.status} ${response.statusText}`);
-      }
+
+      const statsData = await apiClient.get<DevlogStats>(
+        `/api/projects/${projectId}/devlogs/stats/overview`,
+      );
+      setStats(statsData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats';
+      const errorMessage = handleApiError(err);
       console.error('Failed to fetch stats:', err);
       setError(errorMessage);
     } finally {
@@ -141,17 +140,13 @@ export function useTimeSeriesStats(options: UseStatsOptions = {}): UseTimeSeries
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/projects/${projectId}/devlogs/stats/timeseries?days=30`);
-      if (response.ok) {
-        const timeSeriesStatsData = await response.json();
-        setTimeSeriesData(timeSeriesStatsData);
-      } else {
-        throw new Error(
-          `Failed to fetch time series stats: ${response.status} ${response.statusText}`,
-        );
-      }
+
+      const timeSeriesStatsData = await apiClient.get<TimeSeriesStats>(
+        `/api/projects/${projectId}/devlogs/stats/timeseries?days=30`,
+      );
+      setTimeSeriesData(timeSeriesStatsData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time series stats';
+      const errorMessage = handleApiError(err);
       console.error('Failed to fetch time series stats:', err);
       setError(errorMessage);
     } finally {

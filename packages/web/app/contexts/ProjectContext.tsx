@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiClient, handleApiError } from '@/lib/api-client';
 
 export interface ProjectMetadata {
   id: number; // Changed from string to number to match API
@@ -43,14 +44,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/projects');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch projects: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      // Handle both old and new response formats for backward compatibility
-      const projectsList = data.success ? data.data : data.projects || data || [];
+      const projectsList = await apiClient.get<ProjectMetadata[]>('/api/projects');
       setProjects(projectsList);
 
       // If no current project is set, set the first project as default
@@ -62,7 +56,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         });
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load projects';
+      const errorMessage = handleApiError(err);
       setError(errorMessage);
       console.error('Error loading projects:', err);
     } finally {

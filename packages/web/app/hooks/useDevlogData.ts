@@ -11,6 +11,8 @@ import {
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
+import { apiClient, handleApiError } from '@/lib/api-client';
+import type { CollectionResponse } from '@/schemas/responses';
 
 interface UseDevlogDataOptions {
   /**
@@ -160,23 +162,31 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     try {
       setLoading(true);
       const url = `/api/projects/${projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch devlogs');
-      }
-      const data = await response.json();
 
+      const data = await apiClient.get<DevlogEntry[] | CollectionResponse<DevlogEntry>>(url);
+
+      // Handle both collection response and direct array response
       if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
         setDevlogs(data.items);
-        setPagination(data.pagination);
+        // Convert API pagination to core PaginationMeta format
+        const apiPagination = data.pagination;
+        const paginationMeta: PaginationMeta = {
+          page: apiPagination.page,
+          limit: apiPagination.limit,
+          total: apiPagination.total,
+          totalPages: apiPagination.totalPages,
+          hasPreviousPage: apiPagination.page > 1,
+          hasNextPage: apiPagination.page < apiPagination.totalPages,
+        };
+        setPagination(paginationMeta);
       } else {
-        setDevlogs(data);
+        setDevlogs(data as DevlogEntry[]);
         setPagination(null);
       }
 
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
@@ -238,19 +248,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       throw new Error('No project ID available');
     }
 
-    const response = await fetch(`/api/projects/${projectId}/devlogs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create devlog');
-    }
-
-    return await response.json();
+    return apiClient.post<any>(`/api/projects/${projectId}/devlogs`, data);
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
@@ -258,19 +256,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       throw new Error('No project ID available');
     }
 
-    const response = await fetch(`/api/projects/${projectId}/devlogs/${data.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update devlog');
-    }
-
-    return await response.json();
+    return apiClient.put<any>(`/api/projects/${projectId}/devlogs/${data.id}`, data);
   };
 
   const deleteDevlog = async (id: DevlogId) => {
@@ -282,15 +268,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
     try {
-      const response = await fetch(`/api/projects/${projectId}/devlogs/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        // If the API call fails, restore the item to state
-        await fetchDevlogs();
-        throw new Error('Failed to delete devlog');
-      }
+      await apiClient.delete<void>(`/api/projects/${projectId}/devlogs/${id}`);
     } catch (error) {
       // If there's an error, refresh the list to restore correct state
       await fetchDevlogs();
@@ -304,20 +282,13 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       throw new Error('No project ID available');
     }
 
-    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/update`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids, updates }),
+    const result = await apiClient.post<any>(`/api/projects/${projectId}/devlogs/batch/update`, {
+      ids,
+      updates,
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to batch update devlogs');
-    }
-
     await fetchDevlogs();
-    return await response.json();
+    return result;
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
@@ -325,17 +296,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       throw new Error('No project ID available');
     }
 
-    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/delete`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to batch delete devlogs');
-    }
+    await apiClient.post<void>(`/api/projects/${projectId}/devlogs/batch/delete`, { ids });
 
     await fetchDevlogs();
   };
@@ -345,20 +306,14 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       throw new Error('No project ID available');
     }
 
-    const response = await fetch(`/api/projects/${projectId}/devlogs/batch/note`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids, content, category }),
+    const result = await apiClient.post<any>(`/api/projects/${projectId}/devlogs/batch/note`, {
+      ids,
+      content,
+      category,
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to batch add notes');
-    }
-
     await fetchDevlogs();
-    return await response.json();
+    return result;
   };
 
   // Pagination actions

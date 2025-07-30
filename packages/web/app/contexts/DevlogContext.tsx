@@ -23,6 +23,8 @@ import {
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
 import { useProject } from './ProjectContext';
 import { NoteApiClient } from '@/lib/note-api-client';
+import { apiClient, handleApiError } from '@/lib/api-client';
+import type { CollectionResponse } from '@/schemas/responses';
 
 interface DevlogContextType {
   // Devlogs state
@@ -152,23 +154,31 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const url = `/api/projects/${currentProject.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to fetch devlogs');
-      }
-      const data = await response.json();
 
+      const data = await apiClient.get<DevlogEntry[] | CollectionResponse<DevlogEntry>>(url);
+
+      // Handle both collection response and direct array response
       if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
         setDevlogs(data.items);
-        setPagination(data.pagination);
+        // Convert API pagination to core PaginationMeta format
+        const apiPagination = data.pagination;
+        const paginationMeta: PaginationMeta = {
+          page: apiPagination.page,
+          limit: apiPagination.limit,
+          total: apiPagination.total,
+          totalPages: apiPagination.totalPages,
+          hasPreviousPage: apiPagination.page > 1,
+          hasNextPage: apiPagination.page < apiPagination.totalPages,
+        };
+        setPagination(paginationMeta);
       } else {
-        setDevlogs(data);
+        setDevlogs(data as DevlogEntry[]);
         setPagination(null);
       }
 
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
@@ -184,17 +194,13 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setStatsLoading(true);
       setStatsError(null);
-      const response = await fetch(
+
+      const statsData = await apiClient.get<DevlogStats>(
         `/api/projects/${currentProject.projectId}/devlogs/stats/overview`,
       );
-      if (response.ok) {
-        const statsData = await response.json();
-        setStats(statsData);
-      } else {
-        throw new Error(`Failed to fetch stats: ${response.status} ${response.statusText}`);
-      }
+      setStats(statsData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats';
+      const errorMessage = handleApiError(err);
       console.error('Failed to fetch stats:', err);
       setStatsError(errorMessage);
     } finally {
@@ -212,19 +218,13 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setTimeSeriesLoading(true);
       setTimeSeriesError(null);
-      const response = await fetch(
+
+      const timeSeriesData = await apiClient.get<TimeSeriesStats>(
         `/api/projects/${currentProject.projectId}/devlogs/stats/timeseries?days=30`,
       );
-      if (response.ok) {
-        const timeSeriesData = await response.json();
-        setTimeSeriesStats(timeSeriesData);
-      } else {
-        throw new Error(
-          `Failed to fetch time series stats: ${response.status} ${response.statusText}`,
-        );
-      }
+      setTimeSeriesStats(timeSeriesData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time series stats';
+      const errorMessage = handleApiError(err);
       console.error('Failed to fetch time series stats:', err);
       setTimeSeriesError(errorMessage);
     } finally {
@@ -287,19 +287,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No project selected');
     }
 
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create devlog');
-    }
-
-    return await response.json();
+    return apiClient.post<any>(`/api/projects/${currentProject.projectId}/devlogs`, data);
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
@@ -307,19 +295,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No project selected');
     }
 
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update devlog');
-    }
-
-    return await response.json();
+    return apiClient.put<any>(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, data);
   };
 
   const deleteDevlog = async (id: DevlogId) => {
@@ -332,15 +308,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
     try {
-      const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        // If the API call fails, restore the item to state
-        await fetchDevlogs();
-        throw new Error('Failed to delete devlog');
-      }
+      await apiClient.delete<void>(`/api/projects/${currentProject.projectId}/devlogs/${id}`);
     } catch (error) {
       // If there's an error, refresh the list to restore correct state
       await fetchDevlogs();
@@ -354,20 +322,13 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No project selected');
     }
 
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/batch/update`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids, updates }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to batch update devlogs');
-    }
+    const result = await apiClient.post<any>(
+      `/api/projects/${currentProject.projectId}/devlogs/batch/update`,
+      { ids, updates },
+    );
 
     await fetchDevlogs();
-    return await response.json();
+    return result;
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
@@ -375,17 +336,9 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No project selected');
     }
 
-    const response = await fetch(`/api/projects/${currentProject.projectId}/devlogs/batch/delete`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ids }),
+    await apiClient.post<void>(`/api/projects/${currentProject.projectId}/devlogs/batch/delete`, {
+      ids,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to batch delete devlogs');
-    }
 
     await fetchDevlogs();
   };

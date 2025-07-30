@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
+import { apiClient, handleApiError } from '@/lib/api-client';
 
 interface UseDevlogDetailsOptions {
   /**
@@ -54,25 +55,16 @@ export function useDevlogDetails(
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/projects/${projectId}/devlogs/${devlogId}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Devlog not found');
-        } else {
-          throw new Error('Failed to fetch devlog');
-        }
-        return;
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<DevlogEntry>(
+        `/api/projects/${projectId}/devlogs/${devlogId}`,
+      );
       setDevlog(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
-  }, [devlogId, currentProject]);
+  }, [devlogId, projectId]);
 
   // Set up real-time event listeners for this specific devlog
   useEffect(() => {
@@ -111,19 +103,11 @@ export function useDevlogDetails(
         throw new Error('No project ID available');
       }
 
-      const response = await fetch(`/api/projects/${projectId}/devlogs/${data.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const updatedDevlog = await apiClient.put<DevlogEntry>(
+        `/api/projects/${projectId}/devlogs/${data.id}`,
+        data,
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to update devlog');
-      }
-
-      const updatedDevlog = await response.json();
       setDevlog(updatedDevlog);
       return updatedDevlog;
     },
@@ -136,14 +120,7 @@ export function useDevlogDetails(
         throw new Error('No project ID available');
       }
 
-      const response = await fetch(`/api/projects/${projectId}/devlogs/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete devlog');
-      }
-
+      await apiClient.delete<void>(`/api/projects/${projectId}/devlogs/${id}`);
       setDevlog(null);
     },
     [projectId],
