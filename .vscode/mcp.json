@@ -14,13 +14,13 @@
 				"@codervisor/devlog-mcp@dev"
 			]
 		},
-		"github": {
-			"type": "http",
-			"url": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer ${input:github-pat}"
-      }
-		}
+		// "github": {
+		// 	"type": "http",
+		// 	"url": "https://api.githubcopilot.com/mcp/",
+    //   "headers": {
+    //     "Authorization": "Bearer ${input:github-pat}"
+    //   }
+		// }
 	},
 	"inputs": [
 		{
