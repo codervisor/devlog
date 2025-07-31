@@ -111,31 +111,42 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
 
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
 
-  // Build query string for API call
+  // Build query string for API call - now handles all filter parameters
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
 
+    // Search
     if (filters.search) {
       params.append('search', filters.search);
     }
 
+    // Filter type (for backwards compatibility)
     if (filters.filterType) {
       params.append('filterType', filters.filterType);
     }
 
+    // Status filter - convert array to single value for API
     if (filters.status && filters.status.length > 0) {
-      filters.status.forEach((status) => params.append('status', status));
+      // API expects single status value, take the first one
+      params.append('status', filters.status[0]);
     }
 
+    // Type filter - convert array to single value for API
     if (filters.type && filters.type.length > 0) {
-      filters.type.forEach((type) => params.append('type', type));
+      params.append('type', filters.type[0]);
     }
+
+    // Priority filter - convert array to single value for API
     if (filters.priority && filters.priority.length > 0) {
-      filters.priority.forEach((priority) => params.append('priority', priority));
+      params.append('priority', filters.priority[0]);
     }
+
+    // Assignee filter
     if (filters.assignee) {
       params.append('assignee', filters.assignee);
     }
+
+    // Date range filters
     if (filters.fromDate) {
       params.append('fromDate', filters.fromDate);
     }
@@ -143,6 +154,12 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
       params.append('toDate', filters.toDate);
     }
 
+    // Archived filter
+    if (filters.archived !== undefined) {
+      params.append('archived', filters.archived.toString());
+    }
+
+    // Pagination
     if (filters.pagination?.page) {
       params.append('page', filters.pagination.page.toString());
     }
@@ -169,19 +186,41 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     try {
       setLoading(true);
 
-      // Convert query string to filters object for DevlogApiClient
-      const urlParams = new URLSearchParams(queryString);
-      const filters: DevlogFilters = {};
+      // Convert filters to DevlogFilters format for the API client
+      const apiFilters: DevlogFilters = {};
 
-      if (urlParams.get('status')) filters.status = urlParams.get('status') as DevlogStatus;
-      if (urlParams.get('priority')) filters.priority = urlParams.get('priority') as DevlogPriority;
-      if (urlParams.get('type')) filters.type = urlParams.get('type') as DevlogType;
-      if (urlParams.get('search')) filters.search = urlParams.get('search')!;
-      if (urlParams.get('limit')) filters.limit = parseInt(urlParams.get('limit')!, 10);
-      if (urlParams.get('offset')) filters.offset = parseInt(urlParams.get('offset')!, 10);
-      if (urlParams.getAll('tags').length) filters.tags = urlParams.getAll('tags');
+      // Convert array filters to single values (API expects single values currently)
+      if (filters.status && filters.status.length > 0) {
+        apiFilters.status = filters.status[0] as DevlogStatus;
+      }
+      if (filters.priority && filters.priority.length > 0) {
+        apiFilters.priority = filters.priority[0] as DevlogPriority;
+      }
+      if (filters.type && filters.type.length > 0) {
+        apiFilters.type = filters.type[0] as DevlogType;
+      }
 
-      const data = await devlogClient.list(filters);
+      // Direct mappings
+      if (filters.search) apiFilters.search = filters.search;
+      if (filters.assignee) apiFilters.assignee = filters.assignee;
+      if (filters.archived !== undefined) apiFilters.archived = filters.archived;
+      if (filters.fromDate) apiFilters.fromDate = filters.fromDate;
+      if (filters.toDate) apiFilters.toDate = filters.toDate;
+
+      // Handle filterType - only pass through valid values
+      if (filters.filterType && ['total', 'open', 'closed'].includes(filters.filterType)) {
+        apiFilters.filterType = filters.filterType as 'total' | 'open' | 'closed';
+      }
+
+      // Pagination
+      if (filters.pagination) {
+        if (filters.pagination.page) apiFilters.page = filters.pagination.page;
+        if (filters.pagination.limit) apiFilters.limit = filters.pagination.limit;
+        if (filters.pagination.sortBy) apiFilters.sortBy = filters.pagination.sortBy;
+        if (filters.pagination.sortOrder) apiFilters.sortOrder = filters.pagination.sortOrder;
+      }
+
+      const data = await devlogClient.list(apiFilters);
 
       // Handle both collection response and direct array response
       setDevlogs(data);
@@ -193,57 +232,12 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     } finally {
       setLoading(false);
     }
-  }, [queryString, projectId, devlogClient]);
+  }, [filters, projectId, devlogClient]);
 
-  // Client-side filtered devlogs
+  // All filtering is now handled server-side - simply return the devlogs from API
   const filteredDevlogs = useMemo(() => {
-    if (queryString) {
-      return devlogs;
-    }
-
-    let filtered = [...devlogs];
-
-    if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter((devlog) => filters.status!.includes(devlog.status));
-    }
-
-    if (filters.type && filters.type.length > 0) {
-      filtered = filtered.filter((devlog) => filters.type!.includes(devlog.type));
-    }
-
-    if (filters.priority && filters.priority.length > 0) {
-      filtered = filtered.filter((devlog) => filters.priority!.includes(devlog.priority));
-    }
-
-    if (filters.assignee) {
-      filtered = filtered.filter((devlog) => devlog.assignee === filters.assignee);
-    }
-
-    if (filters.fromDate) {
-      const fromDate = new Date(filters.fromDate);
-      fromDate.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) >= fromDate);
-    }
-
-    if (filters.toDate) {
-      const toDate = new Date(filters.toDate);
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) <= toDate);
-    }
-
-    if (filters.search) {
-      const searchQuery = filters.search.toLowerCase().trim();
-      filtered = filtered.filter((devlog) => {
-        const titleMatch = devlog.title.toLowerCase().includes(searchQuery);
-        const descriptionMatch = devlog.description.toLowerCase().includes(searchQuery);
-        const notesMatch =
-          devlog.notes?.some((note) => note.content.toLowerCase().includes(searchQuery)) || false;
-        return titleMatch || descriptionMatch || notesMatch;
-      });
-    }
-
-    return filtered;
-  }, [devlogs, filters, queryString]);
+    return devlogs;
+  }, [devlogs]);
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {

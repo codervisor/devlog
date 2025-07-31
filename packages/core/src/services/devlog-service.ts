@@ -526,25 +526,83 @@ export class DevlogService {
     }
 
     // Apply status filter
-    if (projectFilter.status) {
+    if (projectFilter.status && projectFilter.status.length > 0) {
       queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
     }
 
+    // Apply type filter
+    if (projectFilter.type && projectFilter.type.length > 0) {
+      queryBuilder.andWhere('devlog.type IN (:...types)', { types: projectFilter.type });
+    }
+
     // Apply priority filter
-    if (projectFilter.priority) {
+    if (projectFilter.priority && projectFilter.priority.length > 0) {
       queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
         priorities: projectFilter.priority,
       });
     }
 
-    // Apply pagination
-    const pagination = projectFilter.pagination || { page: 1, limit: 20 };
+    // Apply assignee filter
+    if (projectFilter.assignee !== undefined) {
+      if (projectFilter.assignee === null) {
+        queryBuilder.andWhere('devlog.assignee IS NULL');
+      } else {
+        queryBuilder.andWhere('devlog.assignee = :assignee', { assignee: projectFilter.assignee });
+      }
+    }
+
+    // Apply archived filter
+    if (projectFilter.archived !== undefined) {
+      queryBuilder.andWhere('devlog.archived = :archived', { archived: projectFilter.archived });
+    }
+
+    // Apply date range filters
+    if (projectFilter.fromDate) {
+      queryBuilder.andWhere('devlog.createdAt >= :fromDate', { fromDate: projectFilter.fromDate });
+    }
+    if (projectFilter.toDate) {
+      queryBuilder.andWhere('devlog.createdAt <= :toDate', { toDate: projectFilter.toDate });
+    }
+
+    // Apply search filter (if not already applied by search method)
+    if (projectFilter.search && !queryBuilder.getQueryAndParameters()[0].includes('LIKE')) {
+      queryBuilder.andWhere(
+        '(devlog.title LIKE :search OR devlog.description LIKE :search OR devlog.businessContext LIKE :search OR devlog.technicalContext LIKE :search)',
+        { search: `%${projectFilter.search}%` },
+      );
+    }
+
+    // Apply pagination and sorting
+    const pagination = projectFilter.pagination || {
+      page: 1,
+      limit: 20,
+      sortBy: 'updatedAt',
+      sortOrder: 'desc',
+    };
     const page = pagination.page || 1;
     const limit = pagination.limit || 20;
     const offset = (page - 1) * limit;
+    const sortBy = pagination.sortBy || 'updatedAt';
+    const sortOrder = pagination.sortOrder || 'desc';
 
     queryBuilder.skip(offset).take(limit);
-    queryBuilder.orderBy('devlog.updatedAt', 'DESC');
+
+    // Apply sorting
+    const validSortColumns = [
+      'id',
+      'title',
+      'type',
+      'status',
+      'priority',
+      'createdAt',
+      'updatedAt',
+      'closedAt',
+    ];
+    if (validSortColumns.includes(sortBy)) {
+      queryBuilder.orderBy(`devlog.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC');
+    } else {
+      queryBuilder.orderBy('devlog.updatedAt', 'DESC');
+    }
 
     const [entities, total] = await queryBuilder.getManyAndCount();
     const entries = entities.map((entity) => entity.toDevlogEntry());

@@ -51,14 +51,37 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (queryData.priority) filter.priority = [queryData.priority];
     if (queryData.assignee) filter.assignee = queryData.assignee;
     if (queryData.archived !== undefined) filter.archived = queryData.archived;
+    if (queryData.fromDate) filter.fromDate = queryData.fromDate;
+    if (queryData.toDate) filter.toDate = queryData.toDate;
+    if (queryData.search) filter.search = queryData.search;
 
-    // Pagination
-    if (queryData.limit || queryData.offset) {
-      filter.pagination = {
-        page: queryData.offset ? Math.floor(queryData.offset / (queryData.limit || 20)) + 1 : 1,
-        limit: queryData.limit || 20,
-      };
+    // Handle special filter types for backwards compatibility
+    if (queryData.filterType) {
+      switch (queryData.filterType) {
+        case 'open':
+          filter.status = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+          break;
+        case 'closed':
+          filter.status = ['done', 'cancelled'];
+          break;
+        case 'total':
+          // No status filter - show all
+          break;
+      }
     }
+
+    // Pagination - support both offset/limit and page-based pagination
+    const page =
+      queryData.page ||
+      (queryData.offset ? Math.floor(queryData.offset / (queryData.limit || 20)) + 1 : 1);
+    const limit = queryData.limit || 20;
+
+    filter.pagination = {
+      page,
+      limit,
+      sortBy: queryData.sortBy || 'updatedAt',
+      sortOrder: queryData.sortOrder || 'desc',
+    };
 
     let result;
     if (queryData.search) {

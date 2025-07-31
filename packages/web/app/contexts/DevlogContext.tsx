@@ -158,16 +158,38 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
 
-      // Convert query filters to DevlogApiClient filters format
+      // Convert filters to DevlogFilters format for the API client
       const apiFilters: any = {};
 
+      // Convert array filters to single values (API expects single values currently)
+      if (filters.status && filters.status.length > 0) {
+        apiFilters.status = filters.status[0];
+      }
+      if (filters.type && filters.type.length > 0) {
+        apiFilters.type = filters.type[0];
+      }
+      if (filters.priority && filters.priority.length > 0) {
+        apiFilters.priority = filters.priority[0];
+      }
+
+      // Direct mappings
       if (filters.search) apiFilters.search = filters.search;
-      if (filters.status?.length === 1) apiFilters.status = filters.status[0];
-      if (filters.type?.length === 1) apiFilters.type = filters.type[0];
-      if (filters.priority?.length === 1) apiFilters.priority = filters.priority[0];
-      if (filters.pagination?.limit) apiFilters.limit = filters.pagination.limit;
-      if (filters.pagination?.page && filters.pagination?.limit) {
-        apiFilters.offset = (filters.pagination.page - 1) * filters.pagination.limit;
+      if (filters.assignee) apiFilters.assignee = filters.assignee;
+      if (filters.archived !== undefined) apiFilters.archived = filters.archived;
+      if (filters.fromDate) apiFilters.fromDate = filters.fromDate;
+      if (filters.toDate) apiFilters.toDate = filters.toDate;
+
+      // Handle filterType - only pass through valid values
+      if (filters.filterType && ['total', 'open', 'closed'].includes(filters.filterType)) {
+        apiFilters.filterType = filters.filterType;
+      }
+
+      // Pagination
+      if (filters.pagination) {
+        if (filters.pagination.page) apiFilters.page = filters.pagination.page;
+        if (filters.pagination.limit) apiFilters.limit = filters.pagination.limit;
+        if (filters.pagination.sortBy) apiFilters.sortBy = filters.pagination.sortBy;
+        if (filters.pagination.sortOrder) apiFilters.sortOrder = filters.pagination.sortOrder;
       }
 
       const data = await devlogApiClient.list(apiFilters);
@@ -227,54 +249,10 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentProject, devlogApiClient]);
 
-  // Client-side filtered devlogs
+  // All filtering is now handled server-side - simply return the devlogs from API
   const filteredDevlogs = useMemo(() => {
-    if (queryString) {
-      return devlogs;
-    }
-
-    let filtered = [...devlogs];
-
-    if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter((devlog) => filters.status!.includes(devlog.status));
-    }
-
-    if (filters.type && filters.type.length > 0) {
-      filtered = filtered.filter((devlog) => filters.type!.includes(devlog.type));
-    }
-
-    if (filters.priority && filters.priority.length > 0) {
-      filtered = filtered.filter((devlog) => filters.priority!.includes(devlog.priority));
-    }
-
-    if (filters.assignee) {
-      filtered = filtered.filter((devlog) => devlog.assignee === filters.assignee);
-    }
-
-    if (filters.fromDate) {
-      const fromDate = new Date(filters.fromDate);
-      fromDate.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) >= fromDate);
-    }
-
-    if (filters.toDate) {
-      const toDate = new Date(filters.toDate);
-      toDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((devlog) => new Date(devlog.createdAt) <= toDate);
-    }
-
-    if (filters.search) {
-      const searchQuery = filters.search.toLowerCase().trim();
-      filtered = filtered.filter((devlog) => {
-        const titleMatch = devlog.title.toLowerCase().includes(searchQuery);
-        const descriptionMatch = devlog.description.toLowerCase().includes(searchQuery);
-        // Note: Search in notes is handled separately by the notes API
-        return titleMatch || descriptionMatch;
-      });
-    }
-
-    return filtered;
-  }, [devlogs, filters, queryString]);
+    return devlogs;
+  }, [devlogs]);
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {

@@ -33,8 +33,16 @@ export interface DevlogFilters {
   type?: DevlogType;
   tags?: string[];
   search?: string;
+  assignee?: string;
+  archived?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  filterType?: 'total' | 'open' | 'closed';
   limit?: number;
   offset?: number;
+  page?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface BatchUpdateRequest {
@@ -62,8 +70,16 @@ export class DevlogApiClient {
     if (filters?.priority) params.append('priority', filters.priority);
     if (filters?.type) params.append('type', filters.type);
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.assignee) params.append('assignee', filters.assignee);
+    if (filters?.archived !== undefined) params.append('archived', filters.archived.toString());
+    if (filters?.fromDate) params.append('fromDate', filters.fromDate);
+    if (filters?.toDate) params.append('toDate', filters.toDate);
+    if (filters?.filterType) params.append('filterType', filters.filterType);
     if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.offset) params.append('offset', filters.offset.toString());
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+    if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
     if (filters?.tags?.length) {
       filters.tags.forEach((tag) => params.append('tags', tag));
     }
