@@ -2,19 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useProject } from '@/contexts/ProjectContext';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { AppWindowIcon, LayoutDashboardIcon, FileTextIcon } from 'lucide-react';
+import { AppWindowIcon, FileTextIcon, LayoutDashboardIcon } from 'lucide-react';
 
 interface NavigationSidebarProps {
   // No props needed - using built-in sidebar state

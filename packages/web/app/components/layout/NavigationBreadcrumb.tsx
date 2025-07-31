@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useProject } from '@/contexts/ProjectContext';
 import Link from 'next/link';
-import { FolderIcon, BookOpenIcon, CheckIcon, ChevronDownIcon } from 'lucide-react';
+import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,

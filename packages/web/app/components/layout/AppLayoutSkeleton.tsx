@@ -10,7 +10,7 @@ export function AppLayoutSkeleton() {
       <div className="h-12 border-b border-border bg-background px-4 flex items-center">
         <Skeleton className="h-6 w-32" />
       </div>
-      
+
       <div className="flex flex-1">
         {/* Sidebar skeleton */}
         <div className="w-64 border-r border-border bg-background p-4">
@@ -24,7 +24,7 @@ export function AppLayoutSkeleton() {
             </div>
           </div>
         </div>
-        
+
         {/* Content skeleton */}
         <div className="flex-1 p-6">
           <div className="space-y-4">

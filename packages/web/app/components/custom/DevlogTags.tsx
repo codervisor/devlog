@@ -1,9 +1,15 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { DevlogStatus, DevlogPriority, DevlogType } from '@codervisor/devlog-core';
-import { getStatusIcon, getPriorityIcon, getTypeIcon } from '@/lib';
-import { getStatusLabel, getPriorityLabel, getTypeLabel } from '@/lib';
-import { cn } from '@/lib';
+import { DevlogPriority, DevlogStatus, DevlogType } from '@codervisor/devlog-core';
+import {
+  cn,
+  getPriorityIcon,
+  getPriorityLabel,
+  getStatusIcon,
+  getStatusLabel,
+  getTypeIcon,
+  getTypeLabel,
+} from '@/lib';
 
 export interface DevlogStatusTagProps {
   status: DevlogStatus;

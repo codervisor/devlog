@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PaginationMeta } from '@codervisor/devlog-core';
 
@@ -72,7 +78,10 @@ export function Pagination({
         {showSizeChanger && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Show</span>
-            <Select value={limit.toString()} onValueChange={(value) => onPageSizeChange(parseInt(value))}>
+            <Select
+              value={limit.toString()}
+              onValueChange={(value) => onPageSizeChange(parseInt(value))}
+            >
               <SelectTrigger className="w-16">
                 <SelectValue />
               </SelectTrigger>

@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -22,11 +21,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { statusOptions, priorityOptions, typeOptions } from '@/lib';
+import { priorityOptions, statusOptions, typeOptions } from '@/lib';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, Save } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),

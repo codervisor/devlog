@@ -33,10 +33,6 @@ export function StickyHeadingsWrapper({
 
   // TODO: Implement StickyHeadings functionality with shadcn/ui
   // For now, just render children without sticky functionality
-  
-  return (
-    <div ref={contentRef}>
-      {children}
-    </div>
-  );
+
+  return <div ref={contentRef}>{children}</div>;
 }

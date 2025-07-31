@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Area,
@@ -19,9 +19,8 @@ import {
 } from 'recharts';
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { getColorHex, getStatusColor } from '@/lib';
+import { formatTimeAgoWithTooltip, getColorHex, getStatusColor } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
-import { formatTimeAgoWithTooltip } from '@/lib';
 import {
   CHART_COLORS,
   CHART_OPACITY,
@@ -30,7 +29,6 @@ import {
   formatTooltipValue,
 } from './chart-utils';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
-import { cn } from '@/lib';
 
 interface DashboardProps {
   stats: DevlogStats | null;

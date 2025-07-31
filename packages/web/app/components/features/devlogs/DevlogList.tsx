@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -21,7 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -34,12 +33,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -50,32 +43,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Search,
-  Filter,
-  MessageSquare,
-  X,
-  ChevronDown,
-  MoreHorizontal,
-  CheckSquare,
-  Square,
-} from 'lucide-react';
-import {
-  DevlogEntry,
-  DevlogFilter,
-  DevlogId,
-  DevlogPriority,
-  DevlogStatus,
-  DevlogType,
-  PaginationMeta,
-} from '@codervisor/devlog-core';
+import { Edit, Eye, MessageSquare, Search, Trash2, X } from 'lucide-react';
+import { DevlogEntry, DevlogFilter, DevlogId, PaginationMeta } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
-import { formatTimeAgoWithTooltip } from '@/lib';
-import { priorityOptions, statusOptions, typeOptions } from '@/lib';
-import { cn } from '@/lib';
+import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
 
 interface DevlogListProps {
   devlogs: DevlogEntry[];
