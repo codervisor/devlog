@@ -24,10 +24,10 @@
 - **Build order**: Core → MCP → Web (dependency chain)
 
 ### Task Tracking
-- **Check existing work**: Search related devlogs before starting new tasks
-- **Create devlogs**: For features, refactoring, or multi-step work (>30min)
-- **Track progress**: Add notes after milestones, builds, or when blocked
-- **Complete with summary**: Document learnings and close when done
+- **Always start by checking**: Search related devlogs before starting ANY new work
+- **Must create devlogs**: For features, refactoring, or multi-step work (>30min)
+- **Required progress updates**: Add notes after successful builds, major changes, or blockers
+- **Always complete**: Document learnings and close devlogs when work is finished
 
 ## 🎯 Essential Patterns
 

@@ -14,6 +14,47 @@ This guide provides detailed patterns and examples. Use it when you need:
 
 For quick reference, see the global AI agent guidelines.
 
+## AI Agent Task Workflow
+
+### Before Starting Any Work
+```
+// 1. ALWAYS search for related devlogs first
+mcp_devlog_find_related_devlogs({
+  description: "brief description of planned work",
+  keywords: ["relevant", "keywords"]
+});
+
+// 2. Check current project context
+mcp_devlog_get_current_project();
+```
+
+### During Development Work
+```
+// Create devlog for substantial work (>30min)
+mcp_devlog_create_devlog({
+  title: "Clear, descriptive title",
+  description: "Detailed description of the work",
+  type: "feature", // or "bugfix", "refactor", "task"
+  priority: "medium" // or "low", "high", "critical"
+});
+
+// Update progress at key points
+mcp_devlog_add_devlog_note({
+  id: 123, // devlog ID from creation
+  note: "Completed milestone X, next working on Y",
+  files: ["path/to/modified/files.ts"]
+});
+```
+
+### When Work Is Complete
+```
+// Always complete with summary
+mcp_devlog_complete_devlog({
+  id: 123, // devlog ID
+  summary: "What was accomplished, key learnings, any blockers resolved"
+});
+```
+
 ## Service Architecture
 
 ### Singleton Pattern
