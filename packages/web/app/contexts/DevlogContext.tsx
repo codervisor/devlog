@@ -22,8 +22,8 @@ import {
 } from '@codervisor/devlog-core';
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
 import { useProject } from './ProjectContext';
-import { NoteApiClient } from '@/lib/note-api-client';
-import { apiClient, handleApiError } from '@/lib/api-client';
+import { NoteApiClient } from '@/lib';
+import { apiClient, handleApiError } from '@/lib';
 import type { CollectionResponse } from '@/schemas/responses';
 
 interface DevlogContextType {

@@ -73,9 +73,9 @@ import {
   PaginationMeta,
 } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
-import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
-import { cn } from '@/lib/utils';
+import { formatTimeAgoWithTooltip } from '@/lib';
+import { priorityOptions, statusOptions, typeOptions } from '@/lib';
+import { cn } from '@/lib';
 
 interface DevlogListProps {
   devlogs: DevlogEntry[];

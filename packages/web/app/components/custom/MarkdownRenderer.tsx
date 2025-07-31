@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { StickyHeadings } from './StickyHeadings';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 // Import highlight.js CSS theme
 import 'highlight.js/styles/github.css';

@@ -6,7 +6,7 @@ import {
   withErrorHandling,
   createSuccessResponse,
   ResponseTransformer,
-} from '@/lib/api-utils';
+} from '@/lib';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation

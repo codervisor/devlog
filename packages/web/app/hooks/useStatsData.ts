@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
-import { apiClient, handleApiError } from '@/lib/api-client';
+import { apiClient, handleApiError } from '@/lib';
 
 interface UseStatsOptions {
   /**

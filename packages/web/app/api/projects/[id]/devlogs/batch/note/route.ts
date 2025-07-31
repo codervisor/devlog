@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
   withErrorHandling,
   ResponseTransformer,
-} from '@/lib/api-utils';
+} from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

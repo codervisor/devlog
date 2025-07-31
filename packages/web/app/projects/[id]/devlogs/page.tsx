@@ -1,5 +1,5 @@
 import { ProjectDevlogListPage } from './ProjectDevlogListPage';
-import { RouteParamParsers } from '@/lib/route-params';
+import { RouteParamParsers } from '@/lib';
 
 // Disable static generation for this page since it uses client-side features
 export const dynamic = 'force-dynamic';

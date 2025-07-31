@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import {
-  RouteParams,
-  ApiErrors,
-  createSuccessResponse,
-  ResponseTransformer,
-} from '@/lib/api-utils';
+import { RouteParams, ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

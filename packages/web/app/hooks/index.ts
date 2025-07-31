@@ -8,5 +8,5 @@ export { useNotes } from './useNotes';
 export { useServerSentEvents } from './useServerSentEvents';
 
 // Utility hooks
-export { useIsMobile } from './use-mobile';
+export { useIsMobile } from './useMobile';
 export { useStickyHeaders } from './useStickyHeaders';

@@ -11,7 +11,7 @@ import {
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
-import { apiClient, handleApiError } from '@/lib/api-client';
+import { apiClient, handleApiError } from '@/lib';
 import type { CollectionResponse } from '@/schemas/responses';
 
 interface UseDevlogDataOptions {

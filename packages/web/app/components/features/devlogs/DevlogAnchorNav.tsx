@@ -1,6 +1,6 @@
 import React from 'react';
 import { DevlogEntry } from '@codervisor/devlog-core';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface DevlogAnchorNavProps {
   devlog: DevlogEntry;

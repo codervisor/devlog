@@ -3,10 +3,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Edit2 } from 'lucide-react';
 import { MarkdownEditor } from './MarkdownEditor';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface EditableFieldProps {
   value: string;
@@ -133,12 +139,14 @@ export function EditableField({
           open={isEditing}
           onOpenChange={setIsEditing}
         >
-          <SelectTrigger className={cn(
-            "w-full",
-            borderless && "border-none shadow-none bg-transparent",
-            size === 'sm' && "h-8",
-            size === 'lg' && "h-12"
-          )}>
+          <SelectTrigger
+            className={cn(
+              'w-full',
+              borderless && 'border-none shadow-none bg-transparent',
+              size === 'sm' && 'h-8',
+              size === 'lg' && 'h-12',
+            )}
+          >
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
@@ -160,8 +168,8 @@ export function EditableField({
           onBlur={handleBlur}
           placeholder={placeholder}
           className={cn(
-            "min-h-[32px] resize-none",
-            borderless && "border-none shadow-none bg-transparent focus-visible:ring-0"
+            'min-h-[32px] resize-none',
+            borderless && 'border-none shadow-none bg-transparent focus-visible:ring-0',
           )}
         />
       );
@@ -175,9 +183,9 @@ export function EditableField({
           onBlur={handleBlur}
           placeholder={placeholder}
           className={cn(
-            borderless && "border-none shadow-none bg-transparent focus-visible:ring-0",
-            size === 'sm' && "h-8",
-            size === 'lg' && "h-12"
+            borderless && 'border-none shadow-none bg-transparent focus-visible:ring-0',
+            size === 'sm' && 'h-8',
+            size === 'lg' && 'h-12',
           )}
         />
       );
@@ -186,22 +194,14 @@ export function EditableField({
 
   const renderContent = () => {
     if (showEmptyText && (!value || value.trim() === '')) {
-      return (
-        <span className="text-muted-foreground italic">
-          {emptyText}
-        </span>
-      );
+      return <span className="text-muted-foreground italic">{emptyText}</span>;
     }
 
     return children;
   };
 
   if (isEditing) {
-    return (
-      <div className={cn("relative", className)}>
-        {renderInput()}
-      </div>
-    );
+    return <div className={cn('relative', className)}>{renderInput()}</div>;
   }
 
   // Show empty text if value is empty and emptyText is provided
@@ -211,10 +211,10 @@ export function EditableField({
     <div
       ref={contentRef}
       className={cn(
-        "relative cursor-pointer group hover:bg-muted/20 rounded transition-colors",
-        "p-1 -m-1",
-        borderless && "border-none",
-        className
+        'relative cursor-pointer group hover:bg-muted/20 rounded transition-colors',
+        'p-1 -m-1',
+        borderless && 'border-none',
+        className,
       )}
       onClick={handleEnterEdit}
       onMouseEnter={() => setIsHovered(true)}
@@ -222,10 +222,12 @@ export function EditableField({
       title="Click to edit"
     >
       {renderContent()}
-      <div className={cn(
-        "absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity",
-        "bg-background/80 rounded p-1"
-      )}>
+      <div
+        className={cn(
+          'absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity',
+          'bg-background/80 rounded p-1',
+        )}
+      >
         <Edit2 className="h-3 w-3 text-muted-foreground" />
       </div>
     </div>

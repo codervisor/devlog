@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib/api-utils';
+import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 

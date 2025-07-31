@@ -6,7 +6,7 @@ import {
   createSuccessResponse,
   createSimpleCollectionResponse,
   ResponseTransformer,
-} from '@/lib/api-utils';
+} from '@/lib';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 

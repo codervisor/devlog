@@ -18,13 +18,13 @@ import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
 import { useNotes } from '@/hooks/useNotes';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
-import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
-import { getCategoryIconRaw } from '@/lib/note-utils';
+import { formatTimeAgoWithTooltip } from '@/lib';
+import { priorityOptions, statusOptions, typeOptions } from '@/lib';
+import { getCategoryIconRaw } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib';
 
 interface DevlogDetailsProps {
   devlog?: DevlogEntry;

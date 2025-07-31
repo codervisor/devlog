@@ -19,7 +19,10 @@ export function formatTimeAgo(dateString: string): string {
  * @param dateString - ISO date string
  * @returns Object with timeAgo and fullDate for tooltip
  */
-export function formatTimeAgoWithTooltip(dateString?: string): { timeAgo: string; fullDate: string } {
+export function formatTimeAgoWithTooltip(dateString?: string): {
+  timeAgo: string;
+  fullDate: string;
+} {
   if (!dateString) {
     return { timeAgo: 'N/A', fullDate: 'N/A' };
   }

@@ -5,10 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { statusOptions, priorityOptions, typeOptions } from '@/lib/devlog-options';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { statusOptions, priorityOptions, typeOptions } from '@/lib';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,7 +45,12 @@ interface DevlogFormProps {
   isEditMode?: boolean;
 }
 
-export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = false }: DevlogFormProps) {
+export function DevlogForm({
+  onSubmit,
+  onCancel,
+  initialValues,
+  isEditMode = false,
+}: DevlogFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialValues || {
@@ -87,7 +106,7 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {typeOptions.map(option => (
+                        {typeOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -112,7 +131,7 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {priorityOptions.map(option => (
+                        {priorityOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -138,7 +157,7 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {statusOptions.map(option => (
+                          {statusOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -165,9 +184,7 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {field.value?.length || 0}/500 characters
-                  </FormDescription>
+                  <FormDescription>{field.value?.length || 0}/500 characters</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -187,7 +204,8 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                     />
                   </FormControl>
                   <FormDescription>
-                    Why this work matters and what problem it solves ({field.value?.length || 0}/300 characters)
+                    Why this work matters and what problem it solves ({field.value?.length || 0}/300
+                    characters)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -208,7 +226,8 @@ export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = fal
                     />
                   </FormControl>
                   <FormDescription>
-                    Architecture decisions, constraints, assumptions ({field.value?.length || 0}/300 characters)
+                    Architecture decisions, constraints, assumptions ({field.value?.length || 0}/300
+                    characters)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
-import { apiClient, handleApiError } from '@/lib/api-client';
+import { apiClient, handleApiError } from '@/lib';
 
 interface UseDevlogDetailsOptions {
   /**

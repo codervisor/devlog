@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiClient, handleApiError } from '@/lib/api-client';
+import { apiClient, handleApiError } from '@/lib';
 
 export interface ProjectMetadata {
   id: number; // Changed from string to number to match API
