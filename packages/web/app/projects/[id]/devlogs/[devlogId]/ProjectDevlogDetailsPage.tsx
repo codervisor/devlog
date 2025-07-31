@@ -147,14 +147,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   }
 
   const actions = (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-2 w-full">
       {hasUnsavedChanges && (
         <>
           <Button
             variant="outline"
             onClick={() => discardHandlerRef.current?.()}
             disabled={isSaving}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full justify-start"
           >
             <UndoIcon size={16} />
             Discard Changes
@@ -162,20 +162,24 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
           <Button
             onClick={() => saveHandlerRef.current?.()}
             disabled={isSaving}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full justify-start"
           >
             <SaveIcon size={16} />
             Save Changes
           </Button>
         </>
       )}
-      <Button variant="outline" onClick={handleBack} className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        onClick={handleBack}
+        className="flex items-center gap-2 w-full justify-start"
+      >
         <ArrowLeftIcon size={16} />
         Back to List
       </Button>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="destructive" className="flex items-center gap-2">
+          <Button variant="destructive" className="flex items-center gap-2 w-full justify-start">
             <TrashIcon size={16} />
             Delete
           </Button>
@@ -201,13 +205,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   );
 
   return (
-    <PageLayout actions={actions}>
+    <PageLayout>
       <DevlogDetails
         devlog={devlog}
         hasUnsavedChanges={hasUnsavedChanges}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
         onUnsavedChangesChange={handleUnsavedChangesChange}
+        actions={actions}
       />
     </PageLayout>
   );

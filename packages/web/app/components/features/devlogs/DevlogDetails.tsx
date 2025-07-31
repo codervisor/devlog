@@ -37,6 +37,7 @@ interface DevlogDetailsProps {
     saveHandler: () => Promise<void>,
     discardHandler: () => void,
   ) => void;
+  actions?: React.ReactNode;
 }
 
 export function DevlogDetails({
@@ -46,6 +47,7 @@ export function DevlogDetails({
   onUpdate,
   onDelete,
   onUnsavedChangesChange,
+  actions,
 }: DevlogDetailsProps) {
   // Local state for tracking changes
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
@@ -70,7 +72,7 @@ export function DevlogDetails({
   useStickyHeaders({
     selectorClass: 'section-header',
     stickyClass: 'is-sticky',
-    topOffset: 96, // Account for the main devlog header
+    topOffset: 176, // Account for the sticky main devlog header (increased from 96)
     dependencies: [devlog?.id], // Re-run when devlog changes
   });
 
@@ -255,24 +257,22 @@ export function DevlogDetails({
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex gap-6">
           <div className="flex-1 space-y-6">
-            {/* Header Skeleton */}
-            <Card>
-              <CardHeader>
-                <div className="space-y-4">
-                  <Skeleton className="h-8 w-3/5" />
-                  <div className="flex space-x-2">
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-20" />
-                  </div>
-                  <div className="flex space-x-4 text-sm">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
+            {/* Sticky Header Skeleton */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-3/5" />
+                <div className="flex space-x-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
                 </div>
-              </CardHeader>
-            </Card>
+                <div className="flex space-x-4 text-sm">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            </div>
 
             {/* Content Skeletons */}
             {[
@@ -302,18 +302,29 @@ export function DevlogDetails({
 
           {/* Side Navigation Skeleton */}
           <div className="w-64 flex-shrink-0">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-5 w-20" />
-              </CardHeader>
-              <CardContent>
+            <div className="sticky top-44 space-y-4">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-5 w-20" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Actions skeleton */}
+              <div className="border-t pt-4">
                 <div className="space-y-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-4 w-full" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -325,81 +336,83 @@ export function DevlogDetails({
       <div className="flex gap-6">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
-          {/* Header */}
-          <Card>
-            <CardHeader>
-              <div className="space-y-4">
-                <EditableField
-                  key={`title-${getCurrentValue('title')}`}
-                  value={getCurrentValue('title')}
-                  onSave={(value: any) => handleFieldChange('title', value)}
-                  placeholder="Enter title"
-                  className={cn(
-                    'text-3xl font-bold',
-                    isFieldChanged('title') && 'ring-2 ring-primary/20 bg-primary/5',
-                  )}
-                >
-                  <h1 className="text-3xl font-bold" title={getCurrentValue('title')}>
-                    {getCurrentValue('title')}
-                  </h1>
-                </EditableField>
-
-                <div className="flex flex-wrap gap-2">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
+            <Card className="border-0 shadow-none bg-transparent">
+              <CardHeader className="p-0">
+                <div className="space-y-4">
                   <EditableField
-                    key={`status-${getCurrentValue('status')}`}
+                    key={`title-${getCurrentValue('title')}`}
+                    value={getCurrentValue('title')}
+                    onSave={(value: any) => handleFieldChange('title', value)}
+                    placeholder="Enter title"
                     className={cn(
-                      'inline-block',
-                      isFieldChanged('status') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      'text-3xl font-bold',
+                      isFieldChanged('title') && 'ring-2 ring-primary/20 bg-primary/5',
                     )}
-                    type="select"
-                    value={getCurrentValue('status')}
-                    options={statusOptions}
-                    onSave={(value: any) => handleFieldChange('status', value)}
                   >
-                    <DevlogStatusTag status={getCurrentValue('status')} />
+                    <h1 className="text-3xl font-bold" title={getCurrentValue('title')}>
+                      {getCurrentValue('title')}
+                    </h1>
                   </EditableField>
 
-                  <EditableField
-                    key={`priority-${getCurrentValue('priority')}`}
-                    className={cn(
-                      'inline-block',
-                      isFieldChanged('priority') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
-                    )}
-                    type="select"
-                    value={getCurrentValue('priority')}
-                    options={priorityOptions}
-                    onSave={(value: any) => handleFieldChange('priority', value)}
-                  >
-                    <DevlogPriorityTag priority={getCurrentValue('priority')} />
-                  </EditableField>
+                  <div className="flex flex-wrap gap-2">
+                    <EditableField
+                      key={`status-${getCurrentValue('status')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('status') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('status')}
+                      options={statusOptions}
+                      onSave={(value: any) => handleFieldChange('status', value)}
+                    >
+                      <DevlogStatusTag status={getCurrentValue('status')} />
+                    </EditableField>
 
-                  <EditableField
-                    key={`type-${getCurrentValue('type')}`}
-                    className={cn(
-                      'inline-block',
-                      isFieldChanged('type') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
-                    )}
-                    type="select"
-                    value={getCurrentValue('type')}
-                    options={typeOptions}
-                    onSave={(value: any) => handleFieldChange('type', value)}
-                  >
-                    <DevlogTypeTag type={getCurrentValue('type')} />
-                  </EditableField>
+                    <EditableField
+                      key={`priority-${getCurrentValue('priority')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('priority') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('priority')}
+                      options={priorityOptions}
+                      onSave={(value: any) => handleFieldChange('priority', value)}
+                    >
+                      <DevlogPriorityTag priority={getCurrentValue('priority')} />
+                    </EditableField>
+
+                    <EditableField
+                      key={`type-${getCurrentValue('type')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('type') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('type')}
+                      options={typeOptions}
+                      onSave={(value: any) => handleFieldChange('type', value)}
+                    >
+                      <DevlogTypeTag type={getCurrentValue('type')} />
+                    </EditableField>
+                  </div>
+
+                  <div className="flex space-x-4 text-sm text-muted-foreground">
+                    <span>ID: #{devlog.id}</span>
+                    <span title={formatTimeAgoWithTooltip(devlog.createdAt).fullDate}>
+                      Created: {formatTimeAgoWithTooltip(devlog.createdAt).timeAgo}
+                    </span>
+                    <span title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}>
+                      Updated: {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                    </span>
+                  </div>
                 </div>
-
-                <div className="flex space-x-4 text-sm text-muted-foreground">
-                  <span>ID: #{devlog.id}</span>
-                  <span title={formatTimeAgoWithTooltip(devlog.createdAt).fullDate}>
-                    Created: {formatTimeAgoWithTooltip(devlog.createdAt).timeAgo}
-                  </span>
-                  <span title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}>
-                    Updated: {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+              </CardHeader>
+            </Card>
+          </div>
 
           {/* Description */}
           <Card id="description">
@@ -608,7 +621,14 @@ export function DevlogDetails({
 
         {/* Side Navigation */}
         <div className="w-64 flex-shrink-0">
-          <DevlogAnchorNav devlog={devlog} notesCount={notes?.length || 0} />
+          <div className="sticky top-44 space-y-4">
+            <DevlogAnchorNav devlog={devlog} notesCount={notes?.length || 0} />
+            {actions && (
+              <div className="border-t pt-4">
+                <div className="space-y-3">{actions}</div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
