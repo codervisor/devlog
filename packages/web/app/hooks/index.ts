@@ -1,6 +1,3 @@
-// Core unified hooks
-export { useDevlogDetails } from './useDevlogDetails';
-
 // Specialized hooks
 export { useNotes } from './useNotes';
 export { useServerSentEvents } from './useServerSentEvents';

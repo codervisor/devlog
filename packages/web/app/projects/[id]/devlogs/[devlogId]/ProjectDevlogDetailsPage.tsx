@@ -2,7 +2,6 @@
 
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { DevlogDetails, PageLayout } from '@/components';
-import { useDevlogDetails } from '@/hooks/useDevlogDetails';
 import { useDevlogContext } from '@/contexts/DevlogContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
@@ -41,13 +40,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   }, [projectId, projects, currentProject, setCurrentProject]);
 
   const {
-    devlog,
-    loading,
-    error: fetchError,
-    updateDevlog,
-    deleteDevlog: deleteDevlogFromDetails,
-  } = useDevlogDetails(devlogId, { projectId });
-  const { deleteDevlog: deleteDevlogFromList } = useDevlogContext();
+    selectedDevlog: devlog,
+    selectedDevlogLoading: loading,
+    selectedDevlogError: fetchError,
+    fetchSelectedDevlog,
+    updateSelectedDevlog,
+    deleteDevlog: deleteDevlogFromList,
+    clearSelectedDevlog,
+  } = useDevlogContext();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -55,10 +55,22 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const saveHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const discardHandlerRef = useRef<(() => void) | null>(null);
 
+  // Fetch the devlog when component mounts or devlogId changes
+  useEffect(() => {
+    if (currentProject) {
+      fetchSelectedDevlog(devlogId);
+    }
+
+    // Clear selected devlog when component unmounts
+    return () => {
+      clearSelectedDevlog();
+    };
+  }, [devlogId, currentProject, fetchSelectedDevlog, clearSelectedDevlog]);
+
   const handleUpdate = async (data: any) => {
     try {
       setIsSaving(true);
-      await updateDevlog(data);
+      await updateSelectedDevlog({ ...data, id: devlogId });
       toast.success('Changes saved successfully');
     } catch (error) {
       console.error('Failed to update devlog:', error);
@@ -80,18 +92,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
 
   const handleDelete = async () => {
     try {
-      // Call both delete functions to ensure proper state synchronization:
-      // 1. Delete from details hook (updates local state immediately)
-      await deleteDevlogFromDetails(devlogId);
-
-      // 2. Delete from list context (ensures list state is updated even if SSE is delayed)
-      // Note: This is a safety measure in case there are timing issues with real-time events
-      try {
-        await deleteDevlogFromList(devlogId);
-      } catch (error) {
-        // This might fail if the item is already deleted, which is fine
-        console.debug('List deletion failed (likely already removed by SSE):', error);
-      }
+      // Delete the devlog (this will also clear selected devlog via context)
+      await deleteDevlogFromList(devlogId);
 
       router.push(`/projects/${projectId}/devlogs`);
     } catch (error) {

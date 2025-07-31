@@ -34,6 +34,11 @@ interface DevlogContextType {
   filters: DevlogFilter;
   connected: boolean;
 
+  // Selected devlog state (for detail views)
+  selectedDevlog: DevlogEntry | null;
+  selectedDevlogLoading: boolean;
+  selectedDevlogError: string | null;
+
   // Stats state
   stats: DevlogStats | null;
   statsLoading: boolean;
@@ -49,8 +54,11 @@ interface DevlogContextType {
   fetchDevlogs: () => Promise<void>;
   fetchStats: () => Promise<void>;
   fetchTimeSeriesStats: () => Promise<void>;
+  fetchSelectedDevlog: (id: DevlogId) => Promise<void>;
+  clearSelectedDevlog: () => void;
   createDevlog: (data: Partial<DevlogEntry>) => Promise<any>;
   updateDevlog: (data: Partial<DevlogEntry> & { id: DevlogId }) => Promise<any>;
+  updateSelectedDevlog: (data: Partial<DevlogEntry> & { id: DevlogId }) => Promise<DevlogEntry>;
   deleteDevlog: (id: DevlogId) => Promise<void>;
   batchUpdate: (ids: DevlogId[], updates: any) => Promise<any>;
   batchDelete: (ids: DevlogId[]) => Promise<void>;
@@ -91,6 +99,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   const [timeSeriesLoading, setTimeSeriesLoading] = useState(true);
   const [timeSeriesError, setTimeSeriesError] = useState<string | null>(null);
   const hasTimeSeriesFetched = useRef(false);
+
+  // Selected devlog state (for detail views)
+  const [selectedDevlog, setSelectedDevlog] = useState<DevlogEntry | null>(null);
+  const [selectedDevlogLoading, setSelectedDevlogLoading] = useState(false);
+  const [selectedDevlogError, setSelectedDevlogError] = useState<string | null>(null);
 
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
 
@@ -355,6 +368,64 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Selected devlog operations
+  const fetchSelectedDevlog = useCallback(
+    async (id: DevlogId) => {
+      if (!currentProject || !devlogApiClient) {
+        setSelectedDevlogError('No project selected or API client unavailable');
+        setSelectedDevlogLoading(false);
+        return;
+      }
+
+      try {
+        setSelectedDevlogLoading(true);
+        setSelectedDevlogError(null);
+
+        const devlog = await devlogApiClient.get(id);
+        setSelectedDevlog(devlog);
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        console.error('Failed to fetch selected devlog:', err);
+        setSelectedDevlogError(errorMessage);
+      } finally {
+        setSelectedDevlogLoading(false);
+      }
+    },
+    [currentProject, devlogApiClient],
+  );
+
+  const clearSelectedDevlog = useCallback(() => {
+    setSelectedDevlog(null);
+    setSelectedDevlogError(null);
+    setSelectedDevlogLoading(false);
+  }, []);
+
+  const updateSelectedDevlog = useCallback(
+    async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+      if (!currentProject || !devlogApiClient) {
+        throw new Error('No project selected or API client unavailable');
+      }
+
+      const { id, ...updateData } = data;
+      const updatedDevlog = await devlogApiClient.update(id, updateData as any);
+
+      // Update both selected devlog and list if the devlog exists in the list
+      setSelectedDevlog(updatedDevlog);
+      setDevlogs((current) => {
+        const index = current.findIndex((devlog) => devlog.id === updatedDevlog.id);
+        if (index >= 0) {
+          const updated = [...current];
+          updated[index] = updatedDevlog;
+          return updated;
+        }
+        return current;
+      });
+
+      return updatedDevlog;
+    },
+    [currentProject, devlogApiClient],
+  );
+
   // Fetch data on mount and filter changes
   useEffect(() => {
     fetchDevlogs();
@@ -393,10 +464,26 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
         fetchDevlogs();
         return current;
       });
+
+      // Also update selected devlog if it matches
+      setSelectedDevlog((current) => {
+        if (current && current.id === updatedDevlog.id) {
+          return updatedDevlog;
+        }
+        return current;
+      });
     };
 
     const handleDevlogDeleted = (deletedData: { id: DevlogId }) => {
       setDevlogs((current) => current.filter((devlog) => devlog.id !== deletedData.id));
+
+      // Clear selected devlog if it was deleted
+      setSelectedDevlog((current) => {
+        if (current && current.id === deletedData.id) {
+          return null;
+        }
+        return current;
+      });
     };
 
     subscribe('devlog-created', handleDevlogCreated);
@@ -417,6 +504,9 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     error,
     filters,
     connected,
+    selectedDevlog,
+    selectedDevlogLoading,
+    selectedDevlogError,
     stats,
     statsLoading,
     statsError,
@@ -427,8 +517,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     fetchDevlogs,
     fetchStats,
     fetchTimeSeriesStats,
+    fetchSelectedDevlog,
+    clearSelectedDevlog,
     createDevlog,
     updateDevlog,
+    updateSelectedDevlog,
     deleteDevlog,
     batchUpdate,
     batchDelete,
