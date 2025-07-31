@@ -11,12 +11,6 @@ export * from './core.js';
 // API request and response types
 export * from './requests.js';
 
-// Storage configuration and provider types
-export * from './storage.js';
-
-// Storage provider-specific option types
-export * from './storage-options.js';
-
 // Project isolation and management types
 export * from './project.js';
 

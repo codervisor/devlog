@@ -143,6 +143,9 @@ export class MCPAdapter {
         type: args.type,
         description: args.description,
         priority: args.priority,
+        businessContext: args.businessContext,
+        technicalContext: args.technicalContext,
+        acceptanceCriteria: args.acceptanceCriteria,
       });
 
       return this.toStandardResponse(

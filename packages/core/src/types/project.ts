@@ -25,7 +25,3 @@ export interface ProjectMetadata {
   /** Last accessed timestamp */
   lastAccessedAt: Date;
 }
-
-// Re-export core storage types for backward compatibility
-import type { StorageConfig } from './storage.js';
-export type { StorageConfig };

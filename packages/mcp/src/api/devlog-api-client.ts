@@ -253,17 +253,27 @@ export class DevlogApiClient {
   }
 
   async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
-    const params = new URLSearchParams({ search: query });
+    const params = new URLSearchParams({ q: query });
 
     if (filter) {
       if (filter.status?.length) params.append('status', filter.status.join(','));
       if (filter.type?.length) params.append('type', filter.type.join(','));
       if (filter.priority?.length) params.append('priority', filter.priority.join(','));
       if (filter.archived !== undefined) params.append('archived', String(filter.archived));
+      if (filter.pagination?.page) params.append('page', String(filter.pagination.page));
+      if (filter.pagination?.limit) params.append('limit', String(filter.pagination.limit));
     }
 
-    const response = await this.get(`${this.getProjectEndpoint()}/devlogs?${params.toString()}`);
-    return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
+    const response = await this.get(
+      `${this.getProjectEndpoint()}/devlogs/search?${params.toString()}`,
+    );
+    const searchResponse = this.unwrapApiResponse<any>(response);
+
+    // Transform search response to match PaginatedResult interface
+    return {
+      items: searchResponse.results.map((result: any) => result.entry),
+      pagination: searchResponse.pagination,
+    };
   }
 
   async addDevlogNote(devlogId: number, note: string, category?: string): Promise<DevlogEntry> {

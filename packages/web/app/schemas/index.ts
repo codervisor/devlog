@@ -8,6 +8,7 @@
 // Re-export all schemas and utilities
 export * from './project';
 export * from './devlog';
+export * from './search';
 export * from './validation';
 export * from './bridge';
 export * from './responses';

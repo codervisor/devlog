@@ -13,11 +13,15 @@ import type {
   DevlogId,
   DevlogStats,
   PaginatedResult,
+  SearchPaginatedResult,
+  SearchResult,
+  SearchMeta,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
 import { DevlogDependencyEntity, DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
 import { getDataSource } from '../utils/typeorm-config.js';
+import { getStorageType } from '../entities/decorators.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
 import { generateDevlogKey } from '../utils/key-generator.js';
 
@@ -368,6 +372,137 @@ export class DevlogService {
     return await this.handleList(projectFilter, queryBuilder);
   }
 
+  /**
+   * Enhanced search with database-level relevance scoring and optimized pagination
+   */
+  async searchWithRelevance(
+    query: string,
+    filter?: DevlogFilter,
+  ): Promise<SearchPaginatedResult<DevlogEntry>> {
+    const searchStartTime = Date.now();
+    await this.ensureInitialized();
+
+    // Validate search query
+    if (!query || query.trim().length === 0) {
+      throw new Error('Search query is required and must be a non-empty string');
+    }
+
+    // Validate filter if provided
+    if (filter) {
+      const filterValidation = DevlogValidator.validateFilter(filter);
+      if (!filterValidation.success) {
+        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
+      }
+      filter = filterValidation.data;
+    }
+
+    const projectFilter = this.addProjectFilter(filter);
+    const searchOptions = projectFilter.searchOptions || {};
+    const storageType = getStorageType();
+
+    // Build database-specific relevance query
+    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+
+    // Apply database-specific search with relevance scoring
+    await this.applyRelevanceSearch(queryBuilder, query, searchOptions, storageType);
+
+    // Apply other filters
+    await this.applySearchFilters(queryBuilder, projectFilter);
+
+    // Apply pagination and sorting with relevance
+    const pagination = projectFilter.pagination || {
+      page: 1,
+      limit: 20,
+      sortBy: 'relevance',
+      sortOrder: 'desc',
+    };
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 20;
+    const offset = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalCountQuery = queryBuilder.clone();
+    const total = await totalCountQuery.getCount();
+
+    // Apply sorting - relevance first, then secondary sort
+    if (pagination.sortBy === 'relevance' || !pagination.sortBy) {
+      queryBuilder.orderBy(
+        'relevance_score',
+        (pagination.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
+      );
+      queryBuilder.addOrderBy('devlog.updatedAt', 'DESC');
+    } else {
+      const validSortColumns = [
+        'id',
+        'title',
+        'type',
+        'status',
+        'priority',
+        'createdAt',
+        'updatedAt',
+      ];
+      if (validSortColumns.includes(pagination.sortBy)) {
+        queryBuilder.orderBy(
+          `devlog.${pagination.sortBy}`,
+          (pagination.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
+        );
+      } else {
+        queryBuilder.orderBy('relevance_score', 'DESC');
+      }
+    }
+
+    // Apply pagination
+    queryBuilder.skip(offset).take(limit);
+
+    // Execute query and transform results
+    const rawResults = await queryBuilder.getRawAndEntities();
+    const searchResults: SearchResult<DevlogEntry>[] = rawResults.entities.map((entity, index) => {
+      const rawData = rawResults.raw[index];
+      const entry = entity.toDevlogEntry();
+
+      return {
+        entry,
+        relevance: parseFloat(rawData.relevance_score || '0'),
+        matchedFields: this.extractMatchedFields(entry, query),
+        highlights: searchOptions.includeHighlights
+          ? this.generateHighlights(entry, query)
+          : undefined,
+      };
+    });
+
+    const searchTime = Date.now() - searchStartTime;
+    const totalPages = Math.ceil(total / limit);
+
+    const searchMeta: SearchMeta = {
+      query,
+      searchTime,
+      totalMatches: total,
+      appliedFilters: {
+        status: projectFilter.status,
+        type: projectFilter.type,
+        priority: projectFilter.priority,
+        assignee: projectFilter.assignee,
+        archived: projectFilter.archived,
+        fromDate: projectFilter.fromDate,
+        toDate: projectFilter.toDate,
+      },
+      searchEngine: storageType,
+    };
+
+    return {
+      items: searchResults,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: offset + searchResults.length < total,
+      },
+      searchMeta,
+    };
+  }
+
   async getStats(filter?: DevlogFilter): Promise<DevlogStats> {
     await this.ensureInitialized();
 
@@ -632,5 +767,274 @@ export class DevlogService {
     }
 
     return projectFilter;
+  }
+
+  /**
+   * Apply database-specific relevance search to query builder
+   */
+  private async applyRelevanceSearch(
+    queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
+    query: string,
+    searchOptions: any,
+    storageType: string,
+  ): Promise<void> {
+    const searchMode = searchOptions.searchMode || 'fuzzy';
+
+    if (storageType === 'postgres' && searchMode === 'fuzzy') {
+      // PostgreSQL with pg_trgm similarity scoring
+      queryBuilder
+        .addSelect(
+          `
+          GREATEST(
+            COALESCE(similarity(devlog.title, :query), 0) * 0.4,
+            COALESCE(similarity(devlog.description, :query), 0) * 0.3,
+            COALESCE(similarity(devlog.businessContext, :query), 0) * 0.2,
+            COALESCE(similarity(devlog.technicalContext, :query), 0) * 0.2,
+            CASE WHEN devlog.key ILIKE :keyQuery THEN 0.15 ELSE 0 END,
+            CASE WHEN devlog.type ILIKE :keyQuery THEN 0.1 ELSE 0 END,
+            CASE WHEN devlog.priority ILIKE :keyQuery THEN 0.05 ELSE 0 END,
+            CASE WHEN devlog.status ILIKE :keyQuery THEN 0.05 ELSE 0 END
+          )
+        `,
+          'relevance_score',
+        )
+        .where(
+          `
+          similarity(devlog.title, :query) > 0.1 OR 
+          similarity(devlog.description, :query) > 0.1 OR 
+          similarity(devlog.businessContext, :query) > 0.1 OR 
+          similarity(devlog.technicalContext, :query) > 0.1 OR
+          devlog.key ILIKE :keyQuery OR
+          devlog.type ILIKE :keyQuery OR
+          devlog.priority ILIKE :keyQuery OR
+          devlog.status ILIKE :keyQuery
+        `,
+        )
+        .setParameter('query', query)
+        .setParameter('keyQuery', `%${query}%`);
+    } else if (storageType === 'mysql' && searchMode === 'fulltext') {
+      // MySQL FULLTEXT search with MATCH...AGAINST
+      queryBuilder
+        .addSelect(
+          `
+          GREATEST(
+            COALESCE(MATCH(devlog.title) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.4,
+            COALESCE(MATCH(devlog.description) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.3,
+            COALESCE(MATCH(devlog.businessContext) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.2,
+            COALESCE(MATCH(devlog.technicalContext) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.2,
+            CASE WHEN devlog.key LIKE :keyQuery THEN 0.15 ELSE 0 END,
+            CASE WHEN devlog.type LIKE :keyQuery THEN 0.1 ELSE 0 END,
+            CASE WHEN devlog.priority LIKE :keyQuery THEN 0.05 ELSE 0 END,
+            CASE WHEN devlog.status LIKE :keyQuery THEN 0.05 ELSE 0 END
+          )
+        `,
+          'relevance_score',
+        )
+        .where(
+          `
+          MATCH(devlog.title, devlog.description, devlog.businessContext, devlog.technicalContext) 
+          AGAINST(:query IN NATURAL LANGUAGE MODE) OR
+          devlog.key LIKE :keyQuery OR
+          devlog.type LIKE :keyQuery OR
+          devlog.priority LIKE :keyQuery OR
+          devlog.status LIKE :keyQuery
+        `,
+        )
+        .setParameter('query', query)
+        .setParameter('keyQuery', `%${query}%`);
+    } else {
+      // SQLite and fallback: weighted LIKE-based scoring
+      queryBuilder
+        .addSelect(
+          `
+          (
+            CASE WHEN devlog.title LIKE :exactQuery THEN 0.6
+                 WHEN devlog.title LIKE :keyQuery THEN 0.4
+                 ELSE 0 END +
+            CASE WHEN devlog.description LIKE :exactQuery THEN 0.5
+                 WHEN devlog.description LIKE :keyQuery THEN 0.3
+                 ELSE 0 END +
+            CASE WHEN devlog.businessContext LIKE :exactQuery THEN 0.4
+                 WHEN devlog.businessContext LIKE :keyQuery THEN 0.2
+                 ELSE 0 END +
+            CASE WHEN devlog.technicalContext LIKE :exactQuery THEN 0.4
+                 WHEN devlog.technicalContext LIKE :keyQuery THEN 0.2
+                 ELSE 0 END +
+            CASE WHEN devlog.key LIKE :keyQuery THEN 0.15 ELSE 0 END +
+            CASE WHEN devlog.type LIKE :keyQuery THEN 0.1 ELSE 0 END +
+            CASE WHEN devlog.priority LIKE :keyQuery THEN 0.05 ELSE 0 END +
+            CASE WHEN devlog.status LIKE :keyQuery THEN 0.05 ELSE 0 END
+          )
+        `,
+          'relevance_score',
+        )
+        .where(
+          `
+          devlog.title LIKE :keyQuery OR 
+          devlog.description LIKE :keyQuery OR 
+          devlog.businessContext LIKE :keyQuery OR 
+          devlog.technicalContext LIKE :keyQuery OR
+          devlog.key LIKE :keyQuery OR
+          devlog.type LIKE :keyQuery OR
+          devlog.priority LIKE :keyQuery OR
+          devlog.status LIKE :keyQuery
+        `,
+        )
+        .setParameter('exactQuery', query.toLowerCase())
+        .setParameter('keyQuery', `%${query}%`);
+    }
+
+    // Apply minimum relevance threshold if specified
+    if (searchOptions.minRelevance && searchOptions.minRelevance > 0) {
+      queryBuilder.andWhere('relevance_score >= :minRelevance', {
+        minRelevance: searchOptions.minRelevance,
+      });
+    }
+  }
+
+  /**
+   * Apply standard search filters to query builder
+   */
+  private async applySearchFilters(
+    queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
+    projectFilter: DevlogFilter,
+  ): Promise<void> {
+    // Apply project filter
+    if (projectFilter.projectId !== undefined) {
+      queryBuilder.andWhere('devlog.projectId = :projectId', {
+        projectId: projectFilter.projectId,
+      });
+    }
+
+    // Apply status filter
+    if (projectFilter.status && projectFilter.status.length > 0) {
+      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
+    }
+
+    // Apply type filter
+    if (projectFilter.type && projectFilter.type.length > 0) {
+      queryBuilder.andWhere('devlog.type IN (:...types)', { types: projectFilter.type });
+    }
+
+    // Apply priority filter
+    if (projectFilter.priority && projectFilter.priority.length > 0) {
+      queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
+        priorities: projectFilter.priority,
+      });
+    }
+
+    // Apply assignee filter
+    if (projectFilter.assignee !== undefined) {
+      if (projectFilter.assignee === null) {
+        queryBuilder.andWhere('devlog.assignee IS NULL');
+      } else {
+        queryBuilder.andWhere('devlog.assignee = :assignee', { assignee: projectFilter.assignee });
+      }
+    }
+
+    // Apply archived filter
+    if (projectFilter.archived !== undefined) {
+      queryBuilder.andWhere('devlog.archived = :archived', { archived: projectFilter.archived });
+    }
+
+    // Apply date range filters
+    if (projectFilter.fromDate) {
+      queryBuilder.andWhere('devlog.createdAt >= :fromDate', { fromDate: projectFilter.fromDate });
+    }
+
+    if (projectFilter.toDate) {
+      queryBuilder.andWhere('devlog.createdAt <= :toDate', { toDate: projectFilter.toDate });
+    }
+  }
+
+  /**
+   * Extract which fields matched the search query
+   */
+  private extractMatchedFields(entry: DevlogEntry, query: string): string[] {
+    const matchedFields: string[] = [];
+    const lowerQuery = query.toLowerCase();
+
+    if (entry.title.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('title');
+    }
+
+    if (entry.description.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('description');
+    }
+
+    if (entry.businessContext && entry.businessContext.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('businessContext');
+    }
+
+    if (entry.technicalContext && entry.technicalContext.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('technicalContext');
+    }
+
+    if (entry.key && entry.key.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('key');
+    }
+
+    if (entry.type.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('type');
+    }
+
+    if (entry.priority.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('priority');
+    }
+
+    if (entry.status.toLowerCase().includes(lowerQuery)) {
+      matchedFields.push('status');
+    }
+
+    return matchedFields;
+  }
+
+  /**
+   * Generate highlighted text excerpts for matched fields
+   */
+  private generateHighlights(entry: DevlogEntry, query: string): Record<string, string> {
+    const highlights: Record<string, string> = {};
+    const highlightText = (text: string, maxLength = 200): string => {
+      if (!text) return text;
+      const regex = new RegExp(`(${query})`, 'gi');
+      let highlighted = text.replace(regex, '<mark>$1</mark>');
+
+      if (highlighted.length > maxLength) {
+        // Find the position of the first highlight
+        const markIndex = highlighted.indexOf('<mark>');
+        if (markIndex > -1) {
+          // Extract around the highlight
+          const start = Math.max(0, markIndex - 50);
+          const end = Math.min(highlighted.length, markIndex + maxLength - 50);
+          highlighted = highlighted.substring(start, end);
+          if (start > 0) highlighted = '...' + highlighted;
+          if (end < text.length) highlighted = highlighted + '...';
+        } else {
+          highlighted = highlighted.substring(0, maxLength) + '...';
+        }
+      }
+
+      return highlighted;
+    };
+
+    const lowerQuery = query.toLowerCase();
+
+    if (entry.title.toLowerCase().includes(lowerQuery)) {
+      highlights.title = highlightText(entry.title, 100);
+    }
+
+    if (entry.description.toLowerCase().includes(lowerQuery)) {
+      highlights.description = highlightText(entry.description, 200);
+    }
+
+    if (entry.businessContext && entry.businessContext.toLowerCase().includes(lowerQuery)) {
+      highlights.businessContext = highlightText(entry.businessContext, 150);
+    }
+
+    if (entry.technicalContext && entry.technicalContext.toLowerCase().includes(lowerQuery)) {
+      highlights.technicalContext = highlightText(entry.technicalContext, 150);
+    }
+
+    return highlights;
   }
 }

@@ -204,6 +204,66 @@ export interface DevlogFilter {
   projectId?: number; // Filter by project context
   // Pagination options
   pagination?: PaginationOptions;
+  // Enhanced search options
+  searchOptions?: SearchOptions;
+}
+
+/**
+ * Enhanced search options for database-level search optimization
+ */
+export interface SearchOptions {
+  /** Enable relevance scoring at database level */
+  includeRelevance?: boolean;
+  /** Enable field matching information */
+  includeMatchedFields?: boolean;
+  /** Enable highlighting of search terms */
+  includeHighlights?: boolean;
+  /** Minimum relevance threshold (0-1) */
+  minRelevance?: number;
+  /** Search mode: 'fuzzy' for similarity, 'exact' for exact matches, 'fulltext' for database fulltext */
+  searchMode?: 'fuzzy' | 'exact' | 'fulltext';
+}
+
+/**
+ * Enhanced search result with database-calculated relevance scoring
+ */
+export interface SearchResult<T = DevlogEntry> {
+  /** The original entry */
+  entry: T;
+  /** Database-calculated relevance score (0-1) */
+  relevance: number;
+  /** Fields that matched the search query */
+  matchedFields: string[];
+  /** Highlighted text excerpts (optional) */
+  highlights?: Record<string, string>;
+}
+
+/**
+ * Enhanced paginated search result with relevance scoring
+ */
+export interface SearchPaginatedResult<T = DevlogEntry> {
+  /** Array of search results with relevance scoring */
+  items: SearchResult<T>[];
+  /** Pagination metadata */
+  pagination: PaginationMeta;
+  /** Search metadata */
+  searchMeta: SearchMeta;
+}
+
+/**
+ * Search metadata for performance and debugging
+ */
+export interface SearchMeta {
+  /** Query that was executed */
+  query: string;
+  /** Time taken for search in milliseconds */
+  searchTime: number;
+  /** Total number of matches before pagination */
+  totalMatches: number;
+  /** Applied filters summary */
+  appliedFilters?: Record<string, any>;
+  /** Database engine used for search */
+  searchEngine?: 'postgres' | 'mysql' | 'sqlite';
 }
 
 /**
