@@ -77,7 +77,7 @@ export function DevlogAnchorNav({ devlog, notesCount }: DevlogAnchorNavProps) {
         });
       },
       {
-        rootMargin: '-80px 0px -50% 0px', // Account for fixed header
+        rootMargin: '-176px 0px -50% 0px', // Account for fixed header (increased from -80px)
         threshold: 0.1,
       },
     );
@@ -101,7 +101,7 @@ export function DevlogAnchorNav({ devlog, notesCount }: DevlogAnchorNavProps) {
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
     if (element) {
-      const offsetTop = element.offsetTop - 80; // Account for fixed header
+      const offsetTop = element.offsetTop - 176; // Account for fixed header (increased from 80)
       window.scrollTo({
         top: offsetTop,
         behavior: 'smooth',
