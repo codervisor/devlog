@@ -18,7 +18,13 @@
     "start:web": "pnpm --filter @codervisor/devlog-web start",
     "preview:web": "pnpm --filter @codervisor/devlog-web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "validate": "node scripts/validation/validate-all.js",
+    "validate": "node scripts/validate-all-ast.js",
+    "validate:typescript": "node scripts/validate-typescript-best-practices-ast.js",
+    "validate:architecture": "node scripts/validate-architecture-patterns-ast.js",
+    "validate:testing": "node scripts/validate-testing-standards-ast.js",
+    "validate:security": "node scripts/validate-security-performance-ast.js",
+    "validate:quick": "node scripts/validate-all-ast.js --quick",
+    "validate:list": "node scripts/validate-all-ast.js --list",
     "validate:imports": "node scripts/validation/validate-imports.js",
     "validate:api": "node scripts/validation/validate-api-standardization-ast.js",
     "validate:envelopes": "node scripts/validation/validate-response-envelopes-ast.js",
@@ -66,6 +72,5 @@
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0",
     "tsx": "^4.0.0"
-  },
-  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad"
+  }
 }
