@@ -503,6 +503,18 @@ export class WorkspaceDevlogManager {
   }
 
   /**
+   * Search devlogs from a specific workspace
+   */
+  async searchDevlogsFromWorkspace(
+    workspaceId: string,
+    query: string,
+    filter?: DevlogFilter,
+  ): Promise<PaginatedResult<DevlogEntry>> {
+    const provider = await this.getWorkspaceStorageProvider(workspaceId);
+    return provider.search(query, filter);
+  }
+
+  /**
    * Get devlog statistics for current workspace
    * @param filter Optional filter to apply when calculating statistics
    */

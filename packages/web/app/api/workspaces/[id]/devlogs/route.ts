@@ -12,6 +12,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { searchParams } = new URL(request.url);
     const filter: any = {};
 
+    // Get search query parameter
+    const searchQuery = searchParams.get('search');
+
     // Parse query parameters (same as main devlogs API)
     if (searchParams.get('status')) filter.status = searchParams.get('status')?.split(',');
     if (searchParams.get('type')) filter.type = searchParams.get('type');
@@ -39,7 +42,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       };
     }
 
-    const devlogs = await manager.listDevlogsFromWorkspace(workspaceId, filter);
+    // Use search method if search query is provided, otherwise use list method
+    let devlogs;
+    if (searchQuery && searchQuery.trim()) {
+      devlogs = await manager.searchDevlogsFromWorkspace(workspaceId, searchQuery.trim(), filter);
+    } else {
+      devlogs = await manager.listDevlogsFromWorkspace(workspaceId, filter);
+    }
 
     return NextResponse.json(devlogs);
   } catch (error) {
