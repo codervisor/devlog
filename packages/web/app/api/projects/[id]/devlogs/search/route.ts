@@ -101,7 +101,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const result = await devlogService.searchWithRelevance(searchQuery, enhancedFilter);
 
     // Transform the response to match the expected interface
-    const response = {
+    const response: SearchResponse = {
       query: result.searchMeta.query,
       results: result.items.map((item) => ({
         entry: ResponseTransformer.transformDevlog(item.entry),
