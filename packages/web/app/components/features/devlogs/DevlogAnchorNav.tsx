@@ -1,19 +1,19 @@
-'use client';
-
-import React, { useMemo } from 'react';
-import { Anchor } from 'antd';
-import { DevlogEntry } from '@devlog/core';
-import styles from './DevlogAnchorNav.module.css';
+import React from 'react';
+import { DevlogEntry } from '@codervisor/devlog-core';
+import { cn } from '@/lib';
 
 interface DevlogAnchorNavProps {
   devlog: DevlogEntry;
+  notesCount?: number;
 }
 
-export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
-  const anchorItems = useMemo(() => {
-    const items = [];
+export function DevlogAnchorNav({ devlog, notesCount }: DevlogAnchorNavProps) {
+  const [activeSection, setActiveSection] = React.useState('description');
 
-    // Description - always present
+  const items = React.useMemo(() => {
+    const items: { key: string; href: string; title: string }[] = [];
+
+    // Description (always present)
     items.push({
       key: 'description',
       href: '#description',
@@ -21,7 +21,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     });
 
     // Business Context
-    if (devlog.context?.businessContext) {
+    if (devlog.businessContext) {
       items.push({
         key: 'business-context',
         href: '#business-context',
@@ -30,7 +30,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Technical Context
-    if (devlog.context?.technicalContext) {
+    if (devlog.technicalContext) {
       items.push({
         key: 'technical-context',
         href: '#technical-context',
@@ -39,7 +39,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Acceptance Criteria
-    if (devlog.context?.acceptanceCriteria && devlog.context.acceptanceCriteria.length > 0) {
+    if (devlog.acceptanceCriteria && devlog.acceptanceCriteria.length > 0) {
       items.push({
         key: 'acceptance-criteria',
         href: '#acceptance-criteria',
@@ -48,7 +48,7 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
     }
 
     // Dependencies
-    if (devlog.context?.dependencies && devlog.context.dependencies.length > 0) {
+    if (devlog.dependencies && devlog.dependencies.length > 0) {
       items.push({
         key: 'dependencies',
         href: '#dependencies',
@@ -56,92 +56,91 @@ export function DevlogAnchorNav({ devlog }: DevlogAnchorNavProps) {
       });
     }
 
-    // Decisions
-    if (devlog.context?.decisions && devlog.context.decisions.length > 0) {
-      items.push({
-        key: 'decisions',
-        href: '#decisions',
-        title: 'Decisions',
-      });
-    }
-
-    // Risks
-    if (devlog.context?.risks && devlog.context.risks.length > 0) {
-      items.push({
-        key: 'risks',
-        href: '#risks',
-        title: 'Risks',
-      });
-    }
-
-    // Related Files
-    if (devlog.files && devlog.files.length > 0) {
-      items.push({
-        key: 'files',
-        href: '#files',
-        title: 'Related Files',
-      });
-    }
-
-    // Related Devlogs
-    if (devlog.relatedDevlogs && devlog.relatedDevlogs.length > 0) {
-      items.push({
-        key: 'related-devlogs',
-        href: '#related-devlogs',
-        title: 'Related Devlogs',
-      });
-    }
-
-    // AI Context
-    if (
-      devlog.aiContext &&
-      (devlog.aiContext.currentSummary ||
-        (devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0) ||
-        (devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0) ||
-        (devlog.aiContext.suggestedNextSteps && devlog.aiContext.suggestedNextSteps.length > 0) ||
-        (devlog.aiContext.relatedPatterns && devlog.aiContext.relatedPatterns.length > 0))
-    ) {
-      items.push({
-        key: 'ai-context',
-        href: '#ai-context',
-        title: 'AI Context',
-      });
-    }
-
-    // External References
-    if (devlog.externalReferences && devlog.externalReferences.length > 0) {
-      items.push({
-        key: 'external-references',
-        href: '#external-references',
-        title: 'External References',
-      });
-    }
-
-    // Notes
-    if (devlog.notes && devlog.notes.length > 0) {
-      items.push({
-        key: 'notes',
-        href: '#notes',
-        title: 'Notes',
-      });
-    }
+    // Notes - always show the notes section now since notes are loaded separately
+    items.push({
+      key: 'notes',
+      href: '#notes',
+      title: `Notes${notesCount !== undefined ? ` (${notesCount})` : ''}`,
+    });
 
     return items;
   }, [devlog]);
 
-  // Don't render if there are too few sections to navigate
-  if (anchorItems.length <= 2) {
-    return null;
+  // Set up intersection observer to track active section
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: '-176px 0px -50% 0px', // Account for fixed header (increased from -80px)
+        threshold: 0.1,
+      },
+    );
+
+    items.forEach(({ key }) => {
+      const element = document.getElementById(key);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [items]);
+
+  if (items.length <= 1) {
+    return null; // Don't show anchor nav if only description exists
   }
 
+  const handleClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      const offsetTop = element.offsetTop - 176; // Account for fixed header (increased from 80)
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
-    <Anchor
-      className={styles.anchorNav}
-      getContainer={() => document.querySelector('.page-content.scrollable-content') as HTMLElement}
-      items={anchorItems}
-      offsetTop={120} // Account for sticky header height
-      bounds={20}
-      targetOffset={120}
-    />
+    <div className="sticky top-5">
+      <nav className="space-y-1">
+        <div className="relative">
+          {/* Active indicator line */}
+          <div className="absolute left-0 top-0 w-0.5 bg-border h-full" />
+          <div
+            className="absolute left-0 w-0.5 bg-primary transition-all duration-200 ease-in-out"
+            style={{
+              top: `${items.findIndex((item) => item.key === activeSection) * 2}rem`,
+              height: '1.5rem',
+            }}
+          />
+
+          {/* Navigation items */}
+          <div className="pl-4 space-y-1">
+            {items.map((item) => (
+              <a
+                key={item.key}
+                href={item.href}
+                onClick={(e) => handleClick(e, item.href)}
+                className={cn(
+                  'block py-1 text-sm leading-6 transition-colors hover:text-foreground',
+                  activeSection === item.key ? 'text-primary font-medium' : 'text-muted-foreground',
+                )}
+              >
+                {item.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+    </div>
   );
 }

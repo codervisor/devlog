@@ -1,17 +1,100 @@
-# Routing Implementation for @devlog/web
+# Routing Implementation for @codervisor/devlog-web
 
 ## Overview
 
-The web package now uses Next.js 14 App Router with proper routing structure instead of the previous single-page client with view state management.
+The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This provides better organization and clearer URL structure for project-scoped operations.
 
 ## Route Structure
 
+### Hierarchical Project-Based Routes (Primary)
 ```
-/                           - Dashboard (homepage)
-/devlogs                    - List of all devlogs
-/devlogs/create             - Create new devlog form
-/devlogs/[id]              - Individual devlog details page
+/                                           - Dashboard (homepage)
+/projects                                   - Project management page
+/projects/[id]                             - Project details page
+/projects/[id]/devlogs                     - List of devlogs for specific project
+/projects/[id]/devlogs/create              - Create new devlog in specific project
+/projects/[id]/devlogs/[devlogId]          - Individual devlog details within project
 ```
+
+````markdown
+# Routing Implementation for @codervisor/devlog-web
+
+## Overview
+
+The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This provides better organization and clearer URL structure for project-scoped operations.
+
+## Route Structure
+
+### Hierarchical Project-Based Routes (Primary)
+```
+/                                           - Redirects to /projects
+/projects                                   - Project list page (main entry point)
+/projects/[id]                             - Project dashboard/overview page
+/projects/[id]/devlogs                     - List of devlogs for specific project
+/projects/[id]/devlogs/create              - Create new devlog in specific project
+/projects/[id]/devlogs/[devlogId]          - Individual devlog details within project
+```
+
+## Key Changes Made
+
+### Route Purpose Updates
+- **`/` (Homepage)**: Now redirects to `/projects` as the main entry point
+- **`/projects`**: Project list/management page - browse and manage all projects
+- **`/projects/[id]`**: Project dashboard - overview with stats, charts, and recent devlogs (formerly the homepage dashboard)
+
+### Navigation Flow
+1. **User visits `/`** → Automatically redirected to `/projects`
+2. **User browses projects** at `/projects` → Can view all projects and create new ones
+3. **User selects a project** → Goes to `/projects/[id]` for that project's dashboard
+4. **From project dashboard** → Can navigate to devlogs, create entries, etc.
+
+## File Structure
+
+```
+app/
+├── layout.tsx             - Root layout with AppLayout wrapper
+├── page.tsx               - Homepage (redirects to /projects)
+├── DashboardPage.tsx      - Dashboard component (no longer used at root)
+├── AppLayout.tsx          - Shared layout with sidebar, header, and navigation
+├── projects/
+│   ├── page.tsx           - Project list page (/projects) - NEW MAIN ENTRY
+│   ├── ProjectManagementPage.tsx - Project list component (updated)
+│   └── [id]/
+│       ├── page.tsx       - Project dashboard page (/projects/[id])
+│       ├── ProjectDetailsPage.tsx - Project dashboard component (now uses Dashboard)
+│       └── devlogs/
+│           ├── page.tsx   - Project devlog list (/projects/[id]/devlogs)
+│           ├── ProjectDevlogListPage.tsx - Project-scoped devlog list
+│           ├── create/
+│           │   ├── page.tsx - Create devlog in project
+│           │   └── ProjectDevlogCreatePage.tsx - Project-scoped create form
+│           └── [devlogId]/
+│               ├── page.tsx - Dynamic devlog details page
+│               └── ProjectDevlogDetailsPage.tsx - Project-scoped details
+└── components/
+    ├── NavigationSidebar.tsx - Sidebar with project-aware routing
+    ├── NavigationBreadcrumb.tsx - Hierarchical breadcrumb navigation
+    └── LoadingPage.tsx    - Shared loading component
+```
+
+## Component Responsibilities
+
+### ProjectManagementPage (/projects)
+- **Primary function**: Project list and management interface
+- **Features**: Browse projects, create new projects, view project cards
+- **Navigation**: Links to individual project dashboards
+
+### ProjectDetailsPage (/projects/[id])
+- **Primary function**: Project-specific dashboard and overview
+- **Features**: Project stats, time series charts, recent devlogs, overview stats
+- **Context**: Sets project context for the entire project section
+
+### DashboardPage Component
+- **Usage**: Embedded in ProjectDetailsPage for project-specific dashboards
+- **Features**: Stats visualization, time series data, recent devlogs display
+- **Scope**: Project-scoped rather than global
+
+````
 
 ## File Structure
 
@@ -21,87 +104,23 @@ app/
 ├── page.tsx               - Dashboard page (/)
 ├── DashboardPage.tsx      - Dashboard component
 ├── AppLayout.tsx          - Shared layout with sidebar, header, and navigation
-├── devlogs/
-│   ├── page.tsx           - Devlog list page (/devlogs)
-│   ├── DevlogListPage.tsx - Devlog list component
-│   ├── create/
-│   │   ├── page.tsx       - Create page (/devlogs/create)
-│   │   └── DevlogCreatePage.tsx - Create form component
+├── projects/
+│   ├── page.tsx           - Project management page (/projects)
+│   ├── ProjectManagementPage.tsx - Project management component
 │   └── [id]/
-│       ├── page.tsx       - Dynamic devlog details page
-│       └── DevlogDetailsPage.tsx - Details component
+│       ├── page.tsx       - Project details page (/projects/[id])
+│       ├── ProjectDetailsPage.tsx - Project details component
+│       └── devlogs/
+│           ├── page.tsx   - Project devlog list (/projects/[id]/devlogs)
+│           ├── ProjectDevlogListPage.tsx - Project-scoped devlog list
+│           ├── create/
+│           │   ├── page.tsx - Create devlog in project
+│           │   └── ProjectDevlogCreatePage.tsx - Project-scoped create form
+│           └── [devlogId]/
+│               ├── page.tsx - Dynamic devlog details page
+│               └── ProjectDevlogDetailsPage.tsx - Project-scoped details
 └── components/
-    ├── NavigationSidebar.tsx - Sidebar with routing-aware navigation
-    ├── NavigationBreadcrumb.tsx - Breadcrumb navigation
+    ├── NavigationSidebar.tsx - Sidebar with project-aware routing
+    ├── NavigationBreadcrumb.tsx - Hierarchical breadcrumb navigation
     └── LoadingPage.tsx    - Shared loading component
-```
-
-## Key Features
-
-### 1. Proper Navigation
-- Uses Next.js `useRouter` and `usePathname` for navigation
-- Sidebar automatically highlights current route
-- Breadcrumb navigation shows current location
-
-### 2. Type Safety
-- Proper type conversion for DevlogId (string to number)
-- TypeScript support throughout routing components
-
-### 3. Shared Layout
-- `AppLayout` provides consistent sidebar, header, and error handling
-- Global state management for stats and WebSocket connection
-- Error boundaries for better error handling
-
-### 4. Loading States
-- Dedicated `LoadingPage` component for consistent loading UX
-- Proper loading states in data-dependent pages
-
-### 5. Deep Linking
-- Direct access to specific devlogs via URL
-- Bookmarkable URLs for all pages
-- Better SEO support
-
-## Migration from Previous Implementation
-
-The previous implementation used a single `client.tsx` file with view state management:
-
-```tsx
-// Old approach
-const [currentView, setCurrentView] = useState<View>('dashboard');
-const renderCurrentView = () => {
-  switch (currentView) {
-    case 'dashboard': return <Dashboard />
-    // ...
-  }
-}
-```
-
-Now each view is a proper route with its own page component:
-
-```tsx
-// New approach
-// app/page.tsx - Dashboard
-// app/devlogs/page.tsx - List
-// app/devlogs/create/page.tsx - Create
-// app/devlogs/[id]/page.tsx - Details
-```
-
-## Benefits
-
-1. **Better UX**: Users can bookmark, share, and navigate with browser back/forward
-2. **SEO**: Each page has its own URL and can be indexed separately
-3. **Performance**: Code splitting and route-based loading
-4. **Maintainability**: Clear separation of concerns with dedicated page components
-5. **Standard Patterns**: Follows Next.js best practices for routing
-
-## Development
-
-To run the development server:
-```bash
-pnpm --filter @devlog/web dev
-```
-
-To build for production:
-```bash
-pnpm --filter @devlog/web build
 ```

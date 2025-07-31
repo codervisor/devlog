@@ -1,5 +1,5 @@
 /**
- * @devlog/ai - GitHub Copilot Chat History Extractor
+ * @codervisor/devlog-ai - GitHub Copilot Chat History Extractor
  *
  * Main entry point for the TypeScript implementation
  */
@@ -13,9 +13,15 @@ export * from './parsers/index.js';
 // Export all exporters
 export * from './exporters/index.js';
 
+// Export all services
+export * from './services/index.js';
+
+// Export automation layer
+export * from './automation/index.js';
+
 // Re-export main classes for convenience
 export {
   MessageData as Message,
   ChatSessionData as ChatSession,
-  WorkspaceDataContainer as WorkspaceData,
+  WorkspaceDataContainer as ProjectData,
 } from './models/index.js';

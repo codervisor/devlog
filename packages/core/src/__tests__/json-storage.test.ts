@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JsonStorageProvider } from '../storage/index.js';
 import type { DevlogEntry } from '../types/index.js';
+import { clearProjectRootCache } from '../storage/shared/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { tmpdir } from 'os';
@@ -17,6 +18,9 @@ describe('JsonStorageProvider', () => {
   let originalCwd: string;
 
   beforeEach(async () => {
+    // Clear any cached project root to ensure test isolation
+    clearProjectRootCache();
+
     // Store original working directory
     originalCwd = process.cwd();
 
@@ -65,6 +69,9 @@ describe('JsonStorageProvider', () => {
     if (originalCwd && originalCwd !== process.cwd()) {
       process.chdir(originalCwd);
     }
+
+    // Clear the project root cache to prevent state leakage
+    clearProjectRootCache();
 
     try {
       await fs.rm(testDir, { recursive: true, force: true });

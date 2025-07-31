@@ -1,8 +1,5 @@
 import type { Metadata } from 'next';
-import { ConfigProvider } from 'antd';
-import { AppLayout } from './AppLayout';
-import { WorkspaceProvider } from './contexts/WorkspaceContext';
-import { DevlogProvider } from './contexts/DevlogContext';
+import { AppProviders } from './AppProviders';
 import './globals.css';
 import './fonts.css';
 
@@ -16,15 +13,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="font-inter">
-        <ConfigProvider>
-          <WorkspaceProvider>
-            <DevlogProvider>
-              <AppLayout>{children}</AppLayout>
-            </DevlogProvider>
-          </WorkspaceProvider>
-        </ConfigProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

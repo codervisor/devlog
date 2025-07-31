@@ -1,107 +1,80 @@
 /**
  * TypeScript interfaces for MCP tool arguments
- * This file provides proper typing for all tool arguments to eliminate 'any' types
+ *
+ * These types are derived from the Zod schemas but with proper defaults applied.
  */
 
-import { DevlogType, DevlogStatus, DevlogPriority, DevlogId } from '@devlog/core';
+import { DevlogType, DevlogStatus, DevlogPriority, DevlogId } from '@codervisor/devlog-core';
 
-// Base interfaces for common argument patterns
-export interface BaseDevlogArgs {
+// Core tool argument interfaces with proper defaults
+export interface CreateDevlogArgs {
+  title: string;
+  type: DevlogType;
+  description: string;
+  priority: DevlogPriority; // Required with default 'medium' applied by schema
+  businessContext?: string;
+  technicalContext?: string;
+  acceptanceCriteria?: string[];
+}
+
+export interface UpdateDevlogArgs {
+  id: DevlogId;
+  status?: DevlogStatus;
+  priority?: DevlogPriority;
+  businessContext?: string;
+  technicalContext?: string;
+  acceptanceCriteria?: string[];
+}
+
+export interface GetDevlogArgs {
   id: DevlogId;
 }
 
-export interface DevlogFilterArgs {
+export interface ListDevlogsArgs {
   status?: DevlogStatus;
   type?: DevlogType;
   priority?: DevlogPriority;
-  archived?: boolean; // Filter for archived status
-  // Pagination support (optional)
+  archived?: boolean;
   page?: number;
   limit?: number;
   sortBy?: 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'title';
   sortOrder?: 'asc' | 'desc';
 }
 
-// Core tool argument interfaces
-export interface CreateDevlogArgs {
-  title: string;
-  type: DevlogType;
-  description: string;
-  priority?: DevlogPriority;
-  businessContext?: string;
-  technicalContext?: string;
-  acceptanceCriteria?: string[];
-  initialInsights?: string[];
-  relatedPatterns?: string[];
-  // AI context fields (embedded from update_ai_context)
-  currentSummary?: string;
-  keyInsights?: string[];
-  openQuestions?: string[];
-  suggestedNextSteps?: string[];
-}
-
-export interface UpdateDevlogArgs extends BaseDevlogArgs {
-  status?: DevlogStatus;
-  blockers?: string;
-  nextSteps?: string;
-  files?: string[];
-  businessContext?: string;
-  technicalContext?: string;
-  acceptanceCriteria?: string[];
-  initialInsights?: string[];
-  relatedPatterns?: string[];
-  // AI context fields
-  currentSummary?: string;
-  keyInsights?: string[];
-  openQuestions?: string[];
-  suggestedNextSteps?: string[];
-}
-
-export interface ListDevlogsArgs extends DevlogFilterArgs {
-  // Inherits status, type, priority from DevlogFilterArgs
-}
-
-export interface SearchDevlogsArgs extends DevlogFilterArgs {
+export interface SearchDevlogsArgs {
   query: string;
+  status?: DevlogStatus;
+  type?: DevlogType;
+  priority?: DevlogPriority;
+  archived?: boolean;
 }
 
-export interface AddDevlogNoteArgs extends BaseDevlogArgs {
+export interface AddDevlogNoteArgs {
+  id: DevlogId;
   note: string;
-  category?: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback';
-  codeChanges?: string;
-  files?: string[];
+  category: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback'; // Required with default 'progress' applied by schema
 }
 
-export interface UpdateDevlogWithNoteArgs extends BaseDevlogArgs {
-  note: string;
-  category?: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback';
-  codeChanges?: string;
-  files?: string[];
+export interface UpdateDevlogWithNoteArgs {
+  id: DevlogId;
   status?: DevlogStatus;
   priority?: DevlogPriority;
+  note: string;
+  category: 'progress' | 'issue' | 'solution' | 'idea' | 'reminder' | 'feedback'; // Required with default 'progress' applied by schema
 }
 
-export interface AddDecisionArgs extends BaseDevlogArgs {
-  decision: string;
-  rationale: string;
-  decisionMaker: string;
-  alternatives?: string[];
-}
-
-export interface CompleteDevlogArgs extends BaseDevlogArgs {
+export interface CompleteDevlogArgs {
+  id: DevlogId;
   summary?: string;
 }
 
-export interface CloseDevlogArgs extends BaseDevlogArgs {
+export interface CloseDevlogArgs {
+  id: DevlogId;
   reason?: string;
 }
 
-export interface GetActiveContextArgs {
-  limit?: number;
-}
-
-export interface GetContextForAIArgs extends BaseDevlogArgs {
-  // Just the id from BaseDevlogArgs
+export interface ArchiveDevlogArgs {
+  id: DevlogId;
 }
 
 export interface DiscoverRelatedDevlogsArgs {
@@ -111,11 +84,34 @@ export interface DiscoverRelatedDevlogsArgs {
   scope?: string;
 }
 
-// Legacy AI context tool (deprecated)
-export interface UpdateAIContextArgs extends BaseDevlogArgs {
-  summary?: string;
-  insights?: string[];
-  questions?: string[];
-  patterns?: string[];
-  nextSteps?: string[];
+export interface ListProjectsArgs {
+  // No arguments
+}
+
+export interface GetCurrentProjectArgs {
+  // No arguments
+}
+
+export interface SwitchProjectArgs {
+  projectId: string;
+}
+
+// Legacy interfaces for backward compatibility
+export interface BaseDevlogArgs {
+  id: DevlogId;
+}
+
+export interface DevlogFilterArgs {
+  status?: DevlogStatus;
+  type?: DevlogType;
+  priority?: DevlogPriority;
+  archived?: boolean;
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'title';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface GetActiveContextArgs {
+  limit?: number;
 }

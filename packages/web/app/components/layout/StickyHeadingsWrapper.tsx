@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { StickyHeadings } from '../ui/StickyHeadings';
+import React, { useRef } from 'react';
 
 interface StickyHeadingsWrapperProps {
   children: React.ReactNode;
@@ -30,28 +29,10 @@ export function StickyHeadingsWrapper({
   scrollContainerSelector = '.page-content',
   headingSelector = 'h1, h2, h3, h4, h5, h6',
 }: StickyHeadingsWrapperProps) {
-  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!enabled) return;
+  // TODO: Implement StickyHeadings functionality with shadcn/ui
+  // For now, just render children without sticky functionality
 
-    // Find the scroll container
-    const container = document.querySelector(scrollContainerSelector) as HTMLElement;
-    setScrollContainer(container);
-  }, [enabled, scrollContainerSelector]);
-
-  return (
-    <div ref={contentRef}>
-      {children}
-      {enabled && (
-        <StickyHeadings
-          scrollContainer={scrollContainer}
-          headingSelector={headingSelector}
-          topOffset={topOffset}
-          enabled={enabled}
-        />
-      )}
-    </div>
-  );
+  return <div ref={contentRef}>{children}</div>;
 }

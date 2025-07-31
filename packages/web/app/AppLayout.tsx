@@ -1,23 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Alert, Layout } from 'antd';
-import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton } from '@/components';
-import { useDevlogContext } from './contexts/DevlogContext';
-import { useStats } from '@/hooks/useStats';
-
-const { Content } = Layout;
+import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton, TopNavbar } from '@/components';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
-  const { error, connected } = useDevlogContext();
-  const { stats, loading: isLoadingStats } = useStats();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -31,32 +23,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <ErrorBoundary>
-      <Layout className="app-layout">
-        <NavigationSidebar
-          stats={stats}
-          statsLoading={isLoadingStats}
-          collapsed={sidebarCollapsed}
-          connected={connected}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-        <Layout>
-          <Content className="app-content">
-            <div className="app-content-wrapper">
-              {error && (
-                <Alert
-                  message="Error"
-                  description={error}
-                  type="error"
-                  showIcon
-                  closable
-                  className="app-error-alert"
-                />
-              )}
-              {children}
+      <div className="min-h-screen bg-background w-full">
+        <TopNavbar />
+        <SidebarProvider>
+          <div className="flex w-full h-[calc(100vh-3rem)]">
+            <NavigationSidebar />
+            <div className="flex-1 flex flex-col w-full">
+              <main className="flex-1 p-6 w-full overflow-auto">
+                <div className="w-full">{children}</div>
+              </main>
             </div>
-          </Content>
-        </Layout>
-      </Layout>
+          </div>
+        </SidebarProvider>
+      </div>
     </ErrorBoundary>
   );
 }

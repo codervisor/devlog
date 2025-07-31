@@ -1,40 +1,29 @@
 'use client';
 
 import React from 'react';
-import { Dashboard, PageLayout, OverviewStats } from '@/components';
-import { useDevlogs } from '@/hooks/useDevlogs';
-import { useStats } from '@/hooks/useStats';
-import { useTimeSeriesStats } from '@/hooks/useTimeSeriesStats';
-import { DevlogEntry } from '@devlog/core';
+import { Dashboard, PageLayout } from '@/components';
+import { useDevlogData } from '@/hooks/useDevlogData';
+import { useStats, useTimeSeriesStats } from '@/hooks/useStatsData';
+import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const { devlogs, filters, handleStatusFilter, loading: isLoadingDevlogs } = useDevlogs();
-  const { stats, loading: isLoadingStats } = useStats();
-  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats();
+  const { filteredDevlogs, loading: isLoadingDevlogs } = useDevlogData({ useContext: true });
+  const { stats, loading: isLoadingStats } = useStats({ useContext: true });
+  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats({ useContext: true });
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/devlogs/${devlog.id}`);
   };
 
-  const actions = (
-    <OverviewStats 
-      stats={stats} 
-      loading={isLoadingStats}
-      variant="detailed" 
-      currentFilters={filters}
-      onFilterToggle={handleStatusFilter}
-    />
-  );
-
   return (
-    <PageLayout actions={actions}>
+    <PageLayout>
       <Dashboard
         stats={stats}
         timeSeriesData={timeSeriesData}
         isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={devlogs.slice(0, 10)}
+        recentDevlogs={filteredDevlogs.slice(0, 10)}
         isLoadingDevlogs={isLoadingDevlogs}
         onViewDevlog={handleViewDevlog}
       />

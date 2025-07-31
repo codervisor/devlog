@@ -1,0 +1,22 @@
+# Development-specific services and overrides
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # Development web service
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: devlog-web-dev
+    command: pnpm dev:web
+    ports:
+      - "3200:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/web/.next
+      - /app/packages/web/.next-build
+      - './scripts:/app/scripts'
+      - './.devlog:/app/.devlog'
+    env_file:
+      - .env

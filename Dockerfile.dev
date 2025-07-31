@@ -1,0 +1,46 @@
+# Development Dockerfile for hot reloading and development
+FROM node:20-alpine
+
+# Install necessary system dependencies
+RUN apk add --no-cache libc6-compat python3 make g++ curl
+
+# Enable pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY turbo.json ./
+
+# Copy package files for web application dependencies only
+COPY packages/ai/package.json ./packages/ai/
+COPY packages/core/package.json ./packages/core/
+COPY packages/web/package.json ./packages/web/
+
+# Install dependencies
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
+
+# Copy source code (this will be overridden by volume in docker-compose)
+COPY packages ./packages
+COPY tsconfig.json ./
+
+# Copy scripts directory for development utilities
+COPY scripts ./scripts
+
+# Development environment
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose port for web application
+EXPOSE 3000
+
+# Health check to ensure the development server is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Default command (will be overridden in docker-compose)
+CMD ["pnpm", "dev:web"]

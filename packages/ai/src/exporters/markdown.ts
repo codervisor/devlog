@@ -1,5 +1,5 @@
 /**
- * Simple Markdown exporter for CodeHist chat data
+ * Simple Markdown exporter for AI chat data
  *
  * TypeScript implementation without complex configuration.
  */
@@ -7,11 +7,12 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { dirname } from 'path';
 import type { ChatStatistics, SearchResult } from '../parsers/index.js';
+import type { ChatSession } from '../models/index.js';
 
 export interface MarkdownExportData {
   statistics?: ChatStatistics;
   chat_data?: {
-    chat_sessions: any[];
+    chat_sessions: ChatSession[];
   };
   search_results?: SearchResult[];
 }

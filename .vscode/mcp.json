@@ -1,26 +1,38 @@
 {
-    "servers": {
-        // "github": {
-        //     "url": "https://api.githubcopilot.com/mcp/"
-        // },
-        "devlog": {
-            "type": "stdio",
-            "command": "pnpm",
-            "args": [
-                "--filter", 
-                "@devlog/mcp", 
-                "dev:nodemon"
-            ],
-            "cwd": ".",
-            "env": {
-                "NODE_ENV": "development"
-            }
-        },
-        "playwright": {
-            "command": "npx",
-            "args": [
-                "@playwright/mcp@latest"
-            ]
-        },
-    }
+	"servers": {
+		"playwright": {
+			"command": "npx",
+			"args": [
+				"@playwright/mcp@latest",
+				"--isolated"
+			],
+			"type": "stdio"
+		},
+		"devlog": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"@codervisor/devlog-mcp@dev"
+			]
+		},
+		"sequential-thinking": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking@2025.7.1"
+			],
+			"env": {
+				"DISABLE_THOUGHT_LOGGING": "true"
+			},
+			"type": "stdio"
+		}
+	},
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "github-pat",
+			"description": "GitHub Personal Access Token",
+			"password": true
+		}
+	]
 }

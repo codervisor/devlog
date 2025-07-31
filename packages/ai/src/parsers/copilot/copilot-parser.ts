@@ -167,7 +167,7 @@ export class CopilotParser extends AIAssistantParser {
         const response = request.response;
         if (response) {
           let responseText = '';
-          if (typeof response === 'object' && response !== null) {
+          if (typeof response === 'object') {
             if ('value' in response) {
               responseText = response.value;
             } else if ('text' in response) {
@@ -347,7 +347,7 @@ export class CopilotParser extends AIAssistantParser {
           for (const [key, value] of Object.entries(data.metadata)) {
             if (key in allData.metadata) {
               if (Array.isArray(allData.metadata[key]) && Array.isArray(value)) {
-                (allData.metadata[key] as any[]).push(...value);
+                (allData.metadata[key] as unknown[]).push(...value);
               } else {
                 allData.metadata[`${key}_${basePath.split('/').pop()}`] = value;
               }

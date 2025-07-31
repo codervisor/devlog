@@ -1,233 +1,210 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Button, Layout, Menu, Tooltip } from 'antd';
-import {
-  AppstoreOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  LeftOutlined,
-  PlusOutlined,
-  RightOutlined,
-  WifiOutlined,
-} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { DevlogStats } from '@devlog/core';
-import { OverviewStats, WorkspaceSwitcher } from '@/components';
-import styles from './NavigationSidebar.module.css';
-
-const { Sider } = Layout;
+import { useProject } from '@/contexts/ProjectContext';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { AppWindowIcon, FileTextIcon, LayoutDashboardIcon } from 'lucide-react';
 
 interface NavigationSidebarProps {
-  stats?: DevlogStats | null;
-  statsLoading?: boolean;
-  collapsed?: boolean;
-  connected: boolean;
-  onToggle?: () => void;
+  // No props needed - using built-in sidebar state
 }
 
-export function NavigationSidebar({
-  stats,
-  statsLoading = false,
-  collapsed = false,
-  connected,
-  onToggle,
-}: NavigationSidebarProps) {
+export function NavigationSidebar(_props: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { currentProject } = useProject();
 
   // Handle client-side hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Determine selected key based on current pathname
-  const getSelectedKey = () => {
-    if (!mounted) return 'dashboard'; // Fallback during SSR
-    if (pathname === '/') return 'dashboard';
-    if (pathname === '/devlogs') return 'list';
-    if (pathname === '/devlogs/create') return 'create';
-    if (pathname === '/workspaces') return 'workspaces';
-    if (pathname.startsWith('/devlogs/')) return 'list'; // For individual devlog pages
-    return 'dashboard';
+  // Check if sidebar should be hidden
+  const shouldHideSidebar = () => {
+    if (!mounted) return false;
+    // No pages currently hide the sidebar
+    return false;
   };
 
-  const menuItems = [
-    {
-      key: 'dashboard',
-      label: 'Dashboard',
-      icon: <DashboardOutlined />,
-    },
-    {
-      key: 'list',
-      label: 'All Devlogs',
-      icon: <FileTextOutlined />,
-    },
-    {
-      key: 'create',
-      label: 'New Devlog',
-      icon: <PlusOutlined />,
-    },
-    {
-      key: 'workspaces',
-      label: 'Workspaces',
-      icon: <AppstoreOutlined />,
-    },
-  ];
+  // Get contextual menu items based on current path
+  const getMenuItems = () => {
+    if (!mounted) return [];
+
+    const pathParts = pathname.split('/').filter(Boolean);
+
+    // Dashboard page (/)
+    if (pathname === '/') {
+      return [
+        {
+          key: 'projects',
+          label: 'Projects',
+          icon: <AppWindowIcon size={16} />,
+        },
+      ];
+    }
+
+    // Projects page (/projects)
+    if (pathname === '/projects') {
+      return [
+        {
+          key: 'projects',
+          label: 'Projects',
+          icon: <AppWindowIcon size={16} />,
+        },
+      ];
+    }
+
+    // Project detail page (/projects/[id])
+    if (pathParts.length === 2 && pathParts[0] === 'projects') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Overview',
+          icon: <LayoutDashboardIcon size={16} />,
+        },
+        {
+          key: 'list',
+          label: 'Devlogs',
+          icon: <FileTextIcon size={16} />,
+        },
+      ];
+    }
+
+    // Project devlogs page (/projects/[id]/devlogs)
+    if (pathParts.length === 3 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Overview',
+          icon: <LayoutDashboardIcon size={16} />,
+        },
+        {
+          key: 'list',
+          label: 'Devlogs',
+          icon: <FileTextIcon size={16} />,
+        },
+      ];
+    }
+
+    // Devlog detail page (/projects/[id]/devlogs/[devlogId])
+    if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
+      return [
+        {
+          key: 'dashboard',
+          label: 'Overview',
+          icon: <LayoutDashboardIcon size={16} />,
+        },
+        {
+          key: 'list',
+          label: 'Devlogs',
+          icon: <FileTextIcon size={16} />,
+        },
+      ];
+    }
+
+    // Default fallback
+    return [
+      {
+        key: 'dashboard',
+        label: 'Overview',
+        icon: <LayoutDashboardIcon size={16} />,
+      },
+      {
+        key: 'projects',
+        label: 'Projects',
+        icon: <AppWindowIcon size={16} />,
+      },
+    ];
+  };
+
+  // Determine selected key based on current pathname and menu items
+  const getSelectedKey = () => {
+    if (!mounted) return 'dashboard';
+
+    const pathParts = pathname.split('/').filter(Boolean);
+
+    if (pathname === '/' || pathname === '/projects') return 'projects';
+    if (pathParts.length === 2 && pathParts[0] === 'projects') return 'dashboard';
+    if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
+
+    return 'dashboard';
+  };
 
   const handleMenuClick = ({ key }: { key: string }) => {
     if (!mounted) return;
 
+    const pathParts = pathname.split('/').filter(Boolean);
+    const isInProjectContext = pathParts.length >= 2 && pathParts[0] === 'projects' && pathParts[1];
+    const projectId = isInProjectContext ? pathParts[1] : null;
+
     switch (key) {
       case 'dashboard':
-        router.push('/');
+        if (projectId) {
+          // We're in a project context, go to the project dashboard
+          router.push(`/projects/${projectId}`);
+        } else {
+          // We're not in a project context, go to the main dashboard (which redirects to projects)
+          router.push('/');
+        }
+        break;
+      case 'projects':
+        router.push('/projects');
         break;
       case 'list':
-        router.push('/devlogs');
-        break;
-      case 'create':
-        router.push('/devlogs/create');
-        break;
-      case 'workspaces':
-        router.push('/workspaces');
+        // If a project is selected, go to that project's devlogs
+        // Otherwise, redirect to projects to select one first
+        if (currentProject) {
+          router.push(`/projects/${currentProject.projectId}/devlogs`);
+        } else if (projectId) {
+          // Use project from URL if currentProject is not available
+          router.push(`/projects/${projectId}/devlogs`);
+        } else {
+          router.push('/projects');
+        }
         break;
     }
   };
 
   // Don't render menu items until mounted to prevent hydration issues
-  if (!mounted) {
-    return (
-      <Sider
-        width={280}
-        collapsed={collapsed}
-        collapsedWidth={60}
-        breakpoint="md"
-        collapsible={false}
-        trigger={null}
-        style={{
-          background: '#fff',
-          borderRight: '1px solid #f0f0f0',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div className={styles.sidebarHeader}>
-          <div className={styles.sidebarBrand}>
-            <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
-          </div>
-        </div>
-
-        <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarFooterContent}>
-            {onToggle && (
-              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
-                <Button
-                  type="text"
-                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                  onClick={onToggle}
-                  className={styles.sidebarToggle}
-                  size="small"
-                />
-              </Tooltip>
-            )}
-          </div>
-        </div>
-      </Sider>
-    );
+  if (!mounted || shouldHideSidebar()) {
+    return null;
   }
 
+  const menuItems = getMenuItems();
+
   return (
-    <Sider
-      width={280}
-      collapsed={collapsed}
-      collapsedWidth={60}
-      breakpoint="md"
-      collapsible={false}
-      trigger={null}
-      style={{
-        background: '#fff',
-        borderRight: '1px solid #f0f0f0',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
-      <div className={styles.sidebarHeader}>
-        <div className={styles.sidebarBrand}>
-          {collapsed ? (
-            <Image
-              src="/devlog-logo.svg"
-              alt="Devlog Logo"
-              width={24}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          ) : (
-            <Image
-              src="/devlog-logo-text.svg"
-              alt="Devlog Logo"
-              width={(200 / 64) * 48}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          )}
-        </div>
-      </div>
-
-      <div
-        className={
-          collapsed ? styles.workspaceSwitcherContainerCollapsed : styles.workspaceSwitcherContainer
-        }
-      >
-        <WorkspaceSwitcher collapsed={collapsed} />
-      </div>
-
-      <Menu
-        mode="inline"
-        selectedKeys={[getSelectedKey()]}
-        style={{ borderRight: 0, flex: 1 }}
-        items={menuItems}
-        onClick={handleMenuClick}
-      />
-
-      <div className={styles.sidebarFooter}>
-        <div className={styles.sidebarFooterContent}>
-          {!collapsed && (
-            <div className={styles.sidebarFooterContentLeft}>
-              <Tooltip
-                title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-                placement="top"
+    <Sidebar className="border-r bg-background">
+      <SidebarContent className="bg-background">
+        <SidebarMenu className="space-y-2 px-4 py-2">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.key}>
+              <SidebarMenuButton
+                onClick={() => handleMenuClick({ key: item.key })}
+                isActive={getSelectedKey() === item.key}
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium min-h-[44px] rounded-md"
               >
-                <WifiOutlined
-                  style={{
-                    color: connected ? '#52c41a' : '#ff4d4f',
-                    fontSize: '16px',
-                    cursor: 'default',
-                  }}
-                />
-              </Tooltip>
+                {item.icon}
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
 
-              {(stats || statsLoading) && (
-                <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
-              )}
-            </div>
-          )}
-
-          <div className={styles.sidebarFooterContentRight}>
-            {onToggle && (
-              <Button
-                type="text"
-                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                onClick={onToggle}
-                className={styles.sidebarToggle}
-                size="small"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </Sider>
+      <SidebarFooter className="p-4 bg-background border-t-0">
+        <SidebarTrigger className="h-8 w-8 p-0" />
+      </SidebarFooter>
+    </Sidebar>
   );
 }

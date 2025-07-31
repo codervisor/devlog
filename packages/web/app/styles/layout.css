@@ -4,13 +4,16 @@
 .app-layout {
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-content {
-  background: #fff;
+  background: hsl(var(--background));
   overflow: hidden; /* Prevent outer scroll */
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .app-content-wrapper {
@@ -31,36 +34,28 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: hsl(var(--background));
 }
 
 .page-header {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  background: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
   padding: 0;
   margin: 0;
 }
 
 .page-header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 12px 24px;
-  border-bottom: 1px solid #e8e8e8;
   height: 64px;
-}
-
-.page-header-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
 }
 
 .page-header-right {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 16px;
 }
 
 .page-content {
@@ -75,7 +70,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: #fff;
+  background-color: hsl(var(--background));
   padding: 0;
   margin: 0;
   -webkit-backdrop-filter: blur(8px);
@@ -84,7 +79,7 @@
 
 .page-header-sticky .page-header-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 12px 24px;
   min-height: 48px;
@@ -102,7 +97,7 @@
 @supports (scrollbar-width: thin) {
   .scrollable-content {
     scrollbar-width: thin;
-    scrollbar-color: #d9d9d9 transparent;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
   }
 }
 
@@ -115,13 +110,13 @@
 }
 
 .scrollable-content::-webkit-scrollbar-thumb {
-  background-color: #d9d9d9;
+  background-color: hsl(var(--muted-foreground));
   border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .scrollable-content::-webkit-scrollbar-thumb:hover {
-  background-color: #bfbfbf;
+  background-color: hsl(var(--foreground));
 }
 
 /* Scrollbar utility classes */
@@ -134,13 +129,13 @@
 }
 
 .thin-scrollbar-vertical::-webkit-scrollbar-thumb {
-  background-color: #d9d9d9;
+  background-color: hsl(var(--muted-foreground));
   border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .thin-scrollbar-vertical::-webkit-scrollbar-thumb:hover {
-  background-color: #bfbfbf;
+  background-color: hsl(var(--foreground));
 }
 
 .thin-scrollbar-horizontal::-webkit-scrollbar {
@@ -152,13 +147,13 @@
 }
 
 .thin-scrollbar-horizontal::-webkit-scrollbar-thumb {
-  background-color: #d9d9d9;
+  background-color: hsl(var(--muted-foreground));
   border-radius: 3px;
   transition: background-color 0.2s ease;
 }
 
 .thin-scrollbar-horizontal::-webkit-scrollbar-thumb:hover {
-  background-color: #bfbfbf;
+  background-color: hsl(var(--foreground));
 }
 
 /* Firefox scrollbar styling with feature queries */
@@ -166,7 +161,7 @@
   .thin-scrollbar-vertical,
   .thin-scrollbar-horizontal {
     scrollbar-width: thin;
-    scrollbar-color: #d9d9d9 transparent;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
   }
 }
 

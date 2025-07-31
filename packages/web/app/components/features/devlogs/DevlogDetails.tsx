@@ -1,35 +1,34 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, Checkbox, List, Skeleton, Space, Tag, Timeline, Typography } from 'antd';
-import classNames from 'classnames';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  ApartmentOutlined,
-  BulbOutlined,
-  CheckCircleOutlined,
-  CommentOutlined,
-  FileTextOutlined,
-  InfoCircleOutlined,
-  LinkOutlined,
-  NodeIndexOutlined,
-  QuestionCircleOutlined,
-  RightOutlined,
-  RobotOutlined,
-  SettingOutlined,
-  ToolOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
-import { DevlogEntry } from '@devlog/core';
-import { EditableField, MarkdownRenderer } from '@/components/ui';
-import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
-import styles from './DevlogDetails.module.css';
-import { getCategoryIcon } from '@/lib/note-utils';
-import { priorityOptions, statusOptions, typeOptions } from '@/lib/devlog-options';
+  Briefcase,
+  CheckCircle,
+  ChevronRight,
+  FileText,
+  MessageSquare,
+  Network,
+  Wrench,
+} from 'lucide-react';
+import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
+import { useNotes } from '@/hooks/useNotes';
+import { EditableField } from '@/components/custom/EditableField';
+import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
+import {
+  cn,
+  formatTimeAgoWithTooltip,
+  getCategoryIconRaw,
+  priorityOptions,
+  statusOptions,
+  typeOptions,
+} from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/useStickyHeaders';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
-
-const { Title, Text } = Typography;
 
 interface DevlogDetailsProps {
   devlog?: DevlogEntry;
@@ -42,6 +41,7 @@ interface DevlogDetailsProps {
     saveHandler: () => Promise<void>,
     discardHandler: () => void,
   ) => void;
+  actions?: React.ReactNode;
 }
 
 export function DevlogDetails({
@@ -49,87 +49,24 @@ export function DevlogDetails({
   loading = false,
   hasUnsavedChanges = false,
   onUpdate,
+  onDelete,
   onUnsavedChangesChange,
+  actions,
 }: DevlogDetailsProps) {
-  // If loading, show skeleton
-  if (loading || !devlog) {
-    return (
-      <div>
-        <div className={styles.devlogDetailsHeader}>
-          <div className={styles.devlogTitleWrapper}>
-            <Skeleton.Input style={{ width: '60%', height: '32px' }} active size="large" />
-          </div>
-          <div className={styles.devlogInfo}>
-            <Space wrap className={styles.infoItemWrapper}>
-              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
-              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
-              <Skeleton.Button style={{ width: '80px', height: '24px' }} active size="small" />
-            </Space>
-            <Space className={styles.metaInfo}>
-              <Skeleton.Input style={{ width: '60px', height: '14px' }} active size="small" />
-              <Skeleton.Input style={{ width: '120px', height: '14px' }} active size="small" />
-              <Skeleton.Input style={{ width: '120px', height: '14px' }} active size="small" />
-            </Space>
-          </div>
-        </div>
-
-        <div className={styles.devlogDetailsContent}>
-          <div className={styles.descriptionSection}>
-            <Title level={4}>
-              <FileTextOutlined className={styles.sectionIcon} />
-              Description
-            </Title>
-            <Skeleton active paragraph={{ rows: 4 }} />
-          </div>
-
-          <div className={styles.contextSection}>
-            <Title level={4}>
-              <InfoCircleOutlined className={styles.sectionIcon} />
-              Business Context
-            </Title>
-            <Skeleton active paragraph={{ rows: 3 }} />
-          </div>
-
-          <div className={styles.contextSection}>
-            <Title level={4}>
-              <ToolOutlined className={styles.sectionIcon} />
-              Technical Context
-            </Title>
-            <Skeleton active paragraph={{ rows: 3 }} />
-          </div>
-
-          <div className={styles.criteriaSection}>
-            <Title level={4}>
-              <CheckCircleOutlined className={styles.sectionIcon} />
-              Acceptance Criteria
-            </Title>
-            <Card size="small">
-              <Skeleton active paragraph={{ rows: 2 }} />
-            </Card>
-          </div>
-
-          <div className={styles.notesSection}>
-            <Title level={4}>
-              <CommentOutlined className={styles.sectionIcon} />
-              Notes
-            </Title>
-            <Timeline>
-              <Timeline.Item>
-                <Skeleton active paragraph={{ rows: 2 }} />
-              </Timeline.Item>
-              <Timeline.Item>
-                <Skeleton active paragraph={{ rows: 1 }} />
-              </Timeline.Item>
-            </Timeline>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Local state for tracking changes
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
-  const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry>(devlog);
+  const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry | undefined>(devlog);
+
+  // Use the notes hook to manage notes data separately
+  const {
+    notes,
+    loading: notesLoading,
+    error: notesError,
+    refreshNotes,
+  } = useNotes({
+    devlogId: devlog?.id?.toString() || '',
+    initialNotes: [],
+  });
 
   // State for tracking note animations
   const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());
@@ -137,14 +74,26 @@ export function DevlogDetails({
 
   // Setup sticky header detection
   useStickyHeaders({
-    selectorClass: styles.sectionHeader,
-    stickyClass: styles.isSticky,
-    topOffset: 96, // Account for the main devlog header
-    dependencies: [devlog.id], // Re-run when devlog changes
+    selectorClass: 'section-header',
+    stickyClass: 'is-sticky',
+    topOffset: 176, // Account for the sticky main devlog header (increased from 96)
+    dependencies: [devlog?.id], // Re-run when devlog changes
   });
+
+  // Refresh notes when devlog changes
+  useEffect(() => {
+    if (devlog?.id) {
+      refreshNotes();
+    }
+  }, [devlog?.id, refreshNotes]);
 
   // Reset local changes when devlog prop changes (e.g., after save)
   useEffect(() => {
+    if (!devlog || !originalDevlog) {
+      setOriginalDevlog(devlog);
+      return;
+    }
+
     // Only reset if this is a completely different devlog (ID changed)
     // OR if the devlog was updated but we don't have any unsaved changes
     // This allows real-time updates to flow through while preserving unsaved edits
@@ -154,13 +103,18 @@ export function DevlogDetails({
     ) {
       setLocalChanges({});
       setOriginalDevlog(devlog);
-      // Note: Parent will be notified via the main useEffect below
     }
-  }, [devlog.id, devlog.updatedAt, originalDevlog.id, originalDevlog.updatedAt, hasUnsavedChanges]);
+  }, [
+    devlog?.id,
+    devlog?.updatedAt,
+    originalDevlog?.id,
+    originalDevlog?.updatedAt,
+    hasUnsavedChanges,
+  ]);
 
   // Track new notes for animation
   useEffect(() => {
-    if (!devlog.notes || devlog.notes.length === 0) {
+    if (!notes || !Array.isArray(notes) || notes.length === 0) {
       // For empty notes, just reset the seen notes if they exist
       if (seenNoteIds.size > 0) {
         setSeenNoteIds(new Set());
@@ -168,7 +122,7 @@ export function DevlogDetails({
       return;
     }
 
-    const currentNoteIds = new Set(devlog.notes.map((note) => note.id));
+    const currentNoteIds = new Set(notes.map((note) => note.id));
 
     // On first load, mark all existing notes as seen without animation
     if (seenNoteIds.size === 0) {
@@ -192,16 +146,12 @@ export function DevlogDetails({
     }
 
     return undefined;
-  }, [devlog.notes?.length, devlog.id]); // Remove seenNoteIds from dependencies to avoid loops
+  }, [notes?.length, devlog?.id, seenNoteIds.size]);
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
     (field: string) => {
-      if (field.startsWith('context.')) {
-        const contextField = field.substring(8) as keyof typeof originalDevlog.context;
-        return (originalDevlog.context?.[contextField] as any) || '';
-      }
-      return (originalDevlog as any)[field];
+      return originalDevlog ? (originalDevlog as any)[field] : undefined;
     },
     [originalDevlog],
   );
@@ -215,11 +165,7 @@ export function DevlogDetails({
       }
 
       // Otherwise, use the current devlog value (which includes real-time updates)
-      if (field.startsWith('context.')) {
-        const contextField = field.substring(8) as keyof typeof devlog.context;
-        return (devlog.context?.[contextField] as any) || '';
-      }
-      return (devlog as any)[field];
+      return devlog ? (devlog as any)[field] : undefined;
     },
     [localChanges, devlog],
   );
@@ -232,77 +178,70 @@ export function DevlogDetails({
     [localChanges],
   );
 
-  const handleFieldChange = (field: string, value: any) => {
-    const originalValue = getOriginalValue(field);
-    const newChanges = { ...localChanges };
+  const handleFieldChange = useCallback(
+    (field: string, value: any) => {
+      const originalValue = getOriginalValue(field);
+      const newChanges = { ...localChanges };
 
-    // If the value matches the original, remove it from local changes
-    if (value === originalValue) {
-      delete newChanges[field];
-    } else {
-      // Otherwise, track the change
-      newChanges[field] = value;
-    }
+      // If the value matches the original, remove it from local changes
+      if (value === originalValue) {
+        delete newChanges[field];
+      } else {
+        // Otherwise, track the change
+        newChanges[field] = value;
+      }
 
-    setLocalChanges(newChanges);
+      setLocalChanges(newChanges);
 
-    // Check if there are any actual changes from the original devlog with the new changes
-    const allPossibleFields = [
-      'title',
-      'description',
-      'status',
-      'priority',
-      'type',
-      'context.businessContext',
-      'context.technicalContext',
-    ];
+      // Check if there are any actual changes from the original devlog with the new changes
+      const allPossibleFields = [
+        'title',
+        'description',
+        'status',
+        'priority',
+        'type',
+        'businessContext',
+        'technicalContext',
+      ];
 
-    const actualChanges = allPossibleFields.some((checkField) => {
-      const currentValue =
-        newChanges[checkField] !== undefined
-          ? newChanges[checkField]
-          : getOriginalValue(checkField);
-      const originalFieldValue = getOriginalValue(checkField);
-      return currentValue !== originalFieldValue;
-    });
+      const actualChanges = allPossibleFields.some((checkField) => {
+        const currentValue =
+          newChanges[checkField] !== undefined
+            ? newChanges[checkField]
+            : getOriginalValue(checkField);
+        const originalFieldValue = getOriginalValue(checkField);
+        return currentValue !== originalFieldValue;
+      });
 
-    // Notify parent about changes instead of managing state locally
-    if (onUnsavedChangesChange) {
-      onUnsavedChangesChange(actualChanges, handleSave, handleDiscard);
-    }
-  };
-
-  const handleContextChange = (contextField: string, value: string) => {
-    handleFieldChange(`context.${contextField}`, value);
-  };
+      // Notify parent about changes instead of managing state locally
+      if (onUnsavedChangesChange) {
+        onUnsavedChangesChange(actualChanges, handleSave, handleDiscard);
+      }
+    },
+    [localChanges, getOriginalValue, onUnsavedChangesChange],
+  );
 
   const handleSave = useCallback(async () => {
+    if (!devlog) return;
+
     try {
       // Build update data from local changes
       const updateData: any = { id: devlog.id };
 
       // Handle regular field changes
       Object.entries(localChanges).forEach(([field, value]) => {
-        if (field.startsWith('context.')) {
-          const contextField = field.substring(8);
-          if (!updateData.context) {
-            updateData.context = { ...devlog.context };
-          }
-          updateData.context[contextField] = value;
-        } else {
-          updateData[field] = value;
-        }
+        updateData[field] = value;
       });
 
       // Call the update function
-      onUpdate(updateData);
+      await onUpdate(updateData);
 
       // Note: localChanges will be cleared when the devlog prop updates and triggers the useEffect
     } catch (error) {
       // Let the parent handle save errors
       throw error;
     }
-  }, [localChanges, devlog.id, devlog.context, onUpdate]);
+  }, [localChanges, devlog, onUpdate]);
 
   const handleDiscard = useCallback(() => {
     setLocalChanges({});
@@ -316,515 +255,386 @@ export function DevlogDetails({
     }
   }, [hasUnsavedChanges, handleSave, handleDiscard, onUnsavedChangesChange]);
 
-  return (
-    <div>
-      <div className={styles.devlogDetailsHeader}>
-        <EditableField
-          key={`title-${getCurrentValue('title')}`}
-          value={getCurrentValue('title')}
-          onSave={(value) => handleFieldChange('title', value)}
-          placeholder="Enter title"
-          className={`${isFieldChanged('title') ? styles.fieldChanged : ''} ${styles.devlogTitleWrapper}`}
-        >
-          <Title level={3} className={styles.devlogTitle} title={getCurrentValue('title')}>
-            {getCurrentValue('title')}
-          </Title>
-        </EditableField>
-        <div className={styles.devlogInfo}>
-          <Space wrap className={styles.infoItemWrapper}>
-            <EditableField
-              key={`status-${getCurrentValue('status')}`}
-              className={`${styles.infoItem} ${isFieldChanged('status') ? styles.fieldChanged : ''}`}
-              type="select"
-              value={getCurrentValue('status')}
-              options={statusOptions}
-              onSave={(value) => handleFieldChange('status', value)}
-            >
-              <DevlogStatusTag status={getCurrentValue('status')} className={styles.infoTag} />
-            </EditableField>
-            <EditableField
-              key={`priority-${getCurrentValue('priority')}`}
-              className={`${styles.infoItem} ${isFieldChanged('priority') ? styles.fieldChanged : ''}`}
-              type="select"
-              value={getCurrentValue('priority')}
-              options={priorityOptions}
-              onSave={(value) => handleFieldChange('priority', value)}
-            >
-              <DevlogPriorityTag
-                priority={getCurrentValue('priority')}
-                className={styles.infoTag}
-              />
-            </EditableField>
-            <EditableField
-              key={`type-${getCurrentValue('type')}`}
-              className={`${styles.infoItem} ${isFieldChanged('type') ? styles.fieldChanged : ''}`}
-              type="select"
-              value={getCurrentValue('type')}
-              onSave={(value) => handleFieldChange('type', value)}
-              options={typeOptions}
-            >
-              <DevlogTypeTag type={getCurrentValue('type')} className={styles.infoTag} />
-            </EditableField>
-          </Space>
-          <Space split={<Text type="secondary">•</Text>} className={styles.metaInfo}>
-            <Text type="secondary" className={styles.metaText}>
-              ID: #{devlog.id}
-            </Text>
-            <Text type="secondary" title={formatTimeAgoWithTooltip(devlog.createdAt).fullDate}>
-              Created: {formatTimeAgoWithTooltip(devlog.createdAt).timeAgo}
-            </Text>
-            <Text type="secondary" title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}>
-              Updated: {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
-            </Text>
-          </Space>
+  // If loading, show skeleton
+  if (loading || !devlog) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex gap-6">
+          <div className="flex-1 space-y-6">
+            {/* Sticky Header Skeleton */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-3/5" />
+                <div className="flex space-x-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+                <div className="flex space-x-4 text-sm">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            </div>
+
+            {/* Content Skeletons */}
+            {[
+              { title: 'Description', rows: 4 },
+              { title: 'Business Context', rows: 3 },
+              { title: 'Technical Context', rows: 3 },
+              { title: 'Acceptance Criteria', rows: 2 },
+              { title: 'Notes', rows: 4 },
+            ].map(({ title, rows }) => (
+              <Card key={title}>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Skeleton className="h-5 w-5 mr-2" />
+                    {title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Array.from({ length: rows }).map((_, i) => (
+                      <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Side Navigation Skeleton */}
+          <div className="w-64 flex-shrink-0">
+            <div className="sticky top-44 space-y-4">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-5 w-20" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Actions skeleton */}
+              <div className="border-t pt-4">
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-9 w-full" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div className={styles.devlogDetailsContent}>
-        <div className={styles.descriptionSection} id="description">
-          <div className={styles.sectionHeader}>
-            <Title level={3}>
-              <FileTextOutlined className={styles.sectionIcon} />
-              Description
-            </Title>
-          </div>
-          <EditableField
-            value={getCurrentValue('description')}
-            onSave={(value) => handleFieldChange('description', value)}
-            type="markdown"
-            placeholder="Enter description"
-            emptyText="Click to add description..."
-            className={isFieldChanged('description') ? styles.fieldChanged : ''}
-            borderless={false}
-          >
-            <MarkdownRenderer content={getCurrentValue('description')} />
-          </EditableField>
-        </div>
+  return (
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="flex gap-6">
+        {/* Main Content */}
+        <div className="flex-1 space-y-6">
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 -mx-6 px-6 py-4 mb-6">
+            <Card className="border-0 shadow-none bg-transparent">
+              <CardHeader className="p-0">
+                <div className="space-y-4">
+                  <EditableField
+                    key={`title-${getCurrentValue('title')}`}
+                    value={getCurrentValue('title')}
+                    onSave={(value: any) => handleFieldChange('title', value)}
+                    placeholder="Enter title"
+                    className={cn(
+                      'text-3xl font-bold',
+                      isFieldChanged('title') && 'ring-2 ring-primary/20 bg-primary/5',
+                    )}
+                  >
+                    <h1 className="text-3xl font-bold" title={getCurrentValue('title')}>
+                      {getCurrentValue('title')}
+                    </h1>
+                  </EditableField>
 
-        <div className={styles.contextSection} id="business-context">
-          <div className={styles.sectionHeader}>
-            <Title level={3}>
-              <InfoCircleOutlined className={styles.sectionIcon} />
-              Business Context
-            </Title>
-          </div>
-          <EditableField
-            value={getCurrentValue('context.businessContext')}
-            onSave={(value) => handleContextChange('businessContext', value)}
-            type="markdown"
-            placeholder="Why this work matters and what problem it solves"
-            emptyText="Click to add business context..."
-            className={isFieldChanged('context.businessContext') ? styles.fieldChanged : ''}
-            borderless={false}
-          >
-            <MarkdownRenderer content={getCurrentValue('context.businessContext')} />
-          </EditableField>
-        </div>
+                  <div className="flex flex-wrap gap-2">
+                    <EditableField
+                      key={`status-${getCurrentValue('status')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('status') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('status')}
+                      options={statusOptions}
+                      onSave={(value: any) => handleFieldChange('status', value)}
+                    >
+                      <DevlogStatusTag status={getCurrentValue('status')} />
+                    </EditableField>
 
-        <div className={styles.contextSection} id="technical-context">
-          <div className={styles.sectionHeader}>
-            <Title level={3}>
-              <ToolOutlined className={styles.sectionIcon} />
-              Technical Context
-            </Title>
-          </div>
-          <EditableField
-            value={getCurrentValue('context.technicalContext')}
-            onSave={(value) => handleContextChange('technicalContext', value)}
-            type="markdown"
-            placeholder="Architecture decisions, constraints, assumptions"
-            emptyText="Click to add technical context..."
-            className={isFieldChanged('context.technicalContext') ? styles.fieldChanged : ''}
-            borderless={false}
-          >
-            <MarkdownRenderer content={getCurrentValue('context.technicalContext')} />
-          </EditableField>
-        </div>
+                    <EditableField
+                      key={`priority-${getCurrentValue('priority')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('priority') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('priority')}
+                      options={priorityOptions}
+                      onSave={(value: any) => handleFieldChange('priority', value)}
+                    >
+                      <DevlogPriorityTag priority={getCurrentValue('priority')} />
+                    </EditableField>
 
-        {devlog.context?.acceptanceCriteria && devlog.context.acceptanceCriteria.length > 0 && (
-          <div className={styles.criteriaSection} id="acceptance-criteria">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <CheckCircleOutlined className={styles.sectionIcon} />
-                Acceptance Criteria
-              </Title>
-            </div>
-            <Card size="small">
-              <List
-                dataSource={devlog.context.acceptanceCriteria}
-                renderItem={(criteria, index) => (
-                  <List.Item className={styles.criteriaItem}>
-                    <Space align="start">
-                      <Checkbox disabled checked={false} />
-                      <Text>{criteria}</Text>
-                    </Space>
-                  </List.Item>
-                )}
-              />
+                    <EditableField
+                      key={`type-${getCurrentValue('type')}`}
+                      className={cn(
+                        'inline-block',
+                        isFieldChanged('type') && 'ring-2 ring-primary/20 bg-primary/5 rounded',
+                      )}
+                      type="select"
+                      value={getCurrentValue('type')}
+                      options={typeOptions}
+                      onSave={(value: any) => handleFieldChange('type', value)}
+                    >
+                      <DevlogTypeTag type={getCurrentValue('type')} />
+                    </EditableField>
+                  </div>
+
+                  <div className="flex space-x-4 text-sm text-muted-foreground">
+                    <span>ID: #{devlog.id}</span>
+                    <span title={formatTimeAgoWithTooltip(devlog.createdAt).fullDate}>
+                      Created: {formatTimeAgoWithTooltip(devlog.createdAt).timeAgo}
+                    </span>
+                    <span title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}>
+                      Updated: {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
             </Card>
           </div>
-        )}
 
-        {devlog.context?.dependencies && devlog.context.dependencies.length > 0 && (
-          <div className={styles.dependencySection} id="dependencies">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <NodeIndexOutlined className={styles.sectionIcon} />
-                Dependencies
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.context.dependencies.map((dep, index) => (
-                <Card key={index} size="small" className={styles.dependencyCard}>
-                  <div className={styles.dependencyHeader}>
-                    <div>
-                      <Text strong>{dep.description}</Text>
-                      {dep.externalId && (
-                        <div className={styles.dependencyInfo}>
-                          <Text type="secondary">External ID: {dep.externalId}</Text>
-                        </div>
-                      )}
-                    </div>
-                    <Tag
-                      color={
-                        dep.type === 'blocks'
-                          ? 'red'
-                          : dep.type === 'blocked-by'
-                            ? 'orange'
-                            : 'blue'
-                      }
-                    >
-                      {dep.type}
-                    </Tag>
-                  </div>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.context?.decisions && devlog.context.decisions.length > 0 && (
-          <div className={styles.decisionSection} id="decisions">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <SettingOutlined style={{ marginRight: 8, color: '#13c2c2' }} />
-                Decisions
-              </Title>
-            </div>
-            <Timeline>
-              {devlog.context.decisions.map((decision) => (
-                <Timeline.Item key={decision.id}>
-                  <div className={styles.decisionItem}>
-                    <Text strong>{decision.decision}</Text>
-                  </div>
-                  <div className={styles.decisionContent}>
-                    <Text>{decision.rationale}</Text>
-                  </div>
-                  {decision.alternatives && decision.alternatives.length > 0 && (
-                    <div className={styles.decisionAlternatives}>
-                      <Text type="secondary">Alternatives considered: </Text>
-                      <Text type="secondary">{decision.alternatives.join(', ')}</Text>
-                    </div>
-                  )}
-                  <Text type="secondary" className={styles.noteTimestamp}>
-                    By {decision.decisionMaker} •{' '}
-                    <span title={formatTimeAgoWithTooltip(decision.timestamp).fullDate}>
-                      {formatTimeAgoWithTooltip(decision.timestamp).timeAgo}
-                    </span>
-                  </Text>
-                </Timeline.Item>
-              ))}
-            </Timeline>
-          </div>
-        )}
-
-        {devlog.context?.risks && devlog.context.risks.length > 0 && (
-          <div className={styles.riskSection} id="risks">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <WarningOutlined className={styles.sectionIcon} />
-                Risks
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.context.risks.map((risk, index) => (
-                <Card key={index} size="small" className={styles.riskCard}>
-                  <div>
-                    <div className={styles.riskHeader}>
-                      <Text strong>{risk.description}</Text>
-                      <Space>
-                        <Tag
-                          color={
-                            risk.impact === 'high'
-                              ? 'red'
-                              : risk.impact === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          Impact: {risk.impact}
-                        </Tag>
-                        <Tag
-                          color={
-                            risk.probability === 'high'
-                              ? 'red'
-                              : risk.probability === 'medium'
-                                ? 'orange'
-                                : 'green'
-                          }
-                        >
-                          Probability: {risk.probability}
-                        </Tag>
-                      </Space>
-                    </div>
-                    <div className={styles.riskMitigation}>
-                      <Text type="secondary">Mitigation: </Text>
-                      <Text>{risk.mitigation}</Text>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.files && devlog.files.length > 0 && (
-          <div className={styles.fileSection} id="files">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <FileTextOutlined className={styles.sectionIcon} />
-                Related Files
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.files.map((file, index) => (
-                <Card key={index} size="small" className={styles.fileCard}>
-                  <Text code>{file}</Text>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.relatedDevlogs && devlog.relatedDevlogs.length > 0 && (
-          <div className={styles.relatedSection} id="related-devlogs">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <LinkOutlined className={styles.sectionIcon} />
-                Related Devlogs
-              </Title>
-            </div>
-            <Space wrap>
-              {devlog.relatedDevlogs.map((relatedId, index) => (
-                <Tag key={index} color="cyan">
-                  #{relatedId}
-                </Tag>
-              ))}
-            </Space>
-          </div>
-        )}
-
-        {devlog.aiContext &&
-          (devlog.aiContext.currentSummary ||
-            (devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0) ||
-            (devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0) ||
-            (devlog.aiContext.suggestedNextSteps &&
-              devlog.aiContext.suggestedNextSteps.length > 0) ||
-            (devlog.aiContext.relatedPatterns && devlog.aiContext.relatedPatterns.length > 0)) && (
-            <div className={styles.aiContextSection} id="ai-context">
-              <div className={styles.sectionHeader}>
-                <Title level={3}>
-                  <RobotOutlined className={styles.sectionIcon} />
-                  AI Context
-                </Title>
-              </div>
-              <Card>
-                {devlog.aiContext.currentSummary && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Summary:</Text>
-                    <MarkdownRenderer content={devlog.aiContext.currentSummary} />
-                  </div>
+          {/* Description */}
+          <Card id="description">
+            <CardHeader>
+              <CardTitle className="section-header flex items-center">
+                <FileText className="h-5 w-5 mr-2" />
+                Description
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditableField
+                value={getCurrentValue('description')}
+                onSave={(value: any) => handleFieldChange('description', value)}
+                type="markdown"
+                placeholder="Enter description"
+                emptyText="Click to add description..."
+                className={cn(
+                  isFieldChanged('description') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
+                borderless={false}
+              >
+                <MarkdownRenderer content={getCurrentValue('description')} />
+              </EditableField>
+            </CardContent>
+          </Card>
 
-                {devlog.aiContext.keyInsights && devlog.aiContext.keyInsights.length > 0 && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Key Insights:</Text>
-                    <List
-                      size="small"
-                      style={{ marginTop: '8px' }}
-                      dataSource={devlog.aiContext.keyInsights}
-                      renderItem={(insight) => (
-                        <List.Item className={styles.aiInsightItem}>
-                          <Space align="start">
-                            <BulbOutlined style={{ color: '#faad14', marginTop: '2px' }} />
-                            <Text>{insight}</Text>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
+          {/* Business Context */}
+          <Card id="business-context">
+            <CardHeader>
+              <CardTitle className="section-header flex items-center">
+                <Briefcase className="h-5 w-5 mr-2" />
+                Business Context
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditableField
+                value={getCurrentValue('businessContext')}
+                onSave={(value: any) => handleFieldChange('businessContext', value)}
+                type="markdown"
+                placeholder="Why this work matters and what problem it solves"
+                emptyText="Click to add business context..."
+                className={cn(
+                  isFieldChanged('businessContext') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
+                borderless={false}
+              >
+                <MarkdownRenderer content={getCurrentValue('businessContext')} />
+              </EditableField>
+            </CardContent>
+          </Card>
 
-                {devlog.aiContext.openQuestions && devlog.aiContext.openQuestions.length > 0 && (
-                  <div className={styles.aiSection}>
-                    <Text strong>Open Questions:</Text>
-                    <List
-                      size="small"
-                      style={{ marginTop: '8px' }}
-                      dataSource={devlog.aiContext.openQuestions}
-                      renderItem={(question) => (
-                        <List.Item className={styles.aiQuestionItem}>
-                          <Space align="start">
-                            <QuestionCircleOutlined
-                              style={{ color: '#f5222d', marginTop: '2px' }}
-                            />
-                            <Text>{question}</Text>
-                          </Space>
-                        </List.Item>
-                      )}
-                    />
-                  </div>
+          {/* Technical Context */}
+          <Card id="technical-context">
+            <CardHeader>
+              <CardTitle className="section-header flex items-center">
+                <Wrench className="h-5 w-5 mr-2" />
+                Technical Context
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditableField
+                value={getCurrentValue('technicalContext')}
+                onSave={(value: any) => handleFieldChange('technicalContext', value)}
+                type="markdown"
+                placeholder="Architecture decisions, constraints, assumptions"
+                emptyText="Click to add technical context..."
+                className={cn(
+                  isFieldChanged('technicalContext') &&
+                    'ring-2 ring-primary/20 bg-primary/5 rounded p-2',
                 )}
+                borderless={false}
+              >
+                <MarkdownRenderer content={getCurrentValue('technicalContext')} />
+              </EditableField>
+            </CardContent>
+          </Card>
 
-                {devlog.aiContext.suggestedNextSteps &&
-                  devlog.aiContext.suggestedNextSteps.length > 0 && (
-                    <div className={styles.aiSection}>
-                      <Text strong>Suggested Next Steps:</Text>
-                      <List
-                        size="small"
-                        style={{ marginTop: '8px' }}
-                        dataSource={devlog.aiContext.suggestedNextSteps}
-                        renderItem={(step) => (
-                          <List.Item className={styles.aiStepItem}>
-                            <Space align="start">
-                              <RightOutlined style={{ color: '#52c41a', marginTop: '2px' }} />
-                              <Text>{step}</Text>
-                            </Space>
-                          </List.Item>
-                        )}
-                      />
+          {/* Acceptance Criteria */}
+          {devlog?.acceptanceCriteria && devlog.acceptanceCriteria.length > 0 && (
+            <Card id="acceptance-criteria">
+              <CardHeader>
+                <CardTitle className="section-header flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Acceptance Criteria
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {devlog.acceptanceCriteria.map((criteria, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <Checkbox disabled checked={false} className="mt-1" />
+                      <span className="text-sm">{criteria}</span>
                     </div>
-                  )}
-
-                {devlog.aiContext.relatedPatterns &&
-                  devlog.aiContext.relatedPatterns.length > 0 && (
-                    <div className={styles.aiSection}>
-                      <Text strong>Related Patterns:</Text>
-                      <List
-                        size="small"
-                        style={{ marginTop: '8px' }}
-                        dataSource={devlog.aiContext.relatedPatterns}
-                        renderItem={(pattern) => (
-                          <List.Item className={styles.aiPatternItem}>
-                            <Space align="start">
-                              <ApartmentOutlined style={{ color: '#722ed1', marginTop: '2px' }} />
-                              <Text>{pattern}</Text>
-                            </Space>
-                          </List.Item>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                <div>
-                  <Text type="secondary" className={styles.aiUpdateInfo}>
-                    Last AI Update:{' '}
-                    <span
-                      title={formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.fullDate}
-                    >
-                      {formatTimeAgoWithTooltip(devlog.aiContext?.lastAIUpdate)?.timeAgo}
-                    </span>{' '}
-                    • Version: {devlog.aiContext.contextVersion}
-                  </Text>
+                  ))}
                 </div>
-              </Card>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-        {devlog.externalReferences && devlog.externalReferences.length > 0 && (
-          <div className={styles.externalRefSection} id="external-references">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <LinkOutlined className={styles.sectionIcon} />
-                External References
-              </Title>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              {devlog.externalReferences.map((ref, index) => (
-                <Card key={index} size="small" className={styles.externalRefCard}>
-                  <div className={styles.externalRefHeader}>
-                    <div>
-                      <Text strong>{ref.title || ref.id}</Text>
-                      {ref.url && (
-                        <div>
-                          <a href={ref.url} target="_blank" rel="noopener noreferrer">
-                            <Text className={styles.externalRefLink}>{ref.url}</Text>
-                          </a>
+          {/* Dependencies */}
+          {devlog.dependencies && devlog.dependencies.length > 0 && (
+            <Card id="dependencies">
+              <CardHeader>
+                <CardTitle className="section-header flex items-center">
+                  <Network className="h-5 w-5 mr-2" />
+                  Dependencies
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {devlog.dependencies.map((dependency, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 p-3 border border-border rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline">#{dependency.id}</Badge>
+                          <span className="font-medium">{dependency.description}</span>
                         </div>
-                      )}
-                      {ref.status && (
-                        <div className={styles.externalRefStatus}>
-                          <Text type="secondary">Status: {ref.status}</Text>
-                        </div>
-                      )}
-                      {ref.lastSync && (
-                        <div className={styles.externalRefSync}>
-                          <Text type="secondary">
-                            Last Sync:{' '}
-                            <span title={formatTimeAgoWithTooltip(ref.lastSync).fullDate}>
-                              {formatTimeAgoWithTooltip(ref.lastSync).timeAgo}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Notes */}
+          <Card id="notes">
+            <CardHeader>
+              <CardTitle className="section-header flex items-center">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Notes ({notes?.length || 0})
+                {notesLoading && (
+                  <span className="ml-2 text-sm text-muted-foreground">(Loading...)</span>
+                )}
+                {notesError && <span className="ml-2 text-sm text-red-500">({notesError})</span>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {notesLoading && notes.length === 0 ? (
+                // Show skeleton loading state when initially loading notes
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="border-l-4 border-primary/20 pl-4 py-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Skeleton className="h-4 w-4" />
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : notes && Array.isArray(notes) && notes.length > 0 ? (
+                <div className="space-y-6">
+                  {[...notes].reverse().map((note) => {
+                    const isNewNote = newNoteIds.has(note.id);
+
+                    return (
+                      <div
+                        key={note.id}
+                        className={cn(
+                          'border-l-4 border-primary/20 pl-4 py-1 transition-all duration-500',
+                          isNewNote && 'animate-in slide-in-from-top-2 duration-400 bg-primary/5',
+                        )}
+                      >
+                        <div className="flex items-center space-x-2 mb-4">
+                          {getCategoryIconRaw(note.category as NoteCategory)}
+                          <Badge variant="secondary" className="text-xs">
+                            {note.category}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            <span title={formatTimeAgoWithTooltip(note.timestamp).fullDate}>
+                              {formatTimeAgoWithTooltip(note.timestamp).timeAgo}
                             </span>
-                          </Text>
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <Tag color="blue">{ref.system}</Tag>
-                  </div>
-                </Card>
-              ))}
-            </Space>
-          </div>
-        )}
+                        <MarkdownRenderer
+                          content={note.content}
+                          className="prose prose-sm max-w-none"
+                          maxHeight={false}
+                          noPadding
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No notes yet</p>
+                  <p className="text-sm">Notes will appear here as they are added</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        {devlog.notes && devlog.notes.length > 0 && (
-          <div className={styles.notesSection} id="notes">
-            <div className={styles.sectionHeader}>
-              <Title level={3}>
-                <CommentOutlined className={styles.sectionIcon} />
-                Notes
-              </Title>
-            </div>
-            <Timeline className={styles.notesTimeline}>
-              {[...devlog.notes].reverse().map((note) => {
-                const isNewNote = newNoteIds.has(note.id);
-                const noteItemClass = classNames(styles.noteItem, {
-                  [styles.noteItemNew]: isNewNote,
-                  [styles.noteItemEnter]: !isNewNote && seenNoteIds.has(note.id),
-                });
-
-                return (
-                  <Timeline.Item
-                    key={note.id}
-                    dot={getCategoryIcon(note.category)}
-                    className={noteItemClass}
-                  >
-                    <div>
-                      <MarkdownRenderer content={note.content} maxHeight={false} />
-                    </div>
-                    <Text type="secondary" className={styles.noteTimestamp}>
-                      <span title={formatTimeAgoWithTooltip(note.timestamp).fullDate}>
-                        {formatTimeAgoWithTooltip(note.timestamp).timeAgo}
-                      </span>
-                    </Text>
-                  </Timeline.Item>
-                );
-              })}
-            </Timeline>
+        {/* Side Navigation */}
+        <div className="w-64 flex-shrink-0">
+          <div className="sticky top-44 space-y-4">
+            <DevlogAnchorNav devlog={devlog} notesCount={notes?.length || 0} />
+            {actions && (
+              <div className="border-t pt-4">
+                <div className="space-y-3">{actions}</div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-
-      <DevlogAnchorNav devlog={devlog} />
     </div>
   );
 }

@@ -1,7 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
-import { DevlogEntry, DevlogId } from '@devlog/core';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
-import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useProject } from '@/contexts/ProjectContext';
+import { DevlogApiClient, handleApiError } from '@/lib';
+
+interface UseDevlogDetailsOptions {
+  /**
+   * Project ID to use. If not provided, will use the current project from context.
+   */
+  projectId?: number;
+}
 
 interface UseDevlogDetailsResult {
   devlog: DevlogEntry | null;
@@ -12,14 +20,28 @@ interface UseDevlogDetailsResult {
   deleteDevlog: (id: DevlogId) => Promise<void>;
 }
 
-export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
+/**
+ * Unified hook for fetching and managing devlog details.
+ * Can work with explicit project IDs or use project context.
+ */
+export function useDevlogDetails(
+  id: string | number,
+  options: UseDevlogDetailsOptions = {},
+): UseDevlogDetailsResult {
+  const { projectId: explicitProjectId } = options;
   const [devlog, setDevlog] = useState<DevlogEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
-  const { currentWorkspace } = useWorkspace();
+  const { currentProject } = useProject();
 
   const devlogId = typeof id === 'string' ? parseInt(id, 10) : id;
+  const projectId = explicitProjectId || currentProject?.projectId;
+
+  // Create DevlogApiClient instance
+  const devlogClient = useMemo(() => {
+    return projectId ? new DevlogApiClient(projectId.toString()) : null;
+  }, [projectId]);
 
   const fetchDevlog = useCallback(async () => {
     if (isNaN(devlogId)) {
@@ -28,8 +50,8 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
       return;
     }
 
-    if (!currentWorkspace) {
-      setError('No workspace selected');
+    if (!projectId || !devlogClient) {
+      setError('No project ID available');
       setLoading(false);
       return;
     }
@@ -37,26 +59,15 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${devlogId}`);
-      
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Devlog not found');
-        } else {
-          throw new Error('Failed to fetch devlog');
-        }
-        return;
-      }
 
-      const data = await response.json();
+      const data = await devlogClient.get(devlogId);
       setDevlog(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
-  }, [devlogId, currentWorkspace]);
+  }, [devlogId, projectId, devlogClient]);
 
   // Set up real-time event listeners for this specific devlog
   useEffect(() => {
@@ -89,43 +100,31 @@ export function useDevlogDetails(id: string | number): UseDevlogDetailsResult {
   }, [fetchDevlog]);
 
   // CRUD operations for this specific devlog
-  const updateDevlog = useCallback(async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    if (!currentWorkspace) {
-      throw new Error('No workspace selected');
-    }
+  const updateDevlog = useCallback(
+    async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+      if (!projectId || !devlogClient) {
+        throw new Error('No project ID available');
+      }
 
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${data.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+      const updatedDevlog = await devlogClient.update(data.id, data);
 
-    if (!response.ok) {
-      throw new Error('Failed to update devlog');
-    }
+      setDevlog(updatedDevlog);
+      return updatedDevlog;
+    },
+    [projectId, devlogClient],
+  );
 
-    const updatedDevlog = await response.json();
-    setDevlog(updatedDevlog);
-    return updatedDevlog;
-  }, [currentWorkspace]);
+  const deleteDevlog = useCallback(
+    async (id: DevlogId) => {
+      if (!projectId || !devlogClient) {
+        throw new Error('No project ID available');
+      }
 
-  const deleteDevlog = useCallback(async (id: DevlogId) => {
-    if (!currentWorkspace) {
-      throw new Error('No workspace selected');
-    }
-
-    const response = await fetch(`/api/workspaces/${currentWorkspace.workspaceId}/devlogs/${id}`, {
-      method: 'DELETE',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete devlog');
-    }
-
-    setDevlog(null);
-  }, [currentWorkspace]);
+      await devlogClient.delete(id);
+      setDevlog(null);
+    },
+    [projectId, devlogClient],
+  );
 
   return {
     devlog,

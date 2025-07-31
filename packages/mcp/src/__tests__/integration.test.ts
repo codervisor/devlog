@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { MCPDevlogAdapter } from '../mcp-adapter.js';
-import { WorkspaceDevlogManager } from '@devlog/core';
+import { WorkspaceDevlogManager } from '@codervisor/devlog-core';
+import { MCPDevlogAdapter } from '../adapters/mcp-adapter.js';
 import { allTools } from '../tools/index.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -159,7 +159,9 @@ describe('MCP Server Integration', () => {
       expect(tool.name, `Tool at index ${index} should have a name`).toBeDefined();
       expect(tool.description, `Tool ${tool.name} should have a description`).toBeDefined();
       expect(tool.inputSchema, `Tool ${tool.name} should have an input schema`).toBeDefined();
-      expect(tool.inputSchema.type, `Tool ${tool.name} input schema should have a type`).toBe('object');
+      expect(tool.inputSchema.type, `Tool ${tool.name} input schema should have a type`).toBe(
+        'object',
+      );
     });
   });
 

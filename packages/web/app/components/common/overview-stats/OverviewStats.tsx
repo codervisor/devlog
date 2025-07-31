@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { BarChartOutlined } from '@ant-design/icons';
-import { Popover, Skeleton } from 'antd';
-import { DevlogFilter, DevlogStats, DevlogStatus, FilterType } from '@devlog/core';
-import styles from './OverviewStats.module.css';
+import { BarChart3 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DevlogFilter, DevlogStats, DevlogStatus, FilterType } from '@codervisor/devlog-core';
+import { cn } from '@/lib';
 
 export type OverviewStatsVariant = 'detailed' | 'icon';
 
@@ -28,37 +29,21 @@ export function OverviewStats({
   // Render skeleton loading state
   const renderSkeleton = () => {
     if (variant === 'icon') {
-      return (
-        <Skeleton.Button
-          style={{
-            width: '16px',
-            height: '16px',
-            minWidth: '16px',
-          }}
-          active
-          size="small"
-        />
-      );
+      return <Skeleton className="w-4 h-4" />;
     }
 
-    // Skeleton for detailed view
     return (
-      <div className={`${styles.dashboardStats} ${className || ''}`}>
-        {/* Total stat skeleton */}
-        <div className={styles.statCompact}>
-          <Skeleton.Button style={{ width: '64px', height: '56px' }} active size="small" />
-        </div>
-        {/* Status stats skeleton */}
-        {Array.from({ length: 2 }).map((_, index) => (
-          <div key={index} className={styles.statCompact}>
-            <Skeleton.Button style={{ width: '64px', height: '56px' }} active size="small" />
+      <div className={cn('flex gap-4', className)}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="flex flex-col items-center justify-center min-w-16 p-2">
+            <Skeleton className="w-8 h-6 mb-1" />
+            <Skeleton className="w-12 h-4" />
           </div>
         ))}
       </div>
     );
   };
 
-  // Show skeleton when loading
   if (loading) {
     return renderSkeleton();
   }
@@ -72,7 +57,6 @@ export function OverviewStats({
   };
 
   const isTotalActive = () => {
-    // Total is active when no filterType and no specific status filters
     return (
       (!currentFilters?.filterType || currentFilters.filterType === 'total') &&
       (!currentFilters?.status || currentFilters.status.length === 0)
@@ -80,12 +64,10 @@ export function OverviewStats({
   };
 
   const isOpenActive = () => {
-    // Open is active when filterType is 'open'
     return currentFilters?.filterType === 'open';
   };
 
   const isClosedActive = () => {
-    // Closed is active when filterType is 'closed'
     return currentFilters?.filterType === 'closed';
   };
 
@@ -95,251 +77,242 @@ export function OverviewStats({
     }
   };
 
-  const getStatClasses = (status: FilterType, baseClasses: string, isSubStatus = false) => {
+  const getStatClasses = (filterType: FilterType, isIndividualStatus = false) => {
     let isActive: boolean;
-    if (status === 'total') {
+    if (filterType === 'total') {
       isActive = isTotalActive();
-    } else if (status === 'open') {
+    } else if (filterType === 'open') {
       isActive = isOpenActive();
-    } else if (status === 'closed') {
+    } else if (filterType === 'closed') {
       isActive = isClosedActive();
     } else {
-      // Use status logic for individual statuses to avoid highlighting when parent is active
-      if (!isSubStatus) {
-        throw new Error('isSubStatus must be true for individual statuses');
-      }
-      isActive = isStatusActive(status);
+      isActive = isStatusActive(filterType as DevlogStatus);
     }
 
     const isClickable = onFilterToggle !== undefined;
 
-    return `${baseClasses} ${isClickable ? styles.clickableStat : ''} ${isActive ? styles.activeStat : ''}`;
+    return cn(
+      'flex flex-col items-center justify-center min-w-16 p-2 rounded-md transition-colors',
+      {
+        'cursor-pointer hover:bg-muted/50': isClickable,
+        'bg-primary/10 text-primary border border-primary/20': isActive,
+        'hover:bg-muted': isClickable && !isActive,
+      },
+    );
   };
 
-  // Render detailed variant (for Dashboard and List page)
-  if (variant === 'detailed') {
-    // Render simplified view with only primary aggregates and dropdown for details
-    return (
-      <div className={`${styles.dashboardStats} ${className || ''}`}>
-        <div
-          className={getStatClasses('total', styles.statCompact)}
-          onClick={() => handleStatClick('total')}
-          title={onFilterToggle ? (isTotalActive() ? 'Clear filters' : 'Show all') : undefined}
-        >
-          <span className={styles.statValue}>{stats.totalEntries}</span>
-          <span className={styles.statLabel}>Total</span>
-        </div>
+  const getStatusColor = (status: DevlogStatus) => {
+    const colors = {
+      new: 'text-blue-600',
+      'in-progress': 'text-orange-600',
+      blocked: 'text-red-600',
+      'in-review': 'text-purple-600',
+      testing: 'text-yellow-600',
+      done: 'text-green-600',
+      cancelled: 'text-gray-600',
+    };
+    return colors[status] || 'text-foreground';
+  };
 
-        <Popover
-          content={
-            <div className={styles.popoverContent}>
-              <div className={styles.popoverStats}>
-                <div
-                  className={getStatClasses('new', styles.statCompact, true)}
+  const StatItem = ({
+    value,
+    label,
+    onClick,
+    className: itemClassName,
+    status,
+  }: {
+    value: number;
+    label: string;
+    onClick?: () => void;
+    className?: string;
+    status?: DevlogStatus;
+  }) => (
+    <div className={itemClassName} onClick={onClick}>
+      <span className={cn('text-2xl font-semibold', status && getStatusColor(status))}>
+        {value}
+      </span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  );
+
+  if (variant === 'detailed') {
+    return (
+      <div className={cn('flex gap-4', className)}>
+        <StatItem
+          value={stats.totalEntries}
+          label="Total"
+          onClick={() => handleStatClick('total')}
+          className={getStatClasses('total')}
+        />
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className={getStatClasses('open')}>
+              <StatItem
+                value={stats.openEntries}
+                label="Open"
+                onClick={() => handleStatClick('open')}
+                className="w-full"
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Open Status Breakdown</h4>
+              <div className="grid grid-cols-3 gap-2">
+                <StatItem
+                  value={stats.byStatus['new'] || 0}
+                  label="New"
                   onClick={() => handleStatClick('new')}
-                  title={onFilterToggle ? 'Filter by New' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.new}`}>
-                    {stats.byStatus['new'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>New</span>
-                </div>
-                <div
-                  className={getStatClasses('in-progress', styles.statCompact, true)}
+                  className={getStatClasses('new', true)}
+                  status="new"
+                />
+                <StatItem
+                  value={stats.byStatus['in-progress'] || 0}
+                  label="In Progress"
                   onClick={() => handleStatClick('in-progress')}
-                  title={onFilterToggle ? 'Filter by In Progress' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.inProgress}`}>
-                    {stats.byStatus['in-progress'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>In Progress</span>
-                </div>
-                <div
-                  className={getStatClasses('blocked', styles.statCompact, true)}
+                  className={getStatClasses('in-progress', true)}
+                  status="in-progress"
+                />
+                <StatItem
+                  value={stats.byStatus['blocked'] || 0}
+                  label="Blocked"
                   onClick={() => handleStatClick('blocked')}
-                  title={onFilterToggle ? 'Filter by Blocked' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.blocked}`}>
-                    {stats.byStatus['blocked'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>Blocked</span>
-                </div>
-                <div
-                  className={getStatClasses('in-review', styles.statCompact, true)}
+                  className={getStatClasses('blocked', true)}
+                  status="blocked"
+                />
+                <StatItem
+                  value={stats.byStatus['in-review'] || 0}
+                  label="In Review"
                   onClick={() => handleStatClick('in-review')}
-                  title={onFilterToggle ? 'Filter by In Review' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.inReview}`}>
-                    {stats.byStatus['in-review'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>In Review</span>
-                </div>
-                <div
-                  className={getStatClasses('testing', styles.statCompact, true)}
+                  className={getStatClasses('in-review', true)}
+                  status="in-review"
+                />
+                <StatItem
+                  value={stats.byStatus['testing'] || 0}
+                  label="Testing"
                   onClick={() => handleStatClick('testing')}
-                  title={onFilterToggle ? 'Filter by Testing' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.testing}`}>
-                    {stats.byStatus['testing'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>Testing</span>
-                </div>
+                  className={getStatClasses('testing', true)}
+                  status="testing"
+                />
               </div>
             </div>
-          }
-          title="Open Status Breakdown"
-          trigger="hover"
-          placement="bottom"
-        >
-          <div
-            className={getStatClasses('open', styles.statCompact)}
-            onClick={() => handleStatClick('open')}
-            title={onFilterToggle ? 'Show open entries' : undefined}
-          >
-            <span className={`${styles.statValue} ${styles.inProgress}`}>{stats.openEntries}</span>
-            <span className={styles.statLabel}>Open</span>
-          </div>
+          </PopoverContent>
         </Popover>
 
-        <Popover
-          content={
-            <div className={styles.popoverContent}>
-              <div className={styles.popoverStats}>
-                <div
-                  className={getStatClasses('done', styles.statCompact, true)}
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className={getStatClasses('closed')}>
+              <StatItem
+                value={stats.closedEntries}
+                label="Closed"
+                onClick={() => handleStatClick('closed')}
+                className="w-full"
+              />
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-60">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Closed Status Breakdown</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <StatItem
+                  value={stats.byStatus['done'] || 0}
+                  label="Done"
                   onClick={() => handleStatClick('done')}
-                  title={onFilterToggle ? 'Filter by Done' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.completed}`}>
-                    {stats.byStatus['done'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>Done</span>
-                </div>
-                <div
-                  className={getStatClasses('cancelled', styles.statCompact, true)}
+                  className={getStatClasses('done', true)}
+                  status="done"
+                />
+                <StatItem
+                  value={stats.byStatus['cancelled'] || 0}
+                  label="Cancelled"
                   onClick={() => handleStatClick('cancelled')}
-                  title={onFilterToggle ? 'Filter by Cancelled' : undefined}
-                >
-                  <span className={`${styles.statValue} ${styles.closed}`}>
-                    {stats.byStatus['cancelled'] || 0}
-                  </span>
-                  <span className={styles.statLabel}>Cancelled</span>
-                </div>
+                  className={getStatClasses('cancelled', true)}
+                  status="cancelled"
+                />
               </div>
             </div>
-          }
-          title="Closed Status Breakdown"
-          trigger="hover"
-          placement="bottom"
-        >
-          <div
-            className={getStatClasses('closed', styles.statCompact)}
-            onClick={() => handleStatClick('closed')}
-            title={onFilterToggle ? 'Show closed entries' : undefined}
-          >
-            <span className={`${styles.statValue} ${styles.closed}`}>{stats.closedEntries}</span>
-            <span className={styles.statLabel}>Closed</span>
-          </div>
+          </PopoverContent>
         </Popover>
       </div>
     );
   }
 
-  // Create detailed stats content for popover
-  const detailedContent = (
-    <div className={styles.popoverContent}>
-      <div className={styles.popoverStats}>
-        <div
-          className={getStatClasses('total', styles.statCompact)}
-          onClick={() => handleStatClick('total')}
-          title={onFilterToggle ? 'Show all entries' : undefined}
-        >
-          <span className={styles.statValue}>{stats.totalEntries}</span>
-          <span className={styles.statLabel}>Total</span>
+  if (variant === 'icon') {
+    const detailedContent = (
+      <div className="space-y-3">
+        <div className="grid grid-cols-4 gap-2">
+          <StatItem
+            value={stats.totalEntries}
+            label="Total"
+            onClick={() => handleStatClick('total')}
+            className={getStatClasses('total')}
+          />
+          <StatItem
+            value={stats.byStatus['new'] || 0}
+            label="New"
+            onClick={() => handleStatClick('new')}
+            className={getStatClasses('new', true)}
+            status="new"
+          />
+          <StatItem
+            value={stats.byStatus['in-progress'] || 0}
+            label="In Progress"
+            onClick={() => handleStatClick('in-progress')}
+            className={getStatClasses('in-progress', true)}
+            status="in-progress"
+          />
+          <StatItem
+            value={stats.byStatus['blocked'] || 0}
+            label="Blocked"
+            onClick={() => handleStatClick('blocked')}
+            className={getStatClasses('blocked', true)}
+            status="blocked"
+          />
         </div>
-        <div
-          className={getStatClasses('new', styles.statCompact, true)}
-          onClick={() => handleStatClick('new')}
-          title={onFilterToggle ? 'Filter by New' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.new}`}>{stats.byStatus['new'] || 0}</span>
-          <span className={styles.statLabel}>New</span>
-        </div>
-        <div
-          className={getStatClasses('in-progress', styles.statCompact, true)}
-          onClick={() => handleStatClick('in-progress')}
-          title={onFilterToggle ? 'Filter by In Progress' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.inProgress}`}>
-            {stats.byStatus['in-progress'] || 0}
-          </span>
-          <span className={styles.statLabel}>In Progress</span>
-        </div>
-        <div
-          className={getStatClasses('blocked', styles.statCompact, true)}
-          onClick={() => handleStatClick('blocked')}
-          title={onFilterToggle ? 'Filter by Blocked' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.blocked}`}>
-            {stats.byStatus['blocked'] || 0}
-          </span>
-          <span className={styles.statLabel}>Blocked</span>
-        </div>
-        <div
-          className={getStatClasses('in-review', styles.statCompact, true)}
-          onClick={() => handleStatClick('in-review')}
-          title={onFilterToggle ? 'Filter by In Review' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.inReview}`}>
-            {stats.byStatus['in-review'] || 0}
-          </span>
-          <span className={styles.statLabel}>In Review</span>
-        </div>
-        <div
-          className={getStatClasses('testing', styles.statCompact, true)}
-          onClick={() => handleStatClick('testing')}
-          title={onFilterToggle ? 'Filter by Testing' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.testing}`}>
-            {stats.byStatus['testing'] || 0}
-          </span>
-          <span className={styles.statLabel}>Testing</span>
-        </div>
-        <div
-          className={getStatClasses('done', styles.statCompact, true)}
-          onClick={() => handleStatClick('done')}
-          title={onFilterToggle ? 'Filter by Done' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.completed}`}>
-            {stats.byStatus['done'] || 0}
-          </span>
-          <span className={styles.statLabel}>Done</span>
-        </div>
-        <div
-          className={getStatClasses('cancelled', styles.statCompact, true)}
-          onClick={() => handleStatClick('cancelled')}
-          title={onFilterToggle ? 'Filter by Cancelled' : undefined}
-        >
-          <span className={`${styles.statValue} ${styles.closed}`}>
-            {stats.byStatus['cancelled'] || 0}
-          </span>
-          <span className={styles.statLabel}>Cancelled</span>
+        <div className="grid grid-cols-4 gap-2">
+          <StatItem
+            value={stats.byStatus['in-review'] || 0}
+            label="In Review"
+            onClick={() => handleStatClick('in-review')}
+            className={getStatClasses('in-review', true)}
+            status="in-review"
+          />
+          <StatItem
+            value={stats.byStatus['testing'] || 0}
+            label="Testing"
+            onClick={() => handleStatClick('testing')}
+            className={getStatClasses('testing', true)}
+            status="testing"
+          />
+          <StatItem
+            value={stats.byStatus['done'] || 0}
+            label="Done"
+            onClick={() => handleStatClick('done')}
+            className={getStatClasses('done', true)}
+            status="done"
+          />
+          <StatItem
+            value={stats.byStatus['cancelled'] || 0}
+            label="Cancelled"
+            onClick={() => handleStatClick('cancelled')}
+            className={getStatClasses('cancelled', true)}
+            status="cancelled"
+          />
         </div>
       </div>
-    </div>
-  );
+    );
 
-  // Render icon variant (for footer)
-  if (variant === 'icon') {
     return (
-      <Popover content={detailedContent} title="Quick Stats" trigger="hover" placement="top">
-        <BarChartOutlined
-          style={{
-            color: '#8c8c8c',
-            fontSize: '16px',
-            cursor: 'default',
-          }}
-        />
+      <Popover>
+        <PopoverTrigger asChild>
+          <BarChart3 className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+          <div className="space-y-2">
+            <h4 className="font-medium text-sm">Quick Stats</h4>
+            {detailedContent}
+          </div>
+        </PopoverContent>
       </Popover>
     );
   }

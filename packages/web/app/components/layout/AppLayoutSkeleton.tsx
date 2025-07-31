@@ -1,34 +1,39 @@
 'use client';
 
 import React from 'react';
-import { Layout, Skeleton } from 'antd';
-import styles from './AppLayoutSkeleton.module.css';
-
-const { Sider, Content } = Layout;
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function AppLayoutSkeleton() {
   return (
-    <Layout className="app-layout">
-      <Sider
-        width={280}
-        className={styles.sidebarSkeleton}
-      >
-        <div className={styles.sidebarSkeletonContent}>
-          <Skeleton active paragraph={{ rows: 2 }} />
-          <br />
-          <Skeleton active paragraph={{ rows: 8 }} />
-        </div>
-      </Sider>
-      <Layout>
-        <div className={styles.headerSkeleton}>
-          <Skeleton.Button active className={styles.headerSkeletonButton} />
-        </div>
-        <Content className="app-content">
-          <div className="app-content-wrapper">
-            <Skeleton active paragraph={{ rows: 10 }} />
+    <div className="min-h-screen bg-background">
+      {/* Header skeleton */}
+      <div className="h-12 border-b border-border bg-background px-4 flex items-center">
+        <Skeleton className="h-6 w-32" />
+      </div>
+
+      <div className="flex flex-1">
+        {/* Sidebar skeleton */}
+        <div className="w-64 border-r border-border bg-background p-4">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <div className="space-y-2">
+              {[...Array(8)].map((_, i) => (
+                <Skeleton key={i} className="h-4 w-full" />
+              ))}
+            </div>
           </div>
-        </Content>
-      </Layout>
-    </Layout>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="flex-1 p-6">
+          <div className="space-y-4">
+            {[...Array(10)].map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

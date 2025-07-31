@@ -26,7 +26,7 @@ import type {
 import type { DevlogEvent } from './event.js';
 
 // Storage Configuration Types
-export type StorageType = 'json' | 'sqlite' | 'mysql' | 'postgres' | 'github';
+export type StorageType = 'sqlite' | 'mysql' | 'postgres';
 
 export type ConflictResolution = 'local-wins' | 'remote-wins' | 'timestamp-wins' | 'interactive';
 

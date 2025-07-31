@@ -1,14 +1,41 @@
 'use client';
 
 import React from 'react';
-import { Button, Col, Form, Input, Row, Select, Space, Typography } from 'antd';
-import { CloseOutlined, SaveOutlined } from '@ant-design/icons';
-import { statusOptions, priorityOptions, typeOptions } from '@/lib/devlog-options';
-import styles from './DevlogForm.module.css';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { priorityOptions, statusOptions, typeOptions } from '@/lib';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Save, X } from 'lucide-react';
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
-const { Option } = Select;
+const formSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  type: z.string().min(1, 'Please select a type'),
+  priority: z.string().min(1, 'Please select a priority'),
+  status: z.string().optional(),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(500),
+  businessContext: z.string().max(300).optional(),
+  technicalContext: z.string().max(300).optional(),
+});
 
 interface DevlogFormProps {
   onSubmit: (data: any) => void;
@@ -17,170 +44,211 @@ interface DevlogFormProps {
   isEditMode?: boolean;
 }
 
-export function DevlogForm({ onSubmit, onCancel, initialValues, isEditMode = false }: DevlogFormProps) {
-  const [form] = Form.useForm();
+export function DevlogForm({
+  onSubmit,
+  onCancel,
+  initialValues,
+  isEditMode = false,
+}: DevlogFormProps) {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialValues || {
+      type: 'feature',
+      priority: 'medium',
+    },
+  });
 
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
     onSubmit(values);
   };
 
   const handleReset = () => {
-    form.resetFields();
+    form.reset();
   };
 
   return (
-    <div>
-      <div className={styles.devlogFormTitle}>
-        <Title level={2} style={{ margin: 0, marginBottom: '8px' }}>
-          {isEditMode ? 'Edit Devlog' : 'Create New Devlog'}
-        </Title>
-        <Text type="secondary">
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>{isEditMode ? 'Edit Devlog' : 'Create New Devlog'}</CardTitle>
+        <CardDescription>
           {isEditMode ? 'Update the development log entry' : 'Add a new development log entry'}
-        </Text>
-      </div>
-
-      <Form
-        className={styles.devlogForm}
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={initialValues || {
-          type: 'feature',
-          priority: 'medium',
-        }}
-      >
-        <Row gutter={[16, 0]}>
-          <Col span={24}>
-            <Form.Item
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
               name="title"
-              label="Title"
-              rules={[
-                { required: true, message: 'Please enter a title' },
-                { min: 3, message: 'Title must be at least 3 characters' },
-              ]}
-            >
-              <Input placeholder="Brief, descriptive title" size="large" />
-            </Form.Item>
-          </Col>
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Brief, descriptive title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="type"
-              label="Type"
-              rules={[{ required: true, message: 'Please select a type' }]}
-            >
-              <Select size="large" placeholder="Select type">
-                {typeOptions.map(option => (
-                  <Option key={option.value} value={option.value}>{option.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {typeOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <Col xs={24} md={12}>
-            <Form.Item
-              name="priority"
-              label="Priority"
-              rules={[{ required: true, message: 'Please select a priority' }]}
-            >
-              <Select size="large" placeholder="Select priority">
-                {priorityOptions.map(option => (
-                  <Option key={option.value} value={option.value}>{option.label}</Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {priorityOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {isEditMode && (
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="status"
-                label="Status"
-                rules={[{ required: true, message: 'Please select a status' }]}
-              >
-                <Select size="large" placeholder="Select status">
-                  {statusOptions.map(option => (
-                    <Option key={option.value} value={option.value}>{option.label}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          )}
+              {isEditMode && (
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {statusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
 
-          <Col span={24}>
-            <Form.Item
+            <FormField
+              control={form.control}
               name="description"
-              label="Description"
-              rules={[
-                { required: true, message: 'Please enter a description' },
-                { min: 10, message: 'Description must be at least 10 characters' },
-              ]}
-            >
-              <TextArea
-                rows={4}
-                placeholder="Detailed description with context"
-                showCount
-                maxLength={500}
-              />
-            </Form.Item>
-          </Col>
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Detailed description with context"
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>{field.value?.length || 0}/500 characters</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Col span={24}>
-            <Form.Item
+            <FormField
+              control={form.control}
               name="businessContext"
-              label="Business Context"
-              extra="Why this work matters and what problem it solves"
-            >
-              <TextArea
-                rows={3}
-                placeholder="Business context and rationale"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-          </Col>
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Context</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Business context and rationale"
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Why this work matters and what problem it solves ({field.value?.length || 0}/300
+                    characters)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Col span={24}>
-            <Form.Item
+            <FormField
+              control={form.control}
               name="technicalContext"
-              label="Technical Context"
-              extra="Architecture decisions, constraints, assumptions"
-            >
-              <TextArea
-                rows={3}
-                placeholder="Technical context and implementation details"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Technical Context</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Technical context and implementation details"
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Architecture decisions, constraints, assumptions ({field.value?.length || 0}/300
+                    characters)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Form.Item style={{ marginTop: '32px', marginBottom: 0 }}>
-          <Space size="middle" style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Button size="large" onClick={handleReset} style={{ minWidth: '100px' }}>
-              Reset
-            </Button>
-            <Button
-              size="large"
-              onClick={onCancel}
-              icon={<CloseOutlined />}
-              style={{ minWidth: '100px' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              size="large"
-              htmlType="submit"
-              icon={<SaveOutlined />}
-              style={{ minWidth: '140px' }}
-            >
-              {isEditMode ? 'Update Devlog' : 'Create Devlog'}
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </div>
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button type="button" variant="outline" onClick={handleReset}>
+                Reset
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel}>
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                {isEditMode ? 'Update Devlog' : 'Create Devlog'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
