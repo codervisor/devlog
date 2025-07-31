@@ -2,64 +2,61 @@
 applyTo: '**/*'
 ---
 
-# Devlog Project Instructions
+# Devlog Project - Comprehensive Patterns
 
-## Core Principles
+## 🎯 When to Use This Guide
 
-**Occam's Razor**: Simple solutions are better than complex ones.
+This guide provides detailed patterns and examples. Use it when you need:
+- Specific implementation patterns
+- Code examples and templates  
+- Detailed architectural guidance
+- Decision-making frameworks
 
-- **Quality over quantity**: Well-architected solutions over preserving legacy
-- **One way to do it**: Clear recommendations eliminate decision paralysis  
-- **Show, don't tell**: Examples over extensive documentation
-- **TypeScript everywhere**: Type safety is non-negotiable
+For quick reference, see the global AI agent guidelines.
 
-## Architecture Standards
+## Service Architecture
 
-### Service Pattern
+### Singleton Pattern
 ```typescript
-// ✅ Use Service classes (current architecture)
+// ✅ Current architecture - Use these services
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 
-// Singleton pattern with proper initialization
 const projectService = ProjectService.getInstance();
 await projectService.initialize();
 
 const devlogService = DevlogService.getInstance(projectId);
 await devlogService.ensureInitialized();
-
-// ❌ Don't use deprecated manager classes
-// import { WorkspaceDevlogManager } from '@codervisor/devlog-core'; // Not exported
 ```
 
-### Dependency Injection
+### Service Implementation Template
 ```typescript
-// ✅ Constructor injection pattern
 export class ServiceClass {
-  constructor(
-    private storage: IStorageProvider,
-    private logger: ILogger = new ConsoleLogger()
-  ) {}
+  private static instance: ServiceClass | null = null;
+  private initPromise: Promise<void> | null = null;
+
+  constructor(private storage: IStorageProvider) {}
   
-  async initialize(): Promise<void> { /* setup */ }
+  static getInstance(): ServiceClass {
+    if (!ServiceClass.instance) {
+      ServiceClass.instance = new ServiceClass();
+    }
+    return ServiceClass.instance;
+  }
+
+  async initialize(): Promise<void> {
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this._initialize();
+    return this.initPromise;
+  }
+
+  private async _initialize(): Promise<void> { /* setup */ }
   async dispose(): Promise<void> { /* cleanup */ }
 }
 ```
 
-### Event-Driven Communication
-```typescript
-// ✅ Use EventEmitter for internal communication
-export interface DevlogEvents {
-  'entry:created': { entry: DevlogEntry };
-  'entry:updated': { entry: DevlogEntry };
-}
+## Import System & TypeScript
 
-// Emit events after successful operations
-this.emit('entry:created', { entry });
-```
-
-## Import System
-
-### ESM Requirements
+### ESM Import Rules
 ```typescript
 // ✅ Internal imports (same package) - ALWAYS add .js
 import { DevlogManager } from './managers/devlog-manager.js';
@@ -69,22 +66,9 @@ import type { DevlogEntry } from '../types/index.js';
 // ✅ Cross-package imports
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 import { ChatParser } from '@codervisor/devlog-ai';
-
-// ❌ Missing .js extensions (breaks ESM)
-import { StorageProvider } from '../storage';
-
-// ❌ Self-referencing aliases (ambiguous)  
-import { DevlogEntry } from '@/types';
 ```
 
-### Why .js Extensions Matter
-- **Node.js ESM**: Requires explicit file extensions
-- **Build stability**: Relative imports don't break when files move
-- **Clarity**: Eliminates module resolution ambiguity
-
-## TypeScript Standards
-
-### Type Safety
+### Type Safety & Error Handling
 ```typescript
 // ✅ Proper typing
 interface DevlogEntry {
@@ -93,18 +77,9 @@ interface DevlogEntry {
   status: 'new' | 'in-progress' | 'done';
 }
 
-// ✅ Generic constraints
-interface Repository<T extends { id: number }> {
-  save(item: T): Promise<T>;
-  get(id: number): Promise<T | null>;
-}
+// ✅ Result pattern for operations
+type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
-// ❌ No any types without justification
-function process(data: any) { } // Don't do this
-```
-
-### Error Handling
-```typescript
 // ✅ Custom error classes
 export class DevlogError extends Error {
   constructor(message: string, public code?: string) {
@@ -112,62 +87,7 @@ export class DevlogError extends Error {
     this.name = 'DevlogError';
   }
 }
-
-// ✅ Result pattern for operations that can fail
-type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
-
-async function saveEntry(entry: DevlogEntry): Promise<Result<DevlogEntry>> {
-  try {
-    const saved = await storage.save(entry);
-    return { success: true, data: saved };
-  } catch (error) {
-    return { success: false, error: error as Error };
-  }
-}
 ```
-
-## Testing Standards
-
-### Test Structure
-```typescript
-// ✅ Test behavior, not implementation
-describe('DevlogManager', () => {
-  let manager: DevlogManager;
-  let mockStorage: IStorageProvider;
-  
-  beforeEach(() => {
-    mockStorage = createMockStorage();
-    manager = new DevlogManager(mockStorage, testConfig);
-  });
-  
-  afterEach(async () => {
-    await manager.dispose();
-  });
-  
-  it('should create entry with valid data', async () => {
-    const entry = { title: 'Test', type: 'feature' };
-    const result = await manager.createEntry(entry);
-    
-    expect(result.success).toBe(true);
-    expect(result.data.title).toBe('Test');
-  });
-  
-  it('should handle storage errors gracefully', async () => {
-    mockStorage.save.mockRejectedValue(new Error('Storage failed'));
-    
-    const result = await manager.createEntry({ title: 'Test' });
-    
-    expect(result.success).toBe(false);
-    expect(result.error.message).toContain('Storage failed');
-  });
-});
-```
-
-### Testing Principles
-- **Mock external dependencies** (database, file system, network)
-- **Test both success and failure paths**
-- **Keep tests isolated** (no shared state between tests)
-- **Use descriptive test names** that explain expected behavior
 
 ## Web Development (Next.js)
 
@@ -199,60 +119,46 @@ export function DevlogCard({ devlog, onClick, className }: DevlogCardProps) {
 import { DevlogCard } from '@/components/devlog/devlog-card';
 import { Button } from '@/components/ui/button';
 
-// ✅ Relative imports for components
-import { DevlogList } from './devlog-list';
-import { StatusBadge } from '../ui/status-badge';
-
 // ✅ Cross-package (no .js in Next.js)
 import { DevlogManager } from '@codervisor/devlog-core';
 ```
 
-### Server vs Client Components
-```typescript
-// ✅ Server Component (default) - for data fetching
-async function DevlogList() {
-  const devlogs = await api.getDevlogs();
-  return <div>{devlogs.map(devlog => <DevlogCard key={devlog.id} devlog={devlog} />)}</div>;
-}
+## Testing Standards
 
-// ✅ Client Component - for interactivity
-'use client';
-function InteractiveDevlogList() {
-  const [selected, setSelected] = useState<DevlogEntry | null>(null);
-  return <DevlogCard devlog={devlog} onClick={setSelected} />;
-}
+### Test Structure
+```typescript
+describe('DevlogManager', () => {
+  let manager: DevlogManager;
+  let mockStorage: IStorageProvider;
+  
+  beforeEach(() => {
+    mockStorage = createMockStorage();
+    manager = new DevlogManager(mockStorage, testConfig);
+  });
+  
+  afterEach(async () => {
+    await manager.dispose();
+  });
+  
+  it('should create entry with valid data', async () => {
+    const entry = { title: 'Test', type: 'feature' };
+    const result = await manager.createEntry(entry);
+    
+    expect(result.success).toBe(true);
+    expect(result.data.title).toBe('Test');
+  });
+  
+  it('should handle storage errors gracefully', async () => {
+    mockStorage.save.mockRejectedValue(new Error('Storage failed'));
+    const result = await manager.createEntry({ title: 'Test' });
+    
+    expect(result.success).toBe(false);
+    expect(result.error.message).toContain('Storage failed');
+  });
+});
 ```
 
-### Styling with Tailwind
-```typescript
-// ✅ Use utility classes
-<button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded">
-  Click me
-</button>
-
-// ✅ Component variants with cn()
-const buttonVariants = {
-  variant: {
-    default: "bg-primary text-primary-foreground",
-    outline: "border border-input bg-background",
-  },
-  size: {
-    default: "h-10 px-4 py-2",
-    sm: "h-9 px-3",
-  },
-};
-
-export function Button({ className, variant, size, ...props }: ButtonProps) {
-  return (
-    <button
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
-  );
-}
-```
-
-## File Organization
+## File Organization & Development
 
 ### Package Structure
 ```
@@ -274,42 +180,21 @@ packages/
     └── features/             # Feature-specific components
 ```
 
-### Export Patterns
-```typescript
-// ✅ src/index.ts - Public API only
-export { DevlogService, ProjectService } from './services/index.js';
-export type { DevlogEntry, DevlogConfig } from './types/index.js';
-
-// ✅ Internal modules - relative imports
-import { StorageProvider } from '../storage/base-storage.js';
-```
-
-## Development Workflow
-
-### Build Dependencies
+### Development Workflow
 ```bash
 # Follow dependency chain
 pnpm --filter @codervisor/devlog-core build
 pnpm --filter @codervisor/devlog-mcp build  
 pnpm --filter @codervisor/devlog-web build
-```
 
-### Development Environment
-```bash
 # Start containerized development
 docker compose -f docker-compose.dev.yml up web-dev -d --wait
 
 # Test build without breaking dev server
 pnpm build:test  # Uses .next-build/ instead of .next/
-```
 
-### Testing Workflow
-```bash
 # Run tests with proper isolation
 pnpm test
-
-# Test specific package
-pnpm --filter @codervisor/devlog-core test
 ```
 
 ## Critical Rules
