@@ -9,10 +9,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Check, Monitor, Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme();
+
+  const themes = [
+    { name: 'light', label: 'Light', icon: <Sun className="mr-2 h-4 w-4" /> },
+    { name: 'dark', label: 'Dark', icon: <Moon className="mr-2 h-4 w-4" /> },
+    { name: 'system', label: 'System', icon: <Monitor className="mr-2 h-4 w-4" /> },
+  ];
 
   return (
     <DropdownMenu>
@@ -24,18 +30,35 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')}>
-          <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>
-          <Monitor className="mr-2 h-4 w-4" />
-          <span>System</span>
-        </DropdownMenuItem>
+        {themes.map(({ name, label, icon }) => (
+          <DropdownMenuItem
+            key={name}
+            className="cursor-pointer justify-between"
+            onClick={() => setTheme(name)}
+          >
+            <div className="flex items-center">
+              {icon}
+              <span>{label}</span>
+            </div>
+            <div>{theme === name && <Check className="h-4 w-4" />}</div>
+          </DropdownMenuItem>
+        ))}
+        {/* Uncomment the following lines if you want to allow users to select themes manually */}
+        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('light')}>*/}
+        {/*  <Sun className="mr-2 h-4 w-4" />*/}
+        {/*  <span>Light</span>*/}
+        {/*  {theme === 'light' && <Check />}*/}
+        {/*</DropdownMenuItem>*/}
+        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('dark')}>*/}
+        {/*  <Moon className="mr-2 h-4 w-4" />*/}
+        {/*  <span>Dark</span>*/}
+        {/*  {theme === 'dark' && <Check />}*/}
+        {/*</DropdownMenuItem>*/}
+        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('system')}>*/}
+        {/*  <Monitor className="mr-2 h-4 w-4" />*/}
+        {/*  <span>System</span>*/}
+        {/*  {theme === 'system' && <Check />}*/}
+        {/*</DropdownMenuItem>*/}
       </DropdownMenuContent>
     </DropdownMenu>
   );
