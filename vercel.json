@@ -1,8 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && pnpm run build:vercel",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "outputDirectory": ".next-build",
+  "buildCommand": "pnpm run build:vercel",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "outputDirectory": "packages/web/.next-build",
   "env": {
     "NODE_ENV": "production"
   }

@@ -23,9 +23,9 @@ Vercel should automatically detect the `vercel.json` configuration, but verify:
 
 - **Framework**: Next.js
 - **Root Directory**: `/` (repository root)
-- **Build Command**: `pnpm build:core && pnpm build:web`
+- **Build Command**: `pnpm run build:vercel`
 - **Install Command**: `pnpm install --frozen-lockfile`
-- **Output Directory**: `packages/web/.next`
+- **Output Directory**: `packages/web/.next-build`
 
 ### Step 3: Add PostgreSQL Database
 
