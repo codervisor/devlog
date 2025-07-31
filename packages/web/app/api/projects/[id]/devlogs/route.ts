@@ -119,8 +119,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     await devlogService.save(devlogEntry);
 
-    // Transform and return created devlog
-    const transformedDevlog = ResponseTransformer.transformDevlog(devlogEntry);
+    // Retrieve the actual saved entry to ensure we have the correct ID
+    const savedEntry = await devlogService.get(nextId, false); // Don't include notes for performance
+
+    if (!savedEntry) {
+      throw new Error('Failed to retrieve saved devlog entry');
+    }
+
+    // Transform and return the actual saved devlog
+    const transformedDevlog = ResponseTransformer.transformDevlog(savedEntry);
     return createSuccessResponse(transformedDevlog, { status: 201 });
   } catch (error) {
     console.error('Error creating devlog:', error);
