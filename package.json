@@ -22,7 +22,14 @@
     "start:web": "pnpm --filter @devlog/web start",
     "preview:web": "pnpm --filter @devlog/web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "validate": "node scripts/validate-imports.js",
+    "validate": "node scripts/validate-all-ast.js",
+    "validate:imports": "node scripts/validate-imports.js",
+    "validate:typescript": "node scripts/validate-typescript-best-practices-ast.js",
+    "validate:architecture": "node scripts/validate-architecture-patterns-ast.js",
+    "validate:testing": "node scripts/validate-testing-standards-ast.js",
+    "validate:security": "node scripts/validate-security-performance-ast.js",
+    "validate:quick": "node scripts/validate-all-ast.js --quick",
+    "validate:list": "node scripts/validate-all-ast.js --list",
     "detect-migration": "node scripts/detect-migration.js",
     "pre-commit": "lint-staged && node scripts/validate-imports.js",
     "prepare": "husky"
@@ -43,7 +50,7 @@
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
     "prettier": "3.6.1",
-    "typescript": "^5.0.0"
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": ">=18",
