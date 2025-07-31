@@ -13,13 +13,14 @@ import type {
   DevlogId,
   DevlogStats,
   PaginatedResult,
+  SearchMeta,
+  SearchOptions,
   SearchPaginatedResult,
   SearchResult,
-  SearchMeta,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
-import { DevlogDependencyEntity, DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
+import { DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
 import { getDataSource } from '../utils/typeorm-config.js';
 import { getStorageType } from '../entities/decorators.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
@@ -170,7 +171,7 @@ export class DevlogService {
     }
 
     // Generate consistent note ID
-    const noteId = `note-${devlogId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const noteId = `note-${devlogId}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const timestamp = new Date();
 
     // Create note entity
@@ -322,20 +323,7 @@ export class DevlogService {
   async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
-    // Validate filter if provided
-    if (filter) {
-      const filterValidation = DevlogValidator.validateFilter(filter);
-      if (!filterValidation.success) {
-        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
-      }
-      // Use validated filter for consistent behavior
-      filter = filterValidation.data;
-    }
-
-    const projectFilter = this.addProjectFilter(filter);
-
-    // Build TypeORM query based on filter
-    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+    const { projectFilter, queryBuilder } = this.prepareListQuery(filter);
 
     return await this.handleList(projectFilter, queryBuilder);
   }
@@ -343,24 +331,7 @@ export class DevlogService {
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
-    // Validate search query
-    if (!query || query.trim().length === 0) {
-      throw new Error('Search query is required and must be a non-empty string');
-    }
-
-    // Validate filter if provided
-    if (filter) {
-      const filterValidation = DevlogValidator.validateFilter(filter);
-      if (!filterValidation.success) {
-        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
-      }
-      // Use validated filter for consistent behavior
-      filter = filterValidation.data;
-    }
-
-    const projectFilter = this.addProjectFilter(filter);
-
-    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+    const { projectFilter, queryBuilder } = this.prepareListQuery(filter);
 
     // Apply search query
     queryBuilder
@@ -375,35 +346,15 @@ export class DevlogService {
   /**
    * Enhanced search with database-level relevance scoring and optimized pagination
    */
-  async searchWithRelevance(
-    query: string,
-    filter?: DevlogFilter,
-  ): Promise<SearchPaginatedResult<DevlogEntry>> {
+  async searchWithRelevance(query: string, filter?: DevlogFilter): Promise<SearchPaginatedResult> {
     const searchStartTime = Date.now();
     await this.ensureInitialized();
 
-    // Validate search query
-    if (!query || query.trim().length === 0) {
-      throw new Error('Search query is required and must be a non-empty string');
-    }
-
-    // Validate filter if provided
-    if (filter) {
-      const filterValidation = DevlogValidator.validateFilter(filter);
-      if (!filterValidation.success) {
-        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
-      }
-      filter = filterValidation.data;
-    }
-
-    const projectFilter = this.addProjectFilter(filter);
-    const searchOptions = projectFilter.searchOptions || {};
-    const storageType = getStorageType();
-
-    // Build database-specific relevance query
-    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+    const { projectFilter, queryBuilder } = this.prepareListQuery(filter);
 
     // Apply database-specific search with relevance scoring
+    const searchOptions = projectFilter.searchOptions || {};
+    const storageType = getStorageType();
     await this.applyRelevanceSearch(queryBuilder, query, searchOptions, storageType);
 
     // Apply other filters
@@ -456,7 +407,7 @@ export class DevlogService {
 
     // Execute query and transform results
     const rawResults = await queryBuilder.getRawAndEntities();
-    const searchResults: SearchResult<DevlogEntry>[] = rawResults.entities.map((entity, index) => {
+    const searchResults: SearchResult[] = rawResults.entities.map((entity, index) => {
       const rawData = rawResults.raw[index];
       const entry = entity.toDevlogEntry();
 
@@ -653,51 +604,7 @@ export class DevlogService {
     projectFilter: DevlogFilter,
     queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
   ): Promise<PaginatedResult<DevlogEntry>> {
-    // Apply project filter
-    if (projectFilter.projectId !== undefined) {
-      queryBuilder.andWhere('devlog.projectId = :projectId', {
-        projectId: projectFilter.projectId,
-      });
-    }
-
-    // Apply status filter
-    if (projectFilter.status && projectFilter.status.length > 0) {
-      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
-    }
-
-    // Apply type filter
-    if (projectFilter.type && projectFilter.type.length > 0) {
-      queryBuilder.andWhere('devlog.type IN (:...types)', { types: projectFilter.type });
-    }
-
-    // Apply priority filter
-    if (projectFilter.priority && projectFilter.priority.length > 0) {
-      queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
-        priorities: projectFilter.priority,
-      });
-    }
-
-    // Apply assignee filter
-    if (projectFilter.assignee !== undefined) {
-      if (projectFilter.assignee === null) {
-        queryBuilder.andWhere('devlog.assignee IS NULL');
-      } else {
-        queryBuilder.andWhere('devlog.assignee = :assignee', { assignee: projectFilter.assignee });
-      }
-    }
-
-    // Apply archived filter
-    if (projectFilter.archived !== undefined) {
-      queryBuilder.andWhere('devlog.archived = :archived', { archived: projectFilter.archived });
-    }
-
-    // Apply date range filters
-    if (projectFilter.fromDate) {
-      queryBuilder.andWhere('devlog.createdAt >= :fromDate', { fromDate: projectFilter.fromDate });
-    }
-    if (projectFilter.toDate) {
-      queryBuilder.andWhere('devlog.createdAt <= :toDate', { toDate: projectFilter.toDate });
-    }
+    await this.applySearchFilters(queryBuilder, projectFilter);
 
     // Apply search filter (if not already applied by search method)
     if (projectFilter.search && !queryBuilder.getQueryAndParameters()[0].includes('LIKE')) {
@@ -770,126 +677,109 @@ export class DevlogService {
   }
 
   /**
-   * Apply database-specific relevance search to query builder
+   * Apply simple concatenation-based search to query builder
    */
   private async applyRelevanceSearch(
     queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
     query: string,
-    searchOptions: any,
+    searchOptions: SearchOptions,
     storageType: string,
   ): Promise<void> {
-    const searchMode = searchOptions.searchMode || 'fuzzy';
+    const minRelevance = searchOptions.minRelevance || 0.02;
 
-    if (storageType === 'postgres' && searchMode === 'fuzzy') {
-      // PostgreSQL with pg_trgm similarity scoring
+    if (storageType === 'postgres') {
+      try {
+        // Check if pg_trgm extension is available
+        await this.database.query("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'");
+
+        // PostgreSQL with pg_trgm similarity on concatenated fields
+        queryBuilder
+          .addSelect(
+            `similarity(
+              CONCAT(
+                COALESCE(devlog.title, ''), ' ',
+                COALESCE(devlog.description, ''), ' ',
+                COALESCE(devlog.businessContext, ''), ' ',
+                COALESCE(devlog.technicalContext, '')
+              ), 
+              :query
+            )`,
+            'relevance_score',
+          )
+          .where(
+            `similarity(
+              CONCAT(
+                COALESCE(devlog.title, ''), ' ',
+                COALESCE(devlog.description, ''), ' ',
+                COALESCE(devlog.businessContext, ''), ' ',
+                COALESCE(devlog.technicalContext, '')
+              ), 
+              :query
+            ) > ${minRelevance}`,
+          )
+          .setParameter('query', query);
+      } catch (error) {
+        console.warn(
+          '[DevlogService] pg_trgm extension not available, falling back to LIKE search',
+        );
+        // Fallback to LIKE search on concatenated fields
+        this.applySimpleLikeSearch(queryBuilder, query);
+      }
+    } else if (storageType === 'mysql') {
+      // MySQL FULLTEXT search on concatenated fields
       queryBuilder
         .addSelect(
-          `
-          GREATEST(
-            COALESCE(similarity(devlog.title, :query), 0) * 0.4,
-            COALESCE(similarity(devlog.description, :query), 0) * 0.3,
-            COALESCE(similarity(devlog.businessContext, :query), 0) * 0.2,
-            COALESCE(similarity(devlog.technicalContext, :query), 0) * 0.2,
-            CASE WHEN devlog.key ILIKE :keyQuery THEN 0.15 ELSE 0 END,
-            CASE WHEN devlog.type ILIKE :keyQuery THEN 0.1 ELSE 0 END,
-            CASE WHEN devlog.priority ILIKE :keyQuery THEN 0.05 ELSE 0 END,
-            CASE WHEN devlog.status ILIKE :keyQuery THEN 0.05 ELSE 0 END
-          )
-        `,
+          `MATCH(devlog.title, devlog.description, devlog.businessContext, devlog.technicalContext) 
+           AGAINST(:query IN NATURAL LANGUAGE MODE)`,
           'relevance_score',
         )
         .where(
-          `
-          similarity(devlog.title, :query) > 0.1 OR 
-          similarity(devlog.description, :query) > 0.1 OR 
-          similarity(devlog.businessContext, :query) > 0.1 OR 
-          similarity(devlog.technicalContext, :query) > 0.1 OR
-          devlog.key ILIKE :keyQuery OR
-          devlog.type ILIKE :keyQuery OR
-          devlog.priority ILIKE :keyQuery OR
-          devlog.status ILIKE :keyQuery
-        `,
+          `MATCH(devlog.title, devlog.description, devlog.businessContext, devlog.technicalContext) 
+           AGAINST(:query IN NATURAL LANGUAGE MODE)`,
         )
-        .setParameter('query', query)
-        .setParameter('keyQuery', `%${query}%`);
-    } else if (storageType === 'mysql' && searchMode === 'fulltext') {
-      // MySQL FULLTEXT search with MATCH...AGAINST
-      queryBuilder
-        .addSelect(
-          `
-          GREATEST(
-            COALESCE(MATCH(devlog.title) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.4,
-            COALESCE(MATCH(devlog.description) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.3,
-            COALESCE(MATCH(devlog.businessContext) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.2,
-            COALESCE(MATCH(devlog.technicalContext) AGAINST(:query IN NATURAL LANGUAGE MODE), 0) * 0.2,
-            CASE WHEN devlog.key LIKE :keyQuery THEN 0.15 ELSE 0 END,
-            CASE WHEN devlog.type LIKE :keyQuery THEN 0.1 ELSE 0 END,
-            CASE WHEN devlog.priority LIKE :keyQuery THEN 0.05 ELSE 0 END,
-            CASE WHEN devlog.status LIKE :keyQuery THEN 0.05 ELSE 0 END
-          )
-        `,
-          'relevance_score',
-        )
-        .where(
-          `
-          MATCH(devlog.title, devlog.description, devlog.businessContext, devlog.technicalContext) 
-          AGAINST(:query IN NATURAL LANGUAGE MODE) OR
-          devlog.key LIKE :keyQuery OR
-          devlog.type LIKE :keyQuery OR
-          devlog.priority LIKE :keyQuery OR
-          devlog.status LIKE :keyQuery
-        `,
-        )
-        .setParameter('query', query)
-        .setParameter('keyQuery', `%${query}%`);
+        .setParameter('query', query);
     } else {
-      // SQLite and fallback: weighted LIKE-based scoring
-      queryBuilder
-        .addSelect(
-          `
-          (
-            CASE WHEN devlog.title LIKE :exactQuery THEN 0.6
-                 WHEN devlog.title LIKE :keyQuery THEN 0.4
-                 ELSE 0 END +
-            CASE WHEN devlog.description LIKE :exactQuery THEN 0.5
-                 WHEN devlog.description LIKE :keyQuery THEN 0.3
-                 ELSE 0 END +
-            CASE WHEN devlog.businessContext LIKE :exactQuery THEN 0.4
-                 WHEN devlog.businessContext LIKE :keyQuery THEN 0.2
-                 ELSE 0 END +
-            CASE WHEN devlog.technicalContext LIKE :exactQuery THEN 0.4
-                 WHEN devlog.technicalContext LIKE :keyQuery THEN 0.2
-                 ELSE 0 END +
-            CASE WHEN devlog.key LIKE :keyQuery THEN 0.15 ELSE 0 END +
-            CASE WHEN devlog.type LIKE :keyQuery THEN 0.1 ELSE 0 END +
-            CASE WHEN devlog.priority LIKE :keyQuery THEN 0.05 ELSE 0 END +
-            CASE WHEN devlog.status LIKE :keyQuery THEN 0.05 ELSE 0 END
-          )
-        `,
-          'relevance_score',
-        )
-        .where(
-          `
-          devlog.title LIKE :keyQuery OR 
-          devlog.description LIKE :keyQuery OR 
-          devlog.businessContext LIKE :keyQuery OR 
-          devlog.technicalContext LIKE :keyQuery OR
-          devlog.key LIKE :keyQuery OR
-          devlog.type LIKE :keyQuery OR
-          devlog.priority LIKE :keyQuery OR
-          devlog.status LIKE :keyQuery
-        `,
-        )
-        .setParameter('exactQuery', query.toLowerCase())
-        .setParameter('keyQuery', `%${query}%`);
+      // Fallback to LIKE-based search for SQLite and other databases
+      this.applySimpleLikeSearch(queryBuilder, query);
     }
+  }
 
-    // Apply minimum relevance threshold if specified
-    if (searchOptions.minRelevance && searchOptions.minRelevance > 0) {
-      queryBuilder.andWhere('relevance_score >= :minRelevance', {
-        minRelevance: searchOptions.minRelevance,
-      });
-    }
+  /**
+   * Simple LIKE-based search on concatenated fields
+   */
+  private applySimpleLikeSearch(
+    queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
+    query: string,
+  ): void {
+    queryBuilder
+      .addSelect(
+        `CASE 
+          WHEN CONCAT(
+            COALESCE(devlog.title, ''), ' ',
+            COALESCE(devlog.description, ''), ' ',
+            COALESCE(devlog.businessContext, ''), ' ',
+            COALESCE(devlog.technicalContext, '')
+          ) LIKE :exactQuery THEN 1.0
+          WHEN CONCAT(
+            COALESCE(devlog.title, ''), ' ',
+            COALESCE(devlog.description, ''), ' ',
+            COALESCE(devlog.businessContext, ''), ' ',
+            COALESCE(devlog.technicalContext, '')
+          ) LIKE :keyQuery THEN 0.5
+          ELSE 0.1
+        END`,
+        'relevance_score',
+      )
+      .where(
+        `CONCAT(
+          COALESCE(devlog.title, ''), ' ',
+          COALESCE(devlog.description, ''), ' ',
+          COALESCE(devlog.businessContext, ''), ' ',
+          COALESCE(devlog.technicalContext, '')
+        ) LIKE :keyQuery`,
+      )
+      .setParameter('exactQuery', `%${query}%`)
+      .setParameter('keyQuery', `%${query}%`);
   }
 
   /**
@@ -1036,5 +926,24 @@ export class DevlogService {
     }
 
     return highlights;
+  }
+
+  private prepareListQuery(filter?: DevlogFilter) {
+    // Validate filter if provided
+    if (filter) {
+      const filterValidation = DevlogValidator.validateFilter(filter);
+      if (!filterValidation.success) {
+        throw new Error(`Invalid filter: ${filterValidation.errors.join(', ')}`);
+      }
+      // Use validated filter for consistent behavior
+      filter = filterValidation.data;
+    }
+
+    const projectFilter = this.addProjectFilter(filter);
+
+    // Build TypeORM query based on filter
+    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+
+    return { projectFilter, queryBuilder };
   }
 }

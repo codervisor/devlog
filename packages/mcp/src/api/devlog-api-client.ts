@@ -4,12 +4,11 @@
  */
 
 import type {
+  CreateDevlogRequest,
   DevlogEntry,
   DevlogFilter,
-  CreateDevlogRequest,
-  UpdateDevlogRequest,
   PaginatedResult,
-  DevlogStats,
+  UpdateDevlogRequest,
 } from '@codervisor/devlog-core';
 
 export interface DevlogApiClientConfig {
@@ -87,7 +86,7 @@ export class DevlogApiClient {
       const response = await fetch(url, requestOptions);
 
       if (!response.ok) {
-        let errorText = '';
+        let errorText: string;
         try {
           errorText = await response.text();
         } catch {
@@ -237,12 +236,7 @@ export class DevlogApiClient {
     const params = new URLSearchParams();
 
     if (filter) {
-      if (filter.status?.length) params.append('status', filter.status.join(','));
-      if (filter.type?.length) params.append('type', filter.type.join(','));
-      if (filter.priority?.length) params.append('priority', filter.priority.join(','));
-      if (filter.archived !== undefined) params.append('archived', String(filter.archived));
-      if (filter.pagination?.page) params.append('page', String(filter.pagination.page));
-      if (filter.pagination?.limit) params.append('limit', String(filter.pagination.limit));
+      this.applyFilterToURLSearchParams(filter, params);
       if (filter.pagination?.sortBy) params.append('sortBy', filter.pagination.sortBy);
       if (filter.pagination?.sortOrder) params.append('sortOrder', filter.pagination.sortOrder);
     }
@@ -256,12 +250,7 @@ export class DevlogApiClient {
     const params = new URLSearchParams({ q: query });
 
     if (filter) {
-      if (filter.status?.length) params.append('status', filter.status.join(','));
-      if (filter.type?.length) params.append('type', filter.type.join(','));
-      if (filter.priority?.length) params.append('priority', filter.priority.join(','));
-      if (filter.archived !== undefined) params.append('archived', String(filter.archived));
-      if (filter.pagination?.page) params.append('page', String(filter.pagination.page));
-      if (filter.pagination?.limit) params.append('limit', String(filter.pagination.limit));
+      this.applyFilterToURLSearchParams(filter, params);
     }
 
     const response = await this.get(
@@ -323,5 +312,14 @@ export class DevlogApiClient {
         );
       }
     }
+  }
+
+  private applyFilterToURLSearchParams(filter: DevlogFilter, params: URLSearchParams) {
+    if (filter.status?.length) params.append('status', filter.status.join(','));
+    if (filter.type?.length) params.append('type', filter.type.join(','));
+    if (filter.priority?.length) params.append('priority', filter.priority.join(','));
+    if (filter.archived !== undefined) params.append('archived', String(filter.archived));
+    if (filter.pagination?.page) params.append('page', String(filter.pagination.page));
+    if (filter.pagination?.limit) params.append('limit', String(filter.pagination.limit));
   }
 }

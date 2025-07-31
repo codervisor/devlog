@@ -2,6 +2,11 @@
  * Core devlog types and interfaces
  */
 
+/**
+ * Storage engine types supported by the devlog system
+ */
+export type StorageType = 'postgres' | 'postgre' | 'mysql' | 'sqlite';
+
 export type DevlogType = 'feature' | 'bugfix' | 'task' | 'refactor' | 'docs';
 
 /**
@@ -220,8 +225,6 @@ export interface SearchOptions {
   includeHighlights?: boolean;
   /** Minimum relevance threshold (0-1) */
   minRelevance?: number;
-  /** Search mode: 'fuzzy' for similarity, 'exact' for exact matches, 'fulltext' for database fulltext */
-  searchMode?: 'fuzzy' | 'exact' | 'fulltext';
 }
 
 /**
@@ -263,7 +266,7 @@ export interface SearchMeta {
   /** Applied filters summary */
   appliedFilters?: Record<string, any>;
   /** Database engine used for search */
-  searchEngine?: 'postgres' | 'mysql' | 'sqlite';
+  searchEngine?: StorageType;
 }
 
 /**

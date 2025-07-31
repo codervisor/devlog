@@ -11,16 +11,16 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DevlogApiClient, type DevlogApiClientConfig } from '../api/devlog-api-client.js';
 import type {
-  CreateDevlogArgs,
-  GetDevlogArgs,
-  UpdateDevlogArgs,
-  ListDevlogArgs,
   AddNoteArgs,
   CompleteDevlogArgs,
+  CreateDevlogArgs,
   FindRelatedArgs,
-  ListProjectsArgs,
   GetCurrentProjectArgs,
+  GetDevlogArgs,
+  ListDevlogArgs,
+  ListProjectsArgs,
   SwitchProjectArgs,
+  UpdateDevlogArgs,
 } from '../schemas/index.js';
 
 /**
@@ -211,24 +211,13 @@ export class MCPAdapter {
     await this.ensureInitialized();
 
     try {
-      let result;
-
-      if (args.query) {
-        // Use search when query is provided
-        result = await this.apiClient.searchDevlogs(args.query, {
-          status: args.status ? [args.status] : undefined,
-          type: args.type ? [args.type] : undefined,
-          priority: args.priority ? [args.priority] : undefined,
-        });
-      } else {
-        // Use list when no query
-        result = await this.apiClient.listDevlogs({
-          status: args.status ? [args.status] : undefined,
-          type: args.type ? [args.type] : undefined,
-          priority: args.priority ? [args.priority] : undefined,
-          pagination: args.limit ? { limit: args.limit } : undefined,
-        });
-      }
+      // Use list when no query
+      const result = await this.apiClient.listDevlogs({
+        status: args.status ? [args.status] : undefined,
+        type: args.type ? [args.type] : undefined,
+        priority: args.priority ? [args.priority] : undefined,
+        pagination: args.limit ? { limit: args.limit } : undefined,
+      });
 
       const entries = result.items.map((entry: any) => ({
         id: entry.id,
@@ -238,11 +227,7 @@ export class MCPAdapter {
         priority: entry.priority,
       }));
 
-      return this.toStandardResponse(
-        true,
-        entries,
-        `Found ${entries.length} entries${args.query ? ` matching "${args.query}"` : ''}`,
-      );
+      return this.toStandardResponse(true, entries, `Found ${entries.length} entries`);
     } catch (error) {
       return this.handleError('Failed to list entries', error);
     }
@@ -289,10 +274,12 @@ export class MCPAdapter {
 
     try {
       const searchTerms = [args.description, ...(args.keywords || [])].join(' ');
-      const result = await this.apiClient.searchDevlogs(searchTerms);
+      const result = await this.apiClient.searchDevlogs(searchTerms, {
+        type: args.type ? [args.type] : undefined,
+      });
 
       const hasRelated = result.items.length > 0;
-      const entries = result.items.slice(0, 10).map((entry: any) => ({
+      const entries = result.items.slice(0, 10).map((entry) => ({
         id: entry.id,
         title: entry.title,
         type: entry.type,

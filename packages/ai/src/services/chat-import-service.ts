@@ -11,7 +11,6 @@ import type {
   ChatImportProgress,
   ChatSource,
   AgentType,
-  StorageProvider,
 } from '@codervisor/devlog-core';
 
 import { CopilotParser } from '../parsers/copilot/copilot-parser.js';
@@ -43,12 +42,6 @@ export interface ChatImportService {
 }
 
 export class DefaultChatImportService implements ChatImportService {
-  private storageProvider: StorageProvider;
-
-  constructor(storageProvider: StorageProvider) {
-    this.storageProvider = storageProvider;
-  }
-
   async importFromCopilot(): Promise<ChatImportProgress> {
     const importId = this.generateImportId();
     const progress: ChatImportProgress = {
@@ -80,12 +73,12 @@ export class DefaultChatImportService implements ChatImportService {
 
       // Save to storage
       for (const session of coreSessions) {
-        await this.storageProvider.saveChatSession(session);
+        // await this.storageProvider.saveChatSession(session);
         progress.progress.processedSessions++;
       }
 
       if (coreMessages.length > 0) {
-        await this.storageProvider.saveChatMessages(coreMessages);
+        // await this.storageProvider.saveChatMessages(coreMessages);
         progress.progress.processedMessages = coreMessages.length;
       }
 

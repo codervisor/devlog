@@ -6,16 +6,12 @@
  */
 
 import type {
-  AgentType,
   ChatDevlogLink,
   ChatImportProgress,
   ChatMessage,
   ChatSession,
   ChatSessionId,
   ChatSource,
-  ChatStatus,
-  DevlogEntry,
-  StorageProvider,
 } from '@codervisor/devlog-core';
 
 // Define workspace info type instead of using any
@@ -71,12 +67,7 @@ export interface IChatHubService {
 }
 
 export class ChatHubService implements IChatHubService {
-  private storageProvider: StorageProvider;
   private activeImports = new Map<string, ChatImportProgress>();
-
-  constructor(storageProvider: StorageProvider) {
-    this.storageProvider = storageProvider;
-  }
 
   async ingestChatSessions(sessions: ChatSession[]): Promise<ChatImportProgress> {
     const importId = this.generateImportId();
@@ -100,7 +91,7 @@ export class ChatHubService implements IChatHubService {
       console.log(`[ChatHub] Ingesting ${sessions.length} chat sessions`);
 
       for (const session of sessions) {
-        await this.storageProvider.saveChatSession(session);
+        // await this.storageProvider.saveChatSession(session);
         progress.progress.processedSessions++;
         progress.progress.percentage = Math.round(
           (progress.progress.processedSessions / progress.progress.totalSessions) * 100,
@@ -134,7 +125,7 @@ export class ChatHubService implements IChatHubService {
   async ingestChatMessages(messages: ChatMessage[]): Promise<void> {
     try {
       console.log(`[ChatHub] Ingesting ${messages.length} chat messages`);
-      await this.storageProvider.saveChatMessages(messages);
+      // await this.storageProvider.saveChatMessages(messages);
       console.log(`[ChatHub] Successfully ingested ${messages.length} messages`);
     } catch (error: unknown) {
       console.error('[ChatHub] Error ingesting messages:', error);
@@ -172,18 +163,18 @@ export class ChatHubService implements IChatHubService {
 
       // Process workspace info if provided
       if (data.workspaceInfo) {
-        await this.storageProvider.saveChatWorkspace(data.workspaceInfo);
+        // await this.storageProvider.saveChatWorkspace(data.workspaceInfo);
       }
 
       // Ingest sessions
       for (const session of data.sessions) {
-        await this.storageProvider.saveChatSession(session);
+        // await this.storageProvider.saveChatSession(session);
         progress.progress.processedSessions++;
       }
 
       // Ingest messages
       if (data.messages.length > 0) {
-        await this.storageProvider.saveChatMessages(data.messages);
+        // await this.storageProvider.saveChatMessages(data.messages);
         progress.progress.processedMessages = data.messages.length;
       }
 

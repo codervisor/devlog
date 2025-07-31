@@ -50,7 +50,6 @@ export const UpdateDevlogSchema = z.object({
 
 // === LIST/SEARCH DEVLOGS ===
 export const ListDevlogSchema = z.object({
-  query: z.string().optional(),
   status: DevlogStatusSchema.optional(),
   type: DevlogTypeSchema.optional(),
   priority: DevlogPrioritySchema.optional(),
