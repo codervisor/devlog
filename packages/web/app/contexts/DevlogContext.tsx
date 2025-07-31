@@ -22,8 +22,7 @@ import {
 } from '@codervisor/devlog-core';
 import { useServerSentEvents } from '../hooks/useServerSentEvents';
 import { useProject } from './ProjectContext';
-import { NoteApiClient } from '@/lib';
-import { apiClient, handleApiError } from '@/lib';
+import { DevlogApiClient, NoteApiClient, handleApiError } from '@/lib';
 import type { CollectionResponse } from '@/schemas/responses';
 
 interface DevlogContextType {
@@ -96,6 +95,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   const { connected, subscribe, unsubscribe } = useServerSentEvents();
 
+  // Create DevlogApiClient instance
+  const devlogApiClient = useMemo(() => {
+    return currentProject ? new DevlogApiClient(currentProject.projectId.toString()) : null;
+  }, [currentProject]);
+
   // Build query string for API call
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -145,48 +149,43 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
   }, [filters]);
 
   const fetchDevlogs = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
+    // Don't fetch if no current project or devlog client is available
+    if (!currentProject || !devlogApiClient) {
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const url = `/api/projects/${currentProject.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
 
-      const data = await apiClient.get<DevlogEntry[] | CollectionResponse<DevlogEntry>>(url);
+      // Convert query filters to DevlogApiClient filters format
+      const apiFilters: any = {};
 
-      // Handle both collection response and direct array response
-      if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
-        setDevlogs(data.items);
-        // Convert API pagination to core PaginationMeta format
-        const apiPagination = data.pagination;
-        const paginationMeta: PaginationMeta = {
-          page: apiPagination.page,
-          limit: apiPagination.limit,
-          total: apiPagination.total,
-          totalPages: apiPagination.totalPages,
-          hasPreviousPage: apiPagination.page > 1,
-          hasNextPage: apiPagination.page < apiPagination.totalPages,
-        };
-        setPagination(paginationMeta);
-      } else {
-        setDevlogs(data as DevlogEntry[]);
-        setPagination(null);
+      if (filters.search) apiFilters.search = filters.search;
+      if (filters.status?.length === 1) apiFilters.status = filters.status[0];
+      if (filters.type?.length === 1) apiFilters.type = filters.type[0];
+      if (filters.priority?.length === 1) apiFilters.priority = filters.priority[0];
+      if (filters.pagination?.limit) apiFilters.limit = filters.pagination.limit;
+      if (filters.pagination?.page && filters.pagination?.limit) {
+        apiFilters.offset = (filters.pagination.page - 1) * filters.pagination.limit;
       }
 
+      const data = await devlogApiClient.list(apiFilters);
+
+      // Handle the response (DevlogApiClient returns DevlogEntry[] directly)
+      setDevlogs(data);
+      setPagination(null); // DevlogApiClient doesn't return pagination info yet
       setError(null);
     } catch (err) {
       setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
-  }, [queryString, currentProject]);
+  }, [filters, currentProject, devlogApiClient]);
 
   const fetchStats = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
+    // Don't fetch if no current project or devlog client is available
+    if (!currentProject || !devlogApiClient) {
       setStatsLoading(false);
       return;
     }
@@ -195,9 +194,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       setStatsLoading(true);
       setStatsError(null);
 
-      const statsData = await apiClient.get<DevlogStats>(
-        `/api/projects/${currentProject.projectId}/devlogs/stats/overview`,
-      );
+      const statsData = await devlogApiClient.getStatsOverview();
       setStats(statsData);
     } catch (err) {
       const errorMessage = handleApiError(err);
@@ -206,11 +203,11 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setStatsLoading(false);
     }
-  }, [currentProject]);
+  }, [currentProject, devlogApiClient]);
 
   const fetchTimeSeriesStats = useCallback(async () => {
-    // Don't fetch if no current project is available
-    if (!currentProject) {
+    // Don't fetch if no current project or devlog client is available
+    if (!currentProject || !devlogApiClient) {
       setTimeSeriesLoading(false);
       return;
     }
@@ -219,9 +216,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       setTimeSeriesLoading(true);
       setTimeSeriesError(null);
 
-      const timeSeriesData = await apiClient.get<TimeSeriesStats>(
-        `/api/projects/${currentProject.projectId}/devlogs/stats/timeseries?days=30`,
-      );
+      const timeSeriesData = await devlogApiClient.getStatsTimeseries('month');
       setTimeSeriesStats(timeSeriesData);
     } catch (err) {
       const errorMessage = handleApiError(err);
@@ -230,7 +225,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setTimeSeriesLoading(false);
     }
-  }, [currentProject]);
+  }, [currentProject, devlogApiClient]);
 
   // Client-side filtered devlogs
   const filteredDevlogs = useMemo(() => {
@@ -283,24 +278,25 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
-    return apiClient.post<any>(`/api/projects/${currentProject.projectId}/devlogs`, data);
+    return devlogApiClient.create(data as any);
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
-    return apiClient.put<any>(`/api/projects/${currentProject.projectId}/devlogs/${data.id}`, data);
+    const { id, ...updateData } = data;
+    return devlogApiClient.update(id, updateData as any);
   };
 
   const deleteDevlog = async (id: DevlogId) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
     // Optimistically remove from state immediately to prevent race conditions
@@ -308,7 +304,7 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
     try {
-      await apiClient.delete<void>(`/api/projects/${currentProject.projectId}/devlogs/${id}`);
+      await devlogApiClient.delete(id);
     } catch (error) {
       // If there's an error, refresh the list to restore correct state
       await fetchDevlogs();
@@ -318,44 +314,31 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
 
   // Batch operations
   const batchUpdate = async (ids: DevlogId[], updates: any) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
-    const result = await apiClient.post<any>(
-      `/api/projects/${currentProject.projectId}/devlogs/batch/update`,
-      { ids, updates },
-    );
-
+    const result = await devlogApiClient.batchUpdate(ids, updates);
     await fetchDevlogs();
     return result;
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
-    await apiClient.post<void>(`/api/projects/${currentProject.projectId}/devlogs/batch/delete`, {
-      ids,
-    });
-
+    await devlogApiClient.batchDelete(ids);
     await fetchDevlogs();
   };
 
   const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
-    if (!currentProject) {
-      throw new Error('No project selected');
+    if (!currentProject || !devlogApiClient) {
+      throw new Error('No project selected or API client unavailable');
     }
 
-    const noteApiClient = new NoteApiClient(currentProject.projectId.toString());
-
     try {
-      await noteApiClient.batchAddNote(
-        ids.map((id) => id.toString()),
-        content,
-        category as any,
-      );
+      await devlogApiClient.batchAddNote(ids, { content, category });
 
       // Don't need to refresh devlogs since notes are loaded separately now
       // Individual DevlogDetails components will refresh their notes via real-time updates

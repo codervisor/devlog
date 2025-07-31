@@ -6,12 +6,14 @@ import {
   PaginatedResult,
   PaginationMeta,
   DevlogStatus,
+  DevlogPriority,
+  DevlogType,
   FilterType,
 } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
-import { apiClient, handleApiError } from '@/lib';
+import { DevlogApiClient, DevlogFilters, handleApiError } from '@/lib';
 import type { CollectionResponse } from '@/schemas/responses';
 
 interface UseDevlogDataOptions {
@@ -63,6 +65,11 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
 
   // Determine the actual project ID to use
   const projectId = explicitProjectId || currentProject?.projectId;
+
+  // Create DevlogApiClient instance
+  const devlogClient = useMemo(() => {
+    return projectId ? new DevlogApiClient(projectId.toString()) : null;
+  }, [projectId]);
 
   // If we should use context and have context data, return it
   if (contextData && !explicitProjectId) {
@@ -153,7 +160,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
   }, [filters]);
 
   const fetchDevlogs = useCallback(async () => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       setError('No project ID available');
       setLoading(false);
       return;
@@ -161,28 +168,24 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
 
     try {
       setLoading(true);
-      const url = `/api/projects/${projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
 
-      const data = await apiClient.get<DevlogEntry[] | CollectionResponse<DevlogEntry>>(url);
+      // Convert query string to filters object for DevlogApiClient
+      const urlParams = new URLSearchParams(queryString);
+      const filters: DevlogFilters = {};
+
+      if (urlParams.get('status')) filters.status = urlParams.get('status') as DevlogStatus;
+      if (urlParams.get('priority')) filters.priority = urlParams.get('priority') as DevlogPriority;
+      if (urlParams.get('type')) filters.type = urlParams.get('type') as DevlogType;
+      if (urlParams.get('search')) filters.search = urlParams.get('search')!;
+      if (urlParams.get('limit')) filters.limit = parseInt(urlParams.get('limit')!, 10);
+      if (urlParams.get('offset')) filters.offset = parseInt(urlParams.get('offset')!, 10);
+      if (urlParams.getAll('tags').length) filters.tags = urlParams.getAll('tags');
+
+      const data = await devlogClient.list(filters);
 
       // Handle both collection response and direct array response
-      if (data && typeof data === 'object' && 'items' in data && 'pagination' in data) {
-        setDevlogs(data.items);
-        // Convert API pagination to core PaginationMeta format
-        const apiPagination = data.pagination;
-        const paginationMeta: PaginationMeta = {
-          page: apiPagination.page,
-          limit: apiPagination.limit,
-          total: apiPagination.total,
-          totalPages: apiPagination.totalPages,
-          hasPreviousPage: apiPagination.page > 1,
-          hasNextPage: apiPagination.page < apiPagination.totalPages,
-        };
-        setPagination(paginationMeta);
-      } else {
-        setDevlogs(data as DevlogEntry[]);
-        setPagination(null);
-      }
+      setDevlogs(data);
+      setPagination(null); // Simple implementation for now
 
       setError(null);
     } catch (err) {
@@ -190,7 +193,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     } finally {
       setLoading(false);
     }
-  }, [queryString, projectId]);
+  }, [queryString, projectId, devlogClient]);
 
   // Client-side filtered devlogs
   const filteredDevlogs = useMemo(() => {
@@ -244,23 +247,23 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
 
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
-    return apiClient.post<any>(`/api/projects/${projectId}/devlogs`, data);
+    return devlogClient.create(data as any); // Type assertion for compatibility
   };
 
   const updateDevlog = async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
-    return apiClient.put<any>(`/api/projects/${projectId}/devlogs/${data.id}`, data);
+    return devlogClient.update(data.id, data);
   };
 
   const deleteDevlog = async (id: DevlogId) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
@@ -268,7 +271,7 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
     setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
 
     try {
-      await apiClient.delete<void>(`/api/projects/${projectId}/devlogs/${id}`);
+      await devlogClient.delete(id);
     } catch (error) {
       // If there's an error, refresh the list to restore correct state
       await fetchDevlogs();
@@ -278,39 +281,32 @@ export function useDevlogData(options: UseDevlogDataOptions = {}): UseDevlogData
 
   // Batch operations
   const batchUpdate = async (ids: DevlogId[], updates: any) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
-    const result = await apiClient.post<any>(`/api/projects/${projectId}/devlogs/batch/update`, {
-      ids,
-      updates,
-    });
+    const result = await devlogClient.batchUpdate(ids, updates);
 
     await fetchDevlogs();
     return result;
   };
 
   const batchDelete = async (ids: DevlogId[]) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
-    await apiClient.post<void>(`/api/projects/${projectId}/devlogs/batch/delete`, { ids });
+    await devlogClient.batchDelete(ids);
 
     await fetchDevlogs();
   };
 
   const batchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       throw new Error('No project ID available');
     }
 
-    const result = await apiClient.post<any>(`/api/projects/${projectId}/devlogs/batch/note`, {
-      ids,
-      content,
-      category,
-    });
+    const result = await devlogClient.batchAddNote(ids, { content, category });
 
     await fetchDevlogs();
     return result;

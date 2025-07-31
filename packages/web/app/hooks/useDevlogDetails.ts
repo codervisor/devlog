@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useServerSentEvents } from './useServerSentEvents';
 import { useProject } from '@/contexts/ProjectContext';
-import { apiClient, handleApiError } from '@/lib';
+import { DevlogApiClient, handleApiError } from '@/lib';
 
 interface UseDevlogDetailsOptions {
   /**
@@ -38,6 +38,11 @@ export function useDevlogDetails(
   const devlogId = typeof id === 'string' ? parseInt(id, 10) : id;
   const projectId = explicitProjectId || currentProject?.projectId;
 
+  // Create DevlogApiClient instance
+  const devlogClient = useMemo(() => {
+    return projectId ? new DevlogApiClient(projectId.toString()) : null;
+  }, [projectId]);
+
   const fetchDevlog = useCallback(async () => {
     if (isNaN(devlogId)) {
       setError('Invalid devlog ID');
@@ -45,7 +50,7 @@ export function useDevlogDetails(
       return;
     }
 
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       setError('No project ID available');
       setLoading(false);
       return;
@@ -55,16 +60,14 @@ export function useDevlogDetails(
       setLoading(true);
       setError(null);
 
-      const data = await apiClient.get<DevlogEntry>(
-        `/api/projects/${projectId}/devlogs/${devlogId}`,
-      );
+      const data = await devlogClient.get(devlogId);
       setDevlog(data);
     } catch (err) {
       setError(handleApiError(err));
     } finally {
       setLoading(false);
     }
-  }, [devlogId, projectId]);
+  }, [devlogId, projectId, devlogClient]);
 
   // Set up real-time event listeners for this specific devlog
   useEffect(() => {
@@ -99,31 +102,28 @@ export function useDevlogDetails(
   // CRUD operations for this specific devlog
   const updateDevlog = useCallback(
     async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      if (!projectId) {
+      if (!projectId || !devlogClient) {
         throw new Error('No project ID available');
       }
 
-      const updatedDevlog = await apiClient.put<DevlogEntry>(
-        `/api/projects/${projectId}/devlogs/${data.id}`,
-        data,
-      );
+      const updatedDevlog = await devlogClient.update(data.id, data);
 
       setDevlog(updatedDevlog);
       return updatedDevlog;
     },
-    [projectId],
+    [projectId, devlogClient],
   );
 
   const deleteDevlog = useCallback(
     async (id: DevlogId) => {
-      if (!projectId) {
+      if (!projectId || !devlogClient) {
         throw new Error('No project ID available');
       }
 
-      await apiClient.delete<void>(`/api/projects/${projectId}/devlogs/${id}`);
+      await devlogClient.delete(id);
       setDevlog(null);
     },
-    [projectId],
+    [projectId, devlogClient],
   );
 
   return {

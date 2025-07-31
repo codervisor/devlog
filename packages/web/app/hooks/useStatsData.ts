@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useProject } from '@/contexts/ProjectContext';
 import { useDevlogContext } from '@/contexts/DevlogContext';
-import { apiClient, handleApiError } from '@/lib';
+import { DevlogApiClient, handleApiError } from '@/lib';
 
 interface UseStatsOptions {
   /**
@@ -40,6 +40,11 @@ export function useStats(options: UseStatsOptions = {}): UseStatsResult {
   // Determine the actual project ID to use
   const projectId = explicitProjectId || currentProject?.projectId;
 
+  // Create DevlogApiClient instance
+  const devlogClient = useMemo(() => {
+    return projectId ? new DevlogApiClient(projectId.toString()) : null;
+  }, [projectId]);
+
   // If we should use context and have context data, return it
   if (contextData && !explicitProjectId) {
     return {
@@ -56,7 +61,7 @@ export function useStats(options: UseStatsOptions = {}): UseStatsResult {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       setError('No project ID available');
       setLoading(false);
       return;
@@ -66,9 +71,7 @@ export function useStats(options: UseStatsOptions = {}): UseStatsResult {
       setLoading(true);
       setError(null);
 
-      const statsData = await apiClient.get<DevlogStats>(
-        `/api/projects/${projectId}/devlogs/stats/overview`,
-      );
+      const statsData = await devlogClient.getStatsOverview();
       setStats(statsData);
     } catch (err) {
       const errorMessage = handleApiError(err);
@@ -77,7 +80,7 @@ export function useStats(options: UseStatsOptions = {}): UseStatsResult {
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, devlogClient]);
 
   // Fetch stats on mount (only if not using context)
   useEffect(() => {
@@ -115,6 +118,11 @@ export function useTimeSeriesStats(options: UseStatsOptions = {}): UseTimeSeries
   // Determine the actual project ID to use
   const projectId = explicitProjectId || currentProject?.projectId;
 
+  // Create DevlogApiClient instance
+  const devlogClient = useMemo(() => {
+    return projectId ? new DevlogApiClient(projectId.toString()) : null;
+  }, [projectId]);
+
   // If we should use context and have context data, return it
   if (contextData && !explicitProjectId) {
     return {
@@ -131,7 +139,7 @@ export function useTimeSeriesStats(options: UseStatsOptions = {}): UseTimeSeries
   const [error, setError] = useState<string | null>(null);
 
   const fetchTimeSeriesStats = useCallback(async () => {
-    if (!projectId) {
+    if (!projectId || !devlogClient) {
       setError('No project ID available');
       setLoading(false);
       return;
@@ -141,9 +149,7 @@ export function useTimeSeriesStats(options: UseStatsOptions = {}): UseTimeSeries
       setLoading(true);
       setError(null);
 
-      const timeSeriesStatsData = await apiClient.get<TimeSeriesStats>(
-        `/api/projects/${projectId}/devlogs/stats/timeseries?days=30`,
-      );
+      const timeSeriesStatsData = await devlogClient.getStatsTimeseries();
       setTimeSeriesData(timeSeriesStatsData);
     } catch (err) {
       const errorMessage = handleApiError(err);
@@ -152,7 +158,7 @@ export function useTimeSeriesStats(options: UseStatsOptions = {}): UseTimeSeries
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, devlogClient]);
 
   // Fetch time series stats on mount (only if not using context)
   useEffect(() => {

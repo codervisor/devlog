@@ -7,7 +7,8 @@
   "types": "./build/index.d.ts",
   "bin": {
     "devlog": "./build/index.js",
-    "devlog-automation": "./build/automation.js"
+    "devlog-automation": "./build/automation.js",
+    "devlog-dev": "./build/dev.js"
   },
   "files": [
     "build/**/*",
