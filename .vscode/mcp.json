@@ -14,13 +14,17 @@
 				"@codervisor/devlog-mcp@dev"
 			]
 		},
-		// "github": {
-		// 	"type": "http",
-		// 	"url": "https://api.githubcopilot.com/mcp/",
-    //   "headers": {
-    //     "Authorization": "Bearer ${input:github-pat}"
-    //   }
-		// }
+		"sequential-thinking": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking@2025.7.1"
+			],
+			"env": {
+				"DISABLE_THOUGHT_LOGGING": "true"
+			},
+			"type": "stdio"
+		}
 	},
 	"inputs": [
 		{

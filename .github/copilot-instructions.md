@@ -1,47 +1,37 @@
-# Devlog Project - Copilot Instructions
+# Devlog Project - AI Agent Guidelines
 
-## 🎯 Core Instruction System
+## 🎯 Core Principles
 
-This file applies **Occam's razor principle** - the simplest solution that works is the best solution. All development patterns, architecture decisions, and coding standards are consolidated here as a single, focused source of truth.
+**Occam's Razor**: Simple solutions are better than complex ones.
 
-## Development Philosophy
+- **Quality over continuity**: Well-architected solutions over preserving legacy
+- **Breaking changes acceptable**: Not bound by API compatibility in early development
+- **TypeScript everywhere**: Type safety is non-negotiable
 
-**IMPORTANT**: This project prioritizes clean, modern architecture over backwards compatibility.
+## 🚨 Critical Rules (Never Break These)
 
-- **Quality over continuity**: Well-architected solutions over preserving broken legacy code
-- **Rapid iteration**: Make bold changes to improve codebase structure  
-- **Breaking changes acceptable**: Not bound by API compatibility during early development
-- **Simple is better**: Occam's razor applied to all technical decisions
+- ✅ Add `.js` extensions to relative imports (ESM requirement)
+- ✅ Use `DevlogService` and `ProjectService` singleton patterns
+- ✅ Handle all async operations with error handling
+- ❌ Never use `any` type without explicit justification
+- ❌ Never ignore error handling in async operations
+
+## � Development Workflow
+
+- **Temp files**: Use `tmp/` folder for experiments (gitignored)
+- **Build testing**: Use `pnpm build:test` (doesn't break dev servers)
+- **Containers**: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
+- **Build order**: Core → MCP → Web (dependency chain)
 
 ## 🎯 Essential Patterns
 
-- **Architecture**: Use `DevlogService` and `ProjectService` singleton patterns
-- **Imports**: Add `.js` extensions to relative imports, use `@codervisor/devlog-*` for cross-package
-- **TypeScript**: No `any` types, proper error handling, constructor dependency injection
-- **Testing**: Mock externals, test success/failure paths, isolated tests
-- **React**: Functional components, Server Components by default, Tailwind utilities
+- **Architecture**: Singleton services with `initialize()` and `dispose()`
+- **Imports**: `@codervisor/devlog-*` cross-package, `./path.js` internal
+- **React**: Functional components, Server Components default, Tailwind utilities
+- **Testing**: Mock externals, test success/failure paths
 
-## 🚨 Critical Development Requirements
+## 📖 Decision Framework
 
-### Temporary Files
-- **Use `tmp/` folder**: All experimental code, test scripts, and temporary files
-- **Not committed**: `tmp/` is gitignored for transient work
-
-### Build Testing
-- **Use `pnpm build:test`**: Tests builds without breaking active dev servers
-- **Development containers**: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
-- **Build order**: Core → MCP → Web (follow dependency chain)
-
-### UI Development
-- **Use Playwright MCP tools**: Required for React debugging and console monitoring
-- **Keep containers running**: Don't stop development containers unless explicitly requested
-
-### Quality Standards
-- **No `any` types**: Use proper TypeScript typing
-- **Handle async errors**: All async operations must have error handling
-- **Test critical paths**: Both success and failure scenarios
-- **Export types**: Always export types alongside implementations
-
-## 📖 Remember
-
-Simple, focused solutions over complex, comprehensive ones. When in doubt, choose the clearer, more maintainable approach.
+1. Is there a recommended approach? → Use it
+2. Does it maintain type safety? → Non-negotiable
+3. Is it the simplest solution? → Occam's razor test
