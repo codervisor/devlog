@@ -243,7 +243,7 @@ describe('API Utilities Test Suite', () => {
 
   describe('ApiResponses', () => {
     it('should create success responses', async () => {
-      const successResponse = ApiResponses.success();
+      const successResponse = ApiResponses.success(null);
       expect(successResponse).toBeInstanceOf(NextResponse);
       expect(successResponse.status).toBe(200);
 

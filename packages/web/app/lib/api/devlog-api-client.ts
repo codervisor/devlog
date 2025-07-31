@@ -87,7 +87,7 @@ export class DevlogApiClient {
     const queryString = params.toString();
     const url = `/api/projects/${this.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
 
-    return apiClient.get<DevlogEntry[]>(url);
+    return apiClient.getList<DevlogEntry>(url);
   }
 
   /**

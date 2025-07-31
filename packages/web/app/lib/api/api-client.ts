@@ -228,6 +228,21 @@ export class ApiClient {
   async delete<T = any>(url: string, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T> {
     return this.request<T>(url, { ...options, method: 'DELETE' });
   }
+
+  /**
+   * GET request that expects a collection response and returns the items array
+   * Use this for endpoints that return { items: T[], pagination: PaginationMeta }
+   */
+  async getList<T = any>(
+    url: string,
+    options?: Omit<RequestInit, 'method' | 'body'>,
+  ): Promise<T[]> {
+    const response = await this.request<{ items: T[]; pagination?: any }>(url, {
+      ...options,
+      method: 'GET',
+    });
+    return response.items;
+  }
 }
 
 /**
