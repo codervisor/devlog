@@ -44,6 +44,10 @@ mcp_devlog_add_devlog_note({
   note: "Completed milestone X, next working on Y",
   files: ["path/to/modified/files.ts"]
 });
+
+// Test UI changes for user-facing features
+// Use Playwright MCP tools to verify critical workflows
+// Navigate to localhost:3200 and test key user interactions
 ```
 
 ### When Work Is Complete
@@ -198,6 +202,46 @@ describe('DevlogManager', () => {
   });
 });
 ```
+
+### UI Testing with Playwright
+Use Playwright MCP tools to test user-facing features after implementation.
+
+**When to UI Test:**
+- After implementing new UI features or components
+- When modifying existing user workflows
+- For critical user interactions (create, edit, navigation)
+
+**UI Testing Workflow:**
+```typescript
+// 1. Navigate to the development UI
+mcp_playwright_browser_navigate({ url: "http://localhost:3200" });
+
+// 2. Take accessibility snapshot (better than screenshot for actions)
+mcp_playwright_browser_snapshot();
+
+// 3. Interact with elements (click, type, etc.)
+mcp_playwright_browser_click({
+  element: "Create New Devlog button",
+  ref: "button-create-devlog"
+});
+
+// 4. Verify results
+mcp_playwright_browser_wait_for({ text: "Devlog created successfully" });
+
+// 5. Document in devlog
+mcp_devlog_add_devlog_note({
+  id: 123,
+  note: "UI tested: verified devlog creation workflow works correctly",
+  category: "progress"
+});
+```
+
+**Key Playwright Tools:**
+- `browser_navigate`: Go to localhost:3200
+- `browser_snapshot`: See current page state (use this for navigation)
+- `browser_click`, `browser_type`: Interact with elements
+- `browser_wait_for`: Wait for changes/text to appear
+- `browser_take_screenshot`: Document UI state if needed
 
 ## File Organization & Development
 
