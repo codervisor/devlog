@@ -340,7 +340,7 @@ export class DevlogService {
     await this.ensureInitialized();
 
     // Validate search query
-    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    if (!query || query.trim().length === 0) {
       throw new Error('Search query is required and must be a non-empty string');
     }
 

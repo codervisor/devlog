@@ -1,57 +1,68 @@
-import { describe, beforeEach, afterEach, it, expect } from 'vitest';
-import { DevlogService, ProjectService } from '../../index.js';
+import { describe, beforeEach, afterEach, it, expect, beforeAll, afterAll } from 'vitest';
 import type { DevlogEntry } from '../../types/index.js';
+import {
+  createIsolatedTestEnvironment,
+  type IsolatedTestEnvironment,
+} from '../utils/isolated-services.js';
+import { createTestProject, createTestDevlog } from '../utils/test-env.js';
 
 describe('DevlogService - Note CRUD Operations', () => {
-  let devlogService: DevlogService;
-  let projectService: ProjectService;
+  let testEnv: IsolatedTestEnvironment;
   let testProject: any;
   let testDevlog: DevlogEntry;
 
-  beforeEach(async () => {
-    // Initialize services
-    projectService = ProjectService.getInstance();
+  beforeAll(async () => {
+    // Create isolated test environment
+    testEnv = await createIsolatedTestEnvironment('notes-crud-test');
+  });
 
-    // Create test project with unique name
-    const uniqueName = `Test Project - Notes CRUD - ${Date.now()}`;
-    testProject = await projectService.create({
-      name: uniqueName,
+  afterAll(async () => {
+    // Clean up test environment
+    await testEnv.cleanup();
+  });
+
+  beforeEach(async () => {
+    // Create test project using isolated service
+    const projectEntity = await createTestProject(testEnv.database, {
+      name: `Test Project - Notes CRUD - ${Date.now()}`,
       description: 'Test project for note CRUD operations',
     });
 
-    devlogService = DevlogService.getInstance(testProject.id);
-
-    // Create test devlog entry using the service's save method
-    const testEntry: DevlogEntry = {
-      title: 'Test Devlog for Notes',
-      type: 'task',
-      description: 'Test devlog entry for testing note CRUD operations',
-      status: 'new',
-      priority: 'medium',
-      projectId: testProject.id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      notes: [],
+    testProject = {
+      id: projectEntity.id,
+      name: projectEntity.name,
+      description: projectEntity.description,
     };
 
-    await devlogService.save(testEntry);
-    const entries = await devlogService.list();
-    testDevlog = entries.items[0];
+    // Create test devlog entry using isolated service
+    const devlogEntity = await createTestDevlog(testEnv.database, testProject.id, {
+      title: 'Test Devlog for Notes',
+      description: 'Test devlog entry for testing note CRUD operations',
+    });
+
+    testDevlog = {
+      id: devlogEntity.id,
+      title: devlogEntity.title,
+      type: devlogEntity.type,
+      description: devlogEntity.description,
+      status: devlogEntity.status,
+      priority: devlogEntity.priority,
+      projectId: devlogEntity.projectId,
+      createdAt: devlogEntity.createdAt.toISOString(),
+      updatedAt: devlogEntity.updatedAt.toISOString(),
+      notes: [],
+    };
   });
 
   afterEach(async () => {
-    // Clean up - service should handle cascade deletion of notes
-    if (testDevlog?.id) {
-      try {
-        await devlogService.delete(testDevlog.id);
-      } catch (error) {
-        // Ignore if already deleted
-      }
-    }
+    // Clear test data between tests (but keep the isolated database)
+    const { clearTestDatabase } = await import('../utils/test-env.js');
+    await clearTestDatabase(testEnv.database);
   });
 
   describe('addNote', () => {
     it('should add a note to a devlog entry', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const noteData = {
         content: 'This is a test note',
         category: 'progress' as const,
@@ -67,6 +78,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should throw error for non-existent devlog', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const noteData = {
         content: 'Test note',
         category: 'progress' as const,
@@ -78,6 +90,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should handle minimal note data', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const noteData = {
         content: 'Minimal note',
         category: 'idea' as const,
@@ -92,11 +105,13 @@ describe('DevlogService - Note CRUD Operations', () => {
 
   describe('getNotes', () => {
     it('should return empty array for devlog with no notes', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const notes = await devlogService.getNotes(testDevlog.id!);
       expect(notes).toEqual([]);
     });
 
     it('should return notes in reverse chronological order', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       // Add multiple notes with delays to ensure different timestamps
       const note1 = await devlogService.addNote(testDevlog.id!, {
         content: 'First note',
@@ -119,6 +134,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should respect limit parameter', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       // Add 3 notes
       await devlogService.addNote(testDevlog.id!, { content: 'Note 1', category: 'progress' });
       await devlogService.addNote(testDevlog.id!, { content: 'Note 2', category: 'progress' });
@@ -131,6 +147,7 @@ describe('DevlogService - Note CRUD Operations', () => {
 
   describe('getNote', () => {
     it('should return specific note by ID', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const addedNote = await devlogService.addNote(testDevlog.id!, {
         content: 'Specific note',
         category: 'solution',
@@ -145,6 +162,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should return null for non-existent note', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const note = await devlogService.getNote('non-existent-note-id');
       expect(note).toBeNull();
     });
@@ -152,6 +170,7 @@ describe('DevlogService - Note CRUD Operations', () => {
 
   describe('updateNote', () => {
     it('should update note content', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const originalNote = await devlogService.addNote(testDevlog.id!, {
         content: 'Original content',
         category: 'progress',
@@ -168,6 +187,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should update multiple fields', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const originalNote = await devlogService.addNote(testDevlog.id!, {
         content: 'Original content',
         category: 'progress',
@@ -183,6 +203,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should throw error for non-existent note', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       await expect(
         devlogService.updateNote('non-existent-note-id', { content: 'New content' }),
       ).rejects.toThrow("Note with ID 'non-existent-note-id' not found");
@@ -191,6 +212,7 @@ describe('DevlogService - Note CRUD Operations', () => {
 
   describe('deleteNote', () => {
     it('should delete a note', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const note = await devlogService.addNote(testDevlog.id!, {
         content: 'Note to delete',
         category: 'progress',
@@ -203,12 +225,14 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should throw error for non-existent note', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       await expect(devlogService.deleteNote('non-existent-note-id')).rejects.toThrow(
         "Note with ID 'non-existent-note-id' not found",
       );
     });
 
     it('should not affect other notes', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const note1 = await devlogService.addNote(testDevlog.id!, {
         content: 'Note 1',
         category: 'progress',
@@ -228,6 +252,7 @@ describe('DevlogService - Note CRUD Operations', () => {
 
   describe('integration with devlog operations', () => {
     it('should load notes when getting devlog with includeNotes=true', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       // Add some notes
       await devlogService.addNote(testDevlog.id!, {
         content: 'Integration test note 1',
@@ -244,6 +269,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should not load notes when getting devlog with includeNotes=false', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       await devlogService.addNote(testDevlog.id!, {
         content: 'Should not be loaded',
         category: 'progress',
@@ -254,6 +280,7 @@ describe('DevlogService - Note CRUD Operations', () => {
     });
 
     it('should cascade delete notes when devlog is deleted', async () => {
+      const devlogService = testEnv.devlogService(testProject.id);
       const note = await devlogService.addNote(testDevlog.id!, {
         content: 'Will be cascade deleted',
         category: 'progress',

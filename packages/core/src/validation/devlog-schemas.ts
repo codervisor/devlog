@@ -29,8 +29,8 @@ export const DevlogEntrySchema = z.object({
   archived: z.boolean().optional(),
   projectId: z.number().int().positive(),
   acceptanceCriteria: z.array(z.string()).optional(),
-  businessContext: z.string().max(10000, 'Business context too long').nullable().optional(),
-  technicalContext: z.string().max(10000, 'Technical context too long').nullable().optional(),
+  businessContext: z.string().nullable().optional(),
+  technicalContext: z.string().nullable().optional(),
   notes: z.array(z.any()).optional(), // Notes have their own validation
   dependencies: z.array(z.any()).optional(), // Dependencies have their own validation
 }) satisfies z.ZodType<DevlogEntry>;

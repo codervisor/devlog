@@ -15,6 +15,9 @@ import {
   FilesSchema,
   KeywordsSchema,
   LimitSchema,
+  BusinessContextSchema,
+  TechnicalContextSchema,
+  AcceptanceCriteriaSchema,
 } from './base.js';
 
 // === CREATE DEVLOG ===
@@ -23,6 +26,9 @@ export const CreateDevlogSchema = z.object({
   description: DescriptionSchema,
   type: DevlogTypeSchema,
   priority: DevlogPrioritySchema,
+  businessContext: BusinessContextSchema,
+  technicalContext: TechnicalContextSchema,
+  acceptanceCriteria: AcceptanceCriteriaSchema,
 });
 
 // === GET DEVLOG ===
@@ -37,6 +43,9 @@ export const UpdateDevlogSchema = z.object({
   priority: DevlogPrioritySchema.optional(),
   note: z.string().optional(),
   files: FilesSchema,
+  businessContext: BusinessContextSchema,
+  technicalContext: TechnicalContextSchema,
+  acceptanceCriteria: AcceptanceCriteriaSchema,
 });
 
 // === LIST/SEARCH DEVLOGS ===
