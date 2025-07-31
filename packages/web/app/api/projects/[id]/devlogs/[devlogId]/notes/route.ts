@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import {
-  RouteParams,
-  ApiErrors,
-  createSuccessResponse,
-  createSimpleCollectionResponse,
-  ResponseTransformer,
-} from '@/lib';
+import { RouteParams, ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
+import { NoteSSE, DevlogSSE } from '@/lib/api/sse-utils';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 
@@ -132,7 +127,7 @@ export async function POST(
       category: (category || 'progress') as NoteCategory,
     });
 
-    return createSuccessResponse(newNote, { status: 201 });
+    return NoteSSE.created(createSuccessResponse(newNote, { status: 201 }));
   } catch (error) {
     console.error('Error adding devlog note:', error);
     return ApiErrors.internalError('Failed to add note to devlog entry');
@@ -197,7 +192,7 @@ export async function PUT(
     // Return the updated entry with the note
     const finalEntry = await devlogService.get(devlogId, true); // Load with notes
     const transformedEntry = ResponseTransformer.transformDevlog(finalEntry);
-    return createSuccessResponse(transformedEntry);
+    return DevlogSSE.updated(createSuccessResponse(transformedEntry));
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

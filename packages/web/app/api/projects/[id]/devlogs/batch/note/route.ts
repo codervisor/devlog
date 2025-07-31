@@ -7,6 +7,7 @@ import {
   withErrorHandling,
   ResponseTransformer,
 } from '@/lib';
+import { broadcastUpdate } from '@/lib/api';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -71,9 +72,26 @@ export const POST = withErrorHandling(
 
     // Transform results and return standardized response
     const transformedEntries = ResponseTransformer.transformDevlogs(updatedEntries);
-    return createSuccessResponse({
+    const result = {
       updated: transformedEntries,
       errors: errors.length > 0 ? errors : undefined,
-    });
+    };
+
+    // Broadcast batch note addition event for successful additions
+    if (transformedEntries.length > 0) {
+      setTimeout(() => {
+        try {
+          broadcastUpdate('devlog-batch-note-added', {
+            count: transformedEntries.length,
+            entries: transformedEntries,
+            note: note,
+          });
+        } catch (error) {
+          console.error('Error broadcasting batch note addition SSE:', error);
+        }
+      }, 0);
+    }
+
+    return createSuccessResponse(result);
   },
 );

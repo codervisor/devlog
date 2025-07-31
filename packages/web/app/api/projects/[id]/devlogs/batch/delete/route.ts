@@ -6,6 +6,7 @@ import {
   createSuccessResponse,
   withErrorHandling,
 } from '@/lib';
+import { broadcastUpdate } from '@/lib/api';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -37,8 +38,8 @@ export const POST = withErrorHandling(
     // Get devlog service
     const devlogService = await ServiceHelper.getDevlogService(projectId);
 
-    const deletedIds = [];
-    const errors = [];
+    const deletedIds: number[] = [];
+    const errors: Array<{ id: any; error: string }> = [];
 
     // Process each ID
     for (const id of ids) {
@@ -65,9 +66,26 @@ export const POST = withErrorHandling(
       }
     }
 
-    return createSuccessResponse({
+    const result = {
       deleted: deletedIds,
       errors: errors.length > 0 ? errors : undefined,
-    });
+    };
+
+    // Broadcast batch delete event for successful deletions
+    if (deletedIds.length > 0) {
+      setTimeout(() => {
+        try {
+          broadcastUpdate('devlog-batch-deleted', {
+            count: deletedIds.length,
+            deletedIds: deletedIds,
+            deletedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('Error broadcasting batch delete SSE:', error);
+        }
+      }, 0);
+    }
+
+    return createSuccessResponse(result);
   },
 );

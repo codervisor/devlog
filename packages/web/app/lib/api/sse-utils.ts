@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { broadcastUpdate } from '../server/sse-event-bridge.js';
+import { broadcastUpdate } from './sse-event-bridge';
 
 /**
  * Wraps a successful response with SSE broadcasting

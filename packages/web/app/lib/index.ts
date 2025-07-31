@@ -18,8 +18,5 @@ export * from './devlog';
 // Routing utilities
 export * from './routing';
 
-// Server utilities
-export * from './server';
-
 // General utilities
 export * from './utils';

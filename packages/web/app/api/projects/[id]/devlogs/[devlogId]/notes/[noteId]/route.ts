@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
+import { NoteSSE } from '@/lib/api/sse-utils';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
 
@@ -91,7 +92,7 @@ export async function PUT(
       category: updates.category as NoteCategory | undefined,
     });
 
-    return createSuccessResponse(updatedNote);
+    return NoteSSE.updated(createSuccessResponse(updatedNote));
   } catch (error) {
     console.error('Error updating note:', error);
     if (error instanceof Error && error.message.includes('not found')) {
@@ -114,7 +115,7 @@ export async function DELETE(
     }
 
     const { projectId } = paramResult.data;
-    const { noteId } = params;
+    const { noteId, devlogId } = params;
 
     // Ensure project exists
     const projectService = ProjectService.getInstance();
@@ -129,7 +130,7 @@ export async function DELETE(
     // Delete the note
     await devlogService.deleteNote(noteId);
 
-    return createSuccessResponse({ deleted: true, noteId });
+    return NoteSSE.deleted(createSuccessResponse({ deleted: true, noteId }), noteId, devlogId);
   } catch (error) {
     console.error('Error deleting note:', error);
     if (error instanceof Error && error.message.includes('not found')) {

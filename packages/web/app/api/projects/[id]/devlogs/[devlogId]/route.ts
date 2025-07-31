@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 import { RouteParams, ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
+import { DevlogSSE } from '@/lib/api/sse-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -96,7 +97,7 @@ export async function PUT(
 
     // Transform and return updated entry
     const transformedEntry = ResponseTransformer.transformDevlog(updatedEntry);
-    return createSuccessResponse(transformedEntry);
+    return DevlogSSE.updated(createSuccessResponse(transformedEntry));
   } catch (error) {
     console.error('Error updating devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to update devlog';
@@ -135,7 +136,7 @@ export async function DELETE(
 
     await devlogService.delete(devlogId);
 
-    return createSuccessResponse({ deleted: true, devlogId });
+    return DevlogSSE.deleted(createSuccessResponse({ deleted: true, devlogId }), devlogId);
   } catch (error) {
     console.error('Error deleting devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to delete devlog';

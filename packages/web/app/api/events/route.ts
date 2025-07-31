@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { activeConnections, sseEventBridge } from '@/lib/server';
+import { activeConnections, sseEventBridge } from '@/lib/api';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

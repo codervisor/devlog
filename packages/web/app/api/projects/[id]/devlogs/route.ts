@@ -13,6 +13,7 @@ import {
   createCollectionResponse,
   ResponseTransformer,
 } from '@/lib';
+import { DevlogSSE } from '@/lib/api/sse-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -151,7 +152,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     // Transform and return the actual saved devlog
     const transformedDevlog = ResponseTransformer.transformDevlog(savedEntry);
-    return createSuccessResponse(transformedDevlog, { status: 201 });
+    return DevlogSSE.created(createSuccessResponse(transformedDevlog, { status: 201 }));
   } catch (error) {
     console.error('Error creating devlog:', error);
     return ApiErrors.internalError('Failed to create devlog');

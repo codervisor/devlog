@@ -7,6 +7,7 @@ import {
   withErrorHandling,
   ResponseTransformer,
 } from '@/lib';
+import { broadcastUpdate } from '@/lib/api';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -80,6 +81,21 @@ export const POST = withErrorHandling(
       updated: transformedEntries,
       errors: errors.length > 0 ? errors : undefined,
     };
+
+    // Broadcast batch update event for successful entries
+    if (transformedEntries.length > 0) {
+      setTimeout(() => {
+        try {
+          broadcastUpdate('devlog-batch-updated', {
+            count: transformedEntries.length,
+            entries: transformedEntries,
+            updates: updates,
+          });
+        } catch (error) {
+          console.error('Error broadcasting batch update SSE:', error);
+        }
+      }, 0);
+    }
 
     return createSuccessResponse(result);
   },
