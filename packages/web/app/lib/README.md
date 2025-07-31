@@ -9,6 +9,7 @@ lib/
 ├── api/                    # API client utilities
 │   ├── api-client.ts      # Main API client with error handling
 │   ├── api-utils.ts       # API route utilities, response helpers
+│   ├── devlog-api-client.ts # Devlog-specific API client
 │   ├── note-api-client.ts # Note-specific API client
 │   └── index.ts           # Re-exports for API utilities
 ├── devlog/                # Devlog-specific utilities
@@ -60,6 +61,7 @@ import {
 
 - **api-client.ts**: Centralized API client with standardized error handling
 - **api-utils.ts**: Next.js API route helpers, response formatters, parameter parsing
+- **devlog-api-client.ts**: Specialized client for devlog operations (CRUD, batch operations, stats)
 - **note-api-client.ts**: Specialized client for note operations
 
 ### `devlog/` - Devlog-Specific Utilities

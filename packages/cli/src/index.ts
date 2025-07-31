@@ -418,6 +418,23 @@ program
     }
   });
 
+// Dev environment command
+program
+  .command('dev')
+  .description('Manage local development environment')
+  .action(async () => {
+    try {
+      const { runDevCLI } = await import('./dev.js');
+      await runDevCLI();
+    } catch (error) {
+      console.error(
+        chalk.red('Dev command failed:'),
+        error instanceof Error ? error.message : String(error),
+      );
+      process.exit(1);
+    }
+  });
+
 // Helper function to display chat summary
 function displayChatSummary(
   stats: ChatStatistics,
