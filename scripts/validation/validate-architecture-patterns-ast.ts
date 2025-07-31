@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S pnpm exec tsx
 
 /**
  * Dynamic Architecture Patterns Validation (AST-based)
@@ -13,25 +13,56 @@
  * - No hardcoded class names or method expectations
  */
 
-const fs = require('fs');
-const path = require('path');
-const ts = require('typescript');
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
 
-const ERRORS = [];
-const WARNINGS = [];
-const DISCOVERED_PATTERNS = {
-  managerClasses: new Map(), // className -> { hasInitialize, hasDispose, hasCleanup, constructorParams }
+interface ValidationIssue {
+  file: string;
+  line: number;
+  type: string;
+  message: string;
+  suggestion: string;
+}
+
+interface ClassInfo {
+  filePath: string;
+  lineNumber: number;
+  hasInitialize: boolean;
+  hasCleanup: boolean;
+  hasDispose: boolean;
+  initMethods: Array<{ name: string; isAsync: boolean }>;
+  cleanupMethods: Array<{ name: string; isAsync: boolean }>;
+  constructorParams: number;
+  isExported: boolean;
+  isAbstract: boolean;
+  extendsClass: string | null;
+  implementsInterfaces: string[];
+}
+
+interface DiscoveredPatterns {
+  managerClasses: Map<string, ClassInfo>;
+  serviceClasses: Map<string, ClassInfo>;
+  providerClasses: Map<string, ClassInfo>;
+  lifecycleMethods: Set<string>;
+  initializationMethods: Set<string>;
+}
+
+const ERRORS: ValidationIssue[] = [];
+const WARNINGS: ValidationIssue[] = [];
+const DISCOVERED_PATTERNS: DiscoveredPatterns = {
+  managerClasses: new Map(),
   serviceClasses: new Map(),
   providerClasses: new Map(),
-  lifecycleMethods: new Set(), // All cleanup methods found (dispose, cleanup, destroy, etc.)
-  initializationMethods: new Set(), // All init methods found (initialize, init, setup, etc.)
+  lifecycleMethods: new Set(),
+  initializationMethods: new Set(),
 };
 
 /**
  * Create TypeScript program for AST analysis
  */
-function createProgram(filePaths) {
-  const compilerOptions = {
+function createProgram(filePaths: string[]): ts.Program {
+  const compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
@@ -52,19 +83,19 @@ function createProgram(filePaths) {
 /**
  * Visit AST nodes recursively with proper error handling
  */
-function visitNode(node, sourceFile, visitor) {
+function visitNode(node: ts.Node, sourceFile: ts.SourceFile, visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void): void {
   try {
     visitor(node, sourceFile);
     node.forEachChild(child => visitNode(child, sourceFile, visitor));
   } catch (error) {
-    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error.message}`);
+    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 /**
  * Get line number from AST node with error handling
  */
-function getLineNumber(sourceFile, node) {
+function getLineNumber(sourceFile: ts.SourceFile, node: ts.Node): number {
   try {
     if (!sourceFile || !node) return 1;
     const lineAndChar = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
@@ -77,12 +108,12 @@ function getLineNumber(sourceFile, node) {
 /**
  * Dynamic pattern detection - discover what patterns are actually used
  */
-function discoverPatterns(filePath, sourceFile) {
+function discoverPatterns(filePath: string, sourceFile: ts.SourceFile): void {
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     // Discover class patterns
     if (ts.isClassDeclaration(node) && node.name) {
       const className = node.name.text;
-      const classInfo = {
+      const classInfo: ClassInfo = {
         filePath,
         lineNumber: getLineNumber(sourceFile, node),
         hasInitialize: false,
@@ -162,15 +193,15 @@ function discoverPatterns(filePath, sourceFile) {
 /**
  * Analyze discovered patterns and identify inconsistencies
  */
-function validatePatternConsistency() {
+function validatePatternConsistency(): void {
   // Analyze manager patterns
   const managerClasses = Array.from(DISCOVERED_PATTERNS.managerClasses.values());
   if (managerClasses.length > 0) {
     console.log(`📊 Discovered ${managerClasses.length} manager classes`);
     
     // Find common initialization patterns
-    const initPatterns = new Map();
-    const cleanupPatterns = new Map();
+    const initPatterns = new Map<string, number>();
+    const cleanupPatterns = new Map<string, number>();
     
     managerClasses.forEach(manager => {
       manager.initMethods.forEach(method => {
@@ -216,7 +247,7 @@ function validatePatternConsistency() {
 /**
  * Validate consistency among manager classes based on their category
  */
-function validateManagerConsistency(managers, initPatterns, cleanupPatterns) {
+function validateManagerConsistency(managers: ClassInfo[], initPatterns: Map<string, number>, cleanupPatterns: Map<string, number>): void {
   // Categorize managers by type based on their class names and interfaces
   const workspaceManagers = managers.filter(m => {
     const className = [...DISCOVERED_PATTERNS.managerClasses.entries()]
@@ -246,14 +277,14 @@ function validateManagerConsistency(managers, initPatterns, cleanupPatterns) {
 /**
  * Validate a specific category of managers
  */
-function validateManagerCategory(managers, categoryName, allInitPatterns, allCleanupPatterns) {
+function validateManagerCategory(managers: ClassInfo[], categoryName: string, allInitPatterns: Map<string, number>, allCleanupPatterns: Map<string, number>): void {
   if (managers.length === 0) return;
 
   console.log(`\n🔍 Validating ${categoryName} managers...`);
 
   // Find patterns within this category
-  const categoryInitPatterns = new Map();
-  const categoryCleanupPatterns = new Map();
+  const categoryInitPatterns = new Map<string, number>();
+  const categoryCleanupPatterns = new Map<string, number>();
   
   managers.forEach(manager => {
     manager.initMethods.forEach(method => {
@@ -350,7 +381,7 @@ function validateManagerCategory(managers, categoryName, allInitPatterns, allCle
 /**
  * Validate service class consistency
  */
-function validateServiceConsistency(services) {
+function validateServiceConsistency(services: ClassInfo[]): void {
   services.forEach(service => {
     const className = [...DISCOVERED_PATTERNS.serviceClasses.entries()]
       .find(([name, info]) => info === service)?.[0] || 'Unknown';
@@ -371,7 +402,7 @@ function validateServiceConsistency(services) {
 /**
  * Validate provider class consistency
  */
-function validateProviderConsistency(providers) {
+function validateProviderConsistency(providers: ClassInfo[]): void {
   providers.forEach(provider => {
     const className = [...DISCOVERED_PATTERNS.providerClasses.entries()]
       .find(([name, info]) => info === provider)?.[0] || 'Unknown';
@@ -403,10 +434,10 @@ function validateProviderConsistency(providers) {
 /**
  * Find TypeScript files in all packages
  */
-function findArchitectureFiles() {
-  const files = [];
+function findArchitectureFiles(): string[] {
+  const files: string[] = [];
 
-  function findFilesRecursive(dir, predicate) {
+  function findFilesRecursive(dir: string, predicate: (file: string) => boolean): void {
     if (!fs.existsSync(dir)) return;
     
     const entries = fs.readdirSync(dir);
@@ -442,7 +473,7 @@ function findArchitectureFiles() {
 /**
  * Discovery phase - analyze all files to understand current patterns
  */
-function runDiscoveryPhase(filePaths) {
+function runDiscoveryPhase(filePaths: string[]): void {
   console.log('🔍 Phase 1: Discovering architectural patterns...');
   
   const program = createProgram(filePaths);
@@ -458,7 +489,7 @@ function runDiscoveryPhase(filePaths) {
 /**
  * Validation phase - check consistency based on discovered patterns
  */
-function runValidationPhase() {
+function runValidationPhase(): void {
   console.log('\n🔍 Phase 2: Validating pattern consistency...');
   validatePatternConsistency();
 }
@@ -466,7 +497,7 @@ function runValidationPhase() {
 /**
  * Main validation function
  */
-function validateArchitecturePatterns() {
+export function validateArchitecturePatterns(): void {
   console.log('🚀 Dynamic Architecture Patterns Validation');
   console.log('   Discovering and validating actual codebase patterns...\n');
 
@@ -520,8 +551,6 @@ function validateArchitecturePatterns() {
 }
 
 // Run validation if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   validateArchitecturePatterns();
 }
-
-module.exports = { validateArchitecturePatterns };

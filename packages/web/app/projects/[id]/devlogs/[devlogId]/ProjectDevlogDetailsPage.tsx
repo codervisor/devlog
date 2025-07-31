@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { DevlogDetails, PageLayout } from '@/components';
 import { useDevlogDetails } from '@/hooks/useDevlogDetails';
-import { useDevlogData } from '@/hooks/useDevlogData';
+import { useDevlogContext } from '@/contexts/DevlogContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const router = useRouter();
 
   // Set the current project based on the route parameter when projects are available
-  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
+  // This is essential for the context to work with the correct project
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
@@ -47,7 +47,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     updateDevlog,
     deleteDevlog: deleteDevlogFromDetails,
   } = useDevlogDetails(devlogId, { projectId });
-  const { deleteDevlog: deleteDevlogFromList } = useDevlogData({ projectId, useContext: false });
+  const { deleteDevlog: deleteDevlogFromList } = useDevlogContext();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 

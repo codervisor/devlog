@@ -1,33 +1,39 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S pnpm exec tsx
 
 /**
- * Comprehensive AST-based Validation Suite
+ * Comprehensive Validation Suite
  * Orchestrates all validation scripts for complete code quality assessment
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+import { execSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 let totalErrors = 0;
 let totalWarnings = 0;
 
+interface ValidationScript {
+  name: string;
+  scriptPath: string;
+  fileName: string;
+}
+
 /**
  * Run a validation script with error counting
  */
-function runValidation(name, scriptPath, args = []) {
+function runValidation(name: string, scriptPath: string, args: string[] = []): void {
   console.log(`\n🔍 Running ${name}...`);
   console.log('='.repeat(50));
   
   const startTime = Date.now();
   
   try {
-    const command = `node ${scriptPath} ${args.join(' ')}`;
+    const command = `pnpm exec tsx ${scriptPath} ${args.join(' ')}`;
     execSync(command, { stdio: 'inherit' });
     
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`✅ ${name} completed successfully (${duration}s)`);
-  } catch (error) {
+  } catch (error: any) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     if (error.status === 1) {
       totalErrors++;
@@ -41,18 +47,18 @@ function runValidation(name, scriptPath, args = []) {
 /**
  * Run TypeScript compilation check
  */
-function runTypeCheck() {
+function runTypeCheck(): void {
   console.log(`\n🔍 Running TypeScript Compilation Check...`);
   console.log('='.repeat(50));
   
   try {
     // Check each package's TypeScript
-    const packages = ['core', 'web', 'mcp', 'ai'];
+    const packages = ['core', 'web', 'mcp', 'ai', 'cli'];
     
     packages.forEach(pkg => {
       try {
-        console.log(`  Checking @devlog/${pkg}...`);
-        execSync(`pnpm --filter @devlog/${pkg} type-check 2>/dev/null || pnpm --filter @devlog/${pkg} tsc --noEmit`, { stdio: 'pipe' });
+        console.log(`  Checking @codervisor/devlog-${pkg}...`);
+        execSync(`pnpm --filter @codervisor/devlog-${pkg} type-check 2>/dev/null || pnpm --filter @codervisor/devlog-${pkg} tsc --noEmit`, { stdio: 'pipe' });
       } catch (error) {
         console.log(`  ⚠️  TypeScript issues in ${pkg} package`);
         totalWarnings++;
@@ -69,14 +75,14 @@ function runTypeCheck() {
 /**
  * Run build validation
  */
-function runBuildValidation() {
+function runBuildValidation(): void {
   console.log(`\n🔍 Running Build Validation...`);
   console.log('='.repeat(50));
   
   try {
     // Test build without affecting dev servers
     console.log(`  Testing web package build...`);
-    execSync('pnpm --filter @devlog/web build:test', { stdio: 'pipe' });
+    execSync('pnpm --filter @codervisor/devlog-web build:test', { stdio: 'pipe' });
     
     console.log(`✅ Build Validation completed successfully`);
   } catch (error) {
@@ -88,17 +94,18 @@ function runBuildValidation() {
 /**
  * Get validation scripts from the scripts directory
  */
-function getValidationScripts() {
+function getValidationScripts(): ValidationScript[] {
   const scriptsDir = path.join(__dirname);
-  const scripts = [];
+  const scripts: ValidationScript[] = [];
   
   // Find all validation scripts
   const files = fs.readdirSync(scriptsDir);
   
   files.forEach(file => {
-    if (file.startsWith('validate-') && file.endsWith('.js') && file !== 'validate-all-ast.js') {
+    if (file.startsWith('validate-') && (file.endsWith('.ts') || file.endsWith('.js')) && 
+        file !== 'validate-all.ts' && file !== 'validate-all.js') {
       const scriptPath = path.join(scriptsDir, file);
-      const name = file.replace('validate-', '').replace('-ast.js', '').replace('.js', '').replace(/-/g, ' ');
+      const name = file.replace('validate-', '').replace('-ast.ts', '').replace('-ast.js', '').replace('.ts', '').replace('.js', '').replace(/-/g, ' ');
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
       
       scripts.push({
@@ -115,8 +122,8 @@ function getValidationScripts() {
 /**
  * Main validation suite
  */
-function runFullValidation() {
-  console.log('🚀 Starting Comprehensive AST-based Validation Suite');
+function runFullValidation(skipBuild: boolean = false, skipTypes: boolean = false): void {
+  console.log('🚀 Starting Comprehensive Validation Suite');
   console.log('=' .repeat(60));
   
   const startTime = Date.now();
@@ -129,14 +136,23 @@ function runFullValidation() {
     console.log(`  • ${script.name} (${script.fileName})`);
   });
   
-  // Run all AST-based validations
+  // Run all validations
   validationScripts.forEach(script => {
     runValidation(script.name, script.scriptPath);
   });
   
   // Run additional system checks
-  runTypeCheck();
-  runBuildValidation();
+  if (!skipTypes) {
+    runTypeCheck();
+  } else {
+    console.log('\n⏭️  Skipping TypeScript compilation check');
+  }
+  
+  if (!skipBuild) {
+    runBuildValidation();
+  } else {
+    console.log('\n⏭️  Skipping build validation');
+  }
   
   // Summary report
   const endTime = Date.now();
@@ -145,7 +161,7 @@ function runFullValidation() {
   console.log('\n🎯 Comprehensive Validation Summary');
   console.log('=' .repeat(60));
   console.log(`⏱️  Duration: ${duration}s`);
-  console.log(`🔍 Scripts run: ${validationScripts.length + 2}`);
+  console.log(`🔍 Scripts run: ${validationScripts.length + (skipTypes ? 0 : 1) + (skipBuild ? 0 : 1)}`);
   console.log(`❌ Errors: ${totalErrors}`);
   console.log(`⚠️  Warnings: ${totalWarnings}`);
   
@@ -168,13 +184,13 @@ function runFullValidation() {
 /**
  * Display help information
  */
-function showHelp() {
+function showHelp(): void {
   const validationScripts = getValidationScripts();
   
   console.log(`
-🛠️  Comprehensive AST-based Validation Suite for Devlog Project
+🛠️  Comprehensive Validation Suite for Devlog Project
 
-Usage: node scripts/validate-all-ast.js [options]
+Usage: tsx scripts/validation/validate-all.ts [options]
 
 Options:
   --help, -h          Show this help message
@@ -188,17 +204,17 @@ Available Validation Scripts:
 ${validationScripts.map(s => `  • ${s.name.padEnd(25)} - ${s.fileName}`).join('\n')}
 
 Examples:
-  node scripts/validate-all-ast.js                    # Run all validations
-  node scripts/validate-all-ast.js --script imports   # Run only import validation
-  node scripts/validate-all-ast.js --quick            # Quick validation (skip build/types)
-  node scripts/validate-all-ast.js --no-build         # Skip build check
+  tsx scripts/validation/validate-all.ts                    # Run all validations
+  tsx scripts/validation/validate-all.ts --script imports   # Run only import validation
+  tsx scripts/validation/validate-all.ts --quick            # Quick validation (skip build/types)
+  tsx scripts/validation/validate-all.ts --no-build         # Skip build check
 `);
 }
 
 /**
  * Run a specific validation script
  */
-function runSpecificScript(scriptName) {
+function runSpecificScript(scriptName: string): void {
   const validationScripts = getValidationScripts();
   const script = validationScripts.find(s => 
     s.name.toLowerCase().includes(scriptName.toLowerCase()) ||
@@ -247,7 +263,7 @@ const scriptIndex = args.indexOf('--script');
 if (scriptIndex !== -1 && args[scriptIndex + 1]) {
   const scriptName = args[scriptIndex + 1];
   runSpecificScript(scriptName);
-  return;
+  // Function will exit, so no further code runs
 }
 
 // Handle quick mode
@@ -256,12 +272,8 @@ if (args.includes('--quick')) {
 }
 
 // Handle build/type checking options
-if (args.includes('--no-build')) {
-  runBuildValidation = () => console.log('⏭️  Skipping build validation');
-}
-if (args.includes('--no-types')) {
-  runTypeCheck = () => console.log('⏭️  Skipping TypeScript check');
-}
+const skipBuild = args.includes('--no-build');
+const skipTypes = args.includes('--no-types');
 
 // Run the full validation suite
-runFullValidation();
+runFullValidation(skipBuild, skipTypes);

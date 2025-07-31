@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { DevlogList, PageLayout, Pagination } from '@/components';
-import { useDevlogData } from '@/hooks/useDevlogData';
+import { useDevlogContext } from '@/contexts/DevlogContext';
 import { useProject } from '@/contexts/ProjectContext';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   const router = useRouter();
 
   // Set the current project based on the route parameter when projects are available
-  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
+  // This is essential for the context to work with the correct project
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
@@ -28,7 +28,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   }, [projectId, projects, currentProject, setCurrentProject]);
 
   const {
-    filteredDevlogs,
+    devlogs,
     pagination,
     loading,
     filters,
@@ -39,7 +39,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     batchAddNote,
     goToPage,
     changePageSize,
-  } = useDevlogData({ projectId, useContext: false });
+  } = useDevlogContext();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
@@ -84,7 +84,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   return (
     <PageLayout>
       <DevlogList
-        devlogs={filteredDevlogs}
+        devlogs={devlogs}
         loading={loading}
         onViewDevlog={handleViewDevlog}
         onDeleteDevlog={handleDeleteDevlog}

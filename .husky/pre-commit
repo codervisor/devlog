@@ -8,14 +8,14 @@ npx lint-staged
 
 # Run custom import pattern validation
 echo "🔗 Validating import patterns..."
-node scripts/validation/validate-imports.js
+npm run validate:imports
 
 # Run API response standardization validation (AST-based)
 echo "📡 Validating API response standardization..."
-node scripts/validation/validate-api-standardization-ast.js
+npm run validate:api
 
 # Run response envelope format validation (AST-based)
 echo "📦 Validating response envelope format..."
-node scripts/validation/validate-response-envelopes-ast.js
+npm run validate:envelopes
 
 echo "✅ Pre-commit checks passed!"

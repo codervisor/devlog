@@ -1,7 +1,5 @@
 // Core unified hooks
-export { useDevlogData } from './useDevlogData';
 export { useDevlogDetails } from './useDevlogDetails';
-export { useStats, useTimeSeriesStats } from './useStatsData';
 
 // Specialized hooks
 export { useNotes } from './useNotes';

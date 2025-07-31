@@ -1,16 +1,24 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S pnpm exec tsx
 
 /**
  * Response Envelope Format Validation (AST-based)
  * Uses TypeScript compiler API for accurate envelope format analysis
  */
 
-const fs = require('fs');
-const path = require('path');
-const ts = require('typescript');
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
 
-const ERRORS = [];
-const WARNINGS = [];
+interface ValidationIssue {
+  file: string;
+  line: number;
+  type: string;
+  message: string;
+  suggestion: string;
+}
+
+const ERRORS: ValidationIssue[] = [];
+const WARNINGS: ValidationIssue[] = [];
 
 // Standard error codes
 const STANDARD_ERROR_CODES = [
@@ -24,13 +32,21 @@ const STANDARD_ERROR_CODES = [
   'FORBIDDEN',
   'METHOD_NOT_ALLOWED',
   'RATE_LIMITED'
-];
+] as const;
+
+interface EnvelopeStructure {
+  hasSuccess: boolean;
+  hasData: boolean;
+  hasMeta: boolean;
+  hasError: boolean;
+  propNames: string[];
+}
 
 /**
  * Create TypeScript program for AST analysis
  */
-function createProgram(filePaths) {
-  const compilerOptions = {
+function createProgram(filePaths: string[]): ts.Program {
+  const compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
@@ -51,20 +67,20 @@ function createProgram(filePaths) {
 /**
  * Visit AST nodes recursively with proper error handling
  */
-function visitNode(node, sourceFile, visitor) {
+function visitNode(node: ts.Node, sourceFile: ts.SourceFile, visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void): void {
   try {
     visitor(node, sourceFile);
     node.forEachChild(child => visitNode(child, sourceFile, visitor));
   } catch (error) {
     // Skip problematic nodes and continue
-    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error.message}`);
+    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 /**
  * Get line number from AST node with error handling
  */
-function getLineNumber(sourceFile, node) {
+function getLineNumber(sourceFile: ts.SourceFile, node: ts.Node): number {
   try {
     if (!sourceFile || !node) return 1;
     const lineAndChar = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
@@ -77,7 +93,7 @@ function getLineNumber(sourceFile, node) {
 /**
  * Get node text with error handling
  */
-function getNodeText(sourceFile, node) {
+function getNodeText(sourceFile: ts.SourceFile, node: ts.Node): string {
   try {
     if (!sourceFile || !node) return '';
     return node.getText(sourceFile);
@@ -89,14 +105,14 @@ function getNodeText(sourceFile, node) {
 /**
  * Check if object literal has envelope structure
  */
-function hasEnvelopeStructure(objectLiteral) {
+function hasEnvelopeStructure(objectLiteral: ts.ObjectLiteralExpression): EnvelopeStructure {
   const properties = objectLiteral.properties;
   const propNames = properties.map(prop => {
     if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
       return prop.name.text;
     }
     return null;
-  }).filter(Boolean);
+  }).filter(Boolean) as string[];
 
   const hasSuccess = propNames.includes('success');
   const hasData = propNames.includes('data');
@@ -109,7 +125,7 @@ function hasEnvelopeStructure(objectLiteral) {
 /**
  * Check if success response has proper envelope format
  */
-function validateSuccessEnvelope(node, sourceFile, filePath) {
+function validateSuccessEnvelope(node: ts.ObjectLiteralExpression, sourceFile: ts.SourceFile, filePath: string): void {
   const lineNum = getLineNumber(sourceFile, node);
   const envelope = hasEnvelopeStructure(node);
   
@@ -119,7 +135,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
       ts.isPropertyAssignment(prop) && 
       ts.isIdentifier(prop.name) && 
       prop.name.text === 'success'
-    );
+    ) as ts.PropertyAssignment | undefined;
     
     if (successProp && successProp.initializer) {
       const isSuccessTrue = successProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
@@ -150,7 +166,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
             ts.isPropertyAssignment(prop) && 
             ts.isIdentifier(prop.name) && 
             prop.name.text === 'meta'
-          );
+          ) as ts.PropertyAssignment | undefined;
           
           if (metaProp && ts.isObjectLiteralExpression(metaProp.initializer)) {
             const metaProps = metaProp.initializer.properties.map(prop => {
@@ -158,7 +174,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
                 return prop.name.text;
               }
               return null;
-            }).filter(Boolean);
+            }).filter(Boolean) as string[];
             
             if (!metaProps.includes('timestamp')) {
               WARNINGS.push({
@@ -187,7 +203,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
             ts.isPropertyAssignment(prop) && 
             ts.isIdentifier(prop.name) && 
             prop.name.text === 'error'
-          );
+          ) as ts.PropertyAssignment | undefined;
           
           if (errorProp && ts.isObjectLiteralExpression(errorProp.initializer)) {
             const errorProps = errorProp.initializer.properties.map(prop => {
@@ -195,7 +211,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
                 return prop.name.text;
               }
               return null;
-            }).filter(Boolean);
+            }).filter(Boolean) as string[];
             
             if (!errorProps.includes('code') || !errorProps.includes('message')) {
               ERRORS.push({
@@ -216,7 +232,7 @@ function validateSuccessEnvelope(node, sourceFile, filePath) {
 /**
  * Validate API route response envelope using AST
  */
-function validateResponseEnvelopeAST(filePath, sourceFile) {
+function validateResponseEnvelopeAST(filePath: string, sourceFile: ts.SourceFile): void {
   let hasSuccessEnvelope = false;
   let hasErrorEnvelope = false;
   let usesResponseUtils = false;
@@ -235,7 +251,7 @@ function validateResponseEnvelopeAST(filePath, sourceFile) {
           const firstArg = node.arguments[0];
           if (ts.isStringLiteral(firstArg)) {
             const errorCode = firstArg.text;
-            if (!STANDARD_ERROR_CODES.includes(errorCode)) {
+            if (!STANDARD_ERROR_CODES.includes(errorCode as any)) {
               WARNINGS.push({
                 file: filePath,
                 line: lineNum,
@@ -344,7 +360,7 @@ function validateResponseEnvelopeAST(filePath, sourceFile) {
 /**
  * Validate frontend envelope handling using AST
  */
-function validateEnvelopeHandlingAST(filePath, sourceFile) {
+function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile): void {
   let hasApiClientUsage = false;
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
@@ -427,7 +443,7 @@ function validateEnvelopeHandlingAST(filePath, sourceFile) {
 /**
  * Find and validate files using AST
  */
-function validateFilesWithAST(filePaths) {
+function validateFilesWithAST(filePaths: string[]): void {
   console.log(`🔍 Creating TypeScript program for ${filePaths.length} files...`);
   
   const program = createProgram(filePaths);
@@ -458,10 +474,10 @@ function validateFilesWithAST(filePaths) {
 /**
  * Find files to validate
  */
-function findEnvelopeValidationFiles() {
-  const files = [];
+function findEnvelopeValidationFiles(): string[] {
+  const files: string[] = [];
 
-  function findFilesRecursive(dir, predicate) {
+  function findFilesRecursive(dir: string, predicate: (file: string) => boolean): void {
     if (!fs.existsSync(dir)) return;
     
     const entries = fs.readdirSync(dir);
@@ -495,7 +511,7 @@ function findEnvelopeValidationFiles() {
 /**
  * Main validation function
  */
-function validateResponseEnvelopesAST() {
+export function validateResponseEnvelopesAST(): void {
   console.log('🔍 Validating response envelope format (AST-based)...');
 
   const files = findEnvelopeValidationFiles();
@@ -536,8 +552,6 @@ function validateResponseEnvelopesAST() {
 }
 
 // Run validation if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   validateResponseEnvelopesAST();
 }
-
-module.exports = { validateResponseEnvelopesAST };

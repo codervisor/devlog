@@ -1,16 +1,24 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S pnpm exec tsx
 
 /**
  * API Response Standardization Validation (AST-based)
  * Uses TypeScript compiler API for accurate code analysis
  */
 
-const fs = require('fs');
-const path = require('path');
-const ts = require('typescript');
+import fs from 'fs';
+import path from 'path';
+import ts from 'typescript';
 
-const ERRORS = [];
-const WARNINGS = [];
+interface ValidationIssue {
+  file: string;
+  line: number;
+  type: string;
+  message: string;
+  suggestion: string;
+}
+
+const ERRORS: ValidationIssue[] = [];
+const WARNINGS: ValidationIssue[] = [];
 
 // Standard error codes
 const STANDARD_ERROR_CODES = [
@@ -24,13 +32,13 @@ const STANDARD_ERROR_CODES = [
   'FORBIDDEN',
   'METHOD_NOT_ALLOWED',
   'RATE_LIMITED'
-];
+] as const;
 
 /**
  * Create TypeScript program for AST analysis
  */
-function createProgram(filePaths) {
-  const compilerOptions = {
+function createProgram(filePaths: string[]): ts.Program {
+  const compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
@@ -51,20 +59,20 @@ function createProgram(filePaths) {
 /**
  * Visit AST nodes recursively with proper error handling
  */
-function visitNode(node, sourceFile, visitor) {
+function visitNode(node: ts.Node, sourceFile: ts.SourceFile, visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void): void {
   try {
     visitor(node, sourceFile);
     node.forEachChild(child => visitNode(child, sourceFile, visitor));
   } catch (error) {
     // Skip problematic nodes and continue
-    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error.message}`);
+    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 /**
  * Get line number from AST node with error handling
  */
-function getLineNumber(sourceFile, node) {
+function getLineNumber(sourceFile: ts.SourceFile, node: ts.Node): number {
   try {
     if (!sourceFile || !node) return 1;
     const lineAndChar = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
@@ -77,7 +85,7 @@ function getLineNumber(sourceFile, node) {
 /**
  * Get node text with error handling
  */
-function getNodeText(sourceFile, node) {
+function getNodeText(sourceFile: ts.SourceFile, node: ts.Node): string {
   try {
     if (!sourceFile || !node) return '';
     return node.getText(sourceFile);
@@ -89,14 +97,14 @@ function getNodeText(sourceFile, node) {
 /**
  * Check if node is an API route file (has route.ts in path)
  */
-function isApiRoute(filePath) {
+function isApiRoute(filePath: string): boolean {
   return filePath.includes('/api/') && filePath.endsWith('route.ts');
 }
 
 /**
  * Check if node is a frontend file
  */
-function isFrontendFile(filePath) {
+function isFrontendFile(filePath: string): boolean {
   return (filePath.includes('/contexts/') || 
           filePath.includes('/hooks/') || 
           filePath.includes('/lib/') ||
@@ -107,18 +115,18 @@ function isFrontendFile(filePath) {
 /**
  * Validate API endpoint using AST
  */
-function validateAPIEndpointAST(filePath, sourceFile) {
+function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): void {
   let hasApiResponseUtil = false;
   let hasWithErrorHandling = false;
   let hasManualResponseJson = false;
-  let imports = new Set();
+  const imports = new Set<string>();
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
     
     // Check imports
     if (ts.isImportDeclaration(node)) {
-      const importPath = node.moduleSpecifier?.text;
+      const importPath = (node.moduleSpecifier as ts.StringLiteral)?.text;
       if (importPath) {
         imports.add(importPath);
         
@@ -161,7 +169,7 @@ function validateAPIEndpointAST(filePath, sourceFile) {
           node.expression.name.text === 'json') {
         
         // Check if it's not using standardized format
-        const parentText = getNodeText(sourceFile, node.parent);
+        const parentText = getNodeText(sourceFile, node.parent!);
         if (!parentText.includes('.success')) {
           hasManualResponseJson = true;
           ERRORS.push({
@@ -180,7 +188,7 @@ function validateAPIEndpointAST(filePath, sourceFile) {
         const firstArg = node.arguments[0];
         if (ts.isStringLiteral(firstArg)) {
           const errorCode = firstArg.text;
-          if (!STANDARD_ERROR_CODES.includes(errorCode)) {
+          if (!STANDARD_ERROR_CODES.includes(errorCode as any)) {
             WARNINGS.push({
               file: filePath,
               line: lineNum,
@@ -242,17 +250,17 @@ function validateAPIEndpointAST(filePath, sourceFile) {
 /**
  * Validate frontend API usage using AST
  */
-function validateFrontendAPIUsageAST(filePath, sourceFile) {
+function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile): void {
   let hasApiClientImport = false;
   let hasManualFetch = false;
-  let imports = new Set();
+  const imports = new Set<string>();
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
     
     // Check imports
     if (ts.isImportDeclaration(node)) {
-      const importPath = node.moduleSpecifier?.text;
+      const importPath = (node.moduleSpecifier as ts.StringLiteral)?.text;
       if (importPath) {
         imports.add(importPath);
         
@@ -352,7 +360,7 @@ function validateFrontendAPIUsageAST(filePath, sourceFile) {
 /**
  * Validate type definitions using AST
  */
-function validateTypeDefinitionsAST(filePath, sourceFile) {
+function validateTypeDefinitionsAST(filePath: string, sourceFile: ts.SourceFile): void {
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
     
@@ -368,7 +376,7 @@ function validateTypeDefinitionsAST(filePath, sourceFile) {
             return member.name.text;
           }
           return null;
-        }).filter(Boolean);
+        }).filter(Boolean) as string[];
         
         if (!memberNames.includes('success') || 
             !memberNames.includes('data') || 
@@ -391,7 +399,7 @@ function validateTypeDefinitionsAST(filePath, sourceFile) {
             return member.name.text;
           }
           return null;
-        }).filter(Boolean);
+        }).filter(Boolean) as string[];
         
         if (!memberNames.includes('code') || !memberNames.includes('message')) {
           WARNINGS.push({
@@ -410,7 +418,7 @@ function validateTypeDefinitionsAST(filePath, sourceFile) {
 /**
  * Find and validate files using AST
  */
-function validateFilesWithAST(filePaths) {
+function validateFilesWithAST(filePaths: string[]): void {
   console.log(`🔍 Creating TypeScript program for ${filePaths.length} files...`);
   
   const program = createProgram(filePaths);
@@ -440,10 +448,10 @@ function validateFilesWithAST(filePaths) {
 /**
  * Find relevant files for validation
  */
-function findValidationFiles() {
-  const files = [];
+function findValidationFiles(): string[] {
+  const files: string[] = [];
 
-  function findFilesRecursive(dir, predicate) {
+  function findFilesRecursive(dir: string, predicate: (file: string) => boolean): void {
     if (!fs.existsSync(dir)) return;
     
     const entries = fs.readdirSync(dir);
@@ -477,7 +485,7 @@ function findValidationFiles() {
 /**
  * Main validation function
  */
-function validateAPIStandardizationAST() {
+export function validateAPIStandardizationAST(): void {
   console.log('🔍 Validating API response standardization (AST-based)...');
 
   const files = findValidationFiles();
@@ -519,8 +527,6 @@ function validateAPIStandardizationAST() {
 }
 
 // Run validation if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   validateAPIStandardizationAST();
 }
-
-module.exports = { validateAPIStandardizationAST };

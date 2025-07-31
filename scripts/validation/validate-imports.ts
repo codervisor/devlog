@@ -1,19 +1,26 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S pnpm exec tsx
 
 /**
  * Custom import pattern validation for devlog monorepo
  * Validates ESM import patterns according to our coding standards
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-const ERRORS = [];
+interface ValidationError {
+  file: string;
+  line: number;
+  message: string;
+  suggestion: string;
+}
+
+const ERRORS: ValidationError[] = [];
 
 /**
  * Validate import patterns in a TypeScript file
  */
-function validateFile(filePath) {
+function validateFile(filePath: string): void {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
 
@@ -175,7 +182,7 @@ function validateFile(filePath) {
 /**
  * Recursively find TypeScript files
  */
-function findTSFiles(dir, files = []) {
+function findTSFiles(dir: string, files: string[] = []): string[] {
   const entries = fs.readdirSync(dir);
 
   for (const entry of entries) {
@@ -201,7 +208,7 @@ function findTSFiles(dir, files = []) {
 /**
  * Main validation function
  */
-function validateImportPatterns() {
+function validateImportPatterns(): void {
   console.log('🔍 Validating import patterns...');
 
   const packagesDir = path.join(process.cwd(), 'packages');

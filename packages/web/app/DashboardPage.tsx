@@ -2,15 +2,19 @@
 
 import React from 'react';
 import { Dashboard, PageLayout } from '@/components';
-import { useDevlogData } from '@/hooks/useDevlogData';
-import { useStats, useTimeSeriesStats } from '@/hooks/useStatsData';
+import { useDevlogContext } from '@/contexts/DevlogContext';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const { filteredDevlogs, loading: isLoadingDevlogs } = useDevlogData({ useContext: true });
-  const { stats, loading: isLoadingStats } = useStats({ useContext: true });
-  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats({ useContext: true });
+  const {
+    devlogs: filteredDevlogs,
+    loading: isLoadingDevlogs,
+    stats,
+    statsLoading: isLoadingStats,
+    timeSeriesStats: timeSeriesData,
+    timeSeriesLoading: isLoadingTimeSeries,
+  } = useDevlogContext();
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {

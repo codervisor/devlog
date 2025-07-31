@@ -32,7 +32,6 @@ interface DevlogContextType {
   loading: boolean;
   error: string | null;
   filters: DevlogFilter;
-  filteredDevlogs: DevlogEntry[];
   connected: boolean;
 
   // Stats state
@@ -249,11 +248,6 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentProject, devlogApiClient]);
 
-  // All filtering is now handled server-side - simply return the devlogs from API
-  const filteredDevlogs = useMemo(() => {
-    return devlogs;
-  }, [devlogs]);
-
   // CRUD operations
   const createDevlog = async (data: Partial<DevlogEntry>) => {
     if (!currentProject || !devlogApiClient) {
@@ -277,16 +271,12 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No project selected or API client unavailable');
     }
 
-    // Optimistically remove from state immediately to prevent race conditions
-    // This ensures the UI updates immediately, even if SSE events are delayed
-    setDevlogs((current) => current.filter((devlog) => devlog.id !== id));
-
     try {
       await devlogApiClient.delete(id);
     } catch (error) {
-      // If there's an error, refresh the list to restore correct state
-      await fetchDevlogs();
       throw error;
+    } finally {
+      await fetchDevlogs();
     }
   };
 
@@ -426,7 +416,6 @@ export function DevlogProvider({ children }: { children: React.ReactNode }) {
     loading,
     error,
     filters,
-    filteredDevlogs,
     connected,
     stats,
     statsLoading,

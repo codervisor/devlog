@@ -3,8 +3,7 @@
 import React, { useEffect } from 'react';
 import { Dashboard, PageLayout } from '@/components';
 import { useProject } from '@/contexts/ProjectContext';
-import { useDevlogData } from '@/hooks/useDevlogData';
-import { useStats, useTimeSeriesStats } from '@/hooks/useStatsData';
+import { useDevlogContext } from '@/contexts/DevlogContext';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -14,19 +13,18 @@ interface ProjectDetailsPageProps {
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   const { currentProject, projects, setCurrentProject } = useProject();
-  const { filteredDevlogs, loading: isLoadingDevlogs } = useDevlogData({
-    projectId,
-    useContext: false,
-  });
-  const { stats, loading: isLoadingStats } = useStats({ projectId, useContext: false });
-  const { timeSeriesData, loading: isLoadingTimeSeries } = useTimeSeriesStats({
-    projectId,
-    useContext: false,
-  });
+  const {
+    devlogs: filteredDevlogs,
+    loading: isLoadingDevlogs,
+    stats,
+    statsLoading: isLoadingStats,
+    timeSeriesStats: timeSeriesData,
+    timeSeriesLoading: isLoadingTimeSeries,
+  } = useDevlogContext();
   const router = useRouter();
 
   // Set the current project based on the route parameter when projects are available
-  // This is optional and only for UI context (breadcrumbs, navigation, etc.)
+  // This is essential for the context to work with the correct project
   useEffect(() => {
     const project = projects.find((p) => p.id === projectId);
     if (project && (!currentProject || currentProject.projectId !== projectId)) {
