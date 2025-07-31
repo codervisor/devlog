@@ -16,12 +16,18 @@
 - ❌ Never use `any` type without explicit justification
 - ❌ Never ignore error handling in async operations
 
-## � Development Workflow
+## 📁 Development Workflow
 
 - **Temp files**: Use `tmp/` folder for experiments (gitignored)
 - **Build testing**: Use `pnpm build:test` (doesn't break dev servers)
 - **Containers**: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
 - **Build order**: Core → MCP → Web (dependency chain)
+
+### Task Tracking
+- **Check existing work**: Search related devlogs before starting new tasks
+- **Create devlogs**: For features, refactoring, or multi-step work (>30min)
+- **Track progress**: Add notes after milestones, builds, or when blocked
+- **Complete with summary**: Document learnings and close when done
 
 ## 🎯 Essential Patterns
 
