@@ -37,6 +37,8 @@ export class DevlogService {
   private database: DataSource;
   private devlogRepository: Repository<DevlogEntryEntity>;
   private noteRepository: Repository<DevlogNoteEntity>;
+  private pgTrgmAvailable: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   private constructor(private projectId?: number) {
     // Database initialization will happen in ensureInitialized()
@@ -49,6 +51,18 @@ export class DevlogService {
    * Initialize the database connection if not already initialized
    */
   private async ensureInitialized(): Promise<void> {
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = this._initialize();
+    return this.initPromise;
+  }
+
+  /**
+   * Internal initialization method
+   */
+  private async _initialize(): Promise<void> {
     try {
       if (!this.database || !this.database.isInitialized) {
         console.log('[DevlogService] Getting initialized DataSource...');
@@ -60,10 +74,52 @@ export class DevlogService {
           this.database.entityMetadatas.length,
         );
         console.log('[DevlogService] Repository initialized:', !!this.devlogRepository);
+
+        // Check and ensure pg_trgm extension for PostgreSQL
+        await this.ensurePgTrgmExtension();
       }
     } catch (error) {
       console.error('[DevlogService] Failed to initialize:', error);
+      // Reset initPromise to allow retry
+      this.initPromise = null;
       throw error;
+    }
+  }
+
+  /**
+   * Check and ensure pg_trgm extension is available for PostgreSQL
+   */
+  private async ensurePgTrgmExtension(): Promise<void> {
+    try {
+      const storageType = getStorageType();
+      if (storageType !== 'postgres') {
+        this.pgTrgmAvailable = false;
+        return;
+      }
+
+      // Check if pg_trgm extension already exists
+      const extensionCheck = await this.database.query(
+        "SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'",
+      );
+
+      if (extensionCheck.length > 0) {
+        this.pgTrgmAvailable = true;
+        console.log('[DevlogService] pg_trgm extension is available');
+        return;
+      }
+
+      // Try to create the extension
+      try {
+        await this.database.query('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+        this.pgTrgmAvailable = true;
+        console.log('[DevlogService] pg_trgm extension created successfully');
+      } catch (createError) {
+        console.warn('[DevlogService] Could not create pg_trgm extension:', createError);
+        this.pgTrgmAvailable = false;
+      }
+    } catch (error) {
+      console.warn('[DevlogService] Failed to check pg_trgm extension:', error);
+      this.pgTrgmAvailable = false;
     }
   }
 
@@ -688,10 +744,8 @@ export class DevlogService {
     const minRelevance = searchOptions.minRelevance || 0.02;
 
     if (storageType === 'postgres') {
-      try {
-        // Check if pg_trgm extension is available
-        await this.database.query("SELECT * FROM pg_extension WHERE extname = 'pg_trgm'");
-
+      // Use cached pgTrgmAvailable flag to avoid race conditions
+      if (this.pgTrgmAvailable) {
         // PostgreSQL with pg_trgm similarity on concatenated fields
         queryBuilder
           .addSelect(
@@ -715,14 +769,12 @@ export class DevlogService {
                 COALESCE(devlog.technicalContext, '')
               ), 
               :query
-            ) > ${minRelevance}`,
+            ) > :minRelevance`,
           )
-          .setParameter('query', query);
-      } catch (error) {
-        console.warn(
-          '[DevlogService] pg_trgm extension not available, falling back to LIKE search',
-        );
-        // Fallback to LIKE search on concatenated fields
+          .setParameter('query', query)
+          .setParameter('minRelevance', minRelevance);
+      } else {
+        // Fallback to LIKE search if pg_trgm not available
         this.applySimpleLikeSearch(queryBuilder, query);
       }
     } else if (storageType === 'mysql') {
