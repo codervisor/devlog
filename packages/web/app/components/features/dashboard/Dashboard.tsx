@@ -29,25 +29,26 @@ import {
   formatTooltipValue,
 } from './chart-utils';
 import { useStickyHeaders } from '@/hooks/use-sticky-headers';
+import { DataContext } from '@/stores/base';
 
 interface DashboardProps {
-  stats: DevlogStats | null;
-  timeSeriesData: TimeSeriesStats | null;
-  isLoadingTimeSeries: boolean;
-  recentDevlogs: DevlogEntry[];
-  isLoadingDevlogs: boolean;
+  statsContext: DataContext<DevlogStats>;
+  timeSeriesStatsContext: DataContext<TimeSeriesStats>;
+  recentDevlogsContext: DataContext<DevlogEntry[]>;
   onViewDevlog: (devlog: DevlogEntry) => void;
 }
 
 export function Dashboard({
-  stats,
-  timeSeriesData,
-  isLoadingTimeSeries,
-  recentDevlogs,
-  isLoadingDevlogs,
+  statsContext,
+  timeSeriesStatsContext,
+  recentDevlogsContext,
   onViewDevlog,
 }: DashboardProps) {
   const router = useRouter();
+
+  const { data: stats, loading: statsLoading } = statsContext;
+  const { data: timeSeriesData, loading: timeSeriesLoading } = timeSeriesStatsContext;
+  const { data: recentDevlogs, loading: devlogsLoading } = recentDevlogsContext;
 
   // Format data for charts using utility function
   const chartData = React.useMemo(() => formatTimeSeriesData(timeSeriesData), [timeSeriesData]);
@@ -91,20 +92,12 @@ export function Dashboard({
     ].filter((item) => item.value > 0);
   }, [stats]);
 
-  // Setup sticky header detection
-  useStickyHeaders({
-    selectorClass: 'section-header',
-    stickyClass: 'is-sticky',
-    topOffset: 0,
-    dependencies: [],
-  });
-
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Charts Section */}
         <div className="space-y-6">
-          {isLoadingTimeSeries ? (
+          {timeSeriesLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -276,7 +269,7 @@ export function Dashboard({
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto">
-              {isLoadingDevlogs ? (
+              {devlogsLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 10 }).map((_, index) => (
                     <div
@@ -299,14 +292,14 @@ export function Dashboard({
                     </div>
                   ))}
                 </div>
-              ) : recentDevlogs.length === 0 ? (
+              ) : recentDevlogs?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="text-muted-foreground mb-2 text-2xl">📝</div>
                   <p className="text-sm text-muted-foreground">No devlogs found</p>
                 </div>
               ) : (
                 <div className="space-y-0">
-                  {recentDevlogs.map((devlog) => (
+                  {recentDevlogs?.map((devlog) => (
                     <div
                       key={devlog.id}
                       className="flex items-start space-x-4 p-4 border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"

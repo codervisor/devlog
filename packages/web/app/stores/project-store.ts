@@ -4,30 +4,27 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient, handleApiError } from '@/lib';
 import { Project } from '@codervisor/devlog-core';
+import { DataContext, getDefaultDataContext } from '@/stores/base';
 
 interface ProjectState {
   // State
   currentProjectId: number | null;
-  currentProject: Project | null;
-  projects: Project[];
-  loading: boolean;
-  error: string | null;
+  currentProjectContext: DataContext<Project>;
+  projectsContext: DataContext<Project[]>;
 
   // Actions
   setCurrentProjectId: (id: number | null) => void;
   fetchCurrentProject: () => Promise<void>;
   fetchProjects: () => Promise<void>;
-  clearError: () => void;
+  clearErrors: () => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     currentProjectId: null,
-    currentProject: null,
-    projects: [],
-    loading: true,
-    error: null,
+    currentProjectContext: getDefaultDataContext<Project>(),
+    projectsContext: getDefaultDataContext<Project[]>(),
 
     // Actions
     setCurrentProjectId: (id: number | null) => {
@@ -35,31 +32,100 @@ export const useProjectStore = create<ProjectState>()(
     },
     fetchCurrentProject: async () => {
       const currentProjectId = get().currentProjectId;
+      if (!currentProjectId) {
+        set((state) => ({
+          currentProjectContext: {
+            ...state.currentProjectContext,
+            loading: false,
+            error: 'No project ID selected',
+          },
+        }));
+        return;
+      }
+
       try {
+        set((state) => ({
+          currentProjectContext: {
+            ...state.currentProjectContext,
+            loading: true,
+            error: null,
+          },
+        }));
         const currentProject = await apiClient.get<Project>(`/api/projects/${currentProjectId}`);
-        set({ currentProject });
+        set((state) => ({
+          currentProjectContext: {
+            ...state.currentProjectContext,
+            data: currentProject,
+            error: null,
+          },
+        }));
       } catch (e) {
         const errorMessage = handleApiError(e);
-        set({ error: errorMessage });
+        set((state) => ({
+          currentProjectContext: {
+            ...state.currentProjectContext,
+            error: errorMessage,
+          },
+        }));
         console.error('Error fetching current project:', e);
+      } finally {
+        set((state) => ({
+          currentProjectContext: {
+            ...state.currentProjectContext,
+            loading: false,
+          },
+        }));
       }
     },
 
     fetchProjects: async () => {
       try {
-        set({ loading: true, error: null });
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            loading: true,
+            error: null,
+          },
+        }));
         const projectsList = await apiClient.get<Project[]>('/api/projects');
-        set({ projects: projectsList });
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            data: projectsList,
+            error: null,
+          },
+        }));
       } catch (err) {
         const errorMessage = handleApiError(err);
-        set({ error: errorMessage });
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            error: errorMessage,
+          },
+        }));
         console.error('Error loading projects:', err);
       } finally {
-        set({ loading: false });
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            loading: false,
+          },
+        }));
       }
     },
 
-    clearError: () => set({ error: null }),
+    clearErrors: () => {
+      set((state) => ({
+        currentProjectContext: {
+          ...state.currentProjectContext,
+          error: null,
+        },
+        projectsContext: {
+          ...state.projectsContext,
+          error: null,
+        },
+      }));
+    },
   })),
 );
 

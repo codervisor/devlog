@@ -19,7 +19,7 @@ import {
   getDefaultDataContext,
   getDefaultTableDataContext,
   TableDataContext,
-} from '@/stores/base'; // Helper function to get DevlogApiClient
+} from '@/stores/base';
 
 // Helper function to get DevlogApiClient
 const getDevlogApiClient = () => {
@@ -190,7 +190,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     fetchStats: async () => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -239,7 +239,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     fetchTimeSeriesStats: async () => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -398,7 +398,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     createDevlog: async (data: Partial<DevlogEntry>) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -409,7 +409,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     updateDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -421,7 +421,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     updateSelectedDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -460,7 +460,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     deleteDevlog: async (id: DevlogId) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -477,7 +477,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     batchUpdate: async (ids: DevlogId[], updates: any) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {
@@ -490,7 +490,7 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     batchDelete: async (ids: DevlogId[]) => {
-      const currentProject = useProjectStore.getState().currentProject;
+      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
       if (!currentProject || !devlogApiClient) {

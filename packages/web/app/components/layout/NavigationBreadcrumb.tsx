@@ -1,17 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/stores';
-import Link from 'next/link';
-import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon, Moon, Sun } from 'lucide-react';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon, FolderKanban } from 'lucide-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from '@/components/ui/breadcrumb';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,9 +15,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
-  const pathname = usePathname();
   const router = useRouter();
-  const { currentProject, currentProjectId, projects } = useProjectStore();
+  const { currentProjectContext, currentProjectId, projectsContext } = useProjectStore();
   const [switchingProject, setSwitchingProject] = useState(false);
 
   const getProjectInitials = (name: string) => {
@@ -63,7 +55,7 @@ export function NavigationBreadcrumb() {
     try {
       setSwitchingProject(true);
 
-      const targetProject = projects.find((p) => p.id === projectId);
+      const targetProject = projectsContext.data?.find((p) => p.id === projectId);
       if (!targetProject) {
         throw new Error('Project not found');
       }
@@ -81,24 +73,19 @@ export function NavigationBreadcrumb() {
   };
 
   const renderProjectDropdown = () => {
-    if (!currentProject) return null;
+    if (!currentProjectContext.data) return null;
 
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={switchingProject}
-            className="flex items-center gap-2 px-2 h-auto text-inherit hover:bg-accent"
-          >
-            <BookOpenIcon size={14} />
-            <span>{currentProject?.name}</span>
-            <ChevronDownIcon size={10} className="text-muted-foreground" />
-          </Button>
+          <div className="flex items-center gap-2 cursor-pointer rounded">
+            <FolderKanban size={14} />
+            <span>{currentProjectContext.data?.name}</span>
+            <ChevronDownIcon size={14} className="text-muted-foreground" />
+          </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          {projects.map((project) => {
+          {projectsContext.data?.map((project) => {
             const isCurrentProject = currentProjectId === project.id;
 
             return (
@@ -129,17 +116,7 @@ export function NavigationBreadcrumb() {
   return (
     <Breadcrumb className="navigation-breadcrumb">
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <FolderIcon size={14} />
-                <span>{currentProject?.name}</span>
-                <ChevronDownIcon size={10} className="text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-          </DropdownMenu>
-        </BreadcrumbItem>
+        <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );

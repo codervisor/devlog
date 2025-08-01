@@ -22,7 +22,6 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
-  const { currentProject } = useProjectStore();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -42,7 +41,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
 
     const pathParts = pathname.split('/').filter(Boolean);
 
-    // Dashboard page (/)
+    // Overview page (/)
     if (pathname === '/') {
       return [
         {
@@ -68,7 +67,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
     if (pathParts.length === 2 && pathParts[0] === 'projects') {
       return [
         {
-          key: 'dashboard',
+          key: 'overview',
           label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
@@ -84,7 +83,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
     if (pathParts.length === 3 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
       return [
         {
-          key: 'dashboard',
+          key: 'overview',
           label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
@@ -100,7 +99,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
     if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
       return [
         {
-          key: 'dashboard',
+          key: 'overview',
           label: 'Overview',
           icon: <LayoutDashboardIcon size={16} />,
         },
@@ -115,7 +114,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
     // Default fallback
     return [
       {
-        key: 'dashboard',
+        key: 'overview',
         label: 'Overview',
         icon: <LayoutDashboardIcon size={16} />,
       },
@@ -129,51 +128,16 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
 
   // Determine selected key based on current pathname and menu items
   const getSelectedKey = () => {
-    if (!mounted) return 'dashboard';
+    if (!mounted) return 'overview';
 
     const pathParts = pathname.split('/').filter(Boolean);
 
     if (pathname === '/' || pathname === '/projects') return 'projects';
-    if (pathParts.length === 2 && pathParts[0] === 'projects') return 'dashboard';
+    if (pathParts.length === 2 && pathParts[0] === 'projects') return 'overview';
     if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
     if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
 
-    return 'dashboard';
-  };
-
-  const handleMenuClick = ({ key }: { key: string }) => {
-    if (!mounted) return;
-
-    const pathParts = pathname.split('/').filter(Boolean);
-    const isInProjectContext = pathParts.length >= 2 && pathParts[0] === 'projects' && pathParts[1];
-    const projectId = isInProjectContext ? pathParts[1] : null;
-
-    switch (key) {
-      case 'dashboard':
-        if (projectId) {
-          // We're in a project context, go to the project dashboard
-          router.push(`/projects/${projectId}`);
-        } else {
-          // We're not in a project context, go to the main dashboard (which redirects to projects)
-          router.push('/');
-        }
-        break;
-      case 'projects':
-        router.push('/projects');
-        break;
-      case 'list':
-        // If a project is selected, go to that project's devlogs
-        // Otherwise, redirect to projects to select one first
-        if (currentProject) {
-          router.push(`/projects/${currentProject.projectId}/devlogs`);
-        } else if (projectId) {
-          // Use project from URL if currentProject is not available
-          router.push(`/projects/${projectId}/devlogs`);
-        } else {
-          router.push('/projects');
-        }
-        break;
-    }
+    return 'overview';
   };
 
   // Don't render menu items until mounted to prevent hydration issues
@@ -190,7 +154,6 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.key}>
               <SidebarMenuButton
-                onClick={() => handleMenuClick({ key: item.key })}
                 isActive={getSelectedKey() === item.key}
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium min-h-[44px] rounded-md"
               >

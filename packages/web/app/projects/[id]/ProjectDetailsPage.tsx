@@ -11,15 +11,27 @@ interface ProjectDetailsPageProps {
 }
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
-  const { setCurrentProjectId } = useProjectStore();
-
-  const { devlogsContext, statsContext, timeSeriesStatsContext } = useDevlogStore();
+  const { currentProjectId, setCurrentProjectId } = useProjectStore();
+  const {
+    devlogsContext,
+    statsContext,
+    timeSeriesStatsContext,
+    fetchDevlogs,
+    fetchStats,
+    fetchTimeSeriesStats,
+  } = useDevlogStore();
 
   const router = useRouter();
 
   useEffect(() => {
     setCurrentProjectId(projectId);
   }, [projectId]);
+
+  useEffect(() => {
+    fetchTimeSeriesStats();
+    fetchStats();
+    fetchDevlogs();
+  }, [currentProjectId]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
@@ -28,11 +40,9 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   return (
     <PageLayout>
       <Dashboard
-        stats={statsContext.data}
-        timeSeriesData={timeSeriesStatsContext.data}
-        isLoadingTimeSeries={timeSeriesStatsContext.loading}
-        recentDevlogs={devlogsContext.data?.slice(0, 20) || []}
-        isLoadingDevlogs={devlogsContext.loading}
+        statsContext={statsContext}
+        timeSeriesStatsContext={timeSeriesStatsContext}
+        recentDevlogsContext={devlogsContext}
         onViewDevlog={handleViewDevlog}
       />
     </PageLayout>

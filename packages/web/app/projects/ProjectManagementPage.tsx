@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -26,13 +26,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  PlusIcon,
-  SettingsIcon,
-  FolderIcon,
+  AlertTriangleIcon,
   DatabaseIcon,
   EyeIcon,
+  FolderIcon,
   LoaderIcon,
-  AlertTriangleIcon,
+  PlusIcon,
+  SettingsIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,11 +42,17 @@ interface ProjectFormData {
 }
 
 export function ProjectManagementPage() {
-  const { projects, currentProject, fetchProjects, loading, error } = useProjectStore();
+  const { currentProjectId, projectsContext, fetchProjects } = useProjectStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
   const router = useRouter();
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const { data: projects } = projectsContext;
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,17 +97,17 @@ export function ProjectManagementPage() {
 
   const getProjectStatusColor = (projectId: number) => {
     if (projectId === 1) return 'blue'; // Default project
-    if (currentProject?.projectId === projectId) return 'green';
+    if (currentProjectId === projectId) return 'green';
     return 'default';
   };
 
   const getProjectStatusText = (projectId: number) => {
     if (projectId === 1) return 'Default'; // Default project
-    if (currentProject?.projectId === projectId) return 'Active';
+    if (currentProjectId === projectId) return 'Active';
     return 'Available';
   };
 
-  if (loading) {
+  if (projectsContext.loading) {
     return (
       <PageLayout>
         <div className="flex flex-col items-center justify-center py-12">
@@ -112,14 +118,14 @@ export function ProjectManagementPage() {
     );
   }
 
-  if (error) {
+  if (projectsContext.error) {
     return (
       <PageLayout>
         <Alert variant="destructive" className="m-5 flex items-center gap-2">
           <AlertTriangleIcon size={16} />
           <div>
             <div className="font-semibold">Error Loading Projects</div>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{projectsContext.error}</AlertDescription>
           </div>
         </Alert>
       </PageLayout>
@@ -155,13 +161,11 @@ export function ProjectManagementPage() {
         <div className="px-6 py-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
-              {projects.map((project) => (
+              {projects?.map((project) => (
                 <Card
                   key={project.id}
                   className={`cursor-pointer transition-all hover:shadow-lg ${
-                    currentProject?.projectId === project.id
-                      ? 'border-primary shadow-primary/20'
-                      : ''
+                    currentProjectId === project.id ? 'border-primary shadow-primary/20' : ''
                   }`}
                   onClick={() => handleViewProject(project.id)}
                 >
@@ -206,19 +210,10 @@ export function ProjectManagementPage() {
                         <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
                       </div>
                       <div>
-                        <strong>Updated:</strong> {new Date(project.updatedAt).toLocaleDateString()}
+                        <strong>Last Accessed:</strong>{' '}
+                        {new Date(project.lastAccessedAt).toLocaleDateString()}
                       </div>
                     </div>
-
-                    {project.tags && project.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {project.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
                   </CardContent>
 
                   <CardFooter className="pt-0 flex gap-2">
@@ -251,7 +246,7 @@ export function ProjectManagementPage() {
               ))}
             </div>
 
-            {projects.length === 0 && (
+            {projects?.length === 0 && (
               <div className="min-h-[60vh] flex items-center justify-center">
                 <Card className="text-center p-16 border-dashed border-2 bg-muted/50 max-w-2xl w-full">
                   <FolderIcon size={80} className="mx-auto mb-8 text-muted-foreground" />

@@ -14,7 +14,7 @@ export function getDefaultDataContext<T>(): DataContext<T> {
   };
 }
 
-export interface TableDataContext<T, F> extends DataContext<T> {
+export interface TableDataContext<T, F = any> extends DataContext<T> {
   pagination: PaginationMeta;
   filters: F;
 }
