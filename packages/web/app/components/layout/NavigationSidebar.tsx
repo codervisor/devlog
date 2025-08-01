@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject } from '@/hooks/use-stores';
 import {
   Sidebar,
   SidebarContent,

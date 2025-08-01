@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { DevlogNote, NoteCategory } from '@codervisor/devlog-core';
 import { NoteApiClient, CreateNoteRequest, UpdateNoteRequest } from '@/lib';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject } from '@/hooks/use-stores';
 
 export interface UseNotesOptions {
   devlogId: string;

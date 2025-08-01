@@ -162,3 +162,4 @@ tmp/
 
 # Git worktree directories
 .wt/
+.vercel

@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { Dashboard, PageLayout } from '@/components';
-import { useProject } from '@/contexts/ProjectContext';
-import { useDevlogContext } from '@/contexts/DevlogContext';
+import { useProject } from '@/hooks/use-stores';
+import { useDevlogContext } from '@/hooks/use-stores';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 

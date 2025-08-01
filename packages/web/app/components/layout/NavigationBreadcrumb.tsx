@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject } from '@/hooks/use-stores';
 import Link from 'next/link';
 import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon } from 'lucide-react';
 import {

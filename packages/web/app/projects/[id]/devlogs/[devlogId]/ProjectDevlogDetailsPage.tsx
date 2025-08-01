@@ -2,8 +2,8 @@
 
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { DevlogDetails, PageLayout } from '@/components';
-import { useDevlogContext } from '@/contexts/DevlogContext';
-import { useProject } from '@/contexts/ProjectContext';
+import { useDevlogContext } from '@/hooks/use-stores';
+import { useProject } from '@/hooks/use-stores';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Dashboard, PageLayout } from '@/components';
-import { useDevlogContext } from '@/contexts/DevlogContext';
+import { useDevlogContext } from '@/hooks/use-stores';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
