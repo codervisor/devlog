@@ -160,14 +160,14 @@ export const useDevlogStore = create<DevlogState>()(
           if (filters.pagination.sortOrder) apiFilters.sortOrder = filters.pagination.sortOrder;
         }
 
-        const data = await devlogApiClient.list(apiFilters);
+        const { items: data, pagination } = await devlogApiClient.list(apiFilters);
         set((state) => ({
           devlogsContext: {
             ...state.devlogsContext,
             data,
             pagination: {
               ...state.devlogsContext.pagination,
-              // Update pagination if API returns pagination info
+              ...pagination,
             },
             error: null,
           },

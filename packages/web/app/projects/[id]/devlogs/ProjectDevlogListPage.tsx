@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { DevlogList, PageLayout, Pagination } from '@/components';
+import { DevlogList, PageLayout } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
 
   const {
     devlogsContext,
+    fetchDevlogs,
     setFilters,
     deleteDevlog,
     batchUpdate,
@@ -27,6 +28,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
 
   useEffect(() => {
     setCurrentProjectId(projectId);
+    fetchDevlogs();
   }, [projectId]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {

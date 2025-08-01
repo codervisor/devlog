@@ -7,6 +7,7 @@
  */
 
 import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from '@/schemas/responses';
+import { PaginatedResult, PaginationMeta } from '@codervisor/devlog-core';
 
 /**
  * Custom error class for API errors with structured information
@@ -236,12 +237,11 @@ export class ApiClient {
   async getList<T = any>(
     url: string,
     options?: Omit<RequestInit, 'method' | 'body'>,
-  ): Promise<T[]> {
-    const response = await this.request<{ items: T[]; pagination?: any }>(url, {
+  ): Promise<PaginatedResult<T>> {
+    return await this.request<PaginatedResult<T>>(url, {
       ...options,
       method: 'GET',
     });
-    return response.items;
   }
 }
 

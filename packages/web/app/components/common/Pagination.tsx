@@ -38,7 +38,7 @@ export function Pagination({
     const range = [];
     const rangeWithDots = [];
 
-    for (let i = Math.max(2, page - delta); i <= Math.min(totalPages - 1, page + delta); i++) {
+    for (let i = Math.max(2, page - delta); i <= Math.min(totalPages! - 1, page + delta); i++) {
       range.push(i);
     }
 
@@ -50,9 +50,9 @@ export function Pagination({
 
     rangeWithDots.push(...range);
 
-    if (page + delta < totalPages - 1) {
+    if (page + delta < totalPages! - 1) {
       rangeWithDots.push('...', totalPages);
-    } else if (totalPages > 1) {
+    } else if (totalPages! > 1) {
       rangeWithDots.push(totalPages);
     }
 
@@ -60,7 +60,7 @@ export function Pagination({
   };
 
   const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
-  const endItem = Math.min(page * limit, total);
+  const endItem = Math.min(page * limit, total!);
 
   if (total === 0) {
     return null;

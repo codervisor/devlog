@@ -1,13 +1,13 @@
 import type {
   DevlogEntry,
-  DevlogStats,
-  TimeSeriesStats,
-  DevlogStatus,
-  DevlogPriority,
-  DevlogType,
   DevlogId,
   DevlogNote,
-  NoteCategory,
+  DevlogPriority,
+  DevlogStats,
+  DevlogStatus,
+  DevlogType,
+  PaginatedResult,
+  TimeSeriesStats,
 } from '@codervisor/devlog-core';
 import { apiClient } from './api-client';
 import { CreateNoteRequest, UpdateNoteRequest } from '@/lib';
@@ -66,7 +66,7 @@ export class DevlogApiClient {
   /**
    * Get all devlogs for the project
    */
-  async list(filters?: DevlogFilters): Promise<DevlogEntry[]> {
+  async list(filters?: DevlogFilters): Promise<PaginatedResult<DevlogEntry>> {
     const params = new URLSearchParams();
 
     if (filters?.status) params.append('status', filters.status);
