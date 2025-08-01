@@ -5,6 +5,6 @@ set -euo pipefail
 echo "🧪 Running tests for all packages..."
 
 # Run tests with coverage
-pnpm -r test:coverage
+pnpm test:coverage
 
 echo "✅ All tests completed successfully"
