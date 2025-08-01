@@ -30,11 +30,10 @@ This document outlines the standardized file naming conventions for the web pack
 
 ## React Hooks (`.ts` or `.tsx` files)
 
-- **Pattern**: `useCamelCase.ts` or `useCamelCase.tsx`
+- **Pattern**: `use-kebab-case.ts`
 - **Examples**:
-  - `useDevlogData.ts`
-  - `useMobile.tsx`
-  - `useServerSentEvents.ts`
+  - `use-mobile.tsx`
+  - `use-sse.ts`
 
 ## UI Components (shadcn/ui convention)
 
@@ -60,7 +59,7 @@ This document outlines the standardized file naming conventions for the web pack
 
 ## Schema/Type Files
 
-- **Pattern**: `camelCase.ts`
+- **Pattern**: `kebab-case.ts`
 - **Examples**:
   - `devlog.ts`
   - `project.ts`
@@ -81,7 +80,7 @@ This document outlines the standardized file naming conventions for the web pack
 
 ## Directory Naming
 
-- **Pattern**: `camelCase` for most directories
+- **Pattern**: `kebab-case` for most directories
 - **Examples**:
   - `components/`
   - `contexts/`

@@ -28,7 +28,7 @@ import {
   formatTooltipLabel,
   formatTooltipValue,
 } from './chart-utils';
-import { useStickyHeaders } from '@/hooks/useStickyHeaders';
+import { useStickyHeaders } from '@/hooks/use-sticky-headers';
 
 interface DashboardProps {
   stats: DevlogStats | null;

@@ -15,7 +15,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
-import { useNotes } from '@/hooks/useNotes';
+import { useNotes } from '@/hooks/use-notes';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import {
@@ -27,7 +27,7 @@ import {
   typeOptions,
 } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
-import { useStickyHeaders } from '@/hooks/useStickyHeaders';
+import { useStickyHeaders } from '@/hooks/use-sticky-headers';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
 
 interface DevlogDetailsProps {

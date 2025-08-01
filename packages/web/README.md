@@ -73,10 +73,10 @@ Real-time updates are implemented using Server-Sent Events instead of WebSockets
 ### Usage
 
 ```typescript
-import { useServerSentEvents } from '@/hooks/useServerSentEvents';
+import { useSse } from '@/hooks/useSse';
 
 function MyComponent() {
-  const { connected, subscribe } = useServerSentEvents();
+  const { connected, subscribe } = useSse();
 
   useEffect(() => {
     subscribe('devlog-updated', (devlog) => {

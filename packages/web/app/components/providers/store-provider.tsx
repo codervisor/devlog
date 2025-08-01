@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { initializeProjectStore } from '@/stores';
-import { useServerSentEvents } from '@/hooks/useServerSentEvents';
+import { useSse } from '@/hooks/use-sse';
 import { useDevlogStore } from '@/stores';
 
 /**
@@ -10,7 +10,7 @@ import { useDevlogStore } from '@/stores';
  * This replaces the need for React Context providers
  */
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const { connected, subscribe, unsubscribe } = useServerSentEvents();
+  const { connected, subscribe, unsubscribe } = useSse();
   const { setConnected, handleDevlogCreated, handleDevlogUpdated, handleDevlogDeleted } =
     useDevlogStore();
 

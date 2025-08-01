@@ -6,7 +6,7 @@ interface SSEMessage {
   timestamp: string;
 }
 
-export function useServerSentEvents() {
+export function useSse() {
   const [connected, setConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const listenersRef = useRef<Map<string, (data: any) => void>>(new Map());
@@ -47,7 +47,7 @@ export function useServerSentEvents() {
             window.dispatchEvent(
               new CustomEvent('sse-message', {
                 detail: message,
-              })
+              }),
             );
           }
         } catch (error) {
