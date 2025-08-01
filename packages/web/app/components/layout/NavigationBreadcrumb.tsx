@@ -11,11 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
   const router = useRouter();
-  const { currentProjectContext, currentProjectId, projectsContext } = useProjectStore();
+  const { currentProjectContext, currentProjectId, projectsContext, fetchProjects } =
+    useProjectStore();
 
   const getProjectInitials = (name: string) => {
     return name
@@ -66,11 +68,27 @@ export function NavigationBreadcrumb() {
     }
   };
 
+  const handleDropdownOpenChange = (open: boolean) => {
+    if (open) {
+      // Load projects when dropdown is opened
+      fetchProjects();
+    }
+  };
+
   const renderProjectDropdown = () => {
-    if (!currentProjectContext.data) return null;
+    // Show skeleton if current project is loading
+    if (currentProjectContext.loading) {
+      return (
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-4" />
+        </div>
+      );
+    }
 
     return (
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={handleDropdownOpenChange}>
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer rounded">
             <FolderKanban size={14} />
@@ -79,29 +97,42 @@ export function NavigationBreadcrumb() {
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          {projectsContext.data?.map((project) => {
-            const isCurrentProject = currentProjectId === project.id;
+          {/* Show skeleton items if projects list is loading */}
+          {projectsContext.loading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <DropdownMenuItem key={index} disabled className="flex items-center gap-3 p-3">
+                  <Skeleton className="w-6 h-6 rounded-full flex-shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-8" />
+                  </div>
+                </DropdownMenuItem>
+              ))
+            : projectsContext.data?.map((project) => {
+                const isCurrentProject = currentProjectId === project.id;
 
-            return (
-              <DropdownMenuItem
-                key={project.id}
-                disabled={isCurrentProject}
-                onClick={() => !isCurrentProject && switchProject(project.id)}
-                className="flex items-center gap-3 p-3 cursor-pointer"
-              >
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${getProjectColor(project.name)}`}
-                >
-                  {getProjectInitials(project.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{project.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{project.id}</div>
-                </div>
-                {isCurrentProject && <CheckIcon size={14} className="text-primary flex-shrink-0" />}
-              </DropdownMenuItem>
-            );
-          })}
+                return (
+                  <DropdownMenuItem
+                    key={project.id}
+                    disabled={isCurrentProject}
+                    onClick={() => !isCurrentProject && switchProject(project.id)}
+                    className="flex items-center gap-3 p-3 cursor-pointer"
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${getProjectColor(project.name)}`}
+                    >
+                      {getProjectInitials(project.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{project.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{project.id}</div>
+                    </div>
+                    {isCurrentProject && (
+                      <CheckIcon size={14} className="text-primary flex-shrink-0" />
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
         </DropdownMenuContent>
       </DropdownMenu>
     );
