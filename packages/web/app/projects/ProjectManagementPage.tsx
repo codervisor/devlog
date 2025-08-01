@@ -5,15 +5,7 @@ import { useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -27,12 +19,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   AlertTriangleIcon,
-  DatabaseIcon,
-  EyeIcon,
+  ChevronRight,
   FolderIcon,
   LoaderIcon,
   PlusIcon,
-  SettingsIcon,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,7 +33,7 @@ interface ProjectFormData {
 }
 
 export function ProjectManagementPage() {
-  const { currentProjectId, projectsContext, fetchProjects } = useProjectStore();
+  const { projectsContext, fetchProjects } = useProjectStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
@@ -50,7 +41,7 @@ export function ProjectManagementPage() {
 
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+  }, []);
 
   const { data: projects } = projectsContext;
 
@@ -95,29 +86,6 @@ export function ProjectManagementPage() {
     router.push(`/projects/${projectId}`);
   };
 
-  const getProjectStatusColor = (projectId: number) => {
-    if (projectId === 1) return 'blue'; // Default project
-    if (currentProjectId === projectId) return 'green';
-    return 'default';
-  };
-
-  const getProjectStatusText = (projectId: number) => {
-    if (projectId === 1) return 'Default'; // Default project
-    if (currentProjectId === projectId) return 'Active';
-    return 'Available';
-  };
-
-  if (projectsContext.loading) {
-    return (
-      <PageLayout>
-        <div className="flex flex-col items-center justify-center py-12">
-          <LoaderIcon className="h-8 w-8 animate-spin mb-4" />
-          <div>Loading projects...</div>
-        </div>
-      </PageLayout>
-    );
-  }
-
   if (projectsContext.error) {
     return (
       <PageLayout>
@@ -133,141 +101,68 @@ export function ProjectManagementPage() {
   }
 
   return (
-    <PageLayout
-      actions={
-        <Button
-          size="lg"
-          onClick={() => setIsModalVisible(true)}
-          className="flex items-center gap-2"
-        >
-          <PlusIcon size={16} />
-          New Project
-        </Button>
-      }
-    >
+    <PageLayout>
       <div className="w-full max-w-full">
-        <div className="px-6 py-6 border-b bg-background">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-              <FolderIcon size={24} />
-              Projects
-            </h2>
-            <p className="text-muted-foreground text-base">
-              Manage your development projects and view their dashboards
-            </p>
-          </div>
-        </div>
-
-        <div className="px-6 py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
-              {projects?.map((project) => (
-                <Card
-                  key={project.id}
-                  className={`cursor-pointer transition-all hover:shadow-lg ${
-                    currentProjectId === project.id ? 'border-primary shadow-primary/20' : ''
-                  }`}
-                  onClick={() => handleViewProject(project.id)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FolderIcon size={20} />
-                        <CardTitle className="text-lg">{project.name}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={
-                            getProjectStatusColor(project.id) === 'green' ? 'default' : 'secondary'
-                          }
-                        >
-                          {getProjectStatusText(project.id)}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toast.info('Project settings coming soon');
-                          }}
-                        >
-                          <SettingsIcon size={16} />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pb-3">
-                    <CardDescription className="line-clamp-2 mb-4">
-                      {project.description || 'No description provided'}
-                    </CardDescription>
-
-                    <div className="text-xs text-muted-foreground space-y-1 mb-4">
-                      <div>
-                        <strong>ID:</strong> {project.id}
-                      </div>
-                      <div>
-                        <strong>Created:</strong> {new Date(project.createdAt).toLocaleDateString()}
-                      </div>
-                      <div>
-                        <strong>Last Accessed:</strong>{' '}
-                        {new Date(project.lastAccessedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="pt-0 flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 flex items-center gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewProject(project.id);
-                      }}
-                    >
-                      <EyeIcon size={14} />
-                      Dashboard
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 flex items-center gap-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewProject(project.id);
-                      }}
-                    >
-                      <DatabaseIcon size={14} />
-                      Stats
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button className="bg-primary">New Project</Button>
+            <div className="relative">
+              <Input
+                className="pl-10 max-w-[400px] focus:shadow"
+                placeholder="Search for a project"
+              />
+              <Search
+                size="14"
+                className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
             </div>
-
-            {projects?.length === 0 && (
-              <div className="min-h-[60vh] flex items-center justify-center">
-                <Card className="text-center p-16 border-dashed border-2 bg-muted/50 max-w-2xl w-full">
-                  <FolderIcon size={80} className="mx-auto mb-8 text-muted-foreground" />
-                  <h3 className="text-2xl font-semibold mb-4 text-muted-foreground">
-                    No Projects Found
-                  </h3>
-                  <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
-                    Create your first project to get started with organizing your development work.
-                  </p>
-                  <Button
-                    size="lg"
-                    onClick={() => setIsModalVisible(true)}
-                    className="flex items-center gap-2 px-8 py-3"
-                  >
-                    <PlusIcon size={18} />
-                    Create First Project
-                  </Button>
-                </Card>
-              </div>
-            )}
           </div>
+          <div className="flex items-center gap-6 flex-wrap">
+            {projects?.map((project) => (
+              <Card
+                key={project.id}
+                className="w-[360px] h-[180px] cursor-pointer transition-all hover:bg-muted/50"
+                onClick={() => handleViewProject(project.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg">{project.name}</CardTitle>
+                    <div className="flex items-center gap-2 h-7">
+                      <ChevronRight size={16} />
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pb-3">
+                  <CardDescription className="line-clamp-2 mb-4">
+                    {project.description || 'No description provided'}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {projects?.length === 0 && (
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <Card className="text-center p-16 border-dashed border-2 bg-muted/50 max-w-2xl w-full">
+                <FolderIcon size={80} className="mx-auto mb-8 text-muted-foreground" />
+                <h3 className="text-2xl font-semibold mb-4 text-muted-foreground">
+                  No Projects Found
+                </h3>
+                <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
+                  Create your first project to get started with organizing your development work.
+                </p>
+                <Button
+                  size="lg"
+                  onClick={() => setIsModalVisible(true)}
+                  className="flex items-center gap-2 px-8 py-3"
+                >
+                  <PlusIcon size={18} />
+                  Create First Project
+                </Button>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 

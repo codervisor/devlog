@@ -33,28 +33,6 @@ export function NavigationBreadcrumb() {
       .substring(0, 2);
   };
 
-  const getProjectColor = (name: string) => {
-    const colors = [
-      'bg-blue-500',
-      'bg-green-500',
-      'bg-yellow-500',
-      'bg-red-500',
-      'bg-purple-500',
-      'bg-cyan-500',
-      'bg-pink-500',
-      'bg-orange-500',
-      'bg-lime-500',
-      'bg-indigo-500',
-    ];
-
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    return colors[Math.abs(hash) % colors.length];
-  };
-
   const switchProject = async (projectId: number) => {
     if (currentProjectId === projectId) return;
 
@@ -124,11 +102,6 @@ export function NavigationBreadcrumb() {
                     onClick={() => !isCurrentProject && switchProject(project.id)}
                     className="flex items-center gap-3 p-3 cursor-pointer"
                   >
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${getProjectColor(project.name)}`}
-                    >
-                      {getProjectInitials(project.name)}
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{project.name}</div>
                       <div className="text-xs text-muted-foreground truncate">{project.id}</div>
