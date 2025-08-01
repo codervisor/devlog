@@ -190,10 +190,9 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     fetchStats: async () => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
-      if (!currentProject || !devlogApiClient) {
+      if (!devlogApiClient) {
         set((state) => ({
           statsContext: {
             ...state.statsContext,
@@ -239,10 +238,9 @@ export const useDevlogStore = create<DevlogState>()(
     },
 
     fetchTimeSeriesStats: async () => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
       const devlogApiClient = getDevlogApiClient();
 
-      if (!currentProject || !devlogApiClient) {
+      if (!devlogApiClient) {
         set((state) => ({
           timeSeriesStatsContext: {
             ...state.timeSeriesStatsContext,

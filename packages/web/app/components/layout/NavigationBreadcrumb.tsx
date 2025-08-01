@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/stores';
-import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon, FolderKanban } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, FolderKanban } from 'lucide-react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from '@/components/ui/breadcrumb';
 import {
   DropdownMenu,
@@ -11,13 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
   const router = useRouter();
   const { currentProjectContext, currentProjectId, projectsContext } = useProjectStore();
-  const [switchingProject, setSwitchingProject] = useState(false);
 
   const getProjectInitials = (name: string) => {
     return name
@@ -50,11 +48,9 @@ export function NavigationBreadcrumb() {
   };
 
   const switchProject = async (projectId: number) => {
-    if (switchingProject || currentProjectId === projectId) return;
+    if (currentProjectId === projectId) return;
 
     try {
-      setSwitchingProject(true);
-
       const targetProject = projectsContext.data?.find((p) => p.id === projectId);
       if (!targetProject) {
         throw new Error('Project not found');
@@ -67,8 +63,6 @@ export function NavigationBreadcrumb() {
     } catch (error) {
       console.error('Error switching project:', error);
       toast.error('Failed to switch project');
-    } finally {
-      setSwitchingProject(false);
     }
   };
 

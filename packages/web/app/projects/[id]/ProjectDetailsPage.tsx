@@ -28,9 +28,11 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   }, [projectId]);
 
   useEffect(() => {
-    fetchTimeSeriesStats();
-    fetchStats();
-    fetchDevlogs();
+    if (currentProjectId) {
+      fetchTimeSeriesStats();
+      fetchStats();
+      fetchDevlogs();
+    }
   }, [currentProjectId]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {

@@ -28,7 +28,6 @@ import {
   formatTooltipLabel,
   formatTooltipValue,
 } from './chart-utils';
-import { useStickyHeaders } from '@/hooks/use-sticky-headers';
 import { DataContext } from '@/stores/base';
 
 interface DashboardProps {
@@ -97,69 +96,23 @@ export function Dashboard({
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Charts Section */}
         <div className="space-y-6">
-          {timeSeriesLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Development Activity (Last 30 Days)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <Skeleton key={i} className="h-4 w-full" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <Skeleton key={i} className="h-4 w-full" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Progress & Current Workload</CardTitle>
-                </CardHeader>
-                <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Chart - Time Series */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Progress & Current Workload</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {timeSeriesLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : chartData.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="text-muted-foreground mb-2">📊</div>
                     <p className="text-sm text-muted-foreground">
                       No development activity data available yet
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="text-muted-foreground mb-2">📈</div>
-                    <p className="text-sm text-muted-foreground">
-                      No status distribution data available yet
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Progress & Current Workload</CardTitle>
-                </CardHeader>
-                <CardContent>
+                ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <ComposedChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -219,13 +172,26 @@ export function Dashboard({
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Right Chart - Status Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Status Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : pieChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="text-muted-foreground mb-2">📈</div>
+                    <p className="text-sm text-muted-foreground">
+                      No status distribution data available yet
+                    </p>
+                  </div>
+                ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -256,10 +222,10 @@ export function Dashboard({
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Recent Devlogs Section */}
