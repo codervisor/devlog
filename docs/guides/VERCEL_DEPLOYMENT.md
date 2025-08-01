@@ -100,7 +100,6 @@ No configuration files needed! 🎉
 
 ### Monorepo Dependencies
 - This setup deploys the entire monorepo to handle workspace dependencies
-- If you prefer, you can use Turborepo for better caching (see `turbo.json`)
 
 ## 📁 File Structure
 
@@ -108,7 +107,6 @@ No configuration files needed! 🎉
 devlog/                    # Repository root
 ├── vercel.json           # Vercel deployment config
 ├── .env.example          # Environment variables template
-├── turbo.json           # Optional: Turborepo config
 └── packages/
     ├── core/            # @codervisor/devlog-core (auto-detects DB from env vars)
     └── web/             # @codervisor/devlog-web package (deployed)

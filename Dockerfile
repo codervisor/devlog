@@ -14,7 +14,6 @@ WORKDIR /app
 
 # Copy workspace configuration files
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY turbo.json ./
 
 # ========================================
 # Dependencies stage

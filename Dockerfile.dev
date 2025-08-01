@@ -14,7 +14,6 @@ WORKDIR /app
 
 # Copy package files
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY turbo.json ./
 
 # Copy package files for web application dependencies only
 COPY packages/ai/package.json ./packages/ai/
