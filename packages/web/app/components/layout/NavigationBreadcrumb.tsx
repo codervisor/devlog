@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useProjectStore } from '@/stores';
-import { CheckIcon, ChevronDownIcon, FolderKanban } from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, Package } from 'lucide-react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from '@/components/ui/breadcrumb';
 import {
   DropdownMenu,
@@ -16,8 +16,14 @@ import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
   const router = useRouter();
+  const pathname = usePathname();
   const { currentProjectContext, currentProjectId, projectsContext, fetchProjects } =
     useProjectStore();
+
+  // Don't show breadcrumb on the home or project list page
+  if (['/', '/projects'].includes(pathname)) {
+    return null;
+  }
 
   const getProjectInitials = (name: string) => {
     return name
@@ -91,7 +97,7 @@ export function NavigationBreadcrumb() {
       <DropdownMenu onOpenChange={handleDropdownOpenChange}>
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer rounded">
-            <FolderKanban size={14} />
+            <Package size={14} />
             <span>{currentProjectContext.data?.name}</span>
             <ChevronDownIcon size={14} className="text-muted-foreground" />
           </div>
