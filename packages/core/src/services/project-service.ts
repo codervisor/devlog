@@ -6,7 +6,7 @@
  */
 
 import { DataSource, Repository } from 'typeorm';
-import type { ProjectMetadata } from '../types/project.js';
+import type { Project } from '../types/project.js';
 import { ProjectEntity } from '../entities/project.entity.js';
 import { getDataSource } from '../utils/typeorm-config.js';
 import { ProjectValidator } from '../validation/project-schemas.js';
@@ -57,7 +57,7 @@ export class ProjectService {
    * Create default project
    */
   private async createDefaultProject(): Promise<void> {
-    const defaultProject: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'> = {
+    const defaultProject: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'> = {
       name: 'Default Project',
       description: 'Default devlog project',
     };
@@ -73,7 +73,7 @@ export class ProjectService {
     await this.repository.save(entity);
   }
 
-  async list(): Promise<ProjectMetadata[]> {
+  async list(): Promise<Project[]> {
     await this.ensureInitialized(); // Ensure initialization
 
     const entities = await this.repository.find({
@@ -82,7 +82,7 @@ export class ProjectService {
     return entities.map((entity) => entity.toProjectMetadata());
   }
 
-  async get(id: number): Promise<ProjectMetadata | null> {
+  async get(id: number): Promise<Project | null> {
     await this.ensureInitialized(); // Ensure initialization
 
     const entity = await this.repository.findOne({ where: { id } });
@@ -98,9 +98,7 @@ export class ProjectService {
     return entity.toProjectMetadata();
   }
 
-  async create(
-    project: Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>,
-  ): Promise<ProjectMetadata> {
+  async create(project: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>): Promise<Project> {
     await this.ensureInitialized(); // Ensure initialization
 
     // Validate input data
@@ -132,7 +130,7 @@ export class ProjectService {
     return savedEntity.toProjectMetadata();
   }
 
-  async update(id: number, updates: Partial<ProjectMetadata>): Promise<ProjectMetadata> {
+  async update(id: number, updates: Partial<Project>): Promise<Project> {
     await this.ensureInitialized(); // Ensure initialization
 
     // Validate project ID

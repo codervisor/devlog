@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { formatTimeAgoWithTooltip, getColorHex, getStatusColor } from '@/lib';
+import { formatTimeAgoWithTooltip, getStatusChartColor } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import {
   CHART_COLORS,
@@ -57,36 +57,36 @@ export function Dashboard({
     if (!stats) return [];
 
     return [
-      { name: 'New', value: stats.byStatus['new'] || 0, color: getColorHex(getStatusColor('new')) },
+      { name: 'New', value: stats.byStatus['new'] || 0, color: getStatusChartColor('new') },
       {
         name: 'In Progress',
         value: stats.byStatus['in-progress'] || 0,
-        color: getColorHex(getStatusColor('in-progress')),
+        color: getStatusChartColor('in-progress'),
       },
       {
         name: 'Blocked',
         value: stats.byStatus['blocked'] || 0,
-        color: getColorHex(getStatusColor('blocked')),
+        color: getStatusChartColor('blocked'),
       },
       {
         name: 'In Review',
         value: stats.byStatus['in-review'] || 0,
-        color: getColorHex(getStatusColor('in-review')),
+        color: getStatusChartColor('in-review'),
       },
       {
         name: 'Testing',
         value: stats.byStatus['testing'] || 0,
-        color: getColorHex(getStatusColor('testing')),
+        color: getStatusChartColor('testing'),
       },
       {
         name: 'Done',
         value: stats.byStatus['done'] || 0,
-        color: getColorHex(getStatusColor('done')),
+        color: getStatusChartColor('done'),
       },
       {
         name: 'Cancelled',
         value: stats.byStatus['cancelled'] || 0,
-        color: getColorHex(getStatusColor('cancelled')),
+        color: getStatusChartColor('cancelled'),
       },
     ].filter((item) => item.value > 0);
   }, [stats]);

@@ -43,22 +43,6 @@ export function ThemeToggle() {
             <div>{theme === name && <Check className="h-4 w-4" />}</div>
           </DropdownMenuItem>
         ))}
-        {/* Uncomment the following lines if you want to allow users to select themes manually */}
-        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('light')}>*/}
-        {/*  <Sun className="mr-2 h-4 w-4" />*/}
-        {/*  <span>Light</span>*/}
-        {/*  {theme === 'light' && <Check />}*/}
-        {/*</DropdownMenuItem>*/}
-        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('dark')}>*/}
-        {/*  <Moon className="mr-2 h-4 w-4" />*/}
-        {/*  <span>Dark</span>*/}
-        {/*  {theme === 'dark' && <Check />}*/}
-        {/*</DropdownMenuItem>*/}
-        {/*<DropdownMenuItem className="cursor-pointer" onClick={() => setTheme('system')}>*/}
-        {/*  <Monitor className="mr-2 h-4 w-4" />*/}
-        {/*  <span>System</span>*/}
-        {/*  {theme === 'system' && <Check />}*/}
-        {/*</DropdownMenuItem>*/}
       </DropdownMenuContent>
     </DropdownMenu>
   );

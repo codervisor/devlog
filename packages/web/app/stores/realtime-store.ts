@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { useDevlogStore } from './devlog-store';
-import { useNotesStore } from './notes-store';
 
 interface SSEMessage {
   type: string;
@@ -60,9 +59,6 @@ export const useRealtimeStore = create<RealtimeState>()(
           eventSource,
           reconnectAttempts: 0,
         });
-
-        // Update devlog store connection status
-        useDevlogStore.getState().setConnected(true);
       };
 
       eventSource.onmessage = (event) => {
@@ -101,9 +97,6 @@ export const useRealtimeStore = create<RealtimeState>()(
           reconnectAttempts: currentState.reconnectAttempts + 1,
         });
 
-        // Update devlog store connection status
-        useDevlogStore.getState().setConnected(false);
-
         // Attempt to reconnect if under limit
         if (currentState.reconnectAttempts < currentState.maxReconnectAttempts) {
           setTimeout(
@@ -129,9 +122,6 @@ export const useRealtimeStore = create<RealtimeState>()(
           connected: false,
           reconnectAttempts: 0,
         });
-
-        // Update devlog store connection status
-        useDevlogStore.getState().setConnected(false);
       }
     },
 
@@ -149,41 +139,8 @@ export const useRealtimeStore = create<RealtimeState>()(
       // Route messages to appropriate stores
       switch (type) {
         case 'devlog_created':
-          if (data) {
-            useDevlogStore.getState().handleDevlogCreated(data);
-          }
-          break;
-
         case 'devlog_updated':
-          if (data) {
-            useDevlogStore.getState().handleDevlogUpdated(data);
-          }
-          break;
-
         case 'devlog_deleted':
-          if (data) {
-            useDevlogStore.getState().handleDevlogDeleted(data);
-          }
-          break;
-
-        case 'note_created':
-          if (data && data.devlogId) {
-            useNotesStore.getState().handleNoteCreated(data.devlogId, data.note);
-          }
-          break;
-
-        case 'note_updated':
-          if (data && data.devlogId) {
-            useNotesStore.getState().handleNoteUpdated(data.devlogId, data.note);
-          }
-          break;
-
-        case 'note_deleted':
-          if (data && data.devlogId && data.noteId) {
-            useNotesStore.getState().handleNoteDeleted(data.devlogId, data.noteId);
-          }
-          break;
-
         default:
           console.log('Unhandled SSE message type:', type);
       }

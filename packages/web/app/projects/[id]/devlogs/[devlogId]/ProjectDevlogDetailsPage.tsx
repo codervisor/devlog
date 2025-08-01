@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { DevlogDetails, PageLayout } from '@/components';
-import { useDevlogContext } from '@/hooks/use-stores';
-import { useProject } from '@/hooks/use-stores';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeftIcon,
-  TrashIcon,
-  SaveIcon,
-  UndoIcon,
-  AlertTriangleIcon,
-  InfoIcon,
-} from 'lucide-react';
+  Button,
+  DevlogDetails,
+  PageLayout,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components';
+import { useDevlogStore, useProjectStore } from '@/stores';
+import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangleIcon, ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProjectDevlogDetailsPageProps {
@@ -24,30 +21,18 @@ interface ProjectDevlogDetailsPageProps {
 }
 
 export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogDetailsPageProps) {
-  const { currentProject, projects, setCurrentProject } = useProject();
   const router = useRouter();
 
-  // Set the current project based on the route parameter when projects are available
-  // This is essential for the context to work with the correct project
-  useEffect(() => {
-    const project = projects.find((p) => p.id === projectId);
-    if (project && (!currentProject || currentProject.projectId !== projectId)) {
-      setCurrentProject({
-        projectId: project.id,
-        project,
-      });
-    }
-  }, [projectId, projects, currentProject, setCurrentProject]);
+  const { setCurrentProjectId } = useProjectStore();
 
   const {
-    selectedDevlog: devlog,
-    selectedDevlogLoading: loading,
-    selectedDevlogError: fetchError,
-    fetchSelectedDevlog,
+    currentDevlogContext,
+    currentDevlogNotesContext,
+    fetchCurrentDevlog,
     updateSelectedDevlog,
     deleteDevlog: deleteDevlogFromList,
-    clearSelectedDevlog,
-  } = useDevlogContext();
+    clearCurrentDevlog,
+  } = useDevlogStore();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -55,17 +40,19 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const saveHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const discardHandlerRef = useRef<(() => void) | null>(null);
 
+  useEffect(() => {
+    setCurrentProjectId(projectId);
+  }, [projectId, setCurrentProjectId]);
+
   // Fetch the devlog when component mounts or devlogId changes
   useEffect(() => {
-    if (currentProject) {
-      fetchSelectedDevlog(devlogId);
-    }
+    fetchCurrentDevlog(devlogId);
 
     // Clear selected devlog when component unmounts
     return () => {
-      clearSelectedDevlog();
+      clearCurrentDevlog();
     };
-  }, [devlogId, currentProject, fetchSelectedDevlog, clearSelectedDevlog]);
+  }, [devlogId, fetchCurrentDevlog, clearCurrentDevlog]);
 
   const handleUpdate = async (data: any) => {
     try {
@@ -105,48 +92,6 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const handleBack = () => {
     router.push(`/projects/${projectId}/devlogs`);
   };
-
-  if (loading) {
-    return (
-      <PageLayout>
-        <DevlogDetails
-          loading={true}
-          hasUnsavedChanges={hasUnsavedChanges}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onUnsavedChangesChange={handleUnsavedChangesChange}
-        />
-      </PageLayout>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <PageLayout>
-        <Alert variant="destructive" className="flex items-center gap-2">
-          <AlertTriangleIcon size={16} />
-          <div>
-            <div className="font-semibold">Error</div>
-            <AlertDescription>{fetchError}</AlertDescription>
-          </div>
-        </Alert>
-      </PageLayout>
-    );
-  }
-
-  if (!devlog) {
-    return (
-      <PageLayout>
-        <Alert className="flex items-center gap-2">
-          <InfoIcon size={16} />
-          <div>
-            <div className="font-semibold">Not Found</div>
-            <AlertDescription>Devlog not found</AlertDescription>
-          </div>
-        </Alert>
-      </PageLayout>
-    );
-  }
 
   const actions = (
     <div className="flex flex-col gap-2 w-full">
@@ -209,7 +154,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   return (
     <PageLayout>
       <DevlogDetails
-        devlog={devlog}
+        devlogContext={currentDevlogContext}
+        notesContext={currentDevlogNotesContext}
         hasUnsavedChanges={hasUnsavedChanges}
         onUpdate={handleUpdate}
         onDelete={handleDelete}

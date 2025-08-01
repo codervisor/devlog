@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useProject } from '@/hooks/use-stores';
+import { useProjectStore } from '@/stores';
 import Link from 'next/link';
-import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon } from 'lucide-react';
+import { BookOpenIcon, CheckIcon, ChevronDownIcon, FolderIcon, Moon, Sun } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +24,7 @@ import { toast } from 'sonner';
 export function NavigationBreadcrumb() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentProject, projects, setCurrentProject } = useProject();
+  const { currentProject, currentProjectId, projects } = useProjectStore();
   const [switchingProject, setSwitchingProject] = useState(false);
 
   const getProjectInitials = (name: string) => {
@@ -58,7 +58,7 @@ export function NavigationBreadcrumb() {
   };
 
   const switchProject = async (projectId: number) => {
-    if (switchingProject || currentProject?.projectId === projectId) return;
+    if (switchingProject || currentProjectId === projectId) return;
 
     try {
       setSwitchingProject(true);
@@ -67,17 +67,6 @@ export function NavigationBreadcrumb() {
       if (!targetProject) {
         throw new Error('Project not found');
       }
-
-      // Save project to localStorage for persistence
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('devlog-current-project', projectId.toString());
-      }
-
-      // Update the current project
-      setCurrentProject({
-        projectId,
-        project: targetProject,
-      });
 
       toast.success(`Switched to project: ${targetProject.name}`);
 
@@ -92,7 +81,7 @@ export function NavigationBreadcrumb() {
   };
 
   const renderProjectDropdown = () => {
-    if (!currentProject || projects.length <= 1) return null;
+    if (!currentProject) return null;
 
     return (
       <DropdownMenu>
@@ -104,13 +93,13 @@ export function NavigationBreadcrumb() {
             className="flex items-center gap-2 px-2 h-auto text-inherit hover:bg-accent"
           >
             <BookOpenIcon size={14} />
-            <span>{currentProject.project.name}</span>
+            <span>{currentProject?.name}</span>
             <ChevronDownIcon size={10} className="text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           {projects.map((project) => {
-            const isCurrentProject = currentProject.projectId === project.id;
+            const isCurrentProject = currentProjectId === project.id;
 
             return (
               <DropdownMenuItem
@@ -137,69 +126,20 @@ export function NavigationBreadcrumb() {
     );
   };
 
-  const getBreadcrumbItems = () => {
-    const items = [];
-
-    // Handle hierarchical project-based routes
-    if (pathname.startsWith('/projects/')) {
-      const pathParts = pathname.split('/').filter(Boolean);
-
-      if (pathParts.length >= 2) {
-        // Add Projects breadcrumb (always linkable)
-        items.push({
-          href: '/projects',
-          label: 'Projects',
-          icon: <FolderIcon size={14} />,
-        });
-
-        // Add project selector dropdown (instead of simple project name)
-        if (currentProject?.project) {
-          items.push({
-            component: renderProjectDropdown(),
-          });
-        }
-
-        // Remove all sub-path items (devlogs, create, etc.) - these are now handled by sidebar
-        // The sidebar will show contextual navigation items based on the current route
-      }
-    } else if (pathname === '/projects') {
-      // Only show Projects breadcrumb when on the projects listing page
-      items.push({
-        label: 'Projects',
-        icon: <FolderIcon size={14} />,
-      });
-    }
-
-    return items;
-  };
-
-  const breadcrumbItems = getBreadcrumbItems();
-
   return (
     <Breadcrumb className="navigation-breadcrumb">
       <BreadcrumbList>
-        {breadcrumbItems.map((item, index) => (
-          <React.Fragment key={index}>
-            <BreadcrumbItem>
-              {item.component ? (
-                item.component
-              ) : item.href ? (
-                <BreadcrumbLink asChild>
-                  <Link href={item.href} className="flex items-center gap-2">
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </Link>
-                </BreadcrumbLink>
-              ) : (
-                <span className="flex items-center gap-2">
-                  {item.icon}
-                  <span>{item.label}</span>
-                </span>
-              )}
-            </BreadcrumbItem>
-            {index < breadcrumbItems.length - 1 && <BreadcrumbSeparator />}
-          </React.Fragment>
-        ))}
+        <BreadcrumbItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <FolderIcon size={14} />
+                <span>{currentProject?.name}</span>
+                <ChevronDownIcon size={10} className="text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+          </DropdownMenu>
+        </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
   );

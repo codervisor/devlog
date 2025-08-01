@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useProject } from '@/hooks/use-stores';
+import { useProjectStore } from '@/stores';
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +22,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
-  const { currentProject } = useProject();
+  const { currentProject } = useProjectStore();
 
   // Handle client-side hydration
   useEffect(() => {

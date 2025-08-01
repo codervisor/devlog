@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useProject } from '@/hooks/use-stores';
+import { useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,7 @@ interface ProjectFormData {
 }
 
 export function ProjectManagementPage() {
-  const { projects, currentProject, refreshProjects, loading, error } = useProject();
+  const { projects, currentProject, fetchProjects, loading, error } = useProjectStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
@@ -76,7 +76,7 @@ export function ProjectManagementPage() {
 
       setIsModalVisible(false);
       setFormData({ name: '', description: '' });
-      await refreshProjects();
+      await fetchProjects();
     } catch (error) {
       console.error('Error creating project:', error);
       toast.error('Failed to create project');

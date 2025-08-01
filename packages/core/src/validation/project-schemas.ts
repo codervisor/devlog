@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import type { ProjectMetadata } from '../types/project.js';
+import type { Project } from '../types/project.js';
 
 /**
  * Project creation request schema (excludes auto-generated fields)
@@ -21,7 +21,7 @@ export const CreateProjectRequestSchema = z.object({
       'Project name can only contain letters, numbers, spaces, hyphens, and underscores',
     ),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
-}) satisfies z.ZodType<Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>>;
+}) satisfies z.ZodType<Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>>;
 
 /**
  * Project update request schema (all fields optional)
@@ -41,7 +41,7 @@ export const UpdateProjectRequestSchema = z.object({
     .max(500, 'Description must be less than 500 characters')
     .optional()
     .or(z.literal('')), // Allow empty string to clear description
-}) satisfies z.ZodType<Partial<Omit<ProjectMetadata, 'id' | 'createdAt' | 'lastAccessedAt'>>>;
+}) satisfies z.ZodType<Partial<Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>>>;
 
 /**
  * Project ID parameter schema

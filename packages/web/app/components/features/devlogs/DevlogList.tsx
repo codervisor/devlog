@@ -44,7 +44,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Edit, Eye, MessageSquare, Search, Trash2, X } from 'lucide-react';
-import { DevlogEntry, DevlogFilter, DevlogId, PaginationMeta } from '@codervisor/devlog-core';
+import {
+  DevlogEntry,
+  DevlogFilter,
+  DevlogId,
+  NoteCategory,
+  PaginationMeta,
+} from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
 import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
 
@@ -55,7 +61,7 @@ interface DevlogListProps {
   onDeleteDevlog: (id: DevlogId) => void;
   onBatchUpdate?: (ids: DevlogId[], updates: any) => Promise<void>;
   onBatchDelete?: (ids: DevlogId[]) => Promise<void>;
-  onBatchAddNote?: (ids: DevlogId[], content: string, category?: string) => Promise<void>;
+  onBatchAddNote?: (ids: DevlogId[], content: string, category?: NoteCategory) => Promise<void>;
   currentFilters?: DevlogFilter;
   onFilterChange?: (filters: DevlogFilter) => void;
   pagination?: PaginationMeta | null;
@@ -91,7 +97,7 @@ export function DevlogList({
   });
   const [batchNoteForm, setBatchNoteForm] = useState({
     content: '',
-    category: 'progress' as string,
+    category: 'progress' as NoteCategory,
   });
   const [batchOperationProgress, setBatchOperationProgress] = useState<{
     visible: boolean;
@@ -630,65 +636,6 @@ export function DevlogList({
               Cancel
             </Button>
             <Button onClick={handleBatchUpdate}>Update {selectedRowKeys.length} Devlog(s)</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Batch Add Note Modal */}
-      <Dialog
-        open={batchOperationModal.visible && batchOperationModal.type === 'note'}
-        onOpenChange={(open) =>
-          !open && setBatchOperationModal({ visible: false, type: 'note', title: '' })
-        }
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Note to Selected Devlogs</DialogTitle>
-            <DialogDescription>
-              Add a note to {selectedRowKeys.length} selected devlog(s).
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="note-category">Category</Label>
-              <Select
-                value={batchNoteForm.category}
-                onValueChange={(value) =>
-                  setBatchNoteForm((prev) => ({ ...prev, category: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="progress">Progress</SelectItem>
-                  <SelectItem value="technical">Technical</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="note-content">Note Content</Label>
-              <Textarea
-                id="note-content"
-                value={batchNoteForm.content}
-                onChange={(e) => setBatchNoteForm((prev) => ({ ...prev, content: e.target.value }))}
-                placeholder="Enter note content..."
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setBatchOperationModal({ visible: false, type: 'note', title: '' })}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleBatchAddNote}>
-              Add Note to {selectedRowKeys.length} Devlog(s)
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

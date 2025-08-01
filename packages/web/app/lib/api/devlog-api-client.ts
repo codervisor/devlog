@@ -6,8 +6,11 @@ import type {
   DevlogPriority,
   DevlogType,
   DevlogId,
+  DevlogNote,
+  NoteCategory,
 } from '@codervisor/devlog-core';
 import { apiClient } from './api-client';
+import { CreateNoteRequest, UpdateNoteRequest } from '@/lib';
 
 export interface CreateDevlogRequest {
   title: string;
@@ -58,7 +61,7 @@ export interface BatchNoteRequest {
 }
 
 export class DevlogApiClient {
-  constructor(private projectId: string) {}
+  constructor(private projectId: number) {}
 
   /**
    * Get all devlogs for the project
@@ -159,17 +162,6 @@ export class DevlogApiClient {
   }
 
   /**
-   * Batch add note to multiple devlogs
-   */
-  async batchAddNote(devlogIds: DevlogId[], noteData: BatchNoteRequest): Promise<any> {
-    return apiClient.post<any>(`/api/projects/${this.projectId}/devlogs/batch/note`, {
-      ids: devlogIds,
-      content: noteData.content,
-      category: noteData.category,
-    });
-  }
-
-  /**
    * Get devlog statistics overview
    */
   async getStatsOverview(): Promise<DevlogStats> {
@@ -186,5 +178,54 @@ export class DevlogApiClient {
     return apiClient.get<TimeSeriesStats>(
       `/api/projects/${this.projectId}/devlogs/stats/timeseries${params}`,
     );
+  }
+
+  /**
+   * Add a note to a devlog
+   */
+  async addNote(devlogId: number, data: CreateNoteRequest): Promise<DevlogNote> {
+    return apiClient.post<DevlogNote>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes`,
+      data,
+    );
+  }
+
+  /**
+   * Get a specific note by ID
+   */
+  async getNote(devlogId: number, noteId: string): Promise<DevlogNote> {
+    return apiClient.get<DevlogNote>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+    );
+  }
+
+  /**
+   * Update a specific note
+   */
+  async updateNote(devlogId: number, noteId: string, data: UpdateNoteRequest): Promise<DevlogNote> {
+    return apiClient.put<DevlogNote>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      data,
+    );
+  }
+
+  /**
+   * Delete a specific note
+   */
+  async deleteNote(devlogId: number, noteId: string): Promise<void> {
+    return apiClient.delete<void>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+    );
+  }
+
+  /**
+   * Get all notes for a devlog
+   */
+  async getNotes(devlogId: number, limit?: number): Promise<DevlogNote[]> {
+    const params = limit ? `?limit=${limit}` : '';
+    const response = await apiClient.get<{ devlogId: number; total: number; notes: DevlogNote[] }>(
+      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
+    );
+    return response.notes;
   }
 }

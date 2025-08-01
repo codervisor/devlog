@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Dashboard, PageLayout } from '@/components';
-import { useDevlogContext } from '@/hooks/use-stores';
+import { useDevlogStore } from '@/stores';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +14,7 @@ export function DashboardPage() {
     statsLoading: isLoadingStats,
     timeSeriesStats: timeSeriesData,
     timeSeriesLoading: isLoadingTimeSeries,
-  } = useDevlogContext();
+  } = useDevlogStore();
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {

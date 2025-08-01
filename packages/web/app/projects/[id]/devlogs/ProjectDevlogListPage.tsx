@@ -2,8 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { DevlogList, PageLayout, Pagination } from '@/components';
-import { useDevlogContext } from '@/hooks/use-stores';
-import { useProject } from '@/hooks/use-stores';
+import { useDevlogStore, useProjectStore } from '@/stores';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
@@ -12,34 +11,23 @@ interface ProjectDevlogListPageProps {
 }
 
 export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps) {
-  const { currentProject, projects, setCurrentProject } = useProject();
   const router = useRouter();
 
-  // Set the current project based on the route parameter when projects are available
-  // This is essential for the context to work with the correct project
-  useEffect(() => {
-    const project = projects.find((p) => p.id === projectId);
-    if (project && (!currentProject || currentProject.projectId !== projectId)) {
-      setCurrentProject({
-        projectId: project.id,
-        project,
-      });
-    }
-  }, [projectId, projects, currentProject, setCurrentProject]);
+  const { setCurrentProjectId } = useProjectStore();
 
   const {
-    devlogs,
-    pagination,
-    loading,
-    filters,
+    devlogsContext,
     setFilters,
     deleteDevlog,
     batchUpdate,
     batchDelete,
-    batchAddNote,
     goToPage,
     changePageSize,
-  } = useDevlogContext();
+  } = useDevlogStore();
+
+  useEffect(() => {
+    setCurrentProjectId(projectId);
+  }, [projectId]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
@@ -71,44 +59,21 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     }
   };
 
-  const handleBatchAddNote = async (ids: DevlogId[], content: string, category?: string) => {
-    try {
-      await batchAddNote(ids, content, category);
-      // Note: Adding notes doesn't change stats, so no need to refetch
-    } catch (error) {
-      console.error('Failed to batch add notes:', error);
-      throw error;
-    }
-  };
-
   return (
     <PageLayout>
       <DevlogList
-        devlogs={devlogs}
-        loading={loading}
+        devlogs={devlogsContext.data || []}
+        loading={devlogsContext.loading}
         onViewDevlog={handleViewDevlog}
         onDeleteDevlog={handleDeleteDevlog}
         onBatchUpdate={handleBatchUpdate}
         onBatchDelete={handleBatchDelete}
-        onBatchAddNote={handleBatchAddNote}
-        currentFilters={filters}
+        currentFilters={devlogsContext.filters}
         onFilterChange={setFilters}
-        pagination={pagination}
+        pagination={devlogsContext.pagination}
         onPageChange={goToPage}
         onPageSizeChange={changePageSize}
       />
-
-      {/* TODO: Integrate proper pagination back into footer when backend pagination is implemented */}
-      {false && pagination && (
-        <div className="mt-4 pt-4 border-t">
-          <Pagination
-            pagination={pagination!}
-            onPageChange={goToPage}
-            onPageSizeChange={changePageSize}
-            className="justify-center"
-          />
-        </div>
-      )}
     </PageLayout>
   );
 }

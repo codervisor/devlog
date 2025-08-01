@@ -45,12 +45,25 @@ export const getColorClass = (antColorName: string): string => {
 };
 
 /**
- * @deprecated Use getColorClass instead for theme-aware colors
- * Converts an Ant Design color name to its theme-aware color value
+ * Maps status colors to hex values for charts (Recharts, etc.)
+ * These are theme-neutral colors that work well in both light and dark themes
  */
-export const getColorHex = (antColorName: string): string => {
-  // For backwards compatibility, return the Tailwind class
-  return `text-${getColorClass(antColorName)}`;
+const statusToChartColorMap: Record<string, string> = {
+  blue: '#1890ff', // New
+  orange: '#fa8c16', // In Progress
+  red: '#ff4d4f', // Blocked
+  purple: '#722ed1', // In Review
+  cyan: '#13c2c2', // Testing
+  green: '#52c41a', // Done
+  default: '#8c8c8c', // Cancelled/Default
+};
+
+/**
+ * Gets chart-compatible hex color for status
+ */
+export const getStatusChartColor = (status: DevlogStatus): string => {
+  const antColor = getStatusColor(status);
+  return statusToChartColorMap[antColor] || statusToChartColorMap['default'];
 };
 
 /**

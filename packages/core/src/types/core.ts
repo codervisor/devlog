@@ -344,11 +344,11 @@ export interface PaginationMeta {
   /** Number of items per page */
   limit: number;
   /** Total number of items across all pages */
-  total: number;
+  total?: number;
   /** Total number of pages */
-  totalPages: number;
+  totalPages?: number;
   /** Whether there is a previous page */
-  hasPreviousPage: boolean;
+  hasPreviousPage?: boolean;
   /** Whether there is a next page */
-  hasNextPage: boolean;
+  hasNextPage?: boolean;
 }

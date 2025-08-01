@@ -9,7 +9,7 @@
 /**
  * Project metadata and settings
  */
-export interface ProjectMetadata {
+export interface Project {
   /** Unique project identifier */
   id: number;
 

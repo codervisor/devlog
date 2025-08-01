@@ -12,7 +12,7 @@ export interface UpdateNoteRequest {
 }
 
 export class NoteApiClient {
-  constructor(private projectId: string) {}
+  constructor(private projectId: number) {}
 
   /**
    * Add a note to a devlog
@@ -61,16 +61,5 @@ export class NoteApiClient {
       `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
     );
     return response.notes;
-  }
-
-  /**
-   * Batch add notes to multiple devlogs
-   */
-  async batchAddNote(devlogIds: string[], content: string, category?: NoteCategory): Promise<any> {
-    return apiClient.post<any>(`/api/projects/${this.projectId}/devlogs/batch/note`, {
-      ids: devlogIds,
-      content,
-      category,
-    });
   }
 }

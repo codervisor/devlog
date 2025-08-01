@@ -14,8 +14,7 @@ import {
   Network,
   Wrench,
 } from 'lucide-react';
-import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
-import { useDevlogNotes } from '@/stores';
+import { DevlogEntry, DevlogNote, NoteCategory } from '@codervisor/devlog-core';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import {
@@ -29,10 +28,11 @@ import {
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
 import { useStickyHeaders } from '@/hooks/use-sticky-headers';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
+import { DataContext } from '@/stores/base';
 
 interface DevlogDetailsProps {
-  devlog?: DevlogEntry;
-  loading?: boolean;
+  devlogContext: DataContext<DevlogEntry>;
+  notesContext: DataContext<DevlogNote[]>;
   hasUnsavedChanges?: boolean;
   onUpdate: (data: any) => void;
   onDelete: () => void;
@@ -45,8 +45,8 @@ interface DevlogDetailsProps {
 }
 
 export function DevlogDetails({
-  devlog,
-  loading = false,
+  devlogContext,
+  notesContext,
   hasUnsavedChanges = false,
   onUpdate,
   onDelete,
@@ -55,44 +55,18 @@ export function DevlogDetails({
 }: DevlogDetailsProps) {
   // Local state for tracking changes
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
-  const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry | undefined>(devlog);
-
-  // Use the notes store to manage notes data separately
-  const {
-    notes,
-    loading: notesLoading,
-    error: notesError,
-    refreshNotes,
-  } = useDevlogNotes(devlog?.id?.toString() || '');
-
-  // State for tracking note animations
-  const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());
-  const [newNoteIds, setNewNoteIds] = useState<Set<string>>(new Set());
-
-  // Setup sticky header detection
-  useStickyHeaders({
-    selectorClass: 'section-header',
-    stickyClass: 'is-sticky',
-    topOffset: 176, // Account for the sticky main devlog header (increased from 96)
-    dependencies: [devlog?.id], // Re-run when devlog changes
-  });
-
-  // Refresh notes when devlog changes
-  useEffect(() => {
-    if (devlog?.id) {
-      refreshNotes();
-    }
-  }, [devlog?.id, refreshNotes]);
+  const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry | null>(devlogContext.data);
 
   // Reset local changes when devlog prop changes (e.g., after save)
   useEffect(() => {
+    const devlog = devlogContext.data;
     if (!devlog || !originalDevlog) {
       setOriginalDevlog(devlog);
       return;
     }
 
     // Only reset if this is a completely different devlog (ID changed)
-    // OR if the devlog was updated but we don't have any unsaved changes
+    // OR if the devlog was updated, but we don't have any unsaved changes
     // This allows real-time updates to flow through while preserving unsaved edits
     if (
       devlog.id !== originalDevlog.id ||
@@ -102,48 +76,12 @@ export function DevlogDetails({
       setOriginalDevlog(devlog);
     }
   }, [
-    devlog?.id,
-    devlog?.updatedAt,
+    devlogContext.data?.id,
+    devlogContext.data?.updatedAt,
     originalDevlog?.id,
     originalDevlog?.updatedAt,
     hasUnsavedChanges,
   ]);
-
-  // Track new notes for animation
-  useEffect(() => {
-    if (!notes || !Array.isArray(notes) || notes.length === 0) {
-      // For empty notes, just reset the seen notes if they exist
-      if (seenNoteIds.size > 0) {
-        setSeenNoteIds(new Set());
-      }
-      return;
-    }
-
-    const currentNoteIds = new Set(notes.map((note) => note.id));
-
-    // On first load, mark all existing notes as seen without animation
-    if (seenNoteIds.size === 0) {
-      setSeenNoteIds(currentNoteIds);
-      return;
-    }
-
-    // Find new notes that weren't seen before
-    const newIds = new Set([...currentNoteIds].filter((id) => !seenNoteIds.has(id)));
-
-    if (newIds.size > 0) {
-      setNewNoteIds(newIds);
-      setSeenNoteIds(currentNoteIds);
-
-      // Clear the new note highlights after animation completes
-      const timeout = setTimeout(() => {
-        setNewNoteIds(new Set());
-      }, 2500); // Total animation duration (0.4s slide + 2s highlight)
-
-      return () => clearTimeout(timeout);
-    }
-
-    return undefined;
-  }, [notes?.length, devlog?.id, seenNoteIds.size]);
 
   // Get the original value for a field from the original devlog data
   const getOriginalValue = useCallback(
@@ -156,6 +94,8 @@ export function DevlogDetails({
   // Get the current value for a field (local change if exists, otherwise current devlog value)
   const getCurrentValue = useCallback(
     (field: string) => {
+      const devlog = devlogContext.data;
+
       // If there's a local change for this field, use it
       if (localChanges[field] !== undefined) {
         return localChanges[field];
@@ -164,7 +104,7 @@ export function DevlogDetails({
       // Otherwise, use the current devlog value (which includes real-time updates)
       return devlog ? (devlog as any)[field] : undefined;
     },
-    [localChanges, devlog],
+    [localChanges, devlogContext.data],
   );
 
   // Check if a field has been changed locally (regardless of original value)
@@ -219,6 +159,8 @@ export function DevlogDetails({
   );
 
   const handleSave = useCallback(async () => {
+    const devlog = devlogContext.data;
+
     if (!devlog) return;
 
     try {
@@ -238,7 +180,7 @@ export function DevlogDetails({
       // Let the parent handle save errors
       throw error;
     }
-  }, [localChanges, devlog, onUpdate]);
+  }, [localChanges, devlogContext.data, onUpdate]);
 
   const handleDiscard = useCallback(() => {
     setLocalChanges({});
@@ -253,7 +195,7 @@ export function DevlogDetails({
   }, [hasUnsavedChanges, handleSave, handleDiscard, onUnsavedChangesChange]);
 
   // If loading, show skeleton
-  if (loading || !devlog) {
+  if (devlogContext.loading || !devlogContext.data) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex gap-6">
@@ -331,6 +273,8 @@ export function DevlogDetails({
       </div>
     );
   }
+
+  const devlog = devlogContext.data;
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -550,15 +494,17 @@ export function DevlogDetails({
             <CardHeader>
               <CardTitle className="section-header flex items-center">
                 <MessageSquare className="h-5 w-5 mr-2" />
-                Notes ({notes?.length || 0})
-                {notesLoading && (
+                Notes ({notesContext.data?.length || 0})
+                {notesContext.loading && (
                   <span className="ml-2 text-sm text-muted-foreground">(Loading...)</span>
                 )}
-                {notesError && <span className="ml-2 text-sm text-red-500">({notesError})</span>}
+                {notesContext.error && (
+                  <span className="ml-2 text-sm text-red-500">({notesContext.error})</span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {notesLoading && notes.length === 0 ? (
+              {notesContext.loading && notesContext.data?.length === 0 ? (
                 // Show skeleton loading state when initially loading notes
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -575,17 +521,14 @@ export function DevlogDetails({
                     </div>
                   ))}
                 </div>
-              ) : notes && Array.isArray(notes) && notes.length > 0 ? (
+              ) : notesContext.data && notesContext.data?.length > 0 ? (
                 <div className="space-y-6">
-                  {[...notes].reverse().map((note) => {
-                    const isNewNote = newNoteIds.has(note.id);
-
+                  {[...notesContext.data].map((note) => {
                     return (
                       <div
                         key={note.id}
                         className={cn(
                           'border-l-4 border-primary/20 pl-4 py-1 transition-all duration-500',
-                          isNewNote && 'animate-in slide-in-from-top-2 duration-400 bg-primary/5',
                         )}
                       >
                         <div className="flex items-center space-x-2 mb-4">
@@ -623,7 +566,10 @@ export function DevlogDetails({
         {/* Side Navigation */}
         <div className="w-64 flex-shrink-0">
           <div className="sticky top-44 space-y-4">
-            <DevlogAnchorNav devlog={devlog} notesCount={notes?.length || 0} />
+            <DevlogAnchorNav
+              devlog={devlogContext.data}
+              notesCount={notesContext.data?.length || 0}
+            />
             {actions && (
               <div className="border-t pt-4">
                 <div className="space-y-3">{actions}</div>
