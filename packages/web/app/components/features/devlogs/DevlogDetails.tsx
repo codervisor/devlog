@@ -15,7 +15,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { DevlogEntry, NoteCategory } from '@codervisor/devlog-core';
-import { useNotes } from '@/hooks/use-notes';
+import { useDevlogNotes } from '@/stores';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import {
@@ -57,16 +57,13 @@ export function DevlogDetails({
   const [localChanges, setLocalChanges] = useState<Record<string, any>>({});
   const [originalDevlog, setOriginalDevlog] = useState<DevlogEntry | undefined>(devlog);
 
-  // Use the notes hook to manage notes data separately
+  // Use the notes store to manage notes data separately
   const {
     notes,
     loading: notesLoading,
     error: notesError,
     refreshNotes,
-  } = useNotes({
-    devlogId: devlog?.id?.toString() || '',
-    initialNotes: [],
-  });
+  } = useDevlogNotes(devlog?.id?.toString() || '');
 
   // State for tracking note animations
   const [seenNoteIds, setSeenNoteIds] = useState<Set<string>>(new Set());

@@ -41,11 +41,11 @@ export const FilesSchema = z.array(z.string()).optional();
 export const KeywordsSchema = z.array(z.string()).optional();
 
 // === CONTEXT FIELD SCHEMAS ===
-export const BusinessContextSchema = z.string().optional();
+export const BusinessContextSchema = z.string();
 
-export const TechnicalContextSchema = z.string().optional();
+export const TechnicalContextSchema = z.string();
 
-export const AcceptanceCriteriaSchema = z.array(z.string()).optional();
+export const AcceptanceCriteriaSchema = z.array(z.string());
 
 // === PAGINATION SCHEMAS ===
 export const LimitSchema = z.number().int().min(1).max(50).default(10).optional();

@@ -1,16 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { initializeProjectStore } from '@/stores';
-import { useSse } from '@/hooks/use-sse';
-import { useDevlogStore } from '@/stores';
+import { initializeProjectStore, useRealtime, useDevlogStore } from '@/stores';
 
 /**
  * Provider component that initializes Zustand stores and sets up real-time events
  * This replaces the need for React Context providers
  */
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const { connected, subscribe, unsubscribe } = useSse();
+  const { connected, subscribe, unsubscribe } = useRealtime();
   const { setConnected, handleDevlogCreated, handleDevlogUpdated, handleDevlogDeleted } =
     useDevlogStore();
 
