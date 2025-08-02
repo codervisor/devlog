@@ -503,8 +503,6 @@ export class DevlogService {
         limit,
         total,
         totalPages,
-        hasPreviousPage: page > 1,
-        hasNextPage: offset + searchResults.length < total,
       },
       searchMeta,
     };
@@ -712,8 +710,8 @@ export class DevlogService {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-        hasPreviousPage: page > 1,
-        hasNextPage: offset + entries.length < total,
+        // hasPreviousPage: page > 1,
+        // hasNextPage: offset + entries.length < total,
       },
     };
   }

@@ -8,39 +8,9 @@ import type {
   ApiSuccessResponse,
   ApiErrorResponse,
   CollectionResponse,
-  PaginationMeta,
   ResponseMeta,
 } from '@/schemas/responses';
-
-/**
- * Parse and validate numeric parameters from Next.js route params
- */
-export function parseParams<T extends Record<string, string>>(
-  params: T,
-): { success: true; data: Record<keyof T, number> } | { success: false; response: NextResponse } {
-  const parsed: Record<string, number> = {};
-
-  for (const [key, value] of Object.entries(params)) {
-    const numericValue = parseInt(value, 10);
-
-    if (isNaN(numericValue) || numericValue <= 0) {
-      return {
-        success: false,
-        response: NextResponse.json(
-          { error: `Invalid ${key}: must be a positive integer` },
-          { status: 400 },
-        ),
-      };
-    }
-
-    parsed[key] = numericValue;
-  }
-
-  return {
-    success: true,
-    data: parsed as Record<keyof T, number>,
-  };
-}
+import { PaginationMeta } from '@codervisor/devlog-core';
 
 /**
  * Type-safe parameter parser for API routes

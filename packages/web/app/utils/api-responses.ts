@@ -6,13 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import type {
-  ApiSuccessResponse,
-  ApiErrorResponse,
-  CollectionResponse,
-  PaginationMeta,
-  ResponseMeta,
-} from '@/schemas/responses';
+import type { ApiErrorResponse, ResponseMeta } from '@/schemas/responses';
 
 /**
  * Create an error response
@@ -70,77 +64,3 @@ export const ApiErrors = {
   internalError: (message = 'Internal server error', details?: any) =>
     createErrorResponse('INTERNAL_ERROR', message, { status: 500, details }),
 };
-
-/**
- * Legacy response format helpers (for backward compatibility)
- */
-export function createLegacyProjectsResponse(projects: any[]): NextResponse {
-  return NextResponse.json({ projects });
-}
-
-export function createLegacyPaginatedResponse<T>(
-  items: T[],
-  pagination?: PaginationMeta,
-): NextResponse {
-  if (pagination) {
-    return NextResponse.json({
-      items,
-      pagination,
-      totalCount: pagination.total,
-      page: pagination.page,
-      limit: pagination.limit,
-    });
-  }
-
-  return NextResponse.json({ items });
-}
-
-/**
- * Response transformation utilities
- */
-export class ResponseTransformer {
-  /**
-   * Transform core service data to web API format
-   */
-  static transformProject(coreProject: any) {
-    return {
-      id: coreProject.id, // Keep as number - don't convert to string
-      name: coreProject.name,
-      description: coreProject.description,
-      tags: coreProject.tags || [],
-      createdAt: coreProject.createdAt.toISOString(),
-      updatedAt: coreProject.lastAccessedAt.toISOString(),
-    };
-  }
-
-  /**
-   * Transform multiple projects
-   */
-  static transformProjects(coreProjects: any[]) {
-    return coreProjects.map(this.transformProject);
-  }
-
-  /**
-   * Transform devlog entry
-   */
-  static transformDevlog(coreDevlog: any) {
-    return {
-      ...coreDevlog,
-      createdAt:
-        typeof coreDevlog.createdAt === 'string'
-          ? coreDevlog.createdAt
-          : coreDevlog.createdAt.toISOString(),
-      updatedAt:
-        typeof coreDevlog.updatedAt === 'string'
-          ? coreDevlog.updatedAt
-          : coreDevlog.updatedAt.toISOString(),
-    };
-  }
-
-  /**
-   * Transform multiple devlogs
-   */
-  static transformDevlogs(coreDevlogs: any[]) {
-    return coreDevlogs.map(this.transformDevlog);
-  }
-}

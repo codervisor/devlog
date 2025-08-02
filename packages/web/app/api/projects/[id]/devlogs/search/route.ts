@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import { DevlogService, PaginationMeta, ProjectService } from '@codervisor/devlog-core';
 import { ApiValidator, ProjectIdParamSchema, DevlogSearchQuerySchema } from '@/schemas';
 import { ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
 
@@ -19,14 +19,7 @@ interface SearchResult {
 interface SearchResponse {
   query: string;
   results: SearchResult[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-  };
+  pagination: PaginationMeta;
   searchMeta: {
     searchTime: number;
     totalMatches: number;
@@ -109,7 +102,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         matchedFields: item.matchedFields,
         highlights: item.highlights,
       })),
-      pagination: result.pagination,
+      pagination: {
+        ...result.pagination,
+        total: result.pagination.total ?? 0,
+        totalPages: result.pagination.totalPages ?? 0,
+      },
       searchMeta: {
         searchTime: result.searchMeta.searchTime,
         totalMatches: result.searchMeta.totalMatches,

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useProjectStore } from '@/stores';
 import {
   Sidebar,
   SidebarContent,
@@ -12,13 +11,16 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { AppWindowIcon, FileTextIcon, LayoutDashboardIcon } from 'lucide-react';
+import { Home, Package, SquareKanban } from 'lucide-react';
 
-interface NavigationSidebarProps {
-  // No props needed - using built-in sidebar state
+interface SidebarItem {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  path: string;
 }
 
-export function NavigationSidebar(_props: NavigationSidebarProps) {
+export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -47,7 +49,7 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         {
           key: 'projects',
           label: 'Projects',
-          icon: <AppWindowIcon size={16} />,
+          icon: <Package size={16} />,
         },
       ];
     }
@@ -58,9 +60,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         {
           key: 'projects',
           label: 'Projects',
-          icon: <AppWindowIcon size={16} />,
+          icon: <Package size={16} />,
         },
       ];
+    }
+
+    if (pathname.match(/^\/projects\/\w+\/devlogs/)) {
     }
 
     // Project detail page (/projects/[id])
@@ -69,12 +74,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         {
           key: 'overview',
           label: 'Overview',
-          icon: <LayoutDashboardIcon size={16} />,
+          icon: <Home size={16} />,
         },
         {
           key: 'list',
           label: 'Devlogs',
-          icon: <FileTextIcon size={16} />,
+          icon: <SquareKanban size={16} />,
         },
       ];
     }
@@ -85,12 +90,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         {
           key: 'overview',
           label: 'Overview',
-          icon: <LayoutDashboardIcon size={16} />,
+          icon: <Home size={16} />,
         },
         {
           key: 'list',
           label: 'Devlogs',
-          icon: <FileTextIcon size={16} />,
+          icon: <SquareKanban size={16} />,
         },
       ];
     }
@@ -101,12 +106,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
         {
           key: 'overview',
           label: 'Overview',
-          icon: <LayoutDashboardIcon size={16} />,
+          icon: <Home size={16} />,
         },
         {
           key: 'list',
           label: 'Devlogs',
-          icon: <FileTextIcon size={16} />,
+          icon: <SquareKanban size={16} />,
         },
       ];
     }
@@ -116,12 +121,12 @@ export function NavigationSidebar(_props: NavigationSidebarProps) {
       {
         key: 'overview',
         label: 'Overview',
-        icon: <LayoutDashboardIcon size={16} />,
+        icon: <Home size={16} />,
       },
       {
         key: 'projects',
         label: 'Projects',
-        icon: <AppWindowIcon size={16} />,
+        icon: <Package size={16} />,
       },
     ];
   };

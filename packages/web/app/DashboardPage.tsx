@@ -7,14 +7,7 @@ import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 export function DashboardPage() {
-  const {
-    devlogs: filteredDevlogs,
-    loading: isLoadingDevlogs,
-    stats,
-    statsLoading: isLoadingStats,
-    timeSeriesStats: timeSeriesData,
-    timeSeriesLoading: isLoadingTimeSeries,
-  } = useDevlogStore();
+  const { devlogsContext, statsContext, timeSeriesStatsContext } = useDevlogStore();
   const router = useRouter();
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
@@ -24,11 +17,9 @@ export function DashboardPage() {
   return (
     <PageLayout>
       <Dashboard
-        stats={stats}
-        timeSeriesData={timeSeriesData}
-        isLoadingTimeSeries={isLoadingTimeSeries}
-        recentDevlogs={filteredDevlogs.slice(0, 10)}
-        isLoadingDevlogs={isLoadingDevlogs}
+        statsContext={statsContext}
+        timeSeriesStatsContext={timeSeriesStatsContext}
+        recentDevlogsContext={devlogsContext}
         onViewDevlog={handleViewDevlog}
       />
     </PageLayout>

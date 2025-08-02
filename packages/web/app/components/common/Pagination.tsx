@@ -30,7 +30,7 @@ export function Pagination({
   pageSizeOptions = [10, 20, 50, 100],
   className,
 }: PaginationProps) {
-  const { page, limit, total, totalPages, hasPreviousPage, hasNextPage } = pagination;
+  const { page, limit, total, totalPages } = pagination;
 
   // Calculate visible page numbers
   const getVisiblePages = () => {
@@ -102,7 +102,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            disabled={!hasPreviousPage}
+            disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
@@ -133,7 +133,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            disabled={!hasNextPage}
+            disabled={page >= totalPages!}
             onClick={() => onPageChange(page + 1)}
           >
             Next

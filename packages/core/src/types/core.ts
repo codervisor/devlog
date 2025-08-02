@@ -347,8 +347,4 @@ export interface PaginationMeta {
   total?: number;
   /** Total number of pages */
   totalPages?: number;
-  /** Whether there is a previous page */
-  hasPreviousPage?: boolean;
-  /** Whether there is a next page */
-  hasNextPage?: boolean;
 }
