@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { NavigationSidebar, ErrorBoundary, AppLayoutSkeleton, TopNavbar } from '@/components';
+import { AppLayoutSkeleton, ErrorBoundary, NavigationSidebar, TopNavbar } from '@/components';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useLayoutStore } from '@/stores';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [mounted, setMounted] = useState(false);
+
+  const { sidebarOpen, setSidebarOpen } = useLayoutStore();
 
   // Handle client-side hydration
   useEffect(() => {
@@ -25,7 +28,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     <ErrorBoundary>
       <div className="min-h-screen bg-background w-full">
         <TopNavbar />
-        <SidebarProvider>
+        <SidebarProvider
+          defaultOpen={sidebarOpen}
+          open={sidebarOpen}
+          onOpenChange={(open) => {
+            setSidebarOpen(open);
+          }}
+        >
           <div className="flex w-full h-[calc(100vh-3rem)]">
             <NavigationSidebar />
             <div className="flex-1 flex flex-col w-full">

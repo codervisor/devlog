@@ -11,13 +11,13 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Home, Package, SquareKanban } from 'lucide-react';
+import { Home, SquareKanban } from 'lucide-react';
 
 interface SidebarItem {
   key: string;
   label: string;
   icon: React.ReactNode;
-  path: string;
+  onClick?: () => void;
 }
 
 export function NavigationSidebar() {
@@ -37,98 +37,48 @@ export function NavigationSidebar() {
     return false;
   };
 
+  const getProjectId = () => {
+    const matched = pathname.match(/\/projects\/(\w+)/);
+    if (matched) {
+      return matched[1];
+    }
+    return null;
+  };
+
+  const projectsMenuItems = [
+    {
+      key: 'overview',
+      label: 'Overview',
+      icon: <Home size={16} />,
+      onClick: () => router.push('/projects'),
+    },
+  ];
+  const projectDetailMenuItems = [
+    {
+      key: 'overview',
+      label: 'Overview',
+      icon: <Home size={16} />,
+      onClick: () => router.push(`/projects/${getProjectId()}`),
+    },
+    {
+      key: 'list',
+      label: 'Devlogs',
+      icon: <SquareKanban size={16} />,
+      onClick: () => router.push(`/projects/${getProjectId()}/devlogs`),
+    },
+  ];
+
   // Get contextual menu items based on current path
-  const getMenuItems = () => {
+  const getMenuItems = (): SidebarItem[] => {
     if (!mounted) return [];
 
     const pathParts = pathname.split('/').filter(Boolean);
 
-    // Overview page (/)
-    if (pathname === '/') {
-      return [
-        {
-          key: 'projects',
-          label: 'Projects',
-          icon: <Package size={16} />,
-        },
-      ];
+    if (pathParts.length < 2) {
+      return projectsMenuItems;
+    } else {
+      return projectDetailMenuItems;
     }
-
-    // Projects page (/projects)
-    if (pathname === '/projects') {
-      return [
-        {
-          key: 'projects',
-          label: 'Projects',
-          icon: <Package size={16} />,
-        },
-      ];
-    }
-
-    if (pathname.match(/^\/projects\/\w+\/devlogs/)) {
-    }
-
-    // Project detail page (/projects/[id])
-    if (pathParts.length === 2 && pathParts[0] === 'projects') {
-      return [
-        {
-          key: 'overview',
-          label: 'Overview',
-          icon: <Home size={16} />,
-        },
-        {
-          key: 'list',
-          label: 'Devlogs',
-          icon: <SquareKanban size={16} />,
-        },
-      ];
-    }
-
-    // Project devlogs page (/projects/[id]/devlogs)
-    if (pathParts.length === 3 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
-      return [
-        {
-          key: 'overview',
-          label: 'Overview',
-          icon: <Home size={16} />,
-        },
-        {
-          key: 'list',
-          label: 'Devlogs',
-          icon: <SquareKanban size={16} />,
-        },
-      ];
-    }
-
-    // Devlog detail page (/projects/[id]/devlogs/[devlogId])
-    if (pathParts.length === 4 && pathParts[0] === 'projects' && pathParts[2] === 'devlogs') {
-      return [
-        {
-          key: 'overview',
-          label: 'Overview',
-          icon: <Home size={16} />,
-        },
-        {
-          key: 'list',
-          label: 'Devlogs',
-          icon: <SquareKanban size={16} />,
-        },
-      ];
-    }
-
-    // Default fallback
-    return [
-      {
-        key: 'overview',
-        label: 'Overview',
-        icon: <Home size={16} />,
-      },
-      {
-        key: 'projects',
-        label: 'Projects',
-        icon: <Package size={16} />,
-      },
-    ];
   };
 
   // Determine selected key based on current pathname and menu items
@@ -161,6 +111,7 @@ export function NavigationSidebar() {
               <SidebarMenuButton
                 isActive={getSelectedKey() === item.key}
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium min-h-[44px] rounded-md"
+                onClick={item.onClick}
               >
                 {item.icon}
                 <span>{item.label}</span>
