@@ -11,8 +11,7 @@ import {
 } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangleIcon, ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProjectDevlogDetailsPageProps {
@@ -26,11 +25,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const { setCurrentProjectId } = useProjectStore();
 
   const {
+    currentDevlogId,
+    setCurrentDevlogId,
     currentDevlogContext,
     currentDevlogNotesContext,
     fetchCurrentDevlog,
+    fetchCurrentDevlogNotes,
     updateSelectedDevlog,
-    deleteDevlog: deleteDevlogFromList,
+    deleteDevlog,
     clearCurrentDevlog,
   } = useDevlogStore();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -42,17 +44,24 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
 
   useEffect(() => {
     setCurrentProjectId(projectId);
-  }, [projectId, setCurrentProjectId]);
+  }, [projectId]);
 
-  // Fetch the devlog when component mounts or devlogId changes
   useEffect(() => {
-    fetchCurrentDevlog(devlogId);
+    setCurrentDevlogId(devlogId);
+  }, [devlogId]);
+
+  // Fetch the devlog when currentDevlogId changes
+  useEffect(() => {
+    if (!currentDevlogId) return;
+
+    fetchCurrentDevlog();
+    fetchCurrentDevlogNotes();
 
     // Clear selected devlog when component unmounts
     return () => {
       clearCurrentDevlog();
     };
-  }, [devlogId, fetchCurrentDevlog, clearCurrentDevlog]);
+  }, [currentDevlogId]);
 
   const handleUpdate = async (data: any) => {
     try {
@@ -80,7 +89,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const handleDelete = async () => {
     try {
       // Delete the devlog (this will also clear selected devlog via context)
-      await deleteDevlogFromList(devlogId);
+      await deleteDevlog(devlogId);
 
       router.push(`/projects/${projectId}/devlogs`);
     } catch (error) {

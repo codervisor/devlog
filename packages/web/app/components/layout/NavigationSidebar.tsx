@@ -6,10 +6,12 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Home, SquareKanban } from 'lucide-react';
 
@@ -24,18 +26,12 @@ export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { open, toggleSidebar } = useSidebar();
 
   // Handle client-side hydration
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Check if sidebar should be hidden
-  const shouldHideSidebar = () => {
-    if (!mounted) return false;
-    // No pages currently hide the sidebar
-    return false;
-  };
 
   const getProjectId = () => {
     const matched = pathname.match(/\/projects\/(\w+)/);
@@ -49,7 +45,7 @@ export function NavigationSidebar() {
     {
       key: 'overview',
       label: 'Overview',
-      icon: <Home size={16} />,
+      icon: <Home />,
       onClick: () => router.push('/projects'),
     },
   ];
@@ -57,13 +53,13 @@ export function NavigationSidebar() {
     {
       key: 'overview',
       label: 'Overview',
-      icon: <Home size={16} />,
+      icon: <Home />,
       onClick: () => router.push(`/projects/${getProjectId()}`),
     },
     {
       key: 'list',
       label: 'Devlogs',
-      icon: <SquareKanban size={16} />,
+      icon: <SquareKanban />,
       onClick: () => router.push(`/projects/${getProjectId()}/devlogs`),
     },
   ];
@@ -96,23 +92,19 @@ export function NavigationSidebar() {
   };
 
   // Don't render menu items until mounted to prevent hydration issues
-  if (!mounted || shouldHideSidebar()) {
+  if (!mounted) {
     return null;
   }
 
   const menuItems = getMenuItems();
 
   return (
-    <Sidebar className="border-r bg-background">
+    <Sidebar collapsible="icon" className="py-1 border-r bg-background">
       <SidebarContent className="bg-background">
-        <SidebarMenu className="space-y-2 px-4 py-2">
+        <SidebarMenu className="space-y-2 p-2">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.key}>
-              <SidebarMenuButton
-                isActive={getSelectedKey() === item.key}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium min-h-[44px] rounded-md"
-                onClick={item.onClick}
-              >
+              <SidebarMenuButton isActive={getSelectedKey() === item.key} onClick={item.onClick}>
                 {item.icon}
                 <span>{item.label}</span>
               </SidebarMenuButton>
@@ -121,8 +113,8 @@ export function NavigationSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 bg-background border-t-0">
-        <SidebarTrigger className="h-8 w-8 p-0" />
+      <SidebarFooter className="p-2 bg-background border-t-0">
+        <SidebarTrigger className="h-8 w-8 p-0" onClick={toggleSidebar} />
       </SidebarFooter>
     </Sidebar>
   );

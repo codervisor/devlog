@@ -48,9 +48,9 @@ interface DevlogState {
   fetchDevlogs: () => Promise<void>;
   fetchStats: () => Promise<void>;
   fetchTimeSeriesStats: () => Promise<void>;
-  fetchCurrentDevlog: (id: DevlogId) => Promise<void>;
+  fetchCurrentDevlog: () => Promise<void>;
   clearCurrentDevlog: () => void;
-  fetchCurrentDevlogNotes: (id: DevlogId) => Promise<void>;
+  fetchCurrentDevlogNotes: () => Promise<void>;
   clearCurrentDevlogNotes: () => void;
   createDevlog: (data: Partial<DevlogEntry>) => Promise<any>;
   updateDevlog: (data: Partial<DevlogEntry> & { id: DevlogId }) => Promise<any>;
@@ -285,14 +285,15 @@ export const useDevlogStore = create<DevlogState>()(
       }
     },
 
-    fetchCurrentDevlog: async (id: DevlogId) => {
+    fetchCurrentDevlog: async () => {
+      const { currentDevlogId } = get();
       const devlogApiClient = getDevlogApiClient();
-      if (!devlogApiClient) {
+      if (!currentDevlogId || !devlogApiClient) {
         set((state) => ({
           currentDevlogContext: {
             ...state.currentDevlogContext,
             loading: false,
-            error: 'API client unavailable',
+            error: 'No devlog selected or API client unavailable',
           },
         }));
         return;
@@ -306,7 +307,7 @@ export const useDevlogStore = create<DevlogState>()(
             error: null,
           },
         }));
-        const currentDevlog = await devlogApiClient.get(id);
+        const currentDevlog = await devlogApiClient.get(currentDevlogId);
         set((state) => ({
           currentDevlogContext: {
             ...state.currentDevlogContext,
