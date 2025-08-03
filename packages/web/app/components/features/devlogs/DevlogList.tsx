@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -54,7 +53,6 @@ interface DevlogListProps {
   onDeleteDevlog: (id: DevlogId) => void;
   onBatchUpdate?: (ids: DevlogId[], updates: any) => Promise<void>;
   onBatchDelete?: (ids: DevlogId[]) => Promise<void>;
-  onBatchAddNote?: (ids: DevlogId[], content: string, category?: NoteCategory) => Promise<void>;
   onFilterChange?: (filters: DevlogFilter) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
@@ -66,7 +64,6 @@ export function DevlogList({
   onDeleteDevlog,
   onBatchUpdate,
   onBatchDelete,
-  onBatchAddNote,
   onFilterChange,
   onPageChange,
   onPageSizeChange,
@@ -222,11 +219,44 @@ export function DevlogList({
 
   return (
     <div className="relative h-full px-6 pb-4">
-      {/* Header with search and filters - Sticky */}
+      {/* Header with search, filters, and actions - Sticky */}
       <div className="sticky top-0 z-20 bg-background border-b py-4">
         <div className="flex items-center justify-between">
           <div className="font-semibold leading-none tracking-tight">Devlogs</div>
           <div className="flex items-center space-x-2">
+            {/* Batch Operations */}
+            {selectedRowKeys.length > 0 && (
+              <>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  {selectedRowKeys.length} selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })
+                  }
+                  disabled={!onBatchUpdate}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Update
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setDeleteConfirmVisible(true)}
+                  disabled={!onBatchDelete}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
+                  <X className="h-3 w-3" />
+                </Button>
+                <div className="h-6 w-px bg-border mx-2" />
+              </>
+            )}
+
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -300,60 +330,6 @@ export function DevlogList({
           </div>
         </div>
       </div>
-
-      {/* Batch Operations */}
-      {false && selectedRowKeys.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                {selectedRowKeys.length} item(s) selected
-              </span>
-              <div className="flex space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })
-                  }
-                  disabled={!onBatchUpdate}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Update
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setBatchOperationModal({
-                      visible: true,
-                      type: 'note',
-                      title: 'Add Note to Selected',
-                    })
-                  }
-                  disabled={!onBatchAddNote}
-                >
-                  <MessageSquare className="h-3 w-3 mr-1" />
-                  Add Note
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => setDeleteConfirmVisible(true)}
-                  disabled={!onBatchDelete}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Delete
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
-                  <X className="h-3 w-3 mr-1" />
-                  Clear
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Devlogs Table */}
       {!loading && devlogs.length === 0 ? (
