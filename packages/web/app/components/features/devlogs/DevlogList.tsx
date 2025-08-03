@@ -259,31 +259,80 @@ export function DevlogList({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading Devlogs...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-4 p-4 border border-border rounded">
-                <Skeleton className="w-4 h-4" />
-                <Skeleton className="w-8 h-8" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-                <div className="flex space-x-2">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-                <Skeleton className="h-3 w-16" />
+      <div className="relative h-full px-6 pb-4">
+        {/* Header skeleton - matches the actual header */}
+        <div className="sticky top-0 z-20 bg-background border-b py-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-6 w-32" />
+            <div className="flex items-center space-x-2">
+              {/* Search skeleton */}
+              <div className="relative">
+                <Skeleton className="h-9 w-64" />
               </div>
-            ))}
+              {/* Filter skeletons */}
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-9 w-32" />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Table skeleton - matches the actual table structure */}
+        <div className="h-[calc(100vh-7rem)] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
+              <TableRow>
+                <TableHead className="w-12">
+                  <Skeleton className="w-4 h-4" />
+                </TableHead>
+                <TableHead className="w-16">ID</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead className="w-32">Status</TableHead>
+                <TableHead className="w-32">Priority</TableHead>
+                <TableHead className="w-32">Type</TableHead>
+                <TableHead className="w-32">Updated</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <Skeleton className="w-4 h-4" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-8" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-md space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-3 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      <Skeleton className="h-7 w-7" />
+                      <Skeleton className="h-7 w-7" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     );
   }
 
