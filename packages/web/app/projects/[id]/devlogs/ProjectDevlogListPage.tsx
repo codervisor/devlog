@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { DevlogList, PageLayout } from '@/components';
+import { DevlogList } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
@@ -62,20 +62,15 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   };
 
   return (
-    <PageLayout>
-      <DevlogList
-        devlogs={devlogsContext.data || []}
-        loading={devlogsContext.loading}
-        onViewDevlog={handleViewDevlog}
-        onDeleteDevlog={handleDeleteDevlog}
-        onBatchUpdate={handleBatchUpdate}
-        onBatchDelete={handleBatchDelete}
-        currentFilters={devlogsContext.filters}
-        onFilterChange={setFilters}
-        pagination={devlogsContext.pagination}
-        onPageChange={goToPage}
-        onPageSizeChange={changePageSize}
-      />
-    </PageLayout>
+    <DevlogList
+      devlogContext={devlogsContext}
+      onViewDevlog={handleViewDevlog}
+      onDeleteDevlog={handleDeleteDevlog}
+      onBatchUpdate={handleBatchUpdate}
+      onBatchDelete={handleBatchDelete}
+      onFilterChange={setFilters}
+      onPageChange={goToPage}
+      onPageSizeChange={changePageSize}
+    />
   );
 }

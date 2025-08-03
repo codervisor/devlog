@@ -22,19 +22,13 @@ interface PageLayoutProps {
   stickyHeader?: boolean;
 }
 
-export function PageLayout({
-  children,
-  actions,
-  headerContent,
-  className = '',
-  stickyHeader = true,
-}: PageLayoutProps) {
+export function PageLayout({ children, actions, headerContent, className = '' }: PageLayoutProps) {
   // If headerContent is provided, use it completely
   if (headerContent) {
     return (
-      <div className={`page-layout scrollable-content ${className}`}>
-        <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>{headerContent}</div>
-        <div className="page-content scrollable-content">{children}</div>
+      <div className={`page-layout ${className}`}>
+        <div className={'page-header'}>{headerContent}</div>
+        <div className="page-content">{children}</div>
       </div>
     );
   }
@@ -42,21 +36,21 @@ export function PageLayout({
   // If actions are provided, show a simple header with actions
   if (actions) {
     return (
-      <div className={`page-layout scrollable-content ${className}`}>
-        <div className={stickyHeader ? 'page-header-sticky' : 'page-header'}>
+      <div className={`page-layout ${className}`}>
+        <div className={'page-header'}>
           <div className="page-header-content">
             <div className="page-header-right">{actions}</div>
           </div>
         </div>
-        <div className="page-content scrollable-content">{children}</div>
+        <div className="page-content">{children}</div>
       </div>
     );
   }
 
   // Default layout with just content (no header)
   return (
-    <div className={`page-layout scrollable-content ${className}`}>
-      <div className="page-content scrollable-content">{children}</div>
+    <div className={`page-layout ${className}`}>
+      <div className="page-content">{children}</div>
     </div>
   );
 }

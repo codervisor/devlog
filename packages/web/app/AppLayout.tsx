@@ -26,13 +26,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="min-h-screen bg-background w-full">
         <TopNavbar />
         <SidebarProvider>
-          <div className="flex w-full h-[calc(100vh-3rem)]">
+          <div className="flex w-full h-screen-minus-nav">
             <NavigationSidebar />
-            <SidebarInset>
-              <main className="flex-1 p-6 w-full overflow-auto">
-                <div className="w-full">{children}</div>
-              </main>
-            </SidebarInset>
+            <SidebarInset>{children}</SidebarInset>
           </div>
         </SidebarProvider>
       </div>

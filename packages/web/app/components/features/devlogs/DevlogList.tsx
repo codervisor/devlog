@@ -29,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -44,42 +43,31 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Edit, Eye, MessageSquare, Search, Trash2, X } from 'lucide-react';
-import {
-  DevlogEntry,
-  DevlogFilter,
-  DevlogId,
-  NoteCategory,
-  PaginationMeta,
-} from '@codervisor/devlog-core';
+import { DevlogEntry, DevlogFilter, DevlogId, NoteCategory } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
 import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
+import { TableDataContext } from '@/stores/base';
 
 interface DevlogListProps {
-  devlogs: DevlogEntry[];
-  loading: boolean;
+  devlogContext: TableDataContext<DevlogEntry[]>;
   onViewDevlog: (devlog: DevlogEntry) => void;
   onDeleteDevlog: (id: DevlogId) => void;
   onBatchUpdate?: (ids: DevlogId[], updates: any) => Promise<void>;
   onBatchDelete?: (ids: DevlogId[]) => Promise<void>;
   onBatchAddNote?: (ids: DevlogId[], content: string, category?: NoteCategory) => Promise<void>;
-  currentFilters?: DevlogFilter;
   onFilterChange?: (filters: DevlogFilter) => void;
-  pagination?: PaginationMeta | null;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
 }
 
 export function DevlogList({
-  devlogs,
-  loading,
+  devlogContext,
   onViewDevlog,
   onDeleteDevlog,
   onBatchUpdate,
   onBatchDelete,
   onBatchAddNote,
-  currentFilters,
   onFilterChange,
-  pagination,
   onPageChange,
   onPageSizeChange,
 }: DevlogListProps) {
@@ -107,6 +95,10 @@ export function DevlogList({
   }>({ visible: false, current: 0, total: 0, operation: '' });
   const [searchText, setSearchText] = useState('');
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+
+  const { loading, pagination, filters: currentFilters } = devlogContext;
+
+  const devlogs = devlogContext.data || [];
 
   // Handle batch operations
   const handleBatchUpdate = async () => {
@@ -296,88 +288,86 @@ export function DevlogList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="relative h-full px-6 pb-4">
       {/* Header with search and filters - Sticky */}
-      <div className="sticky top-0 z-20 bg-background border-b pb-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Devlogs ({devlogs.length})</CardTitle>
-              <div className="flex items-center space-x-2">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search devlogs..."
-                    value={searchText}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-8 w-64"
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <Select
-                  value={currentFilters?.status?.[0] || 'all'}
-                  onValueChange={(value) =>
-                    handleFilterChange('status', value === 'all' ? undefined : value)
-                  }
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Priority Filter */}
-                <Select
-                  value={currentFilters?.priority?.[0] || 'all'}
-                  onValueChange={(value) =>
-                    handleFilterChange('priority', value === 'all' ? undefined : value)
-                  }
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priority</SelectItem>
-                    {priorityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Type Filter */}
-                <Select
-                  value={currentFilters?.type?.[0] || 'all'}
-                  onValueChange={(value) =>
-                    handleFilterChange('type', value === 'all' ? undefined : value)
-                  }
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {typeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      <div className="sticky top-0 z-20 bg-background border-b py-4">
+        <div className="flex items-center justify-between">
+          <div className="font-semibold leading-none tracking-tight">
+            Devlogs ({devlogs.length})
+          </div>
+          <div className="flex items-center space-x-2">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search devlogs..."
+                value={searchText}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-8 w-64"
+              />
             </div>
-          </CardHeader>
-        </Card>
+
+            {/* Status Filter */}
+            <Select
+              value={currentFilters?.status?.[0] || 'all'}
+              onValueChange={(value) =>
+                handleFilterChange('status', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Priority Filter */}
+            <Select
+              value={currentFilters?.priority?.[0] || 'all'}
+              onValueChange={(value) =>
+                handleFilterChange('priority', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priority</SelectItem>
+                {priorityOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Type Filter */}
+            <Select
+              value={currentFilters?.type?.[0] || 'all'}
+              onValueChange={(value) =>
+                handleFilterChange('type', value === 'all' ? undefined : value)
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {typeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {/* Batch Operations */}
@@ -435,108 +425,107 @@ export function DevlogList({
       )}
 
       {/* Devlogs Table */}
-      <Card>
-        <CardContent className="p-0">
-          {devlogs.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No devlogs found</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader className="z-10 bg-transparent">
-                <TableRow>
-                  <TableHead className="w-12">
+      {devlogs.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">No devlogs found</p>
+        </div>
+      ) : (
+        <div className="h-[calc(100vh-7rem)] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                    className={cn(
+                      isIndeterminate &&
+                        'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+                    )}
+                  />
+                </TableHead>
+                <TableHead className="w-16">ID</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead className="w-32">Status</TableHead>
+                <TableHead className="w-32">Priority</TableHead>
+                <TableHead className="w-32">Type</TableHead>
+                <TableHead className="w-32">Updated</TableHead>
+                <TableHead className="w-32">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {devlogs.map((devlog) => (
+                <TableRow
+                  key={devlog.id}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => onViewDevlog(devlog)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
-                      checked={isAllSelected}
-                      onCheckedChange={handleSelectAll}
-                      className={cn(
-                        isIndeterminate &&
-                          'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
-                      )}
+                      checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
+                      onCheckedChange={(checked) =>
+                        devlog.id && handleSelectRow(devlog.id, checked as boolean)
+                      }
+                      disabled={!devlog.id}
                     />
-                  </TableHead>
-                  <TableHead className="w-16">ID</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead className="w-32">Status</TableHead>
-                  <TableHead className="w-32">Priority</TableHead>
-                  <TableHead className="w-32">Type</TableHead>
-                  <TableHead className="w-32">Updated</TableHead>
-                  <TableHead className="w-32">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {devlogs.map((devlog) => (
-                  <TableRow
-                    key={devlog.id}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => onViewDevlog(devlog)}
-                  >
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
-                        onCheckedChange={(checked) =>
-                          devlog.id && handleSelectRow(devlog.id, checked as boolean)
-                        }
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{devlog.id}</TableCell>
+                  <TableCell>
+                    <div className="max-w-md">
+                      <div className="font-medium truncate">{devlog.title}</div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {devlog.description}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DevlogStatusTag status={devlog.status} />
+                  </TableCell>
+                  <TableCell>
+                    <DevlogPriorityTag priority={devlog.priority} />
+                  </TableCell>
+                  <TableCell>
+                    <DevlogTypeTag type={devlog.type} />
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className="text-sm text-muted-foreground"
+                      title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
+                    >
+                      {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                    </span>
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <div className="flex space-x-1">
+                      <Button size="sm" variant="ghost" onClick={() => onViewDevlog(devlog)}>
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => devlog.id && onDeleteDevlog(devlog.id)}
+                        className="text-destructive hover:text-destructive"
                         disabled={!devlog.id}
-                      />
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{devlog.id}</TableCell>
-                    <TableCell>
-                      <div className="max-w-md">
-                        <div className="font-medium truncate">{devlog.title}</div>
-                        <div className="text-sm text-muted-foreground truncate">
-                          {devlog.description}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DevlogStatusTag status={devlog.status} />
-                    </TableCell>
-                    <TableCell>
-                      <DevlogPriorityTag priority={devlog.priority} />
-                    </TableCell>
-                    <TableCell>
-                      <DevlogTypeTag type={devlog.type} />
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className="text-sm text-muted-foreground"
-                        title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
                       >
-                        {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
-                      </span>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex space-x-1">
-                        <Button size="sm" variant="ghost" onClick={() => onViewDevlog(devlog)}>
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => devlog.id && onDeleteDevlog(devlog.id)}
-                          className="text-destructive hover:text-destructive"
-                          disabled={!devlog.id}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-      {/* Pagination */}
-      {pagination && (
-        <Pagination
-          pagination={pagination}
-          onPageChange={onPageChange || (() => {})}
-          onPageSizeChange={onPageSizeChange || (() => {})}
-        />
+          {/* Pagination */}
+          {pagination && (
+            <Pagination
+              className="sticky bottom-0 z-10 h-12 bg-background border-t"
+              pagination={pagination}
+              onPageChange={onPageChange || (() => {})}
+              onPageSizeChange={onPageSizeChange || (() => {})}
+            />
+          )}
+        </div>
       )}
 
       {/* Batch Update Modal */}
