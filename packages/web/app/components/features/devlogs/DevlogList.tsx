@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -96,7 +96,7 @@ export function DevlogList({
   const [searchText, setSearchText] = useState('');
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
 
-  const { loading, pagination, filters: currentFilters } = devlogContext;
+  const { loading, filters, pagination } = devlogContext;
 
   const devlogs = devlogContext.data || [];
 
@@ -179,49 +179,12 @@ export function DevlogList({
     }
   };
 
-  const handleBatchAddNote = async () => {
-    if (!selectedRowKeys.length || !onBatchAddNote) return;
-
-    if (!batchNoteForm.content.trim()) {
-      toast.warning('Please enter note content');
-      return;
-    }
-
-    setBatchOperationProgress({
-      visible: true,
-      current: 0,
-      total: selectedRowKeys.length,
-      operation: 'Adding notes...',
-    });
-
-    try {
-      for (let i = 0; i <= selectedRowKeys.length; i++) {
-        setBatchOperationProgress((prev) => ({ ...prev, current: i }));
-        if (i < selectedRowKeys.length) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-      }
-
-      await onBatchAddNote(selectedRowKeys, batchNoteForm.content, batchNoteForm.category);
-      toast.success(`Successfully added notes to ${selectedRowKeys.length} devlog(s)`);
-      setSelectedRowKeys([]);
-      setBatchOperationModal({ visible: false, type: 'note', title: '' });
-      setBatchNoteForm({ content: '', category: 'progress' });
-    } catch (error) {
-      toast.error(
-        `Failed to add notes: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    } finally {
-      setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
-    }
-  };
-
   // Handle search
   const handleSearch = (value: string) => {
     setSearchText(value);
     if (onFilterChange) {
       onFilterChange({
-        ...currentFilters,
+        ...filters,
         search: value || undefined,
       });
     }
@@ -231,7 +194,7 @@ export function DevlogList({
   const handleFilterChange = (key: string, value: string | undefined) => {
     if (onFilterChange) {
       onFilterChange({
-        ...currentFilters,
+        ...filters,
         [key]: value ? [value] : undefined,
       });
     }
@@ -257,93 +220,12 @@ export function DevlogList({
   const isAllSelected = devlogs.length > 0 && selectedRowKeys.length === devlogs.length;
   const isIndeterminate = selectedRowKeys.length > 0 && selectedRowKeys.length < devlogs.length;
 
-  if (loading) {
-    return (
-      <div className="relative h-full px-6 pb-4">
-        {/* Header skeleton - matches the actual header */}
-        <div className="sticky top-0 z-20 bg-background border-b py-4">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-6 w-32" />
-            <div className="flex items-center space-x-2">
-              {/* Search skeleton */}
-              <div className="relative">
-                <Skeleton className="h-9 w-64" />
-              </div>
-              {/* Filter skeletons */}
-              <Skeleton className="h-9 w-32" />
-              <Skeleton className="h-9 w-32" />
-              <Skeleton className="h-9 w-32" />
-            </div>
-          </div>
-        </div>
-
-        {/* Table skeleton - matches the actual table structure */}
-        <div className="h-[calc(100vh-7rem)] overflow-y-auto">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
-              <TableRow>
-                <TableHead className="w-12">
-                  <Skeleton className="w-4 h-4" />
-                </TableHead>
-                <TableHead className="w-16">ID</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead className="w-32">Status</TableHead>
-                <TableHead className="w-32">Priority</TableHead>
-                <TableHead className="w-32">Type</TableHead>
-                <TableHead className="w-32">Updated</TableHead>
-                <TableHead className="w-32">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="w-4 h-4" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-8" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-md space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-3 w-16" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      <Skeleton className="h-7 w-7" />
-                      <Skeleton className="h-7 w-7" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative h-full px-6 pb-4">
       {/* Header with search and filters - Sticky */}
       <div className="sticky top-0 z-20 bg-background border-b py-4">
         <div className="flex items-center justify-between">
-          <div className="font-semibold leading-none tracking-tight">
-            Devlogs ({devlogs.length})
-          </div>
+          <div className="font-semibold leading-none tracking-tight">Devlogs</div>
           <div className="flex items-center space-x-2">
             {/* Search */}
             <div className="relative">
@@ -358,7 +240,7 @@ export function DevlogList({
 
             {/* Status Filter */}
             <Select
-              value={currentFilters?.status?.[0] || 'all'}
+              value={filters?.status?.[0] || 'all'}
               onValueChange={(value) =>
                 handleFilterChange('status', value === 'all' ? undefined : value)
               }
@@ -378,7 +260,7 @@ export function DevlogList({
 
             {/* Priority Filter */}
             <Select
-              value={currentFilters?.priority?.[0] || 'all'}
+              value={filters?.priority?.[0] || 'all'}
               onValueChange={(value) =>
                 handleFilterChange('priority', value === 'all' ? undefined : value)
               }
@@ -398,7 +280,7 @@ export function DevlogList({
 
             {/* Type Filter */}
             <Select
-              value={currentFilters?.type?.[0] || 'all'}
+              value={filters?.type?.[0] || 'all'}
               onValueChange={(value) =>
                 handleFilterChange('type', value === 'all' ? undefined : value)
               }
@@ -420,7 +302,7 @@ export function DevlogList({
       </div>
 
       {/* Batch Operations */}
-      {selectedRowKeys.length > 0 && (
+      {false && selectedRowKeys.length > 0 && (
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -474,7 +356,7 @@ export function DevlogList({
       )}
 
       {/* Devlogs Table */}
-      {devlogs.length === 0 ? (
+      {!loading && devlogs.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No devlogs found</p>
         </div>
@@ -484,14 +366,18 @@ export function DevlogList({
             <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
               <TableRow>
                 <TableHead className="w-12">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={handleSelectAll}
-                    className={cn(
-                      isIndeterminate &&
-                        'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
-                    )}
-                  />
+                  {loading ? (
+                    <Skeleton className="w-4 h-4" />
+                  ) : (
+                    <Checkbox
+                      checked={isAllSelected}
+                      onCheckedChange={handleSelectAll}
+                      className={cn(
+                        isIndeterminate &&
+                          'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+                      )}
+                    />
+                  )}
                 </TableHead>
                 <TableHead className="w-16">ID</TableHead>
                 <TableHead>Title</TableHead>
@@ -503,73 +389,109 @@ export function DevlogList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {devlogs.map((devlog) => (
-                <TableRow
-                  key={devlog.id}
-                  className="hover:bg-muted/50 cursor-pointer"
-                  onClick={() => onViewDevlog(devlog)}
-                >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
-                      onCheckedChange={(checked) =>
-                        devlog.id && handleSelectRow(devlog.id, checked as boolean)
-                      }
-                      disabled={!devlog.id}
-                    />
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">{devlog.id}</TableCell>
-                  <TableCell>
-                    <div className="max-w-md">
-                      <div className="font-medium truncate">{devlog.title}</div>
-                      <div className="text-sm text-muted-foreground truncate">
-                        {devlog.description}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <DevlogStatusTag status={devlog.status} />
-                  </TableCell>
-                  <TableCell>
-                    <DevlogPriorityTag priority={devlog.priority} />
-                  </TableCell>
-                  <TableCell>
-                    <DevlogTypeTag type={devlog.type} />
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className="text-sm text-muted-foreground"
-                      title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
+              {loading
+                ? Array.from({ length: 12 }).map((_, i) => (
+                    <TableRow key={`skeleton-${i}`}>
+                      <TableCell>
+                        <Skeleton className="w-4 h-4" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-8" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-md space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-3 w-16" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-1">
+                          <Skeleton className="h-7 w-7" />
+                          <Skeleton className="h-7 w-7" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : devlogs.map((devlog) => (
+                    <TableRow
+                      key={devlog.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => onViewDevlog(devlog)}
                     >
-                      {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
-                    </span>
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <div className="flex space-x-1">
-                      <Button size="sm" variant="ghost" onClick={() => onViewDevlog(devlog)}>
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => devlog.id && onDeleteDevlog(devlog.id)}
-                        className="text-destructive hover:text-destructive"
-                        disabled={!devlog.id}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={devlog.id ? selectedRowKeys.includes(devlog.id) : false}
+                          onCheckedChange={(checked) =>
+                            devlog.id && handleSelectRow(devlog.id, checked as boolean)
+                          }
+                          disabled={!devlog.id}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{devlog.id}</TableCell>
+                      <TableCell>
+                        <div className="max-w-md">
+                          <div className="font-medium truncate">{devlog.title}</div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {devlog.description}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DevlogStatusTag status={devlog.status} />
+                      </TableCell>
+                      <TableCell>
+                        <DevlogPriorityTag priority={devlog.priority} />
+                      </TableCell>
+                      <TableCell>
+                        <DevlogTypeTag type={devlog.type} />
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className="text-sm text-muted-foreground"
+                          title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
+                        >
+                          {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                        </span>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <div className="flex space-x-1">
+                          <Button size="sm" variant="ghost" onClick={() => onViewDevlog(devlog)}>
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => devlog.id && onDeleteDevlog(devlog.id)}
+                            className="text-destructive hover:text-destructive"
+                            disabled={!devlog.id}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
 
           {/* Pagination */}
           {pagination && (
             <Pagination
-              className="sticky bottom-0 z-10 h-12 bg-background border-t"
+              className="sticky bottom-0 z-10 h-12 bg-background border-t pr-4"
               pagination={pagination}
+              disabled={loading}
               onPageChange={onPageChange || (() => {})}
               onPageSizeChange={onPageSizeChange || (() => {})}
             />

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, PaginationMeta, ProjectService } from '@codervisor/devlog-core';
+import {
+  DevlogFilter,
+  DevlogService,
+  PaginationMeta,
+  ProjectService,
+} from '@codervisor/devlog-core';
 import { ApiValidator, ProjectIdParamSchema, DevlogSearchQuerySchema } from '@/schemas';
 import { ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
 
@@ -71,27 +76,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     };
 
     // Build filter for enhanced search
-    const enhancedFilter: any = {
-      searchOptions,
-      pagination: {
-        page,
-        limit,
-        sortBy: 'relevance',
-        sortOrder: 'desc',
-      },
-    };
+    const filter: DevlogFilter = {};
 
     // Apply validated filters
-    if (queryData.status) enhancedFilter.status = [queryData.status];
-    if (queryData.type) enhancedFilter.type = [queryData.type];
-    if (queryData.priority) enhancedFilter.priority = [queryData.priority];
-    if (queryData.assignee) enhancedFilter.assignee = queryData.assignee;
-    if (queryData.archived !== undefined) enhancedFilter.archived = queryData.archived;
-    if (queryData.fromDate) enhancedFilter.fromDate = queryData.fromDate;
-    if (queryData.toDate) enhancedFilter.toDate = queryData.toDate;
+    if (queryData.status) filter.status = [queryData.status];
+    if (queryData.type) filter.type = [queryData.type];
+    if (queryData.priority) filter.priority = [queryData.priority];
+    if (queryData.assignee) filter.assignee = queryData.assignee;
+    if (queryData.archived !== undefined) filter.archived = queryData.archived;
+    if (queryData.fromDate) filter.fromDate = queryData.fromDate;
+    if (queryData.toDate) filter.toDate = queryData.toDate;
 
     // Perform the enhanced search using DevlogService
-    const result = await devlogService.searchWithRelevance(searchQuery, enhancedFilter);
+    const result = await devlogService.searchWithRelevance(searchQuery, filter);
 
     // Transform the response to match the expected interface
     const response: SearchResponse = {

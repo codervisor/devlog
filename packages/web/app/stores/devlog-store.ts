@@ -10,6 +10,8 @@ import {
   DevlogStats,
   DevlogStatus,
   FilterType,
+  PaginationMeta,
+  SortOptions,
   TimeSeriesStats,
 } from '@codervisor/devlog-core';
 import { DevlogApiClient, handleApiError } from '@/lib';
@@ -44,7 +46,9 @@ interface DevlogState {
 
   // Actions
   setCurrentDevlogId: (id: DevlogId) => void;
-  setFilters: (filters: DevlogFilter | ((prev: DevlogFilter) => DevlogFilter)) => void;
+  setDevlogsFilters: (filters: DevlogFilter) => void;
+  setDevlogsPagination: (pagination: PaginationMeta) => void;
+  setDevlogsSortOptions: (sortOptions: { field: string; direction: 'asc' | 'desc' }) => void;
   fetchDevlogs: () => Promise<void>;
   fetchStats: () => Promise<void>;
   fetchTimeSeriesStats: () => Promise<void>;
@@ -58,8 +62,6 @@ interface DevlogState {
   deleteDevlog: (id: DevlogId) => Promise<void>;
   batchUpdate: (ids: DevlogId[], updates: any) => Promise<any>;
   batchDelete: (ids: DevlogId[]) => Promise<void>;
-  goToPage: (page: number) => void;
-  changePageSize: (pageSize: number) => void;
   handleStatusFilter: (filterValue: FilterType | DevlogStatus) => void;
   clearErrors: () => void;
 }
@@ -87,16 +89,37 @@ export const useDevlogStore = create<DevlogState>()(
         currentDevlogContext: getDefaultDataContext(),
       });
     },
-    setFilters: (filtersOrUpdater) => {
+
+    setDevlogsFilters: (filters) => {
       const currentFilters = get().devlogsContext.filters;
-      const newFilters =
-        typeof filtersOrUpdater === 'function'
-          ? filtersOrUpdater(currentFilters)
-          : filtersOrUpdater;
       set((state) => ({
         devlogsContext: {
           ...state.devlogsContext,
-          filters: newFilters,
+          filters: {
+            ...currentFilters,
+            ...filters,
+          },
+        },
+      }));
+    },
+
+    setDevlogsPagination: (pagination: PaginationMeta) => {
+      set((state) => ({
+        devlogsContext: {
+          ...state.devlogsContext,
+          pagination: {
+            ...state.devlogsContext.pagination,
+            ...pagination,
+          },
+        },
+      }));
+    },
+
+    setDevlogsSortOptions: (sortOptions: SortOptions) => {
+      set((state) => ({
+        devlogsContext: {
+          ...state.devlogsContext,
+          sortOptions,
         },
       }));
     },
@@ -124,7 +147,7 @@ export const useDevlogStore = create<DevlogState>()(
         }));
 
         const { devlogsContext } = get();
-        const { filters } = devlogsContext;
+        const { filters, pagination, sortOptions } = devlogsContext;
 
         // Convert filters to DevlogFilters format for the API client
         const apiFilters: any = {};
@@ -152,22 +175,19 @@ export const useDevlogStore = create<DevlogState>()(
           apiFilters.filterType = filters.filterType;
         }
 
-        // Pagination
-        if (filters.pagination) {
-          if (filters.pagination.page) apiFilters.page = filters.pagination.page;
-          if (filters.pagination.limit) apiFilters.limit = filters.pagination.limit;
-          if (filters.pagination.sortBy) apiFilters.sortBy = filters.pagination.sortBy;
-          if (filters.pagination.sortOrder) apiFilters.sortOrder = filters.pagination.sortOrder;
-        }
-
-        const { items: data, pagination } = await devlogApiClient.list(apiFilters);
+        const { items: data, pagination: responsePagination } = await devlogApiClient.list(
+          apiFilters,
+          pagination,
+          sortOptions,
+        );
         set((state) => ({
           devlogsContext: {
             ...state.devlogsContext,
             data,
             pagination: {
               ...state.devlogsContext.pagination,
-              ...pagination,
+              total: responsePagination.total,
+              totalPages: responsePagination.totalPages,
             },
             error: null,
           },
@@ -500,42 +520,17 @@ export const useDevlogStore = create<DevlogState>()(
       await get().fetchDevlogs();
     },
 
-    goToPage: (page: number) => {
-      const { devlogsContext } = get();
-      const { filters } = devlogsContext;
-      get().setFilters({
-        ...filters,
-        pagination: {
-          ...filters.pagination!,
-          page,
-        },
-      });
-    },
-
-    changePageSize: (limit: number) => {
-      const { devlogsContext } = get();
-      const { filters } = devlogsContext;
-      get().setFilters({
-        ...filters,
-        pagination: {
-          ...filters.pagination!,
-          limit,
-          page: 1, // Reset to first page when changing page size
-        },
-      });
-    },
-
     handleStatusFilter: (filterValue: FilterType | DevlogStatus) => {
       const { devlogsContext } = get();
       const { filters } = devlogsContext;
       if (['total', 'open', 'closed'].includes(filterValue)) {
-        get().setFilters({
+        get().setDevlogsFilters({
           ...filters,
           filterType: filterValue,
           status: undefined,
         });
       } else {
-        get().setFilters({
+        get().setDevlogsFilters({
           ...filters,
           filterType: undefined,
           status: [filterValue as DevlogStatus],

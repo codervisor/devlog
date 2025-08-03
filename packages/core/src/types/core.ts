@@ -207,8 +207,6 @@ export interface DevlogFilter {
   search?: string;
   archived?: boolean; // Filter for archived status
   projectId?: number; // Filter by project context
-  // Pagination options
-  pagination?: PaginationOptions;
   // Enhanced search options
   searchOptions?: SearchOptions;
 }
@@ -347,4 +345,9 @@ export interface PaginationMeta {
   total?: number;
   /** Total number of pages */
   totalPages?: number;
+}
+
+export interface SortOptions {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }

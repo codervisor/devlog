@@ -14,6 +14,7 @@ import { PaginationMeta } from '@codervisor/devlog-core';
 
 interface PaginationProps {
   pagination: PaginationMeta;
+  disabled?: boolean;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   showSizeChanger?: boolean;
@@ -24,6 +25,7 @@ interface PaginationProps {
 
 export function Pagination({
   pagination,
+  disabled = false,
   onPageChange,
   onPageSizeChange,
   showSizeChanger = true,
@@ -59,8 +61,10 @@ export function Pagination({
     return rangeWithDots;
   };
 
-  const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
-  const endItem = Math.min(page * limit, total!);
+  const isTotalValid = total !== undefined && total !== null;
+
+  const startItem = isTotalValid ? (page - 1) * limit + 1 : 0;
+  const endItem = isTotalValid ? Math.min(page * limit, total) : 0;
 
   if (total === 0) {
     return null;
@@ -70,7 +74,7 @@ export function Pagination({
     <div className={`flex items-center justify-between gap-4 ${className || ''}`}>
       {/* Results info */}
       <p className="text-sm text-muted-foreground">
-        Showing {startItem}-{endItem} of {total} results
+        {isTotalValid ? `Showing ${startItem}-${endItem} of ${total} results` : ' '}
       </p>
 
       <div className="flex items-center gap-4">
@@ -102,7 +106,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            disabled={page <= 1}
+            disabled={disabled || page <= 1}
             onClick={() => onPageChange(page - 1)}
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
@@ -121,6 +125,7 @@ export function Pagination({
                   key={pageNum}
                   variant={pageNum === page ? 'default' : 'outline'}
                   size="sm"
+                  disabled={disabled}
                   onClick={() => onPageChange(pageNum as number)}
                   className="min-w-8"
                 >
@@ -133,7 +138,7 @@ export function Pagination({
           <Button
             variant="outline"
             size="sm"
-            disabled={page >= totalPages!}
+            disabled={disabled || page >= totalPages!}
             onClick={() => onPageChange(page + 1)}
           >
             Next

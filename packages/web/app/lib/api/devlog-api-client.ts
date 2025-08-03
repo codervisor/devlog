@@ -7,6 +7,8 @@ import type {
   DevlogStatus,
   DevlogType,
   PaginatedResult,
+  PaginationMeta,
+  SortOptions,
   TimeSeriesStats,
 } from '@codervisor/devlog-core';
 import { apiClient } from './api-client';
@@ -66,7 +68,11 @@ export class DevlogApiClient {
   /**
    * Get all devlogs for the project
    */
-  async list(filters?: DevlogFilters): Promise<PaginatedResult<DevlogEntry>> {
+  async list(
+    filters?: DevlogFilters,
+    pagination?: PaginationMeta,
+    sortOptions?: SortOptions,
+  ): Promise<PaginatedResult<DevlogEntry>> {
     const params = new URLSearchParams();
 
     if (filters?.status) params.append('status', filters.status);
@@ -78,14 +84,10 @@ export class DevlogApiClient {
     if (filters?.fromDate) params.append('fromDate', filters.fromDate);
     if (filters?.toDate) params.append('toDate', filters.toDate);
     if (filters?.filterType) params.append('filterType', filters.filterType);
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.offset) params.append('offset', filters.offset.toString());
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.sortBy) params.append('sortBy', filters.sortBy);
-    if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
-    if (filters?.tags?.length) {
-      filters.tags.forEach((tag) => params.append('tags', tag));
-    }
+    if (pagination?.limit) params.append('limit', pagination.limit.toString());
+    if (pagination?.page) params.append('page', pagination.page.toString());
+    if (sortOptions?.sortBy) params.append('sortBy', sortOptions.sortBy);
+    if (sortOptions?.sortOrder) params.append('sortOrder', sortOptions.sortOrder);
 
     const queryString = params.toString();
     const url = `/api/projects/${this.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;

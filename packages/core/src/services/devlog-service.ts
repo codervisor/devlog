@@ -13,10 +13,12 @@ import type {
   DevlogId,
   DevlogStats,
   PaginatedResult,
+  PaginationMeta,
   SearchMeta,
   SearchOptions,
   SearchPaginatedResult,
   SearchResult,
+  SortOptions,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
@@ -376,12 +378,16 @@ export class DevlogService {
     // Note: Notes will be cascade deleted due to foreign key constraint
   }
 
-  async list(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+  async list(
+    filter?: DevlogFilter,
+    pagination?: PaginationMeta,
+    sortOptions?: SortOptions,
+  ): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     const { projectFilter, queryBuilder } = this.prepareListQuery(filter);
 
-    return await this.handleList(projectFilter, queryBuilder);
+    return await this.handleList(projectFilter, queryBuilder, pagination, sortOptions);
   }
 
   async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
@@ -402,7 +408,12 @@ export class DevlogService {
   /**
    * Enhanced search with database-level relevance scoring and optimized pagination
    */
-  async searchWithRelevance(query: string, filter?: DevlogFilter): Promise<SearchPaginatedResult> {
+  async searchWithRelevance(
+    query: string,
+    filter?: DevlogFilter,
+    pagination?: PaginationMeta,
+    sortOptions?: SortOptions,
+  ): Promise<SearchPaginatedResult> {
     const searchStartTime = Date.now();
     await this.ensureInitialized();
 
@@ -417,14 +428,8 @@ export class DevlogService {
     await this.applySearchFilters(queryBuilder, projectFilter);
 
     // Apply pagination and sorting with relevance
-    const pagination = projectFilter.pagination || {
-      page: 1,
-      limit: 20,
-      sortBy: 'relevance',
-      sortOrder: 'desc',
-    };
-    const page = pagination.page || 1;
-    const limit = pagination.limit || 20;
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 20;
     const offset = (page - 1) * limit;
 
     // Get total count for pagination
@@ -432,10 +437,10 @@ export class DevlogService {
     const total = await totalCountQuery.getCount();
 
     // Apply sorting - relevance first, then secondary sort
-    if (pagination.sortBy === 'relevance' || !pagination.sortBy) {
+    if (sortOptions?.sortBy === 'relevance' || !sortOptions?.sortBy) {
       queryBuilder.orderBy(
         'relevance_score',
-        (pagination.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
+        (sortOptions?.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
       );
       queryBuilder.addOrderBy('devlog.updatedAt', 'DESC');
     } else {
@@ -448,10 +453,10 @@ export class DevlogService {
         'createdAt',
         'updatedAt',
       ];
-      if (validSortColumns.includes(pagination.sortBy)) {
+      if (validSortColumns.includes(sortOptions?.sortBy)) {
         queryBuilder.orderBy(
-          `devlog.${pagination.sortBy}`,
-          (pagination.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
+          `devlog.${sortOptions?.sortBy}`,
+          (sortOptions?.sortOrder?.toUpperCase() as 'ASC' | 'DESC') || 'DESC',
         );
       } else {
         queryBuilder.orderBy('relevance_score', 'DESC');
@@ -655,31 +660,27 @@ export class DevlogService {
   }
 
   private async handleList(
-    projectFilter: DevlogFilter,
+    filter: DevlogFilter,
     queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
+    pagination?: PaginationMeta,
+    sortOptions?: SortOptions,
   ): Promise<PaginatedResult<DevlogEntry>> {
-    await this.applySearchFilters(queryBuilder, projectFilter);
+    await this.applySearchFilters(queryBuilder, filter);
 
     // Apply search filter (if not already applied by search method)
-    if (projectFilter.search && !queryBuilder.getQueryAndParameters()[0].includes('LIKE')) {
+    if (filter.search && !queryBuilder.getQueryAndParameters()[0].includes('LIKE')) {
       queryBuilder.andWhere(
         '(devlog.title LIKE :search OR devlog.description LIKE :search OR devlog.businessContext LIKE :search OR devlog.technicalContext LIKE :search)',
-        { search: `%${projectFilter.search}%` },
+        { search: `%${filter.search}%` },
       );
     }
 
     // Apply pagination and sorting
-    const pagination = projectFilter.pagination || {
-      page: 1,
-      limit: 20,
-      sortBy: 'updatedAt',
-      sortOrder: 'desc',
-    };
-    const page = pagination.page || 1;
-    const limit = pagination.limit || 20;
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 20;
     const offset = (page - 1) * limit;
-    const sortBy = pagination.sortBy || 'updatedAt';
-    const sortOrder = pagination.sortOrder || 'desc';
+    const sortBy = sortOptions?.sortBy || 'updatedAt';
+    const sortOrder = sortOptions?.sortOrder || 'desc';
 
     queryBuilder.skip(offset).take(limit);
 

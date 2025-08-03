@@ -1,16 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import { NextRequest } from 'next/server';
+import {
+  DevlogService,
+  PaginationMeta,
+  ProjectService,
+  SortOptions,
+} from '@codervisor/devlog-core';
 import {
   ApiValidator,
-  ProjectIdParamSchema,
-  DevlogListQuerySchema,
   CreateDevlogBodySchema,
+  DevlogListQuerySchema,
+  ProjectIdParamSchema,
 } from '@/schemas';
 import {
   ApiErrors,
-  createSuccessResponse,
-  createSimpleCollectionResponse,
   createCollectionResponse,
+  createSimpleCollectionResponse,
+  createSuccessResponse,
   ResponseTransformer,
 } from '@/lib';
 import { DevlogSSE } from '@/lib/api/sse-utils';
@@ -77,9 +82,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       (queryData.offset ? Math.floor(queryData.offset / (queryData.limit || 20)) + 1 : 1);
     const limit = queryData.limit || 20;
 
-    filter.pagination = {
+    const pagination: PaginationMeta = {
       page,
       limit,
+    };
+
+    const sortOptions: SortOptions = {
       sortBy: queryData.sortBy || 'updatedAt',
       sortOrder: queryData.sortOrder || 'desc',
     };

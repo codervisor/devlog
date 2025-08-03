@@ -13,23 +13,33 @@ interface ProjectDevlogListPageProps {
 export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps) {
   const router = useRouter();
 
-  const { setCurrentProjectId } = useProjectStore();
+  const { currentProjectId, setCurrentProjectId } = useProjectStore();
 
   const {
     devlogsContext,
     fetchDevlogs,
-    setFilters,
+    setDevlogsFilters,
+    setDevlogsPagination,
     deleteDevlog,
     batchUpdate,
     batchDelete,
-    goToPage,
-    changePageSize,
   } = useDevlogStore();
 
   useEffect(() => {
     setCurrentProjectId(projectId);
-    fetchDevlogs();
   }, [projectId]);
+
+  useEffect(() => {
+    fetchDevlogs();
+  }, [
+    currentProjectId,
+    devlogsContext.filters.search,
+    devlogsContext.filters.type,
+    devlogsContext.filters.status,
+    devlogsContext.filters.priority,
+    devlogsContext.pagination.page,
+    devlogsContext.pagination.limit,
+  ]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
     router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
@@ -61,6 +71,21 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     }
   };
 
+  const goToPage = (page: number) => {
+    setDevlogsPagination({
+      ...devlogsContext.pagination,
+      page: page,
+    });
+  };
+
+  const changePageSize = (size: number) => {
+    setDevlogsPagination({
+      ...devlogsContext.pagination,
+      limit: size,
+      page: 1, // Reset to first page when changing page size
+    });
+  };
+
   return (
     <DevlogList
       devlogContext={devlogsContext}
@@ -68,7 +93,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
       onDeleteDevlog={handleDeleteDevlog}
       onBatchUpdate={handleBatchUpdate}
       onBatchDelete={handleBatchDelete}
-      onFilterChange={setFilters}
+      onFilterChange={setDevlogsFilters}
       onPageChange={goToPage}
       onPageSizeChange={changePageSize}
     />
