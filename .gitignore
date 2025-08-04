@@ -160,6 +160,8 @@ build/
 # Temporal folder for debugging or quick testing
 tmp/
 
-# Git worktree directories
-.wt/
+# Vercel configuration files
 .vercel
+
+# Turbo configuration files
+.turbo
