@@ -40,13 +40,11 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   };
 
   return (
-    <PageLayout>
-      <Dashboard
-        statsContext={statsContext}
-        timeSeriesStatsContext={timeSeriesStatsContext}
-        recentDevlogsContext={devlogsContext}
-        onViewDevlog={handleViewDevlog}
-      />
-    </PageLayout>
+    <Dashboard
+      statsContext={statsContext}
+      timeSeriesStatsContext={timeSeriesStatsContext}
+      recentDevlogsContext={devlogsContext}
+      onViewDevlog={handleViewDevlog}
+    />
   );
 }
