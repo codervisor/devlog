@@ -41,7 +41,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Edit, Eye, MessageSquare, Search, Trash2, X } from 'lucide-react';
+import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import { DevlogEntry, DevlogFilter, DevlogId, NoteCategory } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
 import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
