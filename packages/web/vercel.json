@@ -2,7 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install --frozen-lockfile",
-  "rootDirectory": "packages/web",
   "env": {
     "NODE_ENV": "production"
   }
