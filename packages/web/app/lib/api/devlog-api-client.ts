@@ -118,24 +118,6 @@ export class DevlogApiClient {
   }
 
   /**
-   * Archive a devlog
-   */
-  async archive(devlogId: DevlogId): Promise<DevlogEntry> {
-    return apiClient.post<DevlogEntry>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/archive`,
-    );
-  }
-
-  /**
-   * Unarchive a devlog
-   */
-  async unarchive(devlogId: DevlogId): Promise<DevlogEntry> {
-    return apiClient.post<DevlogEntry>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/unarchive`,
-    );
-  }
-
-  /**
    * Batch update multiple devlogs
    */
   async batchUpdate(

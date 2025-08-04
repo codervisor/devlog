@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
 import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
-import { createSimpleCollectionResponse, createSuccessResponse, ApiErrors } from '@/lib';
+import {
+  ApiErrors,
+  createSimpleCollectionResponse,
+  createSuccessResponse,
+  SSEEventType,
+} from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -41,7 +46,10 @@ export async function POST(request: NextRequest) {
     // Create project (service layer will perform business logic validation)
     const createdProject = await projectService.create(serviceData);
 
-    return createSuccessResponse(createdProject, { status: 201 });
+    return createSuccessResponse(createdProject, {
+      status: 201,
+      sseEventType: SSEEventType.PROJECT_CREATED,
+    });
   } catch (error) {
     console.error('Error creating project:', error);
     return ApiErrors.internalError('Failed to create project');

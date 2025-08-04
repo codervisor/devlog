@@ -2,7 +2,7 @@
  * Types for comprehensive devlog field change tracking
  */
 
-import type { DevlogEntry, DevlogNote, DevlogId } from './core.js';
+import type { DevlogEntry, DevlogId } from './core.js';
 
 /**
  * Types of changes that can be tracked

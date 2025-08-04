@@ -286,16 +286,6 @@ export class DevlogApiClient {
     return this.unwrapApiResponse<DevlogEntry>(response);
   }
 
-  async archiveDevlog(id: number): Promise<DevlogEntry> {
-    const response = await this.put(`${this.getProjectEndpoint()}/devlogs/${id}/archive`, {});
-    return this.unwrapApiResponse<DevlogEntry>(response);
-  }
-
-  async unarchiveDevlog(id: number): Promise<DevlogEntry> {
-    const response = await this.put(`${this.getProjectEndpoint()}/devlogs/${id}/unarchive`, {});
-    return this.unwrapApiResponse<DevlogEntry>(response);
-  }
-
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {

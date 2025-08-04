@@ -11,6 +11,7 @@ import type {
   ResponseMeta,
 } from '@/schemas/responses';
 import { PaginationMeta } from '@codervisor/devlog-core';
+import { broadcastUpdate } from '@/lib';
 
 /**
  * Type-safe parameter parser for API routes
@@ -194,6 +195,7 @@ export function createSuccessResponse<T>(
   options?: {
     status?: number;
     meta?: ResponseMeta;
+    sseEventType?: string;
   },
 ): NextResponse {
   const response: ApiSuccessResponse<T> = {
@@ -204,6 +206,12 @@ export function createSuccessResponse<T>(
       ...options?.meta,
     },
   };
+
+  if (options?.sseEventType) {
+    setTimeout(() => {
+      broadcastUpdate(options.sseEventType!, data);
+    }, 0);
+  }
 
   return NextResponse.json(response, { status: options?.status || 200 });
 }

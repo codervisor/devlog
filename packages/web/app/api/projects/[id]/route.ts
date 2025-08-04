@@ -1,5 +1,11 @@
 import { NextRequest } from 'next/server';
-import { RouteParams, ServiceHelper, withErrorHandling, createSuccessResponse } from '@/lib';
+import {
+  createSuccessResponse,
+  RouteParams,
+  ServiceHelper,
+  SSEEventType,
+  withErrorHandling,
+} from '@/lib';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
@@ -56,7 +62,7 @@ export const PUT = withErrorHandling(
     // Update project
     const updatedProject = await projectResult.data.projectService.update(projectId, data);
 
-    return createSuccessResponse(updatedProject);
+    return createSuccessResponse(updatedProject, { sseEventType: SSEEventType.PROJECT_UPDATED });
   },
 );
 
@@ -80,6 +86,9 @@ export const DELETE = withErrorHandling(
     // Delete project
     await projectResult.data.projectService.delete(projectId);
 
-    return createSuccessResponse({ deleted: true, projectId });
+    return createSuccessResponse(
+      { deleted: true, projectId },
+      { sseEventType: SSEEventType.PROJECT_DELETED },
+    );
   },
 );

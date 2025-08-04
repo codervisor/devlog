@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
-import { NoteSSE } from '@/lib/api/sse-utils';
-import { z } from 'zod';
+import { NextRequest } from 'next/server';
 import type { NoteCategory } from '@codervisor/devlog-core';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import { ApiErrors, createSuccessResponse, RouteParams, SSEEventType } from '@/lib';
+import { z } from 'zod';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -92,7 +91,7 @@ export async function PUT(
       category: updates.category as NoteCategory | undefined,
     });
 
-    return NoteSSE.updated(createSuccessResponse(updatedNote));
+    return createSuccessResponse(updatedNote, { sseEventType: SSEEventType.DEVLOG_NOTE_UPDATED });
   } catch (error) {
     console.error('Error updating note:', error);
     if (error instanceof Error && error.message.includes('not found')) {
@@ -130,7 +129,14 @@ export async function DELETE(
     // Delete the note
     await devlogService.deleteNote(noteId);
 
-    return NoteSSE.deleted(createSuccessResponse({ deleted: true, noteId }), noteId, devlogId);
+    return createSuccessResponse(
+      {
+        deleted: true,
+        devlogId,
+        noteId,
+      },
+      { sseEventType: SSEEventType.DEVLOG_NOTE_DELETED },
+    );
   } catch (error) {
     console.error('Error deleting note:', error);
     if (error instanceof Error && error.message.includes('not found')) {

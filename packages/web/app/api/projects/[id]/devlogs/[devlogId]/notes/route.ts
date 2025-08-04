@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
-import { NoteSSE, DevlogSSE } from '@/lib/api/sse-utils';
-import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core';
+import { ApiErrors, createSuccessResponse, RouteParams, SSEEventType } from '@/lib';
+import { DevlogAddNoteBodySchema, DevlogUpdateWithNoteBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -67,27 +66,6 @@ export async function GET(
   }
 }
 
-// Schema for adding notes
-const AddNoteBodySchema = z.object({
-  note: z.string().min(1, 'Note is required'),
-  category: z.string().optional().default('progress'),
-});
-
-// Schema for updating devlog with note
-const UpdateWithNoteBodySchema = z.object({
-  note: z.string().min(1, 'Note is required'),
-  category: z.string().optional().default('progress'),
-  // Optional update fields
-  status: z
-    .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
-    .optional(),
-  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  assignee: z.string().nullable().optional(),
-  businessContext: z.string().nullable().optional(),
-  technicalContext: z.string().nullable().optional(),
-  acceptanceCriteria: z.array(z.string()).optional(),
-});
-
 // POST /api/projects/[id]/devlogs/[devlogId]/notes - Add note to devlog entry
 export async function POST(
   request: NextRequest,
@@ -104,7 +82,7 @@ export async function POST(
 
     // Validate request body
     const data = await request.json();
-    const validationResult = AddNoteBodySchema.safeParse(data);
+    const validationResult = DevlogAddNoteBodySchema.safeParse(data);
     if (!validationResult.success) {
       return ApiErrors.invalidRequest(validationResult.error.errors[0].message);
     }
@@ -127,7 +105,10 @@ export async function POST(
       category: (category || 'progress') as NoteCategory,
     });
 
-    return NoteSSE.created(createSuccessResponse(newNote, { status: 201 }));
+    return createSuccessResponse(newNote, {
+      status: 201,
+      sseEventType: SSEEventType.DEVLOG_NOTE_CREATED,
+    });
   } catch (error) {
     console.error('Error adding devlog note:', error);
     return ApiErrors.internalError('Failed to add note to devlog entry');
@@ -150,7 +131,7 @@ export async function PUT(
 
     // Validate request body
     const data = await request.json();
-    const validationResult = UpdateWithNoteBodySchema.safeParse(data);
+    const validationResult = DevlogUpdateWithNoteBodySchema.safeParse(data);
     if (!validationResult.success) {
       return ApiErrors.invalidRequest(validationResult.error.errors[0].message);
     }
@@ -184,14 +165,14 @@ export async function PUT(
     }
 
     // Add the note using the dedicated method
-    const newNote = await devlogService.addNote(devlogId, {
+    await devlogService.addNote(devlogId, {
       content: note,
       category: (category || 'progress') as NoteCategory,
     });
 
     // Return the updated entry with the note
     const finalEntry = await devlogService.get(devlogId, true); // Load with notes
-    return DevlogSSE.updated(createSuccessResponse(finalEntry));
+    return createSuccessResponse(finalEntry, { sseEventType: SSEEventType.DEVLOG_UPDATED });
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

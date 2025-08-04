@@ -7,15 +7,6 @@
 import { z } from 'zod';
 
 /**
- * Devlog ID parameter validation (from URL params)
- */
-export const DevlogIdParamSchema = z
-  .object({
-    devlogId: z.string().regex(/^\d+$/, 'Devlog ID must be a valid number'),
-  })
-  .transform((data) => ({ devlogId: Number(data.devlogId) }));
-
-/**
  * Devlog entry creation request body schema
  */
 export const CreateDevlogBodySchema = z.object({
@@ -67,4 +58,25 @@ export const DevlogListQuerySchema = z.object({
 
 export const DevlogSearchQuerySchema = DevlogListQuerySchema.extend({
   q: z.string().min(1, 'Search query is required'),
+});
+
+// Schema for adding notes
+export const DevlogAddNoteBodySchema = z.object({
+  note: z.string().min(1, 'Note is required'),
+  category: z.string().optional().default('progress'),
+});
+
+// Schema for updating devlog with note
+export const DevlogUpdateWithNoteBodySchema = z.object({
+  note: z.string().min(1, 'Note is required'),
+  category: z.string().optional().default('progress'),
+  // Optional update fields
+  status: z
+    .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
+    .optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  assignee: z.string().nullable().optional(),
+  businessContext: z.string().nullable().optional(),
+  technicalContext: z.string().nullable().optional(),
+  acceptanceCriteria: z.array(z.string()).optional(),
 });
