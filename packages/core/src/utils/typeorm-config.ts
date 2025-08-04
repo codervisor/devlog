@@ -66,6 +66,21 @@ function parseSSLConfig(sslEnvVar?: string): boolean | object {
 }
 
 /**
+ * Create additional PostgreSQL connection options for Vercel compatibility
+ */
+function getPostgresExtraOptions(): any {
+  return {
+    // Handle Vercel's connection pooling and authentication issues
+    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 30000,
+    max: 1, // Limit connection pool size in serverless environment
+    // Additional options for SASL authentication stability
+    statement_timeout: 30000,
+    idle_in_transaction_session_timeout: 30000,
+  };
+}
+
+/**
  * Get or create the singleton DataSource instance
  * All services should use this to ensure they share the same database connection
  * Handles race conditions by ensuring only one initialization happens
@@ -145,6 +160,7 @@ export function createDataSource({
           type: 'postgres',
           url: options.url,
           ssl: options.ssl ?? false,
+          extra: getPostgresExtraOptions(),
         } as DataSourceOptions;
       } else {
         config = {
@@ -156,6 +172,7 @@ export function createDataSource({
           password: options.password,
           database: options.database,
           ssl: options.ssl ?? false,
+          extra: getPostgresExtraOptions(),
         } as DataSourceOptions;
       }
       break;
@@ -191,7 +208,9 @@ export function createDataSource({
  * Parse database configuration from environment variables
  */
 export function parseTypeORMConfig(): TypeORMStorageOptions {
-  const postgresUrl = process.env.POSTGRES_URL;
+  // For Vercel, prefer direct connection URLs that bypass connection pooling
+  // to avoid SASL authentication issues
+  const postgresUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   const mysqlUrl = process.env.MYSQL_URL;
   const dbType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase();
 

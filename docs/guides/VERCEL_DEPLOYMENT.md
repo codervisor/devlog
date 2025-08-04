@@ -100,6 +100,13 @@ If you encounter SSL certificate errors in Vercel deployment:
 - If needed, you can override by setting `POSTGRES_SSL="false"` in Vercel environment variables
 - For custom SSL configuration, set `POSTGRES_SSL='{"rejectUnauthorized":false,"ca":"..."}'`
 
+### SASL Authentication Errors (SCRAM-SERVER-FINAL-MESSAGE: server signature is missing)
+If you encounter SASL authentication errors:
+- This is automatically handled by using `POSTGRES_URL_NON_POOLING` when available
+- The system prefers direct connections over pooled connections to avoid authentication issues
+- Vercel automatically provides `POSTGRES_URL_NON_POOLING` which bypasses PgBouncer connection pooling
+- No manual configuration needed - the fix is automatic
+
 ### Auto-Detection Not Working
 - Check console logs for database detection messages
 - Ensure environment variable names match exactly: `POSTGRES_URL`, `MYSQL_URL`, `SQLITE_URL`
