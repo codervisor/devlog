@@ -8,4 +8,3 @@ export * from './api-utils';
 export * from './devlog-api-client';
 export * from './note-api-client';
 export * from './sse-utils';
-export * from './sse-event-bridge';

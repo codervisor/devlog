@@ -1,6 +1,3 @@
-// Event System
-export * from './events/index.js';
-
 // Services
 export * from './services/index.js';
 
@@ -14,5 +11,4 @@ export * from './utils/index.js';
 export * from './types/index.js';
 
 // Validation
-export * from './validation/project-schemas.js';
-export * from './validation/devlog-schemas.js';
+export * from './validation/index.js';

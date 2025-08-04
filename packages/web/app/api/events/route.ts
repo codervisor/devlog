@@ -1,19 +1,10 @@
 import { NextRequest } from 'next/server';
-import { activeConnections, sseEventBridge } from '@/lib/api';
+import { activeConnections } from '@/lib/api';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  console.log('[SSE Route] Starting SSE endpoint, initializing bridge...');
-  const startTime = Date.now();
-
-  // Initialize SSE bridge for real-time events
-  await sseEventBridge.initialize();
-
-  const initDuration = Date.now() - startTime;
-  console.log(`[SSE Route] Bridge initialization completed in ${initDuration}ms`);
-
   // Create a readable stream for SSE
   console.log('[SSE Route] Creating ReadableStream...');
   const stream = new ReadableStream({
