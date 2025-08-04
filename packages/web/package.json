@@ -6,7 +6,6 @@
     "dev": "next dev --port 3000",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "build": "next build",
-    "build:vercel": "cd ../.. && pnpm build",
     "start": "pnpm run build && next start --port 3010",
     "preview": "next start --port 3010",
     "clean": "rimraf .next .next-build out *.tsbuildinfo",

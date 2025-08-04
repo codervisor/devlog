@@ -1,7 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "pnpm --filter=@codervisor/devlog-web build:vercel",
-  "env": {
-    "NODE_ENV": "production"
-  }
-}
