@@ -218,116 +218,114 @@ export function DevlogList({
   const isIndeterminate = selectedRowKeys.length > 0 && selectedRowKeys.length < devlogs.length;
 
   return (
-    <div className="relative h-full px-6 pb-4">
+    <div className="relative h-full px-6">
       {/* Header with search, filters, and actions - Sticky */}
-      <div className="sticky top-0 z-20 bg-background border-b py-4">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold leading-none tracking-tight">Devlogs</div>
-          <div className="flex items-center space-x-2">
-            {/* Batch Operations */}
-            {selectedRowKeys.length > 0 && (
-              <>
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  {selectedRowKeys.length} selected
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })
-                  }
-                  disabled={!onBatchUpdate}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Update
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => setDeleteConfirmVisible(true)}
-                  disabled={!onBatchDelete}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Delete
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
-                  <X className="h-3 w-3" />
-                </Button>
-                <div className="h-6 w-px bg-border mx-2" />
-              </>
-            )}
+      <div className="sticky top-0 z-20 bg-background border-b h-16 flex items-center justify-between">
+        <div className="font-semibold leading-none tracking-tight">Devlogs</div>
+        <div className="flex items-center space-x-2">
+          {/* Batch Operations */}
+          {selectedRowKeys.length > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                {selectedRowKeys.length} selected
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setBatchOperationModal({ visible: true, type: 'update', title: 'Batch Update' })
+                }
+                disabled={!onBatchUpdate}
+              >
+                <Edit className="h-3 w-3 mr-1" />
+                Update
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setDeleteConfirmVisible(true)}
+                disabled={!onBatchDelete}
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
+                <X className="h-3 w-3" />
+              </Button>
+              <div className="h-6 w-px bg-border mx-2" />
+            </>
+          )}
 
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search devlogs..."
-                value={searchText}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-8 w-64"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <Select
-              value={filters?.status?.[0] || 'all'}
-              onValueChange={(value) =>
-                handleFilterChange('status', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Priority Filter */}
-            <Select
-              value={filters?.priority?.[0] || 'all'}
-              onValueChange={(value) =>
-                handleFilterChange('priority', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
-                {priorityOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Type Filter */}
-            <Select
-              value={filters?.type?.[0] || 'all'}
-              onValueChange={(value) =>
-                handleFilterChange('type', value === 'all' ? undefined : value)
-              }
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {typeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search devlogs..."
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-8 w-64"
+            />
           </div>
+
+          {/* Status Filter */}
+          <Select
+            value={filters?.status?.[0] || 'all'}
+            onValueChange={(value) =>
+              handleFilterChange('status', value === 'all' ? undefined : value)
+            }
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Priority Filter */}
+          <Select
+            value={filters?.priority?.[0] || 'all'}
+            onValueChange={(value) =>
+              handleFilterChange('priority', value === 'all' ? undefined : value)
+            }
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priority</SelectItem>
+              {priorityOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Type Filter */}
+          <Select
+            value={filters?.type?.[0] || 'all'}
+            onValueChange={(value) =>
+              handleFilterChange('type', value === 'all' ? undefined : value)
+            }
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {typeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -337,8 +335,8 @@ export function DevlogList({
           <p className="text-muted-foreground mb-4">No devlogs found</p>
         </div>
       ) : (
-        <div className="h-[calc(100vh-7rem)] overflow-y-auto">
-          <Table>
+        <div className={`h-[calc(100%-4rem)] ${loading ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+          <Table className="h-[calc(100%-3rem)]">
             <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
               <TableRow>
                 <TableHead className="w-12">
@@ -364,9 +362,9 @@ export function DevlogList({
                 <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="min-h-[calc(100%-6rem)]">
               {loading
-                ? Array.from({ length: 12 }).map((_, i) => (
+                ? Array.from({ length: 20 }).map((_, i) => (
                     <TableRow key={`skeleton-${i}`}>
                       <TableCell>
                         <Skeleton className="w-4 h-4" />

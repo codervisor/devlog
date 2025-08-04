@@ -32,7 +32,7 @@ export function getDefaultTableDataContext<T, F>(): TableDataContext<T, F> {
 export function getDefaultPagination(): PaginationMeta {
   return {
     page: 1,
-    limit: 10,
+    limit: 20,
   };
 }
 

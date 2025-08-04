@@ -84,6 +84,7 @@ export function Pagination({
             <span className="text-sm text-muted-foreground">Show</span>
             <Select
               value={limit.toString()}
+              disabled={disabled}
               onValueChange={(value) => onPageSizeChange(parseInt(value))}
             >
               <SelectTrigger className="w-16">
