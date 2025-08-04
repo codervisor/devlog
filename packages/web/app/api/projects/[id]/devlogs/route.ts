@@ -61,21 +61,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (queryData.toDate) filter.toDate = queryData.toDate;
     if (queryData.search) filter.search = queryData.search;
 
-    // Handle special filter types for backwards compatibility
-    if (queryData.filterType) {
-      switch (queryData.filterType) {
-        case 'open':
-          filter.status = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
-          break;
-        case 'closed':
-          filter.status = ['done', 'cancelled'];
-          break;
-        case 'total':
-          // No status filter - show all
-          break;
-      }
-    }
-
     // Pagination - support both offset/limit and page-based pagination
     const page =
       queryData.page ||

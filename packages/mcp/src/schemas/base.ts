@@ -52,16 +52,8 @@ export const LimitSchema = z.number().int().min(1).max(50).default(10).optional(
 
 export const PageSchema = z.number().int().min(1).optional();
 
-export const SortBySchema = z
+export const DevlogsSortBySchema = z
   .enum(['createdAt', 'updatedAt', 'priority', 'status', 'title'])
   .optional();
 
 export const SortOrderSchema = z.enum(['asc', 'desc']).optional();
-
-// === TYPE EXPORTS ===
-export type DevlogId = z.infer<typeof DevlogIdSchema>;
-export type ProjectId = z.infer<typeof ProjectIdSchema>;
-export type DevlogType = z.infer<typeof DevlogTypeSchema>;
-export type DevlogStatus = z.infer<typeof DevlogStatusSchema>;
-export type DevlogPriority = z.infer<typeof DevlogPrioritySchema>;
-export type NoteCategory = z.infer<typeof NoteCategorySchema>;

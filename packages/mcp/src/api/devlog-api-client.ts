@@ -8,6 +8,8 @@ import type {
   DevlogEntry,
   DevlogFilter,
   PaginatedResult,
+  PaginationMeta,
+  SortOptions,
   UpdateDevlogRequest,
 } from '@codervisor/devlog-core';
 
@@ -232,13 +234,19 @@ export class DevlogApiClient {
     return this.unwrapApiResponse<void>(response);
   }
 
-  async listDevlogs(filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+  async listDevlogs(
+    args?: Partial<DevlogFilter & PaginationMeta & SortOptions>,
+  ): Promise<PaginatedResult<DevlogEntry>> {
     const params = new URLSearchParams();
 
-    if (filter) {
-      this.applyFilterToURLSearchParams(filter, params);
-      if (filter.pagination?.sortBy) params.append('sortBy', filter.pagination.sortBy);
-      if (filter.pagination?.sortOrder) params.append('sortOrder', filter.pagination.sortOrder);
+    if (args) {
+      this.applyFilterToURLSearchParams(args, params);
+
+      if (args.page) params.append('page', args.page.toString());
+      if (args.limit) params.append('limit', args.limit.toString());
+
+      if (args.sortBy) params.append('sortBy', args.sortBy);
+      if (args.sortOrder) params.append('sortOrder', args.sortOrder);
     }
 
     const query = params.toString() ? `?${params.toString()}` : '';
@@ -246,11 +254,16 @@ export class DevlogApiClient {
     return this.unwrapApiResponse<PaginatedResult<DevlogEntry>>(response);
   }
 
-  async searchDevlogs(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+  async searchDevlogs({
+    query,
+    ...args
+  }: { query: string } & Partial<DevlogFilter & PaginationMeta>): Promise<
+    PaginatedResult<DevlogEntry>
+  > {
     const params = new URLSearchParams({ q: query });
 
-    if (filter) {
-      this.applyFilterToURLSearchParams(filter, params);
+    if (args) {
+      this.applyFilterToURLSearchParams(args, params);
     }
 
     const response = await this.get(
@@ -319,7 +332,5 @@ export class DevlogApiClient {
     if (filter.type?.length) params.append('type', filter.type.join(','));
     if (filter.priority?.length) params.append('priority', filter.priority.join(','));
     if (filter.archived !== undefined) params.append('archived', String(filter.archived));
-    if (filter.pagination?.page) params.append('page', String(filter.pagination.page));
-    if (filter.pagination?.limit) params.append('limit', String(filter.pagination.limit));
   }
 }

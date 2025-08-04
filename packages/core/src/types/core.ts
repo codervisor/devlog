@@ -197,6 +197,9 @@ export interface Dependency {
 }
 
 export interface DevlogFilter {
+  /**
+   * @deprecated
+   */
   filterType?: FilterType; // New filter dimension for status grouping
   status?: DevlogStatus[];
   type?: DevlogType[];

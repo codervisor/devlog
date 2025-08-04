@@ -390,7 +390,12 @@ export class DevlogService {
     return await this.handleList(projectFilter, queryBuilder, pagination, sortOptions);
   }
 
-  async search(query: string, filter?: DevlogFilter): Promise<PaginatedResult<DevlogEntry>> {
+  async search(
+    query: string,
+    filter?: DevlogFilter,
+    pagination?: PaginationMeta,
+    sortOptions?: SortOptions,
+  ): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     const { projectFilter, queryBuilder } = this.prepareListQuery(filter);
@@ -402,7 +407,7 @@ export class DevlogService {
       .orWhere('devlog.businessContext LIKE :query', { query: `%${query}%` })
       .orWhere('devlog.technicalContext LIKE :query', { query: `%${query}%` });
 
-    return await this.handleList(projectFilter, queryBuilder);
+    return await this.handleList(projectFilter, queryBuilder, pagination, sortOptions);
   }
 
   /**
@@ -838,53 +843,53 @@ export class DevlogService {
    */
   private async applySearchFilters(
     queryBuilder: SelectQueryBuilder<DevlogEntryEntity>,
-    projectFilter: DevlogFilter,
+    filter: DevlogFilter,
   ): Promise<void> {
     // Apply project filter
-    if (projectFilter.projectId !== undefined) {
+    if (filter.projectId !== undefined) {
       queryBuilder.andWhere('devlog.projectId = :projectId', {
-        projectId: projectFilter.projectId,
+        projectId: filter.projectId,
       });
     }
 
     // Apply status filter
-    if (projectFilter.status && projectFilter.status.length > 0) {
-      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: projectFilter.status });
+    if (filter.status && filter.status.length > 0) {
+      queryBuilder.andWhere('devlog.status IN (:...statuses)', { statuses: filter.status });
     }
 
     // Apply type filter
-    if (projectFilter.type && projectFilter.type.length > 0) {
-      queryBuilder.andWhere('devlog.type IN (:...types)', { types: projectFilter.type });
+    if (filter.type && filter.type.length > 0) {
+      queryBuilder.andWhere('devlog.type IN (:...types)', { types: filter.type });
     }
 
     // Apply priority filter
-    if (projectFilter.priority && projectFilter.priority.length > 0) {
+    if (filter.priority && filter.priority.length > 0) {
       queryBuilder.andWhere('devlog.priority IN (:...priorities)', {
-        priorities: projectFilter.priority,
+        priorities: filter.priority,
       });
     }
 
     // Apply assignee filter
-    if (projectFilter.assignee !== undefined) {
-      if (projectFilter.assignee === null) {
+    if (filter.assignee !== undefined) {
+      if (filter.assignee === null) {
         queryBuilder.andWhere('devlog.assignee IS NULL');
       } else {
-        queryBuilder.andWhere('devlog.assignee = :assignee', { assignee: projectFilter.assignee });
+        queryBuilder.andWhere('devlog.assignee = :assignee', { assignee: filter.assignee });
       }
     }
 
     // Apply archived filter
-    if (projectFilter.archived !== undefined) {
-      queryBuilder.andWhere('devlog.archived = :archived', { archived: projectFilter.archived });
+    if (filter.archived !== undefined) {
+      queryBuilder.andWhere('devlog.archived = :archived', { archived: filter.archived });
     }
 
     // Apply date range filters
-    if (projectFilter.fromDate) {
-      queryBuilder.andWhere('devlog.createdAt >= :fromDate', { fromDate: projectFilter.fromDate });
+    if (filter.fromDate) {
+      queryBuilder.andWhere('devlog.createdAt >= :fromDate', { fromDate: filter.fromDate });
     }
 
-    if (projectFilter.toDate) {
-      queryBuilder.andWhere('devlog.createdAt <= :toDate', { toDate: projectFilter.toDate });
+    if (filter.toDate) {
+      queryBuilder.andWhere('devlog.createdAt <= :toDate', { toDate: filter.toDate });
     }
   }
 

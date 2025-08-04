@@ -18,6 +18,9 @@ import {
   BusinessContextSchema,
   TechnicalContextSchema,
   AcceptanceCriteriaSchema,
+  PageSchema,
+  DevlogsSortBySchema,
+  SortOrderSchema,
 } from './base.js';
 
 // === CREATE DEVLOG ===
@@ -53,7 +56,10 @@ export const ListDevlogSchema = z.object({
   status: DevlogStatusSchema.optional(),
   type: DevlogTypeSchema.optional(),
   priority: DevlogPrioritySchema.optional(),
+  page: PageSchema,
   limit: LimitSchema,
+  sortBy: DevlogsSortBySchema,
+  sortOrder: SortOrderSchema,
 });
 
 // === ADD NOTE ===
@@ -75,6 +81,7 @@ export const FindRelatedSchema = z.object({
   description: DescriptionSchema,
   type: DevlogTypeSchema.optional(),
   keywords: KeywordsSchema,
+  limit: LimitSchema,
 });
 
 // === TYPE EXPORTS ===

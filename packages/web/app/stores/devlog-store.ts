@@ -149,34 +149,27 @@ export const useDevlogStore = create<DevlogState>()(
         const { devlogsContext } = get();
         const { filters, pagination, sortOptions } = devlogsContext;
 
-        // Convert filters to DevlogFilters format for the API client
-        const apiFilters: any = {};
-
-        // Convert array filters to single values (API expects single values currently)
+        // Convert filters to DevlogFilter format for the API client
+        const filter: DevlogFilter = {};
         if (filters.status && filters.status.length > 0) {
-          apiFilters.status = filters.status[0];
+          filter.status = filters.status;
         }
         if (filters.type && filters.type.length > 0) {
-          apiFilters.type = filters.type[0];
+          filter.type = filters.type;
         }
         if (filters.priority && filters.priority.length > 0) {
-          apiFilters.priority = filters.priority[0];
+          filter.priority = filters.priority;
         }
 
         // Direct mappings
-        if (filters.search) apiFilters.search = filters.search;
-        if (filters.assignee) apiFilters.assignee = filters.assignee;
-        if (filters.archived !== undefined) apiFilters.archived = filters.archived;
-        if (filters.fromDate) apiFilters.fromDate = filters.fromDate;
-        if (filters.toDate) apiFilters.toDate = filters.toDate;
-
-        // Handle filterType - only pass through valid values
-        if (filters.filterType && ['total', 'open', 'closed'].includes(filters.filterType)) {
-          apiFilters.filterType = filters.filterType;
-        }
+        if (filters.search) filter.search = filters.search;
+        if (filters.assignee) filter.assignee = filters.assignee;
+        if (filters.archived !== undefined) filter.archived = filters.archived;
+        if (filters.fromDate) filter.fromDate = filters.fromDate;
+        if (filters.toDate) filter.toDate = filters.toDate;
 
         const { items: data, pagination: responsePagination } = await devlogApiClient.list(
-          apiFilters,
+          filter,
           pagination,
           sortOptions,
         );
@@ -526,13 +519,11 @@ export const useDevlogStore = create<DevlogState>()(
       if (['total', 'open', 'closed'].includes(filterValue)) {
         get().setDevlogsFilters({
           ...filters,
-          filterType: filterValue,
           status: undefined,
         });
       } else {
         get().setDevlogsFilters({
           ...filters,
-          filterType: undefined,
           status: [filterValue as DevlogStatus],
         });
       }

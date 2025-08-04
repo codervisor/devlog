@@ -10,6 +10,7 @@ import type { DevlogStatus, FilterType } from '../types/index.js';
 
 /**
  * Mapping of filter types to their corresponding status arrays
+ * @deprecated
  *
  * This is the single source of truth for status groupings:
  * - 'open': Statuses representing active/in-progress work
@@ -35,6 +36,7 @@ export const FILTER_TYPE_TO_STATUSES: Record<FilterType, DevlogStatus[]> = {
 
 /**
  * Get the status array for a given filter type
+ * @deprecated
  *
  * @param filterType - The filter type to map to statuses
  * @returns Array of DevlogStatus values corresponding to the filter type
@@ -54,6 +56,7 @@ export function getStatusesForFilterType(filterType: FilterType): DevlogStatus[]
 
 /**
  * Check if a status belongs to a specific filter type category
+ * @deprecated
  *
  * @param status - The DevlogStatus to check
  * @param filterType - The FilterType category to check against
@@ -121,6 +124,7 @@ export function isClosedStatus(status: DevlogStatus): boolean {
 
 /**
  * Get the filter type category for a given status
+ * @deprecated
  *
  * @param status - The DevlogStatus to categorize
  * @returns The FilterType category ('open' or 'closed') for the status
@@ -141,6 +145,7 @@ export function getFilterTypeForStatus(status: DevlogStatus): 'open' | 'closed' 
 /**
  * Convert a FilterType to an appropriate status array for filtering operations
  * This is the main function to use when applying filters in storage/manager layers
+ * @deprecated
  *
  * @param filterType - The FilterType to convert
  * @returns Array of DevlogStatus values for filtering, or undefined if 'total' (no filtering needed)

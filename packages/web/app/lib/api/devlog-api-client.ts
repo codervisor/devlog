@@ -1,5 +1,6 @@
 import type {
   DevlogEntry,
+  DevlogFilter,
   DevlogId,
   DevlogNote,
   DevlogPriority,
@@ -32,24 +33,6 @@ export interface UpdateDevlogRequest {
   tags?: string[];
 }
 
-export interface DevlogFilters {
-  status?: DevlogStatus;
-  priority?: DevlogPriority;
-  type?: DevlogType;
-  tags?: string[];
-  search?: string;
-  assignee?: string;
-  archived?: boolean;
-  fromDate?: string;
-  toDate?: string;
-  filterType?: 'total' | 'open' | 'closed';
-  limit?: number;
-  offset?: number;
-  page?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
 export interface BatchUpdateRequest {
   status?: DevlogStatus;
   priority?: DevlogPriority;
@@ -69,21 +52,32 @@ export class DevlogApiClient {
    * Get all devlogs for the project
    */
   async list(
-    filters?: DevlogFilters,
+    filter?: DevlogFilter,
     pagination?: PaginationMeta,
     sortOptions?: SortOptions,
   ): Promise<PaginatedResult<DevlogEntry>> {
     const params = new URLSearchParams();
 
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.priority) params.append('priority', filters.priority);
-    if (filters?.type) params.append('type', filters.type);
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.assignee) params.append('assignee', filters.assignee);
-    if (filters?.archived !== undefined) params.append('archived', filters.archived.toString());
-    if (filters?.fromDate) params.append('fromDate', filters.fromDate);
-    if (filters?.toDate) params.append('toDate', filters.toDate);
-    if (filters?.filterType) params.append('filterType', filters.filterType);
+    if (filter?.status) {
+      filter.status.forEach((status) => {
+        params.append('status', status);
+      });
+    }
+    if (filter?.priority) {
+      filter.priority.forEach((priority) => {
+        params.append('priority', priority);
+      });
+    }
+    if (filter?.type) {
+      filter.type.forEach((type) => {
+        params.append('type', type);
+      });
+    }
+    if (filter?.search) params.append('search', filter.search);
+    if (filter?.assignee) params.append('assignee', filter.assignee);
+    if (filter?.archived !== undefined) params.append('archived', filter.archived.toString());
+    if (filter?.fromDate) params.append('fromDate', filter.fromDate);
+    if (filter?.toDate) params.append('toDate', filter.toDate);
     if (pagination?.limit) params.append('limit', pagination.limit.toString());
     if (pagination?.page) params.append('page', pagination.page.toString());
     if (sortOptions?.sortBy) params.append('sortBy', sortOptions.sortBy);

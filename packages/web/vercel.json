@@ -1,7 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm build",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm run build --filter=@codervisor/devlog-web",
   "env": {
     "NODE_ENV": "production"
   }

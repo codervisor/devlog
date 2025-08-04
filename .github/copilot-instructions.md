@@ -19,13 +19,13 @@
 ## 📁 Development Workflow
 
 - **Temp files**: Use `tmp/` folder for experiments (gitignored)
-- **Build testing**: Use `pnpm build:test` (doesn't break dev servers)
+- **Build packages**: Use `pnpm build` (builds all packages)
 - **Containers**: `docker compose -f docker-compose.dev.yml up web-dev -d --wait`
-- **Build order**: Core → MCP → Web (dependency chain)
+- **Testing**: Use `pnpm test`
 
 ### Task Tracking
 - **Always start by checking**: Search related devlogs before starting ANY new work
-- **Must create devlogs**: For features, refactoring, or multi-step work (>30min)
+- **Must create devlogs**: For features, refactoring, or multistep work (>30min)
 - **Required progress updates**: Add notes after successful builds, major changes, or blockers
 - **Always complete**: Document learnings and close devlogs when work is finished
 

@@ -93,9 +93,6 @@ export const DevlogListQuerySchema = z.object({
   // Sorting
   sortBy: z.enum(['title', 'type', 'status', 'priority', 'createdAt', 'updatedAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
-
-  // Special filter types (for backwards compatibility)
-  filterType: z.enum(['total', 'open', 'closed']).optional(),
 });
 
 /**

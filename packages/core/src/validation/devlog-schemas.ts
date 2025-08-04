@@ -94,20 +94,6 @@ export const DevlogIdSchema = z.number().int().positive('Devlog ID must be a pos
  * Devlog filter validation schema
  */
 export const DevlogFilterSchema = z.object({
-  filterType: z
-    .enum([
-      'new',
-      'in-progress',
-      'blocked',
-      'in-review',
-      'testing',
-      'done',
-      'cancelled',
-      'total',
-      'open',
-      'closed',
-    ])
-    .optional(),
   status: z
     .array(z.enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled']))
     .optional(),
@@ -121,7 +107,7 @@ export const DevlogFilterSchema = z.object({
   projectId: z.number().int().positive().optional(),
   pagination: z
     .object({
-      page: z.number().int().min(1).optional(),
+      page: z.number().int().min(1).default(20).optional(),
       limit: z.number().int().min(1).max(100).optional(),
     })
     .optional(),

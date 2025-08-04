@@ -216,7 +216,8 @@ export class MCPAdapter {
         status: args.status ? [args.status] : undefined,
         type: args.type ? [args.type] : undefined,
         priority: args.priority ? [args.priority] : undefined,
-        pagination: args.limit ? { limit: args.limit } : undefined,
+        page: args.page || 1,
+        limit: args.limit || 10,
       });
 
       const entries = result.items.map((entry: any) => ({
@@ -274,8 +275,10 @@ export class MCPAdapter {
 
     try {
       const searchTerms = [args.description, ...(args.keywords || [])].join(' ');
-      const result = await this.apiClient.searchDevlogs(searchTerms, {
+      const result = await this.apiClient.searchDevlogs({
+        query: searchTerms,
         type: args.type ? [args.type] : undefined,
+        limit: args.limit,
       });
 
       const hasRelated = result.items.length > 0;
