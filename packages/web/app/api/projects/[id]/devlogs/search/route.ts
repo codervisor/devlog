@@ -5,13 +5,7 @@ import {
   PaginationMeta,
   ProjectService,
 } from '@codervisor/devlog-core';
-import {
-  ApiValidator,
-  ProjectIdParamSchema,
-  DevlogSearchQuerySchema,
-  DevlogSearchQuery,
-  DevlogListQuerySchema,
-} from '@/schemas';
+import { ApiValidator, DevlogSearchQuerySchema, ProjectIdParamSchema } from '@/schemas';
 import { ApiErrors, createSuccessResponse } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
