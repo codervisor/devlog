@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm run build --filter=@codervisor/devlog-web",
+  "buildCommand": "pnpm --filter=@codervisor/devlog-web build",
   "env": {
     "NODE_ENV": "production"
   }
