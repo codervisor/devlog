@@ -5,8 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import type {
-  ApiSuccessResponse,
   ApiErrorResponse,
+  ApiSuccessResponse,
   CollectionResponse,
   ResponseMeta,
 } from '@/schemas/responses';
@@ -111,8 +111,7 @@ export class ServiceHelper {
    */
   static async getDevlogService(projectId: number) {
     const { DevlogService } = await import('@codervisor/devlog-core');
-    const devlogService = DevlogService.getInstance(projectId);
-    return devlogService;
+    return DevlogService.getInstance(projectId);
   }
 
   /**
@@ -286,56 +285,6 @@ export function createErrorResponse(
   };
 
   return NextResponse.json(response, { status: options?.status || 500 });
-}
-
-/**
- * Response transformation utilities
- */
-export class ResponseTransformer {
-  /**
-   * Transform core service data to web API format
-   */
-  static transformProject(coreProject: any) {
-    return {
-      id: coreProject.id, // Keep as number - don't convert to string
-      name: coreProject.name,
-      description: coreProject.description,
-      tags: coreProject.tags || [],
-      createdAt: coreProject.createdAt.toISOString(),
-      updatedAt: coreProject.lastAccessedAt.toISOString(),
-    };
-  }
-
-  /**
-   * Transform multiple projects
-   */
-  static transformProjects(coreProjects: any[]) {
-    return coreProjects.map(this.transformProject);
-  }
-
-  /**
-   * Transform devlog entry
-   */
-  static transformDevlog(coreDevlog: any) {
-    return {
-      ...coreDevlog,
-      createdAt:
-        typeof coreDevlog.createdAt === 'string'
-          ? coreDevlog.createdAt
-          : coreDevlog.createdAt.toISOString(),
-      updatedAt:
-        typeof coreDevlog.updatedAt === 'string'
-          ? coreDevlog.updatedAt
-          : coreDevlog.updatedAt.toISOString(),
-    };
-  }
-
-  /**
-   * Transform multiple devlogs
-   */
-  static transformDevlogs(coreDevlogs: any[]) {
-    return coreDevlogs.map(this.transformDevlog);
-  }
 }
 
 /**

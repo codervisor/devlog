@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   DevlogFilter,
   DevlogService,
@@ -6,7 +6,7 @@ import {
   ProjectService,
 } from '@codervisor/devlog-core';
 import { ApiValidator, ProjectIdParamSchema, DevlogSearchQuerySchema } from '@/schemas';
-import { ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
+import { ApiErrors, createSuccessResponse } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const response: SearchResponse = {
       query: result.searchMeta.query,
       results: result.items.map((item) => ({
-        entry: ResponseTransformer.transformDevlog(item.entry),
+        entry: item.entry,
         relevance: item.relevance,
         matchedFields: item.matchedFields,
         highlights: item.highlights,

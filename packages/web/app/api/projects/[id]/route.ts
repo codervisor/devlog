@@ -1,12 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import {
-  ApiResponses,
-  RouteParams,
-  ServiceHelper,
-  withErrorHandling,
-  createSuccessResponse,
-  ResponseTransformer,
-} from '@/lib';
+import { NextRequest } from 'next/server';
+import { RouteParams, ServiceHelper, withErrorHandling, createSuccessResponse } from '@/lib';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
@@ -30,8 +23,7 @@ export const GET = withErrorHandling(
     }
 
     // Transform and return project data
-    const transformedProject = ResponseTransformer.transformProject(projectResult.data.project);
-    return createSuccessResponse(transformedProject);
+    return createSuccessResponse(projectResult.data!.project);
   },
 );
 
@@ -63,9 +55,8 @@ export const PUT = withErrorHandling(
 
     // Update project
     const updatedProject = await projectResult.data.projectService.update(projectId, data);
-    const transformedProject = ResponseTransformer.transformProject(updatedProject);
 
-    return createSuccessResponse(transformedProject);
+    return createSuccessResponse(updatedProject);
   },
 );
 

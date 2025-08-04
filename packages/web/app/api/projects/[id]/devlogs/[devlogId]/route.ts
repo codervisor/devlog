@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
+import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
 import { DevlogSSE } from '@/lib/api/sse-utils';
 
 // Mark this route as dynamic to prevent static generation
@@ -46,8 +46,7 @@ export async function GET(
     }
 
     // Transform and return entry
-    const transformedEntry = ResponseTransformer.transformDevlog(entry);
-    return createSuccessResponse(transformedEntry);
+    return createSuccessResponse(entry);
   } catch (error) {
     console.error('Error fetching devlog:', error);
     return ApiErrors.internalError('Failed to fetch devlog');
@@ -96,8 +95,7 @@ export async function PUT(
     await devlogService.save(updatedEntry);
 
     // Transform and return updated entry
-    const transformedEntry = ResponseTransformer.transformDevlog(updatedEntry);
-    return DevlogSSE.updated(createSuccessResponse(transformedEntry));
+    return DevlogSSE.updated(createSuccessResponse(updatedEntry));
   } catch (error) {
     console.error('Error updating devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to update devlog';

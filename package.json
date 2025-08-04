@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Monorepo for development logging tools and MCP server",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "turbo build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

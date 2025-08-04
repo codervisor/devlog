@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
 import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
-import {
-  createSimpleCollectionResponse,
-  createSuccessResponse,
-  ResponseTransformer,
-  ApiErrors,
-} from '@/lib';
+import { createSimpleCollectionResponse, createSuccessResponse, ApiErrors } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -16,10 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const projectService = ProjectService.getInstance();
 
-    const coreProjects = await projectService.list();
-
-    // Transform core project data to web interface format
-    const projects = ResponseTransformer.transformProjects(coreProjects);
+    const projects = await projectService.list();
 
     // Return new standardized format
     return createSimpleCollectionResponse(projects);
@@ -47,10 +39,7 @@ export async function POST(request: NextRequest) {
     const projectService = ProjectService.getInstance();
 
     // Create project (service layer will perform business logic validation)
-    const coreProject = await projectService.create(serviceData);
-
-    // Transform core project data to web interface format
-    const createdProject = ResponseTransformer.transformProject(coreProject);
+    const createdProject = await projectService.create(serviceData);
 
     return createSuccessResponse(createdProject, { status: 201 });
   } catch (error) {

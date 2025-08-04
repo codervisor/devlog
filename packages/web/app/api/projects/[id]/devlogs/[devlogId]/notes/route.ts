@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { RouteParams, ApiErrors, createSuccessResponse, ResponseTransformer } from '@/lib';
+import { RouteParams, ApiErrors, createSuccessResponse } from '@/lib';
 import { NoteSSE, DevlogSSE } from '@/lib/api/sse-utils';
 import { z } from 'zod';
 import type { NoteCategory } from '@codervisor/devlog-core';
@@ -191,8 +191,7 @@ export async function PUT(
 
     // Return the updated entry with the note
     const finalEntry = await devlogService.get(devlogId, true); // Load with notes
-    const transformedEntry = ResponseTransformer.transformDevlog(finalEntry);
-    return DevlogSSE.updated(createSuccessResponse(transformedEntry));
+    return DevlogSSE.updated(createSuccessResponse(finalEntry));
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

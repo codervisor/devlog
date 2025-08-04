@@ -16,7 +16,6 @@ import {
   createCollectionResponse,
   createSimpleCollectionResponse,
   createSuccessResponse,
-  ResponseTransformer,
 } from '@/lib';
 import { DevlogSSE } from '@/lib/api/sse-utils';
 
@@ -89,8 +88,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return createCollectionResponse(result.items, result.pagination);
     } else {
       // Transform devlogs and return as simple collection
-      const transformedDevlogs = ResponseTransformer.transformDevlogs(result.items || result);
-      return createSimpleCollectionResponse(transformedDevlogs);
+      return createSimpleCollectionResponse(result.items);
     }
   } catch (error) {
     console.error('Error fetching devlogs:', error);
@@ -144,8 +142,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     // Transform and return the actual saved devlog
-    const transformedDevlog = ResponseTransformer.transformDevlog(savedEntry);
-    return DevlogSSE.created(createSuccessResponse(transformedDevlog, { status: 201 }));
+    return DevlogSSE.created(createSuccessResponse(savedEntry, { status: 201 }));
   } catch (error) {
     console.error('Error creating devlog:', error);
     return ApiErrors.internalError('Failed to create devlog');
