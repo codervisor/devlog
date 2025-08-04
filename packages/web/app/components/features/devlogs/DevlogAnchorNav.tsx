@@ -110,37 +110,35 @@ export function DevlogAnchorNav({ devlog, notesCount }: DevlogAnchorNavProps) {
   };
 
   return (
-    <div className="sticky top-5">
-      <nav className="space-y-1">
-        <div className="relative">
-          {/* Active indicator line */}
-          <div className="absolute left-0 top-0 w-0.5 bg-border h-full" />
-          <div
-            className="absolute left-0 w-0.5 bg-primary transition-all duration-200 ease-in-out"
-            style={{
-              top: `${items.findIndex((item) => item.key === activeSection) * 2}rem`,
-              height: '1.5rem',
-            }}
-          />
+    <nav className="space-y-1">
+      <div className="relative">
+        {/* Active indicator line */}
+        <div className="absolute left-0 top-0 w-0.5 bg-border h-full" />
+        <div
+          className="absolute left-0 w-0.5 bg-primary transition-all duration-200 ease-in-out"
+          style={{
+            top: `${items.findIndex((item) => item.key === activeSection) * 2 + 0.25}rem`,
+            height: '1.5rem',
+          }}
+        />
 
-          {/* Navigation items */}
-          <div className="pl-4 space-y-1">
-            {items.map((item) => (
-              <a
-                key={item.key}
-                href={item.href}
-                onClick={(e) => handleClick(e, item.href)}
-                className={cn(
-                  'block py-1 text-sm leading-6 transition-colors hover:text-foreground',
-                  activeSection === item.key ? 'text-primary font-medium' : 'text-muted-foreground',
-                )}
-              >
-                {item.title}
-              </a>
-            ))}
-          </div>
+        {/* Navigation items */}
+        <div className="pl-4">
+          {items.map((item) => (
+            <a
+              key={item.key}
+              href={item.href}
+              onClick={(e) => handleClick(e, item.href)}
+              className={cn(
+                'block py-1 text-sm leading-6 transition-colors hover:text-foreground',
+                activeSection === item.key ? 'text-primary font-medium' : 'text-muted-foreground',
+              )}
+            >
+              {item.title}
+            </a>
+          ))}
         </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 }

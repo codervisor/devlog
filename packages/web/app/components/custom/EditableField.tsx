@@ -111,7 +111,7 @@ export function EditableField({
     if (type === 'markdown') {
       return (
         <MarkdownEditor
-          value={editValue}
+          value={editValue || ''}
           onChange={(value) => {
             setEditValue(value);
           }}
@@ -212,7 +212,6 @@ export function EditableField({
       ref={contentRef}
       className={cn(
         'relative cursor-pointer group hover:bg-muted/20 rounded transition-colors',
-        'p-1 -m-1',
         borderless && 'border-none',
         className,
       )}

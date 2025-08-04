@@ -61,7 +61,7 @@ export function MarkdownEditor({
   const processedValue = value.replace(/\\n/g, '\n');
 
   return (
-    <div className="w-full rounded-md overflow-hidden bg-background [&_.w-tc-editor]:!p-4 [&_.w-tc-editor_.w-tc-editor-text]:!p-0 [&_.w-tc-editor_.w-tc-editor-text]:!bg-transparent [&_.w-tc-editor_.w-tc-editor-text]:!text-sm [&_.w-tc-editor_.w-tc-editor-preview]:!p-0 [&_.w-tc-editor_.w-tc-editor-preview]:!text-sm">
+    <div className="w-full rounded-md overflow-hidden bg-background [&_.w-tc-editor]:!p-4 [&_.w-tc-editor_.w-tc-editor-text]:!p-4 [&_.w-tc-editor_.w-tc-editor-text]:!bg-transparent [&_.w-tc-editor_.w-tc-editor-text]:!text-sm [&_.w-tc-editor_.w-tc-editor-preview]:!p-0 [&_.w-tc-editor_.w-tc-editor-preview]:!text-sm [&_.textarea]:!bg-transparent">
       <CodeEditor
         ref={editorRef}
         value={processedValue}

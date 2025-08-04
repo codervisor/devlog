@@ -1,14 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Button,
-  DevlogDetails,
-  PageLayout,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components';
+import { Button, DevlogDetails, Popover, PopoverContent, PopoverTrigger } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
@@ -161,16 +154,14 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   );
 
   return (
-    <PageLayout>
-      <DevlogDetails
-        devlogContext={currentDevlogContext}
-        notesContext={currentDevlogNotesContext}
-        hasUnsavedChanges={hasUnsavedChanges}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        onUnsavedChangesChange={handleUnsavedChangesChange}
-        actions={actions}
-      />
-    </PageLayout>
+    <DevlogDetails
+      devlogContext={currentDevlogContext}
+      notesContext={currentDevlogNotesContext}
+      hasUnsavedChanges={hasUnsavedChanges}
+      onUpdate={handleUpdate}
+      onDelete={handleDelete}
+      onUnsavedChangesChange={handleUnsavedChangesChange}
+      actions={actions}
+    />
   );
 }
