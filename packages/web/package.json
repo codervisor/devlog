@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "dev:full": "concurrently --names \"CORE,WEB\" --prefix-colors \"green,blue\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
-    "build": "NEXT_BUILD_MODE=standalone next build",
-    "build:test": "NEXT_BUILD_MODE=standalone next build --no-lint",
+    "build": "next build",
+    "build:vercel": "cd ../.. && pnpm --filter @codervisor/devlog-core build && cd web && next build",
     "start": "pnpm run build && next start --port 3010",
     "preview": "next start --port 3010",
     "clean": "rimraf .next .next-build out *.tsbuildinfo",

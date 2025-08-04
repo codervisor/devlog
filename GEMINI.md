@@ -300,7 +300,7 @@ pnpm --filter @codervisor/devlog-web build
 docker compose -f docker-compose.dev.yml up web-dev -d --wait
 
 # Test build without breaking dev server
-pnpm build:test  # Uses .next-build/ instead of .next/
+pnpm build
 ```
 
 ### Testing Workflow
