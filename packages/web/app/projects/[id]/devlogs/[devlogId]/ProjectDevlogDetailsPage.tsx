@@ -2,10 +2,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, DevlogDetails, Popover, PopoverContent, PopoverTrigger } from '@/components';
-import { useDevlogStore, useProjectStore } from '@/stores';
+import { useDevlogStore, useProjectStore, useRealtimeStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { SSEEventType } from '@/lib';
+import { DevlogEntry } from '@codervisor/devlog-core';
 
 interface ProjectDevlogDetailsPageProps {
   projectId: number;
@@ -28,12 +30,40 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     deleteDevlog,
     clearCurrentDevlog,
   } = useDevlogStore();
+
+  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Use refs to store function references to avoid recreation on every render
   const saveHandlerRef = useRef<(() => Promise<void>) | null>(null);
   const discardHandlerRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    connect();
+    subscribe(SSEEventType.DEVLOG_UPDATED, ({ id }: DevlogEntry) => {
+      if (id === currentDevlogId) {
+        fetchCurrentDevlog();
+      }
+    });
+    subscribe(SSEEventType.DEVLOG_DELETED, ({ id }: DevlogEntry) => {
+      if (id === currentDevlogId) {
+        router.push(`/projects/${projectId}/devlogs`);
+      }
+    });
+    subscribe(SSEEventType.DEVLOG_NOTE_CREATED, fetchCurrentDevlogNotes);
+    subscribe(SSEEventType.DEVLOG_NOTE_UPDATED, fetchCurrentDevlogNotes);
+    subscribe(SSEEventType.DEVLOG_NOTE_DELETED, fetchCurrentDevlogNotes);
+    return () => {
+      unsubscribe(SSEEventType.DEVLOG_UPDATED);
+      unsubscribe(SSEEventType.DEVLOG_DELETED);
+      unsubscribe(SSEEventType.DEVLOG_NOTE_CREATED);
+      unsubscribe(SSEEventType.DEVLOG_NOTE_UPDATED);
+      unsubscribe(SSEEventType.DEVLOG_NOTE_DELETED);
+      disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentProjectId(projectId);

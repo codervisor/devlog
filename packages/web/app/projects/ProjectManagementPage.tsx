@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useProjectStore } from '@/stores';
+import { useProjectStore, useRealtimeStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { ProjectGridSkeleton } from '@/components/common';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
   Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SSEEventType } from '@/lib';
 
 interface ProjectFormData {
   name: string;
@@ -38,6 +39,16 @@ export function ProjectManagementPage() {
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
   const router = useRouter();
+  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+
+  useEffect(() => {
+    connect();
+    subscribe(SSEEventType.PROJECT_CREATED, fetchProjects);
+    return () => {
+      unsubscribe(SSEEventType.PROJECT_CREATED);
+      disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     fetchProjects();

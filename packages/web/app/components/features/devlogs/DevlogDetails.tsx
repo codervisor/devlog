@@ -26,7 +26,6 @@ import {
   typeOptions,
 } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
-import { useStickyHeaders } from '@/hooks/use-sticky-headers';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
 import { DataContext } from '@/stores/base';
 

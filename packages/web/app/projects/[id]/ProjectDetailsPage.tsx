@@ -2,16 +2,20 @@
 
 import React, { useEffect } from 'react';
 import { Dashboard } from '@/components';
-import { useDevlogStore, useProjectStore } from '@/stores';
+import { useDevlogStore, useProjectStore, useRealtimeStore } from '@/stores';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
+import { SSEEventType } from '@/lib';
 
 interface ProjectDetailsPageProps {
   projectId: number;
 }
 
 export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
+  const router = useRouter();
+
   const { currentProjectId, setCurrentProjectId } = useProjectStore();
+
   const {
     devlogsContext,
     statsContext,
@@ -21,7 +25,24 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     fetchTimeSeriesStats,
   } = useDevlogStore();
 
-  const router = useRouter();
+  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+
+  const fetchAll = async () => {
+    return await Promise.all([fetchTimeSeriesStats(), fetchStats(), fetchDevlogs()]);
+  };
+
+  useEffect(() => {
+    connect();
+    subscribe(SSEEventType.DEVLOG_CREATED, fetchAll);
+    subscribe(SSEEventType.DEVLOG_UPDATED, fetchAll);
+    subscribe(SSEEventType.DEVLOG_DELETED, fetchAll);
+    return () => {
+      unsubscribe(SSEEventType.DEVLOG_CREATED);
+      unsubscribe(SSEEventType.DEVLOG_UPDATED);
+      unsubscribe(SSEEventType.DEVLOG_DELETED);
+      disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentProjectId(projectId);
@@ -29,9 +50,7 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
 
   useEffect(() => {
     if (currentProjectId) {
-      fetchTimeSeriesStats();
-      fetchStats();
-      fetchDevlogs();
+      fetchAll();
     }
   }, [currentProjectId]);
 

@@ -2,9 +2,10 @@
 
 import React, { useEffect } from 'react';
 import { DevlogList } from '@/components';
-import { useDevlogStore, useProjectStore } from '@/stores';
+import { useDevlogStore, useProjectStore, useRealtimeStore } from '@/stores';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
+import { SSEEventType } from '@/lib';
 
 interface ProjectDevlogListPageProps {
   projectId: number;
@@ -24,6 +25,21 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
     batchUpdate,
     batchDelete,
   } = useDevlogStore();
+
+  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+
+  useEffect(() => {
+    connect();
+    subscribe(SSEEventType.DEVLOG_CREATED, fetchDevlogs);
+    subscribe(SSEEventType.DEVLOG_UPDATED, fetchDevlogs);
+    subscribe(SSEEventType.DEVLOG_DELETED, fetchDevlogs);
+    return () => {
+      unsubscribe(SSEEventType.DEVLOG_CREATED);
+      unsubscribe(SSEEventType.DEVLOG_UPDATED);
+      unsubscribe(SSEEventType.DEVLOG_DELETED);
+      disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentProjectId(projectId);

@@ -2,7 +2,6 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { useDevlogStore } from './devlog-store';
 
 interface SSEMessage {
   type: string;
@@ -22,7 +21,6 @@ interface RealtimeState {
   disconnect: () => void;
   subscribe: (messageType: string, callback: (data: any) => void) => void;
   unsubscribe: (messageType: string) => void;
-  handleMessage: (message: SSEMessage) => void;
 }
 
 // Store for custom listeners (for components that need direct SSE access)
@@ -65,9 +63,6 @@ export const useRealtimeStore = create<RealtimeState>()(
         try {
           const message: SSEMessage = JSON.parse(event.data);
           console.log('SSE message:', message);
-
-          // Handle the message internally
-          get().handleMessage(message);
 
           // Call custom listeners
           const listener = customListeners.get(message.type);
@@ -132,19 +127,6 @@ export const useRealtimeStore = create<RealtimeState>()(
     unsubscribe: (messageType: string) => {
       customListeners.delete(messageType);
     },
-
-    handleMessage: (message: SSEMessage) => {
-      const { type, data } = message;
-
-      // Route messages to appropriate stores
-      switch (type) {
-        case 'devlog_created':
-        case 'devlog_updated':
-        case 'devlog_deleted':
-        default:
-          console.log('Unhandled SSE message type:', type);
-      }
-    },
   })),
 );
 
@@ -162,14 +144,3 @@ if (typeof window !== 'undefined') {
     useRealtimeStore.getState().disconnect();
   });
 }
-
-// Hook to use SSE functionality (replaces useSse hook)
-export const useRealtime = () => {
-  const { connected, subscribe, unsubscribe } = useRealtimeStore();
-
-  return {
-    connected,
-    subscribe,
-    unsubscribe,
-  };
-};
