@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Home, SquareKanban } from 'lucide-react';
+import { Boxes, Home, SquareKanban } from 'lucide-react';
 
 interface SidebarItem {
   key: string;
@@ -43,9 +43,9 @@ export function NavigationSidebar() {
 
   const projectsMenuItems = [
     {
-      key: 'overview',
-      label: 'Overview',
-      icon: <Home />,
+      key: 'projects',
+      label: 'Projects',
+      icon: <Boxes />,
       onClick: () => router.push('/projects'),
     },
   ];

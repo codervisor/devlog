@@ -9,7 +9,6 @@ This document outlines the standardized file naming conventions for the web pack
 - **Pattern**: `PascalCase.tsx` or `page.tsx` (Next.js convention)
 - **Examples**:
   - `ProjectDetailsPage.tsx`
-  - `DashboardPage.tsx`
   - `page.tsx` (Next.js route files)
 
 ### Layout Components
@@ -17,7 +16,6 @@ This document outlines the standardized file naming conventions for the web pack
 - **Pattern**: `PascalCase.tsx`
 - **Examples**:
   - `AppLayout.tsx`
-  - `PageLayout.tsx`
   - `NavigationSidebar.tsx`
 
 ### Feature Components

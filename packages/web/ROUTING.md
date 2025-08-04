@@ -54,7 +54,6 @@ The web package uses Next.js 14 App Router with hierarchical routing structure t
 app/
 ├── layout.tsx             - Root layout with AppLayout wrapper
 ├── page.tsx               - Homepage (redirects to /projects)
-├── DashboardPage.tsx      - Dashboard component (no longer used at root)
 ├── AppLayout.tsx          - Shared layout with sidebar, header, and navigation
 ├── projects/
 │   ├── page.tsx           - Project list page (/projects) - NEW MAIN ENTRY
@@ -102,7 +101,6 @@ app/
 app/
 ├── layout.tsx             - Root layout with AppLayout wrapper
 ├── page.tsx               - Dashboard page (/)
-├── DashboardPage.tsx      - Dashboard component
 ├── AppLayout.tsx          - Shared layout with sidebar, header, and navigation
 ├── projects/
 │   ├── page.tsx           - Project management page (/projects)

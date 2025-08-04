@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
-import { PageLayout } from '@/components/layout/PageLayout';
 import { ProjectGridSkeleton } from '@/components/common';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,21 +88,19 @@ export function ProjectManagementPage() {
 
   if (projectsContext.error) {
     return (
-      <PageLayout>
-        <Alert variant="destructive" className="m-5 flex items-center gap-2">
-          <AlertTriangleIcon size={16} />
-          <div>
-            <div className="font-semibold">Error Loading Projects</div>
-            <AlertDescription>{projectsContext.error}</AlertDescription>
-          </div>
-        </Alert>
-      </PageLayout>
+      <Alert variant="destructive" className="m-5 flex items-center gap-2">
+        <AlertTriangleIcon size={16} />
+        <div>
+          <div className="font-semibold">Error Loading Projects</div>
+          <AlertDescription>{projectsContext.error}</AlertDescription>
+        </div>
+      </Alert>
     );
   }
 
   return (
-    <PageLayout>
-      <div className="w-full max-w-full">
+    <>
+      <div className="w-full max-w-full p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button className="bg-primary">New Project</Button>
@@ -229,6 +226,6 @@ export function ProjectManagementPage() {
           </form>
         </DialogContent>
       </Dialog>
-    </PageLayout>
+    </>
   );
 }

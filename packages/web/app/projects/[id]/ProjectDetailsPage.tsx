@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Dashboard, PageLayout } from '@/components';
+import { Dashboard } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
