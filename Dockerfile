@@ -4,6 +4,9 @@ FROM node:20-alpine AS base
 # Install necessary system dependencies
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Enable pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
