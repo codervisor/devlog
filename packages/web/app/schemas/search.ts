@@ -50,3 +50,5 @@ export const DevlogSearchQuerySchema = z.object({
     .transform((val) => val === 'true')
     .optional(),
 });
+
+export type DevlogSearchQuery = z.infer<typeof DevlogSearchQuerySchema>;

@@ -5,7 +5,13 @@ import {
   PaginationMeta,
   ProjectService,
 } from '@codervisor/devlog-core';
-import { ApiValidator, ProjectIdParamSchema, DevlogSearchQuerySchema } from '@/schemas';
+import {
+  ApiValidator,
+  ProjectIdParamSchema,
+  DevlogSearchQuerySchema,
+  DevlogSearchQuery,
+  DevlogListQuerySchema,
+} from '@/schemas';
 import { ApiErrors, createSuccessResponse } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
@@ -34,8 +40,6 @@ interface SearchResponse {
 
 // GET /api/projects/[id]/devlogs/search - Enhanced search for devlogs
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const searchStartTime = Date.now();
-
   try {
     // Validate project ID parameter
     const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
@@ -65,15 +69,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Pagination configuration
     const page = queryData.page || 1;
     const limit = queryData.limit || 20;
-
-    // Build enhanced search options
-    const searchOptions = {
-      includeRelevance: true,
-      includeMatchedFields: true,
-      includeHighlights: true,
-      searchMode: 'fuzzy' as const, // Use database-native fuzzy search when available
-      minRelevance: 0.01, // Filter out very low relevance results
-    };
 
     // Build filter for enhanced search
     const filter: DevlogFilter = {};

@@ -35,36 +35,6 @@ export const CreateDevlogBodySchema = z.object({
 });
 
 /**
- * Devlog entry update request body schema
- */
-export const UpdateDevlogBodySchema = CreateDevlogBodySchema.partial();
-
-/**
- * Batch operations schemas
- */
-export const BatchUpdateDevlogBodySchema = z.object({
-  devlogIds: z.array(z.number().int().positive()),
-  updates: z.object({
-    status: z
-      .enum(['new', 'in-progress', 'blocked', 'in-review', 'testing', 'done', 'cancelled'])
-      .optional(),
-    priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-    assignee: z.string().optional(),
-  }),
-});
-
-export const BatchDeleteDevlogBodySchema = z.object({
-  devlogIds: z.array(z.number().int().positive()),
-});
-
-export const BatchNoteBodySchema = z.object({
-  devlogIds: z.array(z.number().int().positive()),
-  note: z.object({
-    content: z.string().min(1, 'Note content is required'),
-  }),
-});
-
-/**
  * Query parameter schemas for devlog endpoints
  */
 export const DevlogListQuerySchema = z.object({
@@ -95,23 +65,6 @@ export const DevlogListQuerySchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
-/**
- * Stats query schemas
- */
-export const StatsTimeseriesQuerySchema = z.object({
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  interval: z.enum(['day', 'week', 'month']).default('day'),
+export const DevlogSearchQuerySchema = DevlogListQuerySchema.extend({
+  q: z.string().min(1, 'Search query is required'),
 });
-
-/**
- * Type exports for TypeScript usage
- */
-export type DevlogIdParam = z.infer<typeof DevlogIdParamSchema>;
-export type CreateDevlogBody = z.infer<typeof CreateDevlogBodySchema>;
-export type UpdateDevlogBody = z.infer<typeof UpdateDevlogBodySchema>;
-export type BatchUpdateDevlogBody = z.infer<typeof BatchUpdateDevlogBodySchema>;
-export type BatchDeleteDevlogBody = z.infer<typeof BatchDeleteDevlogBodySchema>;
-export type BatchNoteBody = z.infer<typeof BatchNoteBodySchema>;
-export type DevlogListQuery = z.infer<typeof DevlogListQuerySchema>;
-export type StatsTimeseriesQuery = z.infer<typeof StatsTimeseriesQuerySchema>;
