@@ -2,17 +2,12 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-
-interface SSEMessage {
-  type: string;
-  data?: any;
-  timestamp: string;
-}
+import { realtimeService, type RealtimeConnection } from '@/lib/realtime';
 
 interface RealtimeState {
   // Connection state
   connected: boolean;
-  eventSource: EventSource | null;
+  providerType: string | null;
   reconnectAttempts: number;
   maxReconnectAttempts: number;
 
@@ -21,111 +16,76 @@ interface RealtimeState {
   disconnect: () => void;
   subscribe: (messageType: string, callback: (data: any) => void) => void;
   unsubscribe: (messageType: string) => void;
+  getProviderType: () => string | null;
 }
-
-// Store for custom listeners (for components that need direct SSE access)
-const customListeners = new Map<string, (data: any) => void>();
 
 export const useRealtimeStore = create<RealtimeState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     connected: false,
-    eventSource: null,
+    providerType: null,
     reconnectAttempts: 0,
     maxReconnectAttempts: 5,
 
     // Actions
-    connect: () => {
+    connect: async () => {
       // Only run on client side
       if (typeof window === 'undefined') {
         return;
       }
 
-      const state = get();
+      try {
+        await realtimeService.connect();
+        
+        // Update state based on realtime service
+        const connectionState = realtimeService.getConnectionState();
+        const providerType = realtimeService.getProviderType();
+        
+        set({
+          connected: connectionState.connected,
+          providerType,
+          reconnectAttempts: connectionState.reconnectAttempts,
+          maxReconnectAttempts: connectionState.maxReconnectAttempts,
+        });
 
-      // Close existing connection if any
-      if (state.eventSource) {
-        state.eventSource.close();
+        // Listen for connection changes
+        realtimeService.onConnectionChange((connected) => {
+          const state = realtimeService.getConnectionState();
+          set({
+            connected,
+            reconnectAttempts: state.reconnectAttempts,
+          });
+        });
+
+        console.log(`[Realtime Store] Connected using ${providerType} provider`);
+      } catch (error) {
+        console.error('[Realtime Store] Failed to connect:', error);
+        set({ connected: false });
       }
-
-      const eventSource = new EventSource('/api/events');
-
-      eventSource.onopen = () => {
-        console.log('SSE connected');
-        set({
-          connected: true,
-          eventSource,
-          reconnectAttempts: 0,
-        });
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const message: SSEMessage = JSON.parse(event.data);
-          console.log('SSE message:', message);
-
-          // Call custom listeners
-          const listener = customListeners.get(message.type);
-          if (listener && message.data) {
-            listener(message.data);
-          }
-
-          // Also dispatch as custom event for components that prefer this approach
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(
-              new CustomEvent('sse-message', {
-                detail: message,
-              }),
-            );
-          }
-        } catch (error) {
-          console.error('Error parsing SSE message:', error);
-        }
-      };
-
-      eventSource.onerror = () => {
-        console.log('SSE error, attempting to reconnect...');
-        const currentState = get();
-
-        set({
-          connected: false,
-          reconnectAttempts: currentState.reconnectAttempts + 1,
-        });
-
-        // Attempt to reconnect if under limit
-        if (currentState.reconnectAttempts < currentState.maxReconnectAttempts) {
-          setTimeout(
-            () => {
-              if (get().eventSource?.readyState === EventSource.CLOSED) {
-                get().connect();
-              }
-            },
-            3000 * (currentState.reconnectAttempts + 1),
-          ); // Exponential backoff
-        }
-      };
-
-      set({ eventSource });
     },
 
-    disconnect: () => {
-      const state = get();
-      if (state.eventSource) {
-        state.eventSource.close();
+    disconnect: async () => {
+      try {
+        await realtimeService.disconnect();
         set({
-          eventSource: null,
           connected: false,
           reconnectAttempts: 0,
         });
+      } catch (error) {
+        console.error('[Realtime Store] Failed to disconnect:', error);
       }
     },
 
     subscribe: (messageType: string, callback: (data: any) => void) => {
-      customListeners.set(messageType, callback);
+      realtimeService.subscribe(messageType, callback);
     },
 
     unsubscribe: (messageType: string) => {
-      customListeners.delete(messageType);
+      realtimeService.unsubscribe(messageType);
+    },
+
+    getProviderType: () => {
+      return get().providerType;
     },
   })),
 );

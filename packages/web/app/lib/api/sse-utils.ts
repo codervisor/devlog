@@ -1,6 +1,8 @@
 /**
- * SSE Utilities
+ * SSE Utilities (Legacy - now using server-realtime.ts)
  */
+
+import { serverRealtimeService } from './server-realtime';
 
 export class SSEEventType {
   static PROJECT_CREATED = 'project-created';
@@ -14,27 +16,13 @@ export class SSEEventType {
   static DEVLOG_NOTE_DELETED = 'devlog-note-deleted';
 }
 
-// Keep track of active SSE connections
-export const activeConnections = new Set<ReadableStreamDefaultController>();
+// Re-export active connections for backward compatibility
+export { activeConnections } from './server-realtime';
 
 // Function to broadcast updates to all connected clients
 export function broadcastUpdate(type: string, data: any) {
-  const message = JSON.stringify({
-    type,
-    data,
-    timestamp: new Date().toISOString(),
+  // Use the new server realtime service
+  serverRealtimeService.broadcast(type, data).catch((error) => {
+    console.error('Error broadcasting update:', error);
   });
-
-  console.log(`Broadcasting SSE update: ${type} to ${activeConnections.size} connections`);
-
-  // Send to all active connections
-  for (const controller of activeConnections) {
-    try {
-      controller.enqueue(`data: ${message}\n\n`);
-    } catch (error) {
-      console.error('Error sending SSE message, removing dead connection:', error);
-      // Remove dead connections
-      activeConnections.delete(controller);
-    }
-  }
 }

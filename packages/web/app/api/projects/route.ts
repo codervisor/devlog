@@ -7,6 +7,7 @@ import {
   createSuccessResponse,
   SSEEventType,
 } from '@/lib';
+import { RealtimeEventType } from '@/lib/realtime';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     return createSuccessResponse(createdProject, {
       status: 201,
-      sseEventType: SSEEventType.PROJECT_CREATED,
+      sseEventType: RealtimeEventType.PROJECT_CREATED,
     });
   } catch (error) {
     console.error('Error creating project:', error);
