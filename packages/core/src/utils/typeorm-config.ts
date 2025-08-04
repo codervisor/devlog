@@ -31,12 +31,39 @@ export interface TypeORMStorageOptions {
   // General options
   synchronize?: boolean;
   logging?: boolean;
-  ssl?: boolean;
+  ssl?: boolean | object;
 }
 
 // Singleton DataSource instance
 let singletonDataSource: DataSource | null = null;
 let initializationPromise: Promise<DataSource> | null = null;
+
+/**
+ * Parse SSL configuration from environment variable
+ */
+function parseSSLConfig(sslEnvVar?: string): boolean | object {
+  if (!sslEnvVar) {
+    // Default SSL config for production (Vercel-compatible)
+    return process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false;
+  }
+
+  // Handle boolean strings
+  if (sslEnvVar.toLowerCase() === 'false') {
+    return false;
+  }
+  if (sslEnvVar.toLowerCase() === 'true') {
+    // Use Vercel-compatible SSL config for true
+    return { rejectUnauthorized: false };
+  }
+
+  // Try to parse as JSON object
+  try {
+    return JSON.parse(sslEnvVar);
+  } catch {
+    // Fallback to Vercel-compatible SSL config
+    return { rejectUnauthorized: false };
+  }
+}
 
 /**
  * Get or create the singleton DataSource instance
@@ -175,7 +202,7 @@ export function parseTypeORMConfig(): TypeORMStorageOptions {
       url: postgresUrl,
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
-      ssl: process.env.NODE_ENV === 'production',
+      ssl: parseSSLConfig(process.env.POSTGRES_SSL),
     };
   }
 
@@ -218,7 +245,7 @@ export function parseTypeORMConfig(): TypeORMStorageOptions {
         url: postgresUrl,
         synchronize: process.env.NODE_ENV === 'development',
         logging: process.env.NODE_ENV === 'development',
-        ssl: process.env.NODE_ENV === 'production',
+        ssl: parseSSLConfig(process.env.POSTGRES_SSL),
       };
     }
 

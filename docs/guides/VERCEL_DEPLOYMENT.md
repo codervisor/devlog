@@ -93,6 +93,13 @@ No configuration files needed! 🎉
 - Check that environment variable is properly formatted
 - For local testing, ensure `.env.local` contains the database URL
 
+### SSL Certificate Errors (self-signed certificate in certificate chain)
+If you encounter SSL certificate errors in Vercel deployment:
+- This is automatically handled by the updated SSL configuration
+- The system defaults to SSL with self-signed certificate support in production
+- If needed, you can override by setting `POSTGRES_SSL="false"` in Vercel environment variables
+- For custom SSL configuration, set `POSTGRES_SSL='{"rejectUnauthorized":false,"ca":"..."}'`
+
 ### Auto-Detection Not Working
 - Check console logs for database detection messages
 - Ensure environment variable names match exactly: `POSTGRES_URL`, `MYSQL_URL`, `SQLITE_URL`
