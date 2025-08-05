@@ -21,6 +21,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: 22
 
 jobs:
   # Phase 1: Build and Test
@@ -29,21 +30,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
-    
-    strategy:
-      matrix:
-        node-version: [ 20, 22 ]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -68,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: ./.github/scripts/setup-node.sh
 
-      - name: Build packages (dependency order)
+      - name: Build packages
         run: ./.github/scripts/build-packages.sh
 
       - name: Run tests
