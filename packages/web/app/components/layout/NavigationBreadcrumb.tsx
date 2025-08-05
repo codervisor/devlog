@@ -1,10 +1,15 @@
 'use client';
 
 import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useProjectStore } from '@/stores';
-import { CheckIcon, ChevronDownIcon, Package } from 'lucide-react';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from '@/components/ui/breadcrumb';
+import { usePathname, useRouter } from 'next/navigation';
+import { useDevlogStore, useProjectStore } from '@/stores';
+import { CheckIcon, ChevronsUpDown, NotepadText, Package } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,19 +24,12 @@ export function NavigationBreadcrumb() {
   const pathname = usePathname();
   const { currentProjectContext, currentProjectId, projectsContext, fetchProjects } =
     useProjectStore();
+  const { currentDevlogContext, currentDevlogId } = useDevlogStore();
 
   // Don't show breadcrumb on the home or project list page
   if (['/', '/projects'].includes(pathname)) {
     return null;
   }
-
-  const getProjectInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase())
-      .join('')
-      .substring(0, 2);
-  };
 
   const switchProject = async (projectId: number) => {
     if (currentProjectId === projectId) return;
@@ -64,9 +62,7 @@ export function NavigationBreadcrumb() {
     if (currentProjectContext.loading) {
       return (
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-32" />
         </div>
       );
     }
@@ -77,7 +73,7 @@ export function NavigationBreadcrumb() {
           <div className="flex items-center gap-2 cursor-pointer rounded">
             <Package size={14} />
             <span>{currentProjectContext.data?.name}</span>
-            <ChevronDownIcon size={14} className="text-muted-foreground" />
+            <ChevronsUpDown size={14} className="text-muted-foreground" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
@@ -117,10 +113,34 @@ export function NavigationBreadcrumb() {
     );
   };
 
+  const renderDevlogDropdown = () => {
+    if (currentDevlogContext.loading) {
+      return (
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-32" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2 cursor-pointer rounded">
+        <NotepadText size={14} />
+        <span>{currentDevlogContext.data?.id}</span>
+        <ChevronsUpDown size={14} className="text-muted-foreground" />
+      </div>
+    );
+  };
+
   return (
     <Breadcrumb className="navigation-breadcrumb">
       <BreadcrumbList>
-        <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>
+        {currentProjectId && <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>}
+        {currentDevlogId && (
+          <>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>{renderDevlogDropdown()}</BreadcrumbItem>
+          </>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
