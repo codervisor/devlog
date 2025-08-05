@@ -22,6 +22,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   NODE_VERSION: 22
+  PNPM_VERSION: 10.13.1
 
 jobs:
   # Phase 1: Build and Test
@@ -45,7 +46,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.13.1
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
 
       - name: Generate cache key
@@ -193,13 +194,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.13.1
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
 
       - name: Restore pnpm cache
@@ -277,13 +278,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10.13.1
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
 
       - name: Restore pnpm cache
