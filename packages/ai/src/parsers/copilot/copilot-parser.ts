@@ -18,7 +18,7 @@ import {
   WorkspaceDataContainer,
   type ChatSessionMetadata,
 } from '../../models/index.js';
-import { BaseParser, Logger } from '../base/base-parser';
+import { BaseParser, Logger } from '../base/base-parser.js';
 
 export class CopilotParser extends BaseParser {
   constructor(logger?: Logger) {
