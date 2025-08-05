@@ -2,10 +2,10 @@
 
 import React, { useEffect } from 'react';
 import { Dashboard } from '@/components';
-import { useDevlogStore, useProjectStore, useRealtimeStore } from '@/stores';
+import { useDevlogStore, useProjectStore } from '@/stores';
+import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { SSEEventType } from '@/lib';
 
 interface ProjectDetailsPageProps {
   projectId: number;
@@ -25,24 +25,23 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
     fetchTimeSeriesStats,
   } = useDevlogStore();
 
-  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+  const { onDevlogCreated, onDevlogUpdated, onDevlogDeleted } = useDevlogEvents();
 
   const fetchAll = async () => {
     return await Promise.all([fetchTimeSeriesStats(), fetchStats(), fetchDevlogs()]);
   };
 
   useEffect(() => {
-    connect();
-    subscribe(SSEEventType.DEVLOG_CREATED, fetchAll);
-    subscribe(SSEEventType.DEVLOG_UPDATED, fetchAll);
-    subscribe(SSEEventType.DEVLOG_DELETED, fetchAll);
+    const unsubscribeCreated = onDevlogCreated(fetchAll);
+    const unsubscribeUpdated = onDevlogUpdated(fetchAll);
+    const unsubscribeDeleted = onDevlogDeleted(fetchAll);
+
     return () => {
-      unsubscribe(SSEEventType.DEVLOG_CREATED);
-      unsubscribe(SSEEventType.DEVLOG_UPDATED);
-      unsubscribe(SSEEventType.DEVLOG_DELETED);
-      disconnect();
+      unsubscribeCreated();
+      unsubscribeUpdated();
+      unsubscribeDeleted();
     };
-  }, []);
+  }, [onDevlogCreated, onDevlogUpdated, onDevlogDeleted]);
 
   useEffect(() => {
     setCurrentProjectId(projectId);

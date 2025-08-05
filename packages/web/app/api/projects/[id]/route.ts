@@ -3,7 +3,7 @@ import {
   createSuccessResponse,
   RouteParams,
   ServiceHelper,
-  SSEEventType,
+  RealtimeEventType,
   withErrorHandling,
 } from '@/lib';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
@@ -62,7 +62,7 @@ export const PUT = withErrorHandling(
     // Update project
     const updatedProject = await projectResult.data.projectService.update(projectId, data);
 
-    return createSuccessResponse(updatedProject, { sseEventType: SSEEventType.PROJECT_UPDATED });
+    return createSuccessResponse(updatedProject, { sseEventType: RealtimeEventType.PROJECT_UPDATED });
   },
 );
 
@@ -88,7 +88,7 @@ export const DELETE = withErrorHandling(
 
     return createSuccessResponse(
       { deleted: true, projectId },
-      { sseEventType: SSEEventType.PROJECT_DELETED },
+      { sseEventType: RealtimeEventType.PROJECT_DELETED },
     );
   },
 );

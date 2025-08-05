@@ -5,20 +5,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DefaultChatImportService } from '../services/chat-import-service.js';
 import { ChatHubService } from '../services/chat-hub-service.js';
-import type { StorageProvider } from '@codervisor/devlog-core';
-
-// Mock storage provider
-const mockStorageProvider: StorageProvider = {
-  saveChatSession: vi.fn(),
-  saveChatMessages: vi.fn(),
-  saveChatWorkspace: vi.fn(),
-} as any;
 
 describe('DefaultChatImportService', () => {
   let service: DefaultChatImportService;
 
   beforeEach(() => {
-    service = new DefaultChatImportService(mockStorageProvider);
+    service = new DefaultChatImportService();
     vi.clearAllMocks();
   });
 
@@ -37,7 +29,7 @@ describe('ChatHubService', () => {
   let service: ChatHubService;
 
   beforeEach(() => {
-    service = new ChatHubService(mockStorageProvider);
+    service = new ChatHubService();
     vi.clearAllMocks();
   });
 

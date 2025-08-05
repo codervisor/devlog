@@ -87,3 +87,28 @@ export function useProjectEvents() {
     onProjectDeleted,
   };
 }
+
+/**
+ * Hook for subscribing to note events
+ */
+export function useNoteEvents() {
+  const { subscribe } = useRealtime();
+
+  const onNoteCreated = useCallback((callback: (note: any) => void) => {
+    return subscribe(RealtimeEventType.DEVLOG_NOTE_CREATED, callback);
+  }, [subscribe]);
+
+  const onNoteUpdated = useCallback((callback: (note: any) => void) => {
+    return subscribe(RealtimeEventType.DEVLOG_NOTE_UPDATED, callback);
+  }, [subscribe]);
+
+  const onNoteDeleted = useCallback((callback: (data: { id: string }) => void) => {
+    return subscribe(RealtimeEventType.DEVLOG_NOTE_DELETED, callback);
+  }, [subscribe]);
+
+  return {
+    onNoteCreated,
+    onNoteUpdated,
+    onNoteDeleted,
+  };
+}

@@ -7,6 +7,7 @@ RUN apk add --no-cache libc6-compat python3 make g++ curl
 # Enable pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g pnpm
 
 # Set working directory
 WORKDIR /app

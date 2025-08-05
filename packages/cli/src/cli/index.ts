@@ -138,7 +138,7 @@ program
           }
 
           const parser = new CopilotParser();
-          const projectData = await parser.discoverVSCodeCopilotData();
+          const projectData = await parser.discoverChatData();
 
           if (projectData.chat_sessions.length === 0) {
             spinner?.stop();

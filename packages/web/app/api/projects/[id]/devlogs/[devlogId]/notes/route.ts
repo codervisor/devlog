@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import type { NoteCategory } from '@codervisor/devlog-core';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { ApiErrors, createSuccessResponse, RouteParams, SSEEventType } from '@/lib';
+import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib';
+import { RealtimeEventType } from '@/lib/realtime';
 import { DevlogAddNoteBodySchema, DevlogUpdateWithNoteBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
@@ -107,7 +108,7 @@ export async function POST(
 
     return createSuccessResponse(newNote, {
       status: 201,
-      sseEventType: SSEEventType.DEVLOG_NOTE_CREATED,
+      sseEventType: RealtimeEventType.DEVLOG_NOTE_CREATED,
     });
   } catch (error) {
     console.error('Error adding devlog note:', error);
@@ -172,7 +173,7 @@ export async function PUT(
 
     // Return the updated entry with the note
     const finalEntry = await devlogService.get(devlogId, true); // Load with notes
-    return createSuccessResponse(finalEntry, { sseEventType: SSEEventType.DEVLOG_UPDATED });
+    return createSuccessResponse(finalEntry, { sseEventType: RealtimeEventType.DEVLOG_UPDATED });
   } catch (error) {
     console.error('Error updating devlog with note:', error);
     return ApiErrors.internalError('Failed to update devlog entry with note');

@@ -429,9 +429,4 @@ export class CopilotParser extends AIAssistantParser {
     );
     return workspaceData;
   }
-
-  // Legacy method name for backwards compatibility
-  async discoverVSCodeCopilotData(): Promise<WorkspaceData> {
-    return this.discoverChatData();
-  }
 }
