@@ -1,7 +1,7 @@
 /**
  * API request and response types for the MCP server
- * 
- * Re-exports from @devlog/core for convenience
+ *
+ * Re-exports from @codervisor/devlog-core for convenience
  */
 
-export * from '@devlog/core';
+export * from '@codervisor/devlog-core';

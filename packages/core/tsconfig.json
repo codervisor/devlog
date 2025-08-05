@@ -11,24 +11,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@devlog/ai": [
-        "../ai/build"
-      ],
-      "@devlog/ai/*": [
-        "../ai/build/*"
-      ]
+      "@/*": ["./src/*"],
+      "@codervisor/devlog-ai": ["../ai/build"],
+      "@codervisor/devlog-ai/*": ["../ai/build/*"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build", "**/*.test.ts", "**/*.spec.ts"]
 }

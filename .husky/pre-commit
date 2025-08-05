@@ -1,13 +1,15 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Running pre-commit validations..."
 
-# Run lint-staged for efficient checking of staged files
-npx lint-staged
-
-# Run custom import pattern validation (most important for catching issues)
+# Run custom import pattern validation
 echo "🔗 Validating import patterns..."
-node scripts/validate-imports.js
+npm run validate:imports
+
+# Run API response standardization validation (AST-based)
+echo "📡 Validating API response standardization..."
+npm run validate:api
+
+# Run response envelope format validation (AST-based)
+echo "📦 Validating response envelope format..."
+npm run validate:envelopes
 
 echo "✅ Pre-commit checks passed!"

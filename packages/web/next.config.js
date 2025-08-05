@@ -1,17 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   swcMinify: true,
-  transpilePackages: ['@devlog/core'],
+  transpilePackages: ['@codervisor/devlog-core'],
   // Use separate build directory for standalone builds only
   distDir: process.env.NEXT_BUILD_MODE === 'standalone' ? '.next-build' : '.next',
+  // Enable standalone output for Docker
+  output: process.env.NEXT_BUILD_MODE === 'standalone' ? 'standalone' : undefined,
   experimental: {
     serverComponentsExternalPackages: [
       // Keep TypeORM and database drivers server-side only
       'typeorm',
       'pg',
-      'mysql2', 
+      'mysql2',
       'better-sqlite3',
-      'reflect-metadata'
+      'reflect-metadata',
     ],
   },
   webpack: (config, { isServer }) => {
@@ -48,10 +50,10 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         // Prevent TypeORM from being bundled on client-side
-        'typeorm': false,
-        'pg': false,
-        'mysql2': false,
-        'mysql': false,
+        typeorm: false,
+        pg: false,
+        mysql2: false,
+        mysql: false,
         'better-sqlite3': false,
         'reflect-metadata': false,
         // Exclude problematic TypeORM drivers
@@ -60,7 +62,7 @@ const nextConfig = {
         '@sap/hana-client/extension/Stream': false,
         // Additional TypeORM dependencies that shouldn't be in client bundle
         'app-root-path': false,
-        'dotenv': false,
+        dotenv: false,
       };
 
       // Add ignore patterns for critical dependency warnings

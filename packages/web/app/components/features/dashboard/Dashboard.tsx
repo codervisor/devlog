@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Col, Empty, FloatButton, List, Row, Skeleton, Typography } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Area,
   Bar,
@@ -17,11 +17,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@devlog/core';
+import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { getColorHex, getStatusColor } from '@/lib/devlog-ui-utils';
+import { formatTimeAgoWithTooltip, getStatusChartColor } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
-import { formatTimeAgoWithTooltip } from '@/lib/time-utils';
 import {
   CHART_COLORS,
   CHART_OPACITY,
@@ -29,30 +28,26 @@ import {
   formatTooltipLabel,
   formatTooltipValue,
 } from './chart-utils';
-import styles from './Dashboard.module.css';
-import { Gutter } from 'antd/es/grid/row';
-import { useStickyHeaders } from '@/hooks/useStickyHeaders';
-
-const { Title, Text } = Typography;
+import { DataContext } from '@/stores/base';
 
 interface DashboardProps {
-  stats: DevlogStats | null;
-  timeSeriesData: TimeSeriesStats | null;
-  isLoadingTimeSeries: boolean;
-  recentDevlogs: DevlogEntry[];
-  isLoadingDevlogs: boolean;
+  statsContext: DataContext<DevlogStats>;
+  timeSeriesStatsContext: DataContext<TimeSeriesStats>;
+  recentDevlogsContext: DataContext<DevlogEntry[]>;
   onViewDevlog: (devlog: DevlogEntry) => void;
 }
 
 export function Dashboard({
-  stats,
-  timeSeriesData,
-  isLoadingTimeSeries,
-  recentDevlogs,
-  isLoadingDevlogs,
+  statsContext,
+  timeSeriesStatsContext,
+  recentDevlogsContext,
   onViewDevlog,
 }: DashboardProps) {
   const router = useRouter();
+
+  const { data: stats, loading: statsLoading } = statsContext;
+  const { data: timeSeriesData, loading: timeSeriesLoading } = timeSeriesStatsContext;
+  const { data: recentDevlogs, loading: devlogsLoading } = recentDevlogsContext;
 
   // Format data for charts using utility function
   const chartData = React.useMemo(() => formatTimeSeriesData(timeSeriesData), [timeSeriesData]);
@@ -62,107 +57,62 @@ export function Dashboard({
     if (!stats) return [];
 
     return [
-      { name: 'New', value: stats.byStatus['new'] || 0, color: getColorHex(getStatusColor('new')) },
+      { name: 'New', value: stats.byStatus['new'] || 0, color: getStatusChartColor('new') },
       {
         name: 'In Progress',
         value: stats.byStatus['in-progress'] || 0,
-        color: getColorHex(getStatusColor('in-progress')),
+        color: getStatusChartColor('in-progress'),
       },
       {
         name: 'Blocked',
         value: stats.byStatus['blocked'] || 0,
-        color: getColorHex(getStatusColor('blocked')),
+        color: getStatusChartColor('blocked'),
       },
       {
         name: 'In Review',
         value: stats.byStatus['in-review'] || 0,
-        color: getColorHex(getStatusColor('in-review')),
+        color: getStatusChartColor('in-review'),
       },
       {
         name: 'Testing',
         value: stats.byStatus['testing'] || 0,
-        color: getColorHex(getStatusColor('testing')),
+        color: getStatusChartColor('testing'),
       },
       {
         name: 'Done',
         value: stats.byStatus['done'] || 0,
-        color: getColorHex(getStatusColor('done')),
+        color: getStatusChartColor('done'),
       },
       {
         name: 'Cancelled',
         value: stats.byStatus['cancelled'] || 0,
-        color: getColorHex(getStatusColor('cancelled')),
+        color: getStatusChartColor('cancelled'),
       },
     ].filter((item) => item.value > 0);
   }, [stats]);
 
-  // Define gutter for chart rows
-  const chartRowGutter = [48, 24] as [Gutter, Gutter];
-
-  // Setup sticky header detection
-  useStickyHeaders({
-    selectorClass: styles.sectionHeader,
-    stickyClass: styles.isSticky,
-    topOffset: 0,
-    dependencies: [],
-  });
-
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <div className={`${styles.dashboardContent} scrollable-content`}>
+      <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Charts Section */}
-        <div className={styles.dashboardChartsSection}>
-          {isLoadingTimeSeries ? (
-            <Row gutter={chartRowGutter} className={styles.chartRow}>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Development Activity (Last 30 Days)
-                  </Title>
-                  <Skeleton active paragraph={{ rows: 8 }} />
-                </div>
-              </Col>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Current Status Distribution
-                  </Title>
-                  <Skeleton active paragraph={{ rows: 8 }} />
-                </div>
-              </Col>
-            </Row>
-          ) : chartData.length === 0 ? (
-            <Row gutter={chartRowGutter}>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Project Progress & Current Workload
-                  </Title>
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No development activity data available yet"
-                  />
-                </div>
-              </Col>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Current Status Distribution
-                  </Title>
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No status distribution data available yet"
-                  />
-                </div>
-              </Col>
-            </Row>
-          ) : (
-            <Row gutter={chartRowGutter}>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Project Progress & Current Workload
-                  </Title>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Chart - Time Series */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Progress & Current Workload</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {timeSeriesLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : chartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="text-muted-foreground mb-2">📊</div>
+                    <p className="text-sm text-muted-foreground">
+                      No development activity data available yet
+                    </p>
+                  </div>
+                ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <ComposedChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -222,13 +172,26 @@ export function Dashboard({
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
-                </div>
-              </Col>
-              <Col xs={24} lg={12}>
-                <div className={styles.chartCard}>
-                  <Title level={4} className="mb-4">
-                    Current Status Distribution
-                  </Title>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Right Chart - Status Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Status Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-[300px] w-full" />
+                ) : pieChartData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="text-muted-foreground mb-2">📈</div>
+                    <p className="text-sm text-muted-foreground">
+                      No status distribution data available yet
+                    </p>
+                  </div>
+                ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -255,109 +218,91 @@ export function Dashboard({
                       <Legend
                         verticalAlign="bottom"
                         height={36}
-                        formatter={(value: string) => (
-                          <span className={styles.chartLegendText}>{value}</span>
-                        )}
+                        formatter={(value: string) => <span className="text-sm">{value}</span>}
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-              </Col>
-            </Row>
-          )}
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div className={`${styles.recentDevlogs} flex-1 flex flex-col`}>
-          <div className={styles.sectionHeader}>
-            <Title level={3} className={styles.recentDevlogsTitle}>
-              Recent Devlogs
-            </Title>
-          </div>
-          <div className="flex-1 overflow-hidden thin-scrollbar-vertical">
-            {isLoadingDevlogs ? (
-              <List
-                itemLayout="horizontal"
-                dataSource={Array.from({ length: 10 }, (_, index) => ({
-                  key: `skeleton-${index}`,
-                }))}
-                renderItem={() => (
-                  <List.Item className={styles.devlogListItem}>
-                    <List.Item.Meta
-                      className={styles.devlogListItemMeta}
-                      avatar={<Skeleton.Avatar size={40} active />}
-                      title={<Skeleton paragraph={{ rows: 2 }} active />}
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : recentDevlogs.length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="No devlogs found"
-                className={styles.emptyDevlogs}
-              />
-            ) : (
-              <List
-                itemLayout="horizontal"
-                dataSource={recentDevlogs}
-                renderItem={(devlog) => (
-                  <List.Item
-                    className={styles.devlogListItem}
-                    onClick={() => onViewDevlog(devlog)}
-                    actions={[
-                      <Text
-                        type="secondary"
-                        key="date"
-                        className={styles.devlogDate}
-                        title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
-                      >
-                        {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
-                      </Text>,
-                    ]}
-                  >
-                    <List.Item.Meta
-                      className={styles.devlogListItemMeta}
-                      avatar={
-                        <Text strong className={styles.devlogId}>
-                          {devlog.id}
-                        </Text>
-                      }
-                      title={
-                        <div className={styles.devlogTitleSection}>
-                          <Text strong className={styles.devlogTitleText}>
-                            {devlog.title}
-                          </Text>
-                          <div className={styles.recentDevlogsMeta}>
-                            <DevlogStatusTag status={devlog.status} className={styles.devlogTag} />
-                            <DevlogPriorityTag
-                              priority={devlog.priority}
-                              className={styles.devlogTag}
-                            />
-                            <DevlogTypeTag type={devlog.type} className={styles.devlogTag} />
-                          </div>
+        {/* Recent Devlogs Section */}
+        <Card className="flex-1 flex flex-col">
+          <CardHeader className="section-header">
+            <CardTitle>Recent Devlogs</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              {devlogsLoading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <div
+                      key={`skeleton-${index}`}
+                      className="flex items-start space-x-4 p-4 border-b border-border"
+                    >
+                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                        <Skeleton className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                        <div className="flex space-x-2">
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-5 w-16" />
                         </div>
-                      }
-                      description={
-                        <Text type="secondary" ellipsis className={styles.devlogDescription}>
-                          {devlog.description}
-                        </Text>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            )}
-          </div>
-        </div>
+                      </div>
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  ))}
+                </div>
+              ) : recentDevlogs?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-muted-foreground mb-2 text-2xl">📝</div>
+                  <p className="text-sm text-muted-foreground">No devlogs found</p>
+                </div>
+              ) : (
+                <div className="space-y-0">
+                  {recentDevlogs?.map((devlog) => (
+                    <div
+                      key={devlog.id}
+                      className="flex items-start space-x-4 p-4 border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => onViewDevlog(devlog)}
+                    >
+                      <div className="w-12 h-12 bg-primary/10 rounded flex items-center justify-center text-primary font-bold text-sm">
+                        {devlog.id}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1 truncate">{devlog.title}</h4>
+                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                              {devlog.description}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              <DevlogStatusTag status={devlog.status} />
+                              <DevlogPriorityTag priority={devlog.priority} />
+                              <DevlogTypeTag type={devlog.type} />
+                            </div>
+                          </div>
+                          <span
+                            className="text-xs text-muted-foreground ml-4 flex-shrink-0"
+                            title={formatTimeAgoWithTooltip(devlog.updatedAt).fullDate}
+                          >
+                            {formatTimeAgoWithTooltip(devlog.updatedAt).timeAgo}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      <FloatButton
-        icon={<PlusOutlined />}
-        tooltip="Create new devlog"
-        onClick={() => router.push('/devlogs/create')}
-        style={{ right: 24, bottom: 24 }}
-      />
     </div>
   );
 }

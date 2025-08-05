@@ -1,9 +1,0 @@
-# Devlog - exclude cache and temporary files, include JSON entries
-*.tmp
-*.cache
-cache/
-temp/
-
-# Include JSON files and structure
-!entries/
-!*.json

@@ -71,19 +71,19 @@ You can also work directly with individual packages using pnpm filters:
 
 ```bash
 # Work on the MCP server package
-pnpm --filter @devlog/mcp build
-pnpm --filter @devlog/mcp dev
+pnpm --filter @codervisor/devlog-mcp build
+pnpm --filter @codervisor/devlog-mcp dev
 
 # Work on the core package
-pnpm --filter @devlog/core build
-pnpm --filter @devlog/core dev
+pnpm --filter @codervisor/devlog-core build
+pnpm --filter @codervisor/devlog-core dev
 
 # Work on the web package
-pnpm --filter @devlog/web build
-pnpm --filter @devlog/web dev
+pnpm --filter @codervisor/devlog-web build
+pnpm --filter @codervisor/devlog-web dev
 
 # Install dependencies for a specific package
-pnpm --filter @devlog/mcp add some-dependency
+pnpm --filter @codervisor/devlog-mcp add some-dependency
 ```
 
 ## Adding New Packages
@@ -91,7 +91,7 @@ pnpm --filter @devlog/mcp add some-dependency
 When adding a new package to the monorepo:
 
 1. Create a new directory in `packages/`
-2. Add a `package.json` with a scoped name (e.g., `@devlog/package-name`)
+2. Add a `package.json` with a scoped name (e.g., `@codervisor/devlog-package-name`)
 3. Update the root `tsconfig.json` to include the new package reference
 4. Update this document
 
@@ -106,12 +106,12 @@ When adding a new package to the monorepo:
 
 ### Package Structure
 
-- `@devlog/core`: Core devlog management functionality, file system operations, CRUD, and all shared TypeScript types
-- `@devlog/mcp`: MCP server implementation that wraps the core functionality
-- `@devlog/web`: Next.js web interface for browsing and managing devlogs
+- `@codervisor/devlog-core`: Core devlog management functionality, file system operations, CRUD, and all shared TypeScript types
+- `@codervisor/devlog-mcp`: MCP server implementation that wraps the core functionality
+- `@codervisor/devlog-web`: Next.js web interface for browsing and managing devlogs
 - Future packages might include:
-  - `@devlog/cli`: Command-line interface for devlog management
-  - `@devlog/utils`: Shared utilities
+  - `@codervisor/devlog-cli`: Command-line interface for devlog management
+  - `@codervisor/devlog-utils`: Shared utilities
 
 ## Build System
 

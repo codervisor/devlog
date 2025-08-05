@@ -1,23 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["build/**", ".next/**", ".next-build/**", "dist/**"]
-    },
-    "build:test": {
-      "dependsOn": ["^build"],
-      "outputs": ["build/**", ".next-build/**", "dist/**"]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "test": {
-      "dependsOn": ["^build"]
-    },
-    "clean": {
-      "cache": false
+      "outputs": ["build/**", ".next/**"],
+      "env": [
+        "DEVLOG_STORAGE_TYPE",
+        "POSTGRES_URL_NON_POOLING",
+        "POSTGRES_URL",
+        "POSTGRES_SSL", 
+        "MYSQL_URL",
+        "MYSQL_HOST",
+        "MYSQL_PORT",
+        "MYSQL_USERNAME",
+        "MYSQL_PASSWORD",
+        "MYSQL_DATABASE",
+        "SQLITE_PATH",
+        "NODE_ENV",
+        "NEXT_BUILD_MODE",
+        "npm_package_version"
+      ]
     }
   }
 }

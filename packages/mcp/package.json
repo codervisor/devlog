@@ -1,6 +1,6 @@
 {
-  "name": "@devlog/mcp",
-  "version": "1.0.0",
+  "name": "@codervisor/devlog-mcp",
+  "version": "0.0.1",
   "description": "MCP server for managing development logs and working notes",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -13,22 +13,25 @@
   "bin": {
     "devlog-mcp": "build/index.js"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/devlog-monorepo.git",
+    "url": "https://github.com/codervisor/devlog.git",
     "directory": "packages/mcp"
   },
-  "homepage": "https://github.com/your-username/devlog-monorepo#readme",
+  "homepage": "https://github.com/codervisor/devlog#readme",
   "bugs": {
-    "url": "https://github.com/your-username/devlog-monorepo/issues"
+    "url": "https://github.com/codervisor/devlog/issues"
   },
   "scripts": {
     "build": "tsc",
     "start": "node build/index.js",
     "dev": "tsx src/index.ts",
-    "dev:watch": "tsx watch --clear-screen=false src/index.ts",
     "dev:nodemon": "nodemon",
-    "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @devlog/core dev\" \"pnpm dev\"",
+    "dev:full": "concurrently --names \"CORE,MCP\" --prefix-colors \"green,yellow\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm dev\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -43,16 +46,20 @@
     "development-notes",
     "ai-assistant"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": {
+    "name": "Marvin Zhang",
+    "email": "tikazyq@163.com"
+  },
+  "license": "Apache-2.0",
   "dependencies": {
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "better-sqlite3": "^11.10.0",
-    "dotenv": "16.5.0"
+    "dotenv": "16.5.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@devlog/core": "workspace:*",
+    "@codervisor/devlog-core": "workspace:*",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "2.1.9",
     "@vitest/ui": "^2.1.9",
@@ -63,6 +70,6 @@
     "vitest": "^2.1.9"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

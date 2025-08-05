@@ -1,22 +1,29 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { coreTools } from './core-tools.js';
-import { searchTools } from './search-tools.js';
-import { progressTools } from './progress-tools.js';
-import { aiContextTools } from './ai-context-tools.js';
-import { chatTools } from './chat-tools.js'; // Re-enabled with stub implementations
-import { workspaceTools } from './workspace-tools.js';
+import { devlogTools } from './devlog-tools.js';
+import { projectTools } from './project-tools.js';
 
 /**
- * All available MCP tools organized by functionality
+ * All available MCP tools - devlog-specific naming
+ *
+ * See server description for complete terminology and context.
+ *
+ * Total: 10 tools
+ * - 7 devlog tools: create_devlog, get_devlog, update_devlog, list_devlogs,
+ *   add_devlog_note, complete_devlog, find_related_devlogs
+ * - 3 project tools: list_projects, get_current_project, switch_project
  */
-export const allTools: Tool[] = [
-  ...coreTools,
-  ...searchTools,
-  ...progressTools,
-  ...aiContextTools,
-  ...chatTools, // Re-enabled with stub implementations
-  ...workspaceTools,
-];
+export const allTools: Tool[] = [...devlogTools, ...projectTools];
 
-// Re-export individual tool groups for specific use cases
-export { coreTools, searchTools, progressTools, aiContextTools, chatTools, workspaceTools };
+// Re-export tool groups
+export { devlogTools, projectTools };
+
+// Simplified tool categories
+export const coreTools = devlogTools.filter((tool) =>
+  ['create_devlog', 'get_devlog', 'update_devlog', 'list_devlogs'].includes(tool.name),
+);
+
+export const actionTools = devlogTools.filter((tool) =>
+  ['add_devlog_note', 'complete_devlog', 'find_related_devlogs'].includes(tool.name),
+);
+
+export const contextTools = projectTools; // Project tools provide AI agent context

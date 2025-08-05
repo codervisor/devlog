@@ -1,233 +1,121 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Button, Layout, Menu, Tooltip } from 'antd';
-import {
-  AppstoreOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  LeftOutlined,
-  PlusOutlined,
-  RightOutlined,
-  WifiOutlined,
-} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { DevlogStats } from '@devlog/core';
-import { OverviewStats, WorkspaceSwitcher } from '@/components';
-import styles from './NavigationSidebar.module.css';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { Boxes, Home, SquareKanban } from 'lucide-react';
 
-const { Sider } = Layout;
-
-interface NavigationSidebarProps {
-  stats?: DevlogStats | null;
-  statsLoading?: boolean;
-  collapsed?: boolean;
-  connected: boolean;
-  onToggle?: () => void;
+interface SidebarItem {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick?: () => void;
 }
 
-export function NavigationSidebar({
-  stats,
-  statsLoading = false,
-  collapsed = false,
-  connected,
-  onToggle,
-}: NavigationSidebarProps) {
+export function NavigationSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { open, toggleSidebar } = useSidebar();
 
   // Handle client-side hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Determine selected key based on current pathname
-  const getSelectedKey = () => {
-    if (!mounted) return 'dashboard'; // Fallback during SSR
-    if (pathname === '/') return 'dashboard';
-    if (pathname === '/devlogs') return 'list';
-    if (pathname === '/devlogs/create') return 'create';
-    if (pathname === '/workspaces') return 'workspaces';
-    if (pathname.startsWith('/devlogs/')) return 'list'; // For individual devlog pages
-    return 'dashboard';
+  const getProjectId = () => {
+    const matched = pathname.match(/\/projects\/(\w+)/);
+    if (matched) {
+      return matched[1];
+    }
+    return null;
   };
 
-  const menuItems = [
+  const projectsMenuItems = [
     {
-      key: 'dashboard',
-      label: 'Dashboard',
-      icon: <DashboardOutlined />,
+      key: 'projects',
+      label: 'Projects',
+      icon: <Boxes />,
+      onClick: () => router.push('/projects'),
+    },
+  ];
+  const projectDetailMenuItems = [
+    {
+      key: 'overview',
+      label: 'Overview',
+      icon: <Home />,
+      onClick: () => router.push(`/projects/${getProjectId()}`),
     },
     {
       key: 'list',
-      label: 'All Devlogs',
-      icon: <FileTextOutlined />,
-    },
-    {
-      key: 'create',
-      label: 'New Devlog',
-      icon: <PlusOutlined />,
-    },
-    {
-      key: 'workspaces',
-      label: 'Workspaces',
-      icon: <AppstoreOutlined />,
+      label: 'Devlogs',
+      icon: <SquareKanban />,
+      onClick: () => router.push(`/projects/${getProjectId()}/devlogs`),
     },
   ];
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    if (!mounted) return;
+  // Get contextual menu items based on current path
+  const getMenuItems = (): SidebarItem[] => {
+    if (!mounted) return [];
 
-    switch (key) {
-      case 'dashboard':
-        router.push('/');
-        break;
-      case 'list':
-        router.push('/devlogs');
-        break;
-      case 'create':
-        router.push('/devlogs/create');
-        break;
-      case 'workspaces':
-        router.push('/workspaces');
-        break;
+    const pathParts = pathname.split('/').filter(Boolean);
+
+    if (pathParts.length < 2) {
+      return projectsMenuItems;
+    } else {
+      return projectDetailMenuItems;
     }
+  };
+
+  // Determine selected key based on current pathname and menu items
+  const getSelectedKey = () => {
+    if (!mounted) return 'overview';
+
+    const pathParts = pathname.split('/').filter(Boolean);
+
+    if (pathname === '/' || pathname === '/projects') return 'projects';
+    if (pathParts.length === 2 && pathParts[0] === 'projects') return 'overview';
+    if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
+
+    return 'overview';
   };
 
   // Don't render menu items until mounted to prevent hydration issues
   if (!mounted) {
-    return (
-      <Sider
-        width={280}
-        collapsed={collapsed}
-        collapsedWidth={60}
-        breakpoint="md"
-        collapsible={false}
-        trigger={null}
-        style={{
-          background: '#fff',
-          borderRight: '1px solid #f0f0f0',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div className={styles.sidebarHeader}>
-          <div className={styles.sidebarBrand}>
-            <Image src="/devlog-logo-text.svg" alt="Devlog Logo" width={200} height={24} />
-          </div>
-        </div>
-
-        <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarFooterContent}>
-            {onToggle && (
-              <Tooltip title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} placement="top">
-                <Button
-                  type="text"
-                  icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                  onClick={onToggle}
-                  className={styles.sidebarToggle}
-                  size="small"
-                />
-              </Tooltip>
-            )}
-          </div>
-        </div>
-      </Sider>
-    );
+    return null;
   }
 
+  const menuItems = getMenuItems();
+
   return (
-    <Sider
-      width={280}
-      collapsed={collapsed}
-      collapsedWidth={60}
-      breakpoint="md"
-      collapsible={false}
-      trigger={null}
-      style={{
-        background: '#fff',
-        borderRight: '1px solid #f0f0f0',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-      }}
-    >
-      <div className={styles.sidebarHeader}>
-        <div className={styles.sidebarBrand}>
-          {collapsed ? (
-            <Image
-              src="/devlog-logo.svg"
-              alt="Devlog Logo"
-              width={24}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          ) : (
-            <Image
-              src="/devlog-logo-text.svg"
-              alt="Devlog Logo"
-              width={(200 / 64) * 48}
-              height={24}
-              className={styles.sidebarBrandIcon}
-            />
-          )}
-        </div>
-      </div>
+    <Sidebar collapsible="icon" className="py-1 border-r bg-background">
+      <SidebarContent className="bg-background">
+        <SidebarMenu className="space-y-2 p-2">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.key}>
+              <SidebarMenuButton isActive={getSelectedKey() === item.key} onClick={item.onClick}>
+                {item.icon}
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
 
-      <div
-        className={
-          collapsed ? styles.workspaceSwitcherContainerCollapsed : styles.workspaceSwitcherContainer
-        }
-      >
-        <WorkspaceSwitcher collapsed={collapsed} />
-      </div>
-
-      <Menu
-        mode="inline"
-        selectedKeys={[getSelectedKey()]}
-        style={{ borderRight: 0, flex: 1 }}
-        items={menuItems}
-        onClick={handleMenuClick}
-      />
-
-      <div className={styles.sidebarFooter}>
-        <div className={styles.sidebarFooterContent}>
-          {!collapsed && (
-            <div className={styles.sidebarFooterContentLeft}>
-              <Tooltip
-                title={connected ? 'Connected to MCP server' : 'Disconnected from MCP server'}
-                placement="top"
-              >
-                <WifiOutlined
-                  style={{
-                    color: connected ? '#52c41a' : '#ff4d4f',
-                    fontSize: '16px',
-                    cursor: 'default',
-                  }}
-                />
-              </Tooltip>
-
-              {(stats || statsLoading) && (
-                <OverviewStats stats={stats || null} loading={statsLoading} variant="icon" />
-              )}
-            </div>
-          )}
-
-          <div className={styles.sidebarFooterContentRight}>
-            {onToggle && (
-              <Button
-                type="text"
-                icon={collapsed ? <RightOutlined /> : <LeftOutlined />}
-                onClick={onToggle}
-                className={styles.sidebarToggle}
-                size="small"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </Sider>
+      <SidebarFooter className="p-2 bg-background border-t-0">
+        <SidebarTrigger className="h-8 w-8 p-0" onClick={toggleSidebar} />
+      </SidebarFooter>
+    </Sidebar>
   );
 }

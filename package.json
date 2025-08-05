@@ -3,28 +3,29 @@
   "version": "1.0.0",
   "description": "Monorepo for development logging tools and MCP server",
   "scripts": {
-    "build": "pnpm -r build",
-    "build:test": "pnpm --filter @devlog/ai build && pnpm --filter @devlog/core build && pnpm --filter @devlog/web build:test",
-    "start": "pnpm --filter @devlog/mcp start",
-    "dev": "pnpm --filter @devlog/mcp dev",
-    "test": "pnpm -r test",
-    "test:watch": "pnpm -r test:watch",
-    "test:coverage": "pnpm --filter @devlog/mcp test -- --coverage",
-    "test:integration": "pnpm --filter @devlog/mcp test:integration",
+    "build": "turbo build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:packages": "pnpm -r test",
+    "test:watch:packages": "pnpm -r test:watch",
+    "test:coverage:packages": "pnpm -r test -- --coverage",
+    "test:integration": "pnpm --filter @codervisor/devlog-mcp test:integration",
     "clean": "pnpm -r clean && rm -f *.tsbuildinfo",
-    "install-all": "pnpm install",
-    "build:mcp": "pnpm --filter @devlog/mcp build",
-    "build:core": "pnpm --filter @devlog/core build",
-    "build:web": "pnpm --filter @devlog/web build",
-    "build:vercel": "pnpm --filter @devlog/ai build && pnpm --filter @devlog/core build && pnpm --filter @devlog/web build",
-    "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/mcp dev\"",
-    "dev:web": "scripts/dev-with-check.sh concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @devlog/ai dev\" \"pnpm --filter @devlog/core dev\" \"pnpm --filter @devlog/web dev\"",
-    "start:web": "pnpm --filter @devlog/web start",
-    "preview:web": "pnpm --filter @devlog/web preview",
+    "dev:mcp": "concurrently --names \"AI,CORE,MCP\" --prefix-colors \"red,green,yellow\" \"pnpm --filter @codervisor/devlog-ai dev\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm --filter @codervisor/devlog-mcp dev\"",
+    "dev:web": "concurrently --names \"AI,CORE,WEB\" --prefix-colors \"red,green,blue\"  \"pnpm --filter @codervisor/devlog-ai dev\" \"pnpm --filter @codervisor/devlog-core dev\" \"pnpm --filter @codervisor/devlog-web dev\"",
+    "start:web": "pnpm --filter @codervisor/devlog-web start",
+    "preview:web": "pnpm --filter @codervisor/devlog-web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "validate": "node scripts/validate-imports.js",
-    "detect-migration": "node scripts/detect-migration.js",
-    "pre-commit": "lint-staged && node scripts/validate-imports.js",
+    "validate": "pnpm exec tsx scripts/validation/validate-all.ts",
+    "validate:list": "pnpm exec tsx scripts/validation/validate-all.ts --list",
+    "validate:quick": "pnpm exec tsx scripts/validation/validate-all.ts --quick",
+    "validate:imports": "pnpm exec tsx scripts/validation/validate-imports.ts",
+    "validate:api": "pnpm exec tsx scripts/validation/validate-api-standardization-ast.ts",
+    "validate:envelopes": "pnpm exec tsx scripts/validation/validate-response-envelopes-ast.ts",
+    "validate:architecture": "pnpm exec tsx scripts/validation/validate-architecture-patterns-ast.ts",
+    "pre-commit": "lint-staged && pnpm exec tsx scripts/validation/validate-imports.ts",
     "prepare": "husky"
   },
   "keywords": [
@@ -35,21 +36,27 @@
     "development-notes",
     "ai-assistant"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": {
+    "name": "Marvin Zhang",
+    "email": "tikazyq@163.com"
+  },
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/semver": "^7.5.8",
+    "@vitest/coverage-v8": "2.1.9",
     "concurrently": "9.2.0",
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
     "prettier": "3.6.1",
-    "typescript": "^5.0.0"
+    "semver": "^7.6.3",
+    "turbo": "2.5.5",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.9"
   },
   "engines": {
-    "node": ">=18",
-    "pnpm": ">=8.0.0"
+    "node": ">=20"
   },
-  "packageManager": "pnpm@10.13.1",
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
       "prettier --write"
@@ -60,6 +67,8 @@
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
-    "dotenv": "16.5.0"
-  }
+    "dotenv": "16.5.0",
+    "tsx": "^4.0.0"
+  },
+  "packageManager": "pnpm@10.13.1"
 }

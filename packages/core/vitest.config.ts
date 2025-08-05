@@ -1,13 +1,16 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, mergeConfig } from 'vitest/config';
+import { baseConfig } from '../../vitest.config.base';
 
-export default defineConfig({
-  test: {
-    environment: 'node',
-    globals: true,
-    testTimeout: 30000,
-    // Handle dynamic imports better
-    deps: {
-      external: ['better-sqlite3'],
+export default defineConfig(
+  mergeConfig(baseConfig, {
+    // Core-specific overrides
+    test: {
+      // Handle dynamic imports better for core package
+      deps: {
+        external: ['better-sqlite3'],
+      },
+      // Keep the existing timeout since core has longer-running tests
+      testTimeout: 30000,
     },
-  },
-});
+  }),
+);

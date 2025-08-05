@@ -1,15 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Button, Select, Space, Typography } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { PaginationMeta } from '@devlog/core';
-
-const { Text } = Typography;
-const { Option } = Select;
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PaginationMeta } from '@codervisor/devlog-core';
 
 interface PaginationProps {
   pagination: PaginationMeta;
+  disabled?: boolean;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   showSizeChanger?: boolean;
@@ -20,13 +25,14 @@ interface PaginationProps {
 
 export function Pagination({
   pagination,
+  disabled = false,
   onPageChange,
   onPageSizeChange,
   showSizeChanger = true,
   pageSizeOptions = [10, 20, 50, 100],
   className,
 }: PaginationProps) {
-  const { page, limit, total, totalPages, hasPreviousPage, hasNextPage } = pagination;
+  const { page, limit, total, totalPages } = pagination;
 
   // Calculate visible page numbers
   const getVisiblePages = () => {
@@ -34,7 +40,7 @@ export function Pagination({
     const range = [];
     const rangeWithDots = [];
 
-    for (let i = Math.max(2, page - delta); i <= Math.min(totalPages - 1, page + delta); i++) {
+    for (let i = Math.max(2, page - delta); i <= Math.min(totalPages! - 1, page + delta); i++) {
       range.push(i);
     }
 
@@ -46,17 +52,19 @@ export function Pagination({
 
     rangeWithDots.push(...range);
 
-    if (page + delta < totalPages - 1) {
+    if (page + delta < totalPages! - 1) {
       rangeWithDots.push('...', totalPages);
-    } else if (totalPages > 1) {
+    } else if (totalPages! > 1) {
       rangeWithDots.push(totalPages);
     }
 
     return rangeWithDots;
   };
 
-  const startItem = total === 0 ? 0 : (page - 1) * limit + 1;
-  const endItem = Math.min(page * limit, total);
+  const isTotalValid = total !== undefined && total !== null;
+
+  const startItem = isTotalValid ? (page - 1) * limit + 1 : 0;
+  const endItem = isTotalValid ? Math.min(page * limit, total) : 0;
 
   if (total === 0) {
     return null;
@@ -65,70 +73,80 @@ export function Pagination({
   return (
     <div className={`flex items-center justify-between gap-4 ${className || ''}`}>
       {/* Results info */}
-      <Text type="secondary" className="text-sm">
-        Showing {startItem}-{endItem} of {total} results
-      </Text>
+      <p className="text-sm text-muted-foreground">
+        {isTotalValid ? `Showing ${startItem}-${endItem} of ${total} results` : ' '}
+      </p>
 
-      <Space size="middle" className="flex items-center">
+      <div className="flex items-center gap-4">
         {/* Page size selector */}
         {showSizeChanger && (
-          <Space size="small">
-            <Text type="secondary" className="text-sm">Show</Text>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Show</span>
             <Select
-              value={limit}
-              onChange={onPageSizeChange}
-              size="small"
-              style={{ width: 70 }}
+              value={limit.toString()}
+              disabled={disabled}
+              onValueChange={(value) => onPageSizeChange(parseInt(value))}
             >
-              {pageSizeOptions.map(size => (
-                <Option key={size} value={size}>{size}</Option>
-              ))}
+              <SelectTrigger className="w-16">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-            <Text type="secondary" className="text-sm">per page</Text>
-          </Space>
+            <span className="text-sm text-muted-foreground">per page</span>
+          </div>
         )}
 
         {/* Page navigation */}
-        <Space size="small">
+        <div className="flex items-center gap-1">
           <Button
-            icon={<LeftOutlined />}
-            disabled={!hasPreviousPage}
+            variant="outline"
+            size="sm"
+            disabled={disabled || page <= 1}
             onClick={() => onPageChange(page - 1)}
-            size="small"
           >
+            <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </Button>
 
           {/* Page numbers */}
-          <Space size={4}>
-            {getVisiblePages().map((pageNum, index) => (
+          <div className="flex items-center gap-1">
+            {getVisiblePages().map((pageNum, index) =>
               pageNum === '...' ? (
-                <span key={`dots-${index}`} className="px-2 text-gray-400">...</span>
+                <span key={`dots-${index}`} className="px-2 text-muted-foreground">
+                  ...
+                </span>
               ) : (
                 <Button
                   key={pageNum}
-                  type={pageNum === page ? 'primary' : 'default'}
+                  variant={pageNum === page ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={disabled}
                   onClick={() => onPageChange(pageNum as number)}
-                  size="small"
                   className="min-w-8"
                 >
                   {pageNum}
                 </Button>
-              )
-            ))}
-          </Space>
+              ),
+            )}
+          </div>
 
           <Button
-            iconPosition="end"
-            icon={<RightOutlined />}
-            disabled={!hasNextPage}
+            variant="outline"
+            size="sm"
+            disabled={disabled || page >= totalPages!}
             onClick={() => onPageChange(page + 1)}
-            size="small"
           >
             Next
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
-        </Space>
-      </Space>
+        </div>
+      </div>
     </div>
   );
 }
