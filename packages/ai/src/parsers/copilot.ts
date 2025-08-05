@@ -51,7 +51,6 @@ export class CopilotParser extends BaseParser {
         const workspaceCount = Object.keys(workspaceMapping).length;
 
         if (workspaceCount > 0) {
-          console.log(chalk.green(`✓ Found VS Code ${appName} with ${workspaceCount} workspaces`));
           applications.push({
             id: appId,
             name: appName,
@@ -62,8 +61,13 @@ export class CopilotParser extends BaseParser {
           });
         }
       } catch (error) {
-        console.warn(`VS Code path not found: ${basePath}`);
+        // Skip inaccessible paths silently
       }
+    }
+
+    if (applications.length > 0) {
+      const totalWorkspaces = applications.reduce((sum, app) => sum + (app.workspaceCount || 0), 0);
+      console.log(chalk.green(`✓ Found ${applications.length} VS Code installation(s) with ${totalWorkspaces} total workspaces`));
     }
 
     return applications;
@@ -115,7 +119,7 @@ export class CopilotParser extends BaseParser {
         }
       }
     } catch (error) {
-      console.error(chalk.red(`Failed to get workspaces for application ${applicationId}:`), error);
+      // Return empty array on error
     }
 
     return workspaces;
@@ -140,7 +144,6 @@ export class CopilotParser extends BaseParser {
       for (const sessionFile of sessionFiles) {
         const sessionId = sessionFile.split('/').pop()?.replace('.json', '');
         if (!sessionId) {
-          console.warn(chalk.yellow(`Session file without ID found: ${sessionFile}`));
           continue;
         }
         const session = await this.parseChatSession(applicationId, workspaceId, sessionId);
@@ -165,7 +168,6 @@ export class CopilotParser extends BaseParser {
   ): Promise<ChatSession | null> {
     const targetBasePath = this.getTargetBasePath(applicationId);
     if (!targetBasePath) {
-      console.error(chalk.red(`Application not found: ${applicationId}`));
       return null;
     }
     const filePath = resolve(
@@ -223,7 +225,6 @@ export class CopilotParser extends BaseParser {
         turns: this.extractChatTurns(sessionId, sessionData),
       };
 
-      console.info(chalk.blue(`✓ Parsed chat session ${actualSessionId} with ${(sessionData.requests || []).length} turns`));
       return session;
     } catch (error) {
       console.error(chalk.red(`Error parsing chat session ${sessionId}:`), error instanceof Error ? error.message : String(error));
@@ -278,7 +279,7 @@ export class CopilotParser extends BaseParser {
           stat(basePath);
           return basePath;
         } catch (error) {
-          console.warn(chalk.yellow(`VS Code path not found: ${basePath}`));
+          // Path not accessible, continue
         }
       }
     }

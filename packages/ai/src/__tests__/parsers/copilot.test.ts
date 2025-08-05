@@ -76,7 +76,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('getWorkspaces', () => {
-    it.skipIf(!hasVSCodeData)('should return workspaces for valid application', async () => {
+    it.runIf(() => hasVSCodeData)('should return workspaces for valid application', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {
@@ -115,7 +115,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('getChatSessions', () => {
-    it.skipIf(!hasVSCodeData)('should return chat sessions for valid workspace', async () => {
+    it.runIf(() => hasVSCodeData)('should return chat sessions for valid workspace', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {
@@ -168,7 +168,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('parseChatSession', () => {
-    it.skipIf(!hasVSCodeData)('should parse individual chat session correctly', async () => {
+    it.runIf(() => hasVSCodeData)('should parse individual chat session correctly', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {
@@ -248,7 +248,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('Chat message extraction', () => {
-    it.skipIf(!hasVSCodeData)('should extract messages with correct structure', async () => {
+    it.runIf(() => hasVSCodeData)('should extract messages with correct structure', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {
@@ -353,7 +353,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('Performance and scalability', () => {
-    it.skipIf(!hasVSCodeData)('should handle large numbers of sessions efficiently', async () => {
+    it.runIf(() => hasVSCodeData)('should handle large numbers of sessions efficiently', async () => {
       const startTime = Date.now();
       
       const applications = await parser.getApplications();
@@ -391,7 +391,7 @@ describe('CopilotParser Integration Tests', () => {
   });
 
   describe('Data integrity and consistency', () => {
-    it.skipIf(!hasVSCodeData)('should maintain consistent data relationships', async () => {
+    it.runIf(() => hasVSCodeData)('should maintain consistent data relationships', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {
@@ -421,7 +421,7 @@ describe('CopilotParser Integration Tests', () => {
       }
     });
 
-    it.skipIf(!hasVSCodeData)('should have consistent timestamps', async () => {
+    it.runIf(() => hasVSCodeData)('should have consistent timestamps', async () => {
       const applications = await parser.getApplications();
       
       if (applications.length === 0) {

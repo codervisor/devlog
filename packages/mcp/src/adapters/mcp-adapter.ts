@@ -198,7 +198,7 @@ export class MCPAdapter {
       // Handle update with optional note
       if (args.note) {
         // Then add the note
-        await this.apiClient.addDevlogNote(args.id, args.note.content, 'progress');
+        await this.apiClient.addDevlogNote(args.id, args.note.content, args.note.category);
 
         return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id} with note`);
       } else {
