@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ChatMessageData, ChatSessionData, WorkspaceDataContainer } from '../models/index.js';
+import { ChatMessageData, ChatSessionData, WorkspaceDataContainer } from '../types/index.js';
 
 describe('MessageData', () => {
   it('should create a message with required fields', () => {
@@ -78,11 +78,11 @@ describe('ChatSessionData', () => {
     const session = new ChatSessionData({
       agent: 'GitHub Copilot',
       messages,
-      session_id: 'session-1',
+      id: 'session-1',
     });
 
     expect(session.messages).toHaveLength(2);
-    expect(session.session_id).toBe('session-1');
+    expect(session.id).toBe('session-1');
   });
 });
 
@@ -99,8 +99,8 @@ describe('WorkspaceDataContainer', () => {
 
   it('should handle chat sessions correctly', () => {
     const sessions = [
-      new ChatSessionData({ agent: 'GitHub Copilot', session_id: 'session-1' }),
-      new ChatSessionData({ agent: 'GitHub Copilot', session_id: 'session-2' }),
+      new ChatSessionData({ agent: 'GitHub Copilot', id: 'session-1' }),
+      new ChatSessionData({ agent: 'GitHub Copilot', id: 'session-2' }),
     ];
 
     const workspace = new WorkspaceDataContainer({

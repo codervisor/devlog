@@ -3,11 +3,11 @@
  *
  * Provides a common interface for parsing chat history from various AI coding assistants
  * like GitHub Copilot, Cursor, Claude Code, etc.
- * 
+ *
  * Supports three-level hierarchy: Application -> Workspace -> Session
  */
 
-import type { ChatSession, ApplicationInfo, WorkspaceInfo } from '../models/index.js';
+import type { ChatSession, Application, Workspace, ParserType } from '../types/index.js';
 import { Logger, ConsoleLogger } from './utils.js';
 
 /**
@@ -21,16 +21,22 @@ export abstract class BaseParser {
   }
 
   /**
+   * Get the parser type (e.g. 'github-copilot', 'cursor', etc.)
+   * Used for metadata and identification
+   */
+  abstract getParserType(): ParserType;
+
+  /**
    * Get all available applications (VS Code installations) for this AI assistant
    * Returns lightweight application info without workspaces or sessions
    */
-  abstract getApplications(): Promise<ApplicationInfo[]>;
+  abstract getApplications(): Promise<Application[]>;
 
   /**
    * Get all workspaces from a specific application
    * Returns lightweight workspace info without sessions
    */
-  abstract getWorkspaces(applicationId: string): Promise<WorkspaceInfo[]>;
+  abstract getWorkspaces(applicationId: string): Promise<Workspace[]>;
 
   /**
    * Get all chat sessions from a specific workspace within an application
@@ -40,5 +46,9 @@ export abstract class BaseParser {
   /**
    * Parse a single chat session by session ID
    */
-  protected abstract parseChatSession(applicationId: string, workspaceId: string, sessionId: string): Promise<ChatSession | null>;
+  protected abstract parseChatSession(
+    applicationId: string,
+    workspaceId: string,
+    sessionId: string,
+  ): Promise<ChatSession | null>;
 }
