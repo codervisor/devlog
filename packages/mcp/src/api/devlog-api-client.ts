@@ -7,6 +7,8 @@ import type {
   CreateDevlogRequest,
   DevlogEntry,
   DevlogFilter,
+  DevlogNote,
+  DevlogNoteCategory,
   PaginatedResult,
   PaginationMeta,
   SortOptions,
@@ -284,6 +286,23 @@ export class DevlogApiClient {
       category,
     });
     return this.unwrapApiResponse<DevlogEntry>(response);
+  }
+
+  async listDevlogNotes(
+    devlogId: number,
+    category?: DevlogNoteCategory,
+    limit?: number,
+  ): Promise<{ devlogId: number; total: number; notes: DevlogNote[] }> {
+    const params = new URLSearchParams();
+
+    if (category) params.append('category', category);
+    if (limit) params.append('limit', limit.toString());
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await this.get(
+      `${this.getProjectEndpoint()}/devlogs/${devlogId}/notes${query}`,
+    );
+    return this.unwrapApiResponse(response);
   }
 
   // Health check

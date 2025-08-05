@@ -54,7 +54,7 @@ export const UpdateDevlogSchema = z.object({
     .optional(),
 });
 
-// === LIST/SEARCH DEVLOGS ===
+// === LIST DEVLOGS ===
 export const ListDevlogSchema = z.object({
   status: DevlogStatusSchema.optional(),
   type: DevlogTypeSchema.optional(),
@@ -65,13 +65,6 @@ export const ListDevlogSchema = z.object({
   sortOrder: SortOrderSchema,
 });
 
-// === ADD DEVLOG NOTE ===
-export const AddDevlogNoteSchema = z.object({
-  id: DevlogIdSchema,
-  content: DevlogNoteContentSchema,
-  category: DevlogNoteCategorySchema,
-});
-
 // === FIND RELATED DEVLOGS ===
 export const FindRelatedDevlogsSchema = z.object({
   description: DescriptionSchema,
@@ -80,10 +73,25 @@ export const FindRelatedDevlogsSchema = z.object({
   limit: LimitSchema,
 });
 
+// === ADD DEVLOG NOTE ===
+export const AddDevlogNoteSchema = z.object({
+  id: DevlogIdSchema,
+  content: DevlogNoteContentSchema,
+  category: DevlogNoteCategorySchema,
+});
+
+// === LIST DEVLOG NOTES ===
+export const ListDevlogNotesSchema = z.object({
+  id: DevlogIdSchema,
+  category: DevlogNoteCategorySchema,
+  limit: LimitSchema,
+});
+
 // === TYPE EXPORTS ===
 export type CreateDevlogArgs = z.infer<typeof CreateDevlogSchema>;
 export type GetDevlogArgs = z.infer<typeof GetDevlogSchema>;
 export type UpdateDevlogArgs = z.infer<typeof UpdateDevlogSchema>;
 export type ListDevlogArgs = z.infer<typeof ListDevlogSchema>;
-export type AddDevlogNoteArgs = z.infer<typeof AddDevlogNoteSchema>;
 export type FindRelatedDevlogsArgs = z.infer<typeof FindRelatedDevlogsSchema>;
+export type AddDevlogNoteArgs = z.infer<typeof AddDevlogNoteSchema>;
+export type ListDevlogNotesArgs = z.infer<typeof ListDevlogNotesSchema>;

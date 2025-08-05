@@ -17,6 +17,7 @@ import type {
   GetCurrentProjectArgs,
   GetDevlogArgs,
   ListDevlogArgs,
+  ListDevlogNotesArgs,
   ListProjectsArgs,
   SwitchProjectArgs,
   UpdateDevlogArgs,
@@ -197,19 +198,10 @@ export class MCPAdapter {
 
       // Handle update with optional note
       if (args.note) {
-        // Then add the note
         await this.apiClient.addDevlogNote(args.id, args.note.content, args.note.category);
-
-        return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id} with note`);
-      } else {
-        // Regular update without note
-        const entry = await this.apiClient.updateDevlog(args.id, {
-          status: args.status,
-          priority: args.priority,
-        });
-
-        return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id}`);
       }
+
+      return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id}`);
     } catch (error) {
       return this.handleError('Failed to update entry', error);
     }
@@ -239,22 +231,6 @@ export class MCPAdapter {
       return this.toStandardResponse(true, entries, `Found ${entries.length} entries`);
     } catch (error) {
       return this.handleError('Failed to list entries', error);
-    }
-  }
-
-  async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      await this.apiClient.addDevlogNote(args.id, args.content, args.category);
-
-      return this.toStandardResponse(
-        true,
-        { id: args.id },
-        `Added ${args.category} note to entry ${args.id}`,
-      );
-    } catch (error) {
-      return this.handleError('Failed to add note', error);
     }
   }
 
@@ -291,6 +267,42 @@ export class MCPAdapter {
       );
     } catch (error) {
       return this.handleError('Failed to find related entries', error);
+    }
+  }
+
+  async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      await this.apiClient.addDevlogNote(args.id, args.content, args.category);
+
+      return this.toStandardResponse(
+        true,
+        { id: args.id },
+        `Added ${args.category} note to entry ${args.id}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to add note', error);
+    }
+  }
+
+  async listDevlogNotes(args: ListDevlogNotesArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      const result = await this.apiClient.listDevlogNotes(args.id, args.category, args.limit);
+
+      return this.toStandardResponse(
+        true,
+        {
+          devlogId: args.id,
+          total: result.total,
+          notes: result.notes,
+        },
+        `Found ${result.notes.length} notes for devlog ${args.id}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to list notes', error);
     }
   }
 

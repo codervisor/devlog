@@ -16,6 +16,8 @@ import {
   type GetDevlogArgs,
   GetDevlogSchema,
   type ListDevlogArgs,
+  ListDevlogNotesArgs,
+  ListDevlogNotesSchema,
   ListDevlogSchema,
   type ListProjectsArgs,
   ListProjectsSchema,
@@ -75,6 +77,14 @@ export const toolHandlers = {
       adapter.listDevlogs(validArgs),
     ),
 
+  find_related_devlogs: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<FindRelatedDevlogsArgs>(
+      FindRelatedDevlogsSchema,
+      args,
+      'find_related_devlogs',
+      (validArgs) => adapter.findRelatedDevlogs(validArgs),
+    ),
+
   add_devlog_note: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<AddDevlogNoteArgs>(
       AddDevlogNoteSchema,
@@ -83,12 +93,12 @@ export const toolHandlers = {
       (validArgs) => adapter.addDevlogNote(validArgs),
     ),
 
-  find_related_devlogs: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<FindRelatedDevlogsArgs>(
-      FindRelatedDevlogsSchema,
+  list_devlog_notes: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<ListDevlogNotesArgs>(
+      ListDevlogNotesSchema,
       args,
-      'find_related_devlogs',
-      (validArgs) => adapter.findRelatedDevlogs(validArgs),
+      'list_devlog_notes',
+      (validArgs) => adapter.listDevlogNotes(validArgs),
     ),
 
   // Project operations
