@@ -9,6 +9,7 @@
  */
 
 // Re-export all models from their respective files
-export * from './chat-message.js';
-export * from './chat-session.js';
+export * from './application.js';
 export * from './workspace.js';
+export * from './chat-session.js';
+export * from './chat-message.js';

@@ -16,7 +16,6 @@ import { JsonColumn, getStorageType } from './decorators.js';
 @Index(['timestamp'])
 @Index(['workspace'])
 @Index(['status'])
-@Index(['importedAt'])
 @Index(['archived'])
 export class ChatSessionEntity {
   @PrimaryColumn({ type: 'varchar', length: 255 })

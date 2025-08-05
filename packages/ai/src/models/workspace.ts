@@ -13,7 +13,7 @@ export interface WorkspaceMetadata {
   [key: string]: unknown; // Allow additional properties
 }
 
-// TypeScript interface
+// TypeScript interface for full workspace with sessions
 export interface Workspace {
   /** Name of the AI agent */
   agent: string;
