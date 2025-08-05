@@ -68,16 +68,16 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
       unsubscribeNoteDeleted();
     };
   }, [
-    currentDevlogId, 
-    fetchCurrentDevlog, 
-    fetchCurrentDevlogNotes, 
-    onDevlogUpdated, 
-    onDevlogDeleted, 
+    currentDevlogId,
+    fetchCurrentDevlog,
+    fetchCurrentDevlogNotes,
+    onDevlogUpdated,
+    onDevlogDeleted,
     onNoteCreated,
     onNoteUpdated,
     onNoteDeleted,
-    router, 
-    projectId
+    router,
+    projectId,
   ]);
 
   useEffect(() => {
@@ -92,8 +92,12 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   useEffect(() => {
     if (!currentDevlogId) return;
 
-    fetchCurrentDevlog();
-    fetchCurrentDevlogNotes();
+    try {
+      fetchCurrentDevlog();
+      fetchCurrentDevlogNotes();
+    } catch (error) {
+      console.warn('Failed to fetch devlog:', error);
+    }
 
     // Clear selected devlog when component unmounts
     return () => {

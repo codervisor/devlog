@@ -1,11 +1,11 @@
 /**
- * Main realtime service that manages provider selection and operation
+ * Frontend realtime service that manages provider selection and operation
  */
 
-import type { RealtimeProvider, RealtimeConnection } from './types';
+import type { RealtimeConnection, RealtimeProvider } from './types';
 import { SSEProvider } from './sse-provider';
 import { PusherProvider } from './pusher-provider';
-import { getRealtimeConfig, logRealtimeConfig } from './config';
+import { getRealtimeConfig, getRealtimeConfigSync } from './config';
 
 export class RealtimeService {
   private static instance: RealtimeService | null = null;
@@ -29,11 +29,11 @@ export class RealtimeService {
       return;
     }
 
-    const config = getRealtimeConfig();
-    
+    const config = await getRealtimeConfig();
+
     // Log configuration for debugging
     if (process.env.NODE_ENV === 'development') {
-      logRealtimeConfig();
+      console.log('[Realtime] Configuration received from server:', config);
     }
 
     try {
@@ -42,6 +42,9 @@ export class RealtimeService {
         case 'pusher':
           if (!config.pusher) {
             throw new Error('Pusher configuration missing');
+          }
+          if (!config.pusher.key || !config.pusher.cluster) {
+            throw new Error('Pusher key or cluster not configured');
           }
           this.provider = new PusherProvider({
             key: config.pusher.key,
@@ -53,10 +56,7 @@ export class RealtimeService {
 
         case 'sse':
         default:
-          this.provider = new SSEProvider(
-            config.sse?.endpoint,
-            config.sse?.reconnectInterval
-          );
+          this.provider = new SSEProvider(config.sse?.endpoint, config.sse?.reconnectInterval);
           break;
       }
 
@@ -67,7 +67,7 @@ export class RealtimeService {
       console.log(`[Realtime] Initialized with ${config.provider} provider`);
     } catch (error) {
       console.error('[Realtime] Failed to initialize provider:', error);
-      
+
       // Fallback to SSE if Pusher fails
       if (config.provider === 'pusher') {
         console.log('[Realtime] Falling back to SSE provider');
@@ -150,7 +150,7 @@ export class RealtimeService {
    * Get the current provider type
    */
   getProviderType(): string | null {
-    const config = getRealtimeConfig();
+    const config = getRealtimeConfigSync();
     return config.provider;
   }
 

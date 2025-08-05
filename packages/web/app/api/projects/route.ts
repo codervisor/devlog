@@ -1,12 +1,7 @@
 import { NextRequest } from 'next/server';
 import { ProjectService } from '@codervisor/devlog-core';
 import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
-import {
-  ApiErrors,
-  createSimpleCollectionResponse,
-  createSuccessResponse,
-  SSEEventType,
-} from '@/lib';
+import { ApiErrors, createSimpleCollectionResponse, createSuccessResponse } from '@/lib';
 import { RealtimeEventType } from '@/lib/realtime';
 
 // Mark this route as dynamic to prevent static generation

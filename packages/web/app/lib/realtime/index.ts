@@ -6,9 +6,9 @@ export { RealtimeService } from './realtime-service';
 export { SSEProvider } from './sse-provider';
 export { PusherProvider } from './pusher-provider';
 export { 
-  detectRealtimeProvider, 
   createRealtimeConfig, 
   getRealtimeConfig,
+  getRealtimeConfigSync,
   isSSESupported,
   isPusherConfigured,
   logRealtimeConfig,

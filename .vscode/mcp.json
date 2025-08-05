@@ -13,7 +13,10 @@
 			"command": "npx",
 			"args": [
 				"@codervisor/devlog-mcp@dev"
-			]
+			],
+			"env": {
+				"DEVLOG_API_URL": "http://localhost:3200"
+			}
 		},
 		"sequential-thinking": {
 			"command": "npx",

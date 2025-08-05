@@ -26,7 +26,7 @@ import {
   Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { SSEEventType } from '@/lib';
+import { RealtimeEventType } from '@/lib';
 
 interface ProjectFormData {
   name: string;
@@ -39,14 +39,12 @@ export function ProjectManagementPage() {
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({ name: '', description: '' });
   const router = useRouter();
-  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+  const { subscribe, unsubscribe } = useRealtimeStore();
 
   useEffect(() => {
-    connect();
-    subscribe(SSEEventType.PROJECT_CREATED, fetchProjects);
+    subscribe(RealtimeEventType.PROJECT_CREATED, fetchProjects);
     return () => {
-      unsubscribe(SSEEventType.PROJECT_CREATED);
-      disconnect();
+      unsubscribe(RealtimeEventType.PROJECT_CREATED);
     };
   }, []);
 
