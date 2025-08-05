@@ -6,8 +6,8 @@ echo "📦 Publishing packages to NPM with dev tag..."
 
 # Define all publishable packages (as regular arrays for better compatibility)
 PACKAGES=(
+    "core:packages/core"
     "mcp:packages/mcp"
-    "core:packages/core" 
     "ai:packages/ai"
     "cli:packages/cli"
 )
