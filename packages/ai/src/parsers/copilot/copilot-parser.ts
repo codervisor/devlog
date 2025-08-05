@@ -12,14 +12,15 @@ import fg from 'fast-glob';
 import {
   ChatSession,
   ChatSessionData,
-  Message,
-  MessageData,
-  WorkspaceData,
+  ChatMessage,
+  ChatMessageData,
+  Workspace,
   WorkspaceDataContainer,
+  type ChatSessionMetadata,
 } from '../../models/index.js';
-import { AIAssistantParser, Logger } from '../base/ai-assistant-parser.js';
+import { BaseParser, Logger } from '../base/base-parser';
 
-export class CopilotParser extends AIAssistantParser {
+export class CopilotParser extends BaseParser {
   constructor(logger?: Logger) {
     super(logger);
   }
@@ -143,12 +144,12 @@ export class CopilotParser extends AIAssistantParser {
       }
 
       // Extract messages from requests
-      const messages: Message[] = [];
+      const messages: ChatMessage[] = [];
       for (const request of data.requests || []) {
         // User message
         const userMessageText = request.message?.text || '';
         if (userMessageText) {
-          const userMessage = new MessageData({
+          const userMessage = new ChatMessageData({
             role: 'user',
             content: userMessageText,
             timestamp,
@@ -163,44 +164,24 @@ export class CopilotParser extends AIAssistantParser {
           messages.push(userMessage);
         }
 
-        // Assistant response
-        const response = request.response;
-        if (response) {
-          let responseText = '';
-          if (typeof response === 'object') {
-            if ('value' in response) {
-              responseText = response.value;
-            } else if ('text' in response) {
-              responseText = response.text;
-            } else if ('content' in response) {
-              responseText = response.content;
-            }
-          } else if (typeof response === 'string') {
-            responseText = response;
-          }
-
-          if (responseText) {
-            const assistantMessage = new MessageData({
-              role: 'assistant',
-              content: responseText,
+        // Parse assistant responses (response is an array)
+        if (request.response && Array.isArray(request.response)) {
+          for (let i = 0; i < request.response.length; i++) {
+            const responseItem = request.response[i];
+            const responseMessage = this.parseResponseItem(
+              responseItem,
+              request.requestId,
+              i,
               timestamp,
-              id: request.responseId,
-              metadata: {
-                type: 'assistant_response',
-                result: request.result || {},
-                followups: request.followups || [],
-                isCanceled: request.isCanceled || false,
-                contentReferences: request.contentReferences || [],
-                codeCitations: request.codeCitations || [],
-                requestTimestamp: request.timestamp,
-              },
-            });
-            messages.push(assistantMessage);
+            );
+            if (responseMessage) {
+              messages.push(responseMessage);
+            }
           }
         }
       }
 
-      const sessionMetadata = {
+      const sessionMetadata: ChatSessionMetadata = {
         version: data.version,
         requesterUsername: data.requesterUsername,
         responderUsername: data.responderUsername,
@@ -235,6 +216,150 @@ export class CopilotParser extends AIAssistantParser {
   }
 
   /**
+   * Parse a single response item from the response array
+   */
+  private parseResponseItem(
+    responseItem: any,
+    requestId: string,
+    index: number,
+    timestamp: Date,
+  ): ChatMessage | null {
+    if (!responseItem) return null;
+
+    const messageId = `${requestId}_response_${index}`;
+
+    // Handle different response kinds
+    switch (responseItem.kind) {
+      case 'prepareToolInvocation':
+        return new ChatMessageData({
+          role: 'assistant',
+          content: `Preparing to use tool: ${responseItem.toolName || 'unknown'}`,
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'tool_preparation',
+            toolName: responseItem.toolName,
+            kind: responseItem.kind,
+          },
+        });
+
+      case 'toolInvocationSerialized':
+        const toolMessage =
+          responseItem.invocationMessage?.value ||
+          responseItem.pastTenseMessage?.value ||
+          'Tool invocation';
+        return new ChatMessageData({
+          role: 'assistant',
+          content: toolMessage,
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'tool_invocation',
+            toolId: responseItem.toolId,
+            toolCallId: responseItem.toolCallId,
+            isConfirmed: responseItem.isConfirmed,
+            isComplete: responseItem.isComplete,
+            resultDetails: responseItem.resultDetails,
+            toolSpecificData: responseItem.toolSpecificData,
+            kind: responseItem.kind,
+          },
+        });
+
+      case 'textEditGroup':
+        return new ChatMessageData({
+          role: 'assistant',
+          content: `Made text edits to ${responseItem.uri?.path || 'file'}`,
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'text_edit',
+            uri: responseItem.uri,
+            edits: responseItem.edits,
+            done: responseItem.done,
+            kind: responseItem.kind,
+          },
+        });
+
+      case 'codeblockUri':
+        return new ChatMessageData({
+          role: 'assistant',
+          content: `Modified code in ${responseItem.uri?.path || 'file'}`,
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'code_edit',
+            uri: responseItem.uri,
+            isEdit: responseItem.isEdit,
+            kind: responseItem.kind,
+          },
+        });
+
+      case 'undoStop':
+        return new ChatMessageData({
+          role: 'assistant',
+          content: 'Undo stop marker',
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'undo_stop',
+            undoId: responseItem.id,
+            kind: responseItem.kind,
+          },
+        });
+
+      case 'inlineReference':
+        const refPath = responseItem.inlineReference?.path || 'unknown file';
+        return new ChatMessageData({
+          role: 'assistant',
+          content: `Referenced: ${refPath}`,
+          timestamp,
+          id: messageId,
+          metadata: {
+            type: 'inline_reference',
+            inlineReference: responseItem.inlineReference,
+            kind: responseItem.kind,
+          },
+        });
+
+      default:
+        // Handle plain text responses (no kind property)
+        if (responseItem.value) {
+          return new ChatMessageData({
+            role: 'assistant',
+            content: responseItem.value,
+            timestamp,
+            id: messageId,
+            metadata: {
+              type: 'text_response',
+              supportThemeIcons: responseItem.supportThemeIcons,
+              supportHtml: responseItem.supportHtml,
+              baseUri: responseItem.baseUri,
+              uris: responseItem.uris,
+              kind: responseItem.kind || 'text',
+            },
+          });
+        }
+
+        // Handle other unknown response types
+        if (responseItem.kind) {
+          return new ChatMessageData({
+            role: 'assistant',
+            content: `Unknown response type: ${responseItem.kind}`,
+            timestamp,
+            id: messageId,
+            metadata: {
+              type: 'unknown_response',
+              kind: responseItem.kind,
+              rawData: responseItem,
+            },
+          });
+        }
+
+        return null;
+    }
+  }
+
+  /**
    * Parse chat editing session from state.json file (legacy format)
    */
   async parseChatEditingSession(filePath: string): Promise<ChatSession | null> {
@@ -247,7 +372,7 @@ export class CopilotParser extends AIAssistantParser {
       const timestamp = new Date(fileStats.mtime);
 
       // Extract messages from linear history
-      const messages: Message[] = [];
+      const messages: ChatMessage[] = [];
       for (let i = 0; i < (data.linearHistory || []).length; i++) {
         const historyEntry = data.linearHistory[i];
         const requestId = historyEntry.requestId || `request_${i}`;
@@ -260,7 +385,7 @@ export class CopilotParser extends AIAssistantParser {
           content += ` and ${entries.length} entries`;
         }
 
-        const message = new MessageData({
+        const message = new ChatMessageData({
           role: 'user', // Changed from 'system' to match interface
           content,
           timestamp,
@@ -277,7 +402,7 @@ export class CopilotParser extends AIAssistantParser {
       // Add information about recent snapshot
       const recentSnapshot = data.recentSnapshot || {};
       if (Object.keys(recentSnapshot).length > 0) {
-        const snapshotMessage = new MessageData({
+        const snapshotMessage = new ChatMessageData({
           role: 'assistant',
           content: `Recent snapshot with ${(recentSnapshot.workingSet || []).length} files`,
           timestamp,
@@ -324,7 +449,7 @@ export class CopilotParser extends AIAssistantParser {
   /**
    * Discover Copilot data from VS Code's application support directory
    */
-  async discoverChatData(): Promise<WorkspaceData> {
+  async discoverChatData(): Promise<Workspace> {
     const vscodePaths = this.getDataPaths();
 
     // Collect all data from all VS Code installations
@@ -374,7 +499,7 @@ export class CopilotParser extends AIAssistantParser {
   /**
    * Discover and parse all Copilot data in a directory
    */
-  async discoverCopilotData(basePath: string): Promise<WorkspaceData> {
+  async discoverCopilotData(basePath: string): Promise<Workspace> {
     const workspaceData = new WorkspaceDataContainer({
       agent: 'GitHub Copilot',
       workspace_path: basePath,

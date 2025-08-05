@@ -6,10 +6,7 @@
  */
 
 // Export base classes
-export { AIAssistantParser, Logger, SimpleConsoleLogger } from './base/ai-assistant-parser.js';
+export { BaseParser, Logger, SimpleConsoleLogger } from './base/base-parser';
 
 // Export provider-specific parsers
 export { CopilotParser } from './copilot/copilot-parser.js';
-
-// Re-export types from models for convenience
-export type { SearchResult, ChatStatistics } from '../models/index.js';

@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { MessageData, ChatSessionData, WorkspaceDataContainer } from '../models/index.js';
+import { ChatMessageData, ChatSessionData, WorkspaceDataContainer } from '../models/index.js';
 
 describe('MessageData', () => {
   it('should create a message with required fields', () => {
-    const message = new MessageData({
+    const message = new ChatMessageData({
       role: 'user',
       content: 'Hello, world!',
     });
@@ -19,7 +19,7 @@ describe('MessageData', () => {
   });
 
   it('should serialize to dict correctly', () => {
-    const message = new MessageData({
+    const message = new ChatMessageData({
       id: 'msg-1',
       role: 'assistant',
       content: 'Hello back!',
@@ -47,7 +47,7 @@ describe('MessageData', () => {
       metadata: { type: 'user_request' },
     };
 
-    const message = MessageData.fromDict(dict);
+    const message = ChatMessageData.fromDict(dict);
 
     expect(message.id).toBe('msg-1');
     expect(message.role).toBe('user');
@@ -71,8 +71,8 @@ describe('ChatSessionData', () => {
 
   it('should handle messages correctly', () => {
     const messages = [
-      new MessageData({ role: 'user', content: 'Hello' }),
-      new MessageData({ role: 'assistant', content: 'Hi there!' }),
+      new ChatMessageData({ role: 'user', content: 'Hello' }),
+      new ChatMessageData({ role: 'assistant', content: 'Hi there!' }),
     ];
 
     const session = new ChatSessionData({

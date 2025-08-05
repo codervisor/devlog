@@ -107,9 +107,6 @@ import {
 const parser = new CopilotParser();
 const data = await parser.discoverChatData();
 
-// Get statistics
-const stats = parser.getChatStatistics(data);
-
 // Search content
 const results = parser.searchChatContent(data, 'async function');
 
