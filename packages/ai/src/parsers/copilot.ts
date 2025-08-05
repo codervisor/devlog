@@ -9,17 +9,23 @@ import { readFile, stat } from 'fs/promises';
 import { resolve } from 'path';
 import { homedir, platform } from 'os';
 import fg from 'fast-glob';
+import chalk from 'chalk';
 import {
   Application,
   ChatMessage,
   ChatSession,
   type ChatSessionMetadata,
+  ChatTurn,
   ParserType,
   Workspace,
 } from '../types/index.js';
 import { BaseParser } from './base.js';
 
 export class CopilotParser extends BaseParser {
+  constructor() {
+    super();
+  }
+
   getParserType(): ParserType {
     return 'copilot';
   }
@@ -45,6 +51,7 @@ export class CopilotParser extends BaseParser {
         const workspaceCount = Object.keys(workspaceMapping).length;
 
         if (workspaceCount > 0) {
+          console.log(chalk.green(`✓ Found VS Code ${appName} with ${workspaceCount} workspaces`));
           applications.push({
             id: appId,
             name: appName,
@@ -55,7 +62,7 @@ export class CopilotParser extends BaseParser {
           });
         }
       } catch (error) {
-        this.logger.debug?.(`VS Code path not found: ${basePath}`);
+        console.warn(`VS Code path not found: ${basePath}`);
       }
     }
 
@@ -108,7 +115,7 @@ export class CopilotParser extends BaseParser {
         }
       }
     } catch (error) {
-      this.logger.error?.(`Failed to get workspaces for application ${applicationId}:`, error);
+      console.error(chalk.red(`Failed to get workspaces for application ${applicationId}:`), error);
     }
 
     return workspaces;
@@ -133,7 +140,7 @@ export class CopilotParser extends BaseParser {
       for (const sessionFile of sessionFiles) {
         const sessionId = sessionFile.split('/').pop()?.replace('.json', '');
         if (!sessionId) {
-          this.logger.warn?.(`Session file without ID found: ${sessionFile}`);
+          console.warn(chalk.yellow(`Session file without ID found: ${sessionFile}`));
           continue;
         }
         const session = await this.parseChatSession(applicationId, workspaceId, sessionId);
@@ -144,10 +151,6 @@ export class CopilotParser extends BaseParser {
 
       return sessions;
     } catch (error) {
-      this.logger.error?.(
-        `Failed to get chat sessions for workspace ${workspaceId} in application ${applicationId}:`,
-        error,
-      );
       return [];
     }
   }
@@ -162,20 +165,26 @@ export class CopilotParser extends BaseParser {
   ): Promise<ChatSession | null> {
     const targetBasePath = this.getTargetBasePath(applicationId);
     if (!targetBasePath) {
-      this.logger.error?.(`Application not found: ${applicationId}`);
+      console.error(chalk.red(`Application not found: ${applicationId}`));
       return null;
     }
-    const filePath = resolve(targetBasePath, 'workspaceStorage', workspaceId, 'chatSessions', `${sessionId}.json`);
+    const filePath = resolve(
+      targetBasePath,
+      'workspaceStorage',
+      workspaceId,
+      'chatSessions',
+      `${sessionId}.json`,
+    );
 
     try {
       const fileContent = await readFile(filePath, 'utf-8');
-      const data = JSON.parse(fileContent);
+      const sessionData = JSON.parse(fileContent);
 
-      const actualSessionId = data.sessionId || sessionId;
+      const actualSessionId = sessionData.sessionId || sessionId;
 
       // Parse timestamps
-      const creationDate = data.creationDate;
-      const lastMessageDate = data.lastMessageDate;
+      const creationDate = sessionData.creationDate;
+      const lastMessageDate = sessionData.lastMessageDate;
 
       let timestamp: Date;
       if (creationDate) {
@@ -190,128 +199,36 @@ export class CopilotParser extends BaseParser {
         timestamp = new Date(fileStats.mtime);
       }
 
-      // Extract messages from requests
-      const messages: ChatMessage[] = [];
-      for (const request of data.requests || []) {
-        // User message
-        const userMessageText = request.message?.text || '';
-        if (userMessageText) {
-          const userMessage: ChatMessage = {
-            role: 'user',
-            content: userMessageText,
-            timestamp,
-            id: request.requestId,
-            metadata: {
-              type: 'user_request',
-              agent: request.agent || {},
-              variableData: request.variableData || {},
-              modelId: request.modelId,
-            },
-          };
-          messages.push(userMessage);
-        }
-
-        // Parse assistant responses (response is an array)
-        if (request.response && Array.isArray(request.response)) {
-          for (let i = 0; i < request.response.length; i++) {
-            const responseItem = request.response[i];
-            const responseMessage = this.parseResponseItem(
-              responseItem,
-              request.requestId,
-              i,
-              timestamp,
-            );
-            if (responseMessage) {
-              messages.push(responseMessage);
-            }
-          }
-        }
-      }
-
       const sessionMetadata: ChatSessionMetadata = {
-        version: data.version,
-        requesterUsername: data.requesterUsername,
-        responderUsername: data.responderUsername,
-        initialLocation: data.initialLocation,
+        version: sessionData.version,
+        requesterUsername: sessionData.requesterUsername,
+        responderUsername: sessionData.responderUsername,
+        initialLocation: sessionData.initialLocation,
         creationDate,
         lastMessageDate,
-        isImported: data.isImported,
-        customTitle: data.customTitle,
+        isImported: sessionData.isImported,
+        customTitle: sessionData.customTitle,
         type: 'chat_session',
         source_file: filePath,
-        total_requests: (data.requests || []).length,
+        total_requests: (sessionData.requests || []).length,
       };
 
       const session: ChatSession = {
-        timestamp,
-        workspaceId,
         id: actualSessionId,
-        title: data.customTitle, // Extract title from customTitle field
+        workspaceId,
+        title: sessionData.customTitle, // Extract title from customTitle field
         metadata: sessionMetadata,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        turns: this.extractChatTurns(sessionId, sessionData),
       };
 
-      this.logger.info?.(`Parsed chat session ${actualSessionId} with ${messages.length} messages`);
+      console.info(chalk.blue(`✓ Parsed chat session ${actualSessionId} with ${(sessionData.requests || []).length} turns`));
       return session;
     } catch (error) {
-      this.logger.error?.(
-        `Error parsing chat session ${sessionId}:`,
-        error instanceof Error ? error.message : String(error),
-      );
+      console.error(chalk.red(`Error parsing chat session ${sessionId}:`), error instanceof Error ? error.message : String(error));
       return null;
     }
-  }
-
-  /**
-   * Get mapping from workspace storage directory to actual workspace path
-   */
-  private async getWorkspaceMapping(basePath: string): Promise<Record<string, string>> {
-    const workspaceMapping: Record<string, string> = {};
-
-    try {
-      const workspaceStoragePath = resolve(basePath, 'workspaceStorage');
-
-      // Get all workspace directories
-      const workspaceDirs = await fg('*/', {
-        cwd: workspaceStoragePath,
-        onlyDirectories: true,
-      });
-
-      for (const workspaceDir of workspaceDirs) {
-        const workspaceDirPath = resolve(workspaceStoragePath, workspaceDir);
-        const workspaceJsonPath = resolve(workspaceDirPath, 'workspace.json');
-
-        try {
-          const workspaceJsonContent = await readFile(workspaceJsonPath, 'utf-8');
-          const workspaceData = JSON.parse(workspaceJsonContent);
-
-          const folderUri = workspaceData.folder || '';
-          if (folderUri.startsWith('file://')) {
-            const folderPath = folderUri.slice(7); // Remove file:// prefix
-
-            // Use the full path as the workspace identifier
-            workspaceMapping[workspaceDir.replace('/', '')] = folderPath;
-            this.logger.debug?.(`Mapped workspace ${workspaceDir} -> ${folderPath}`);
-          } else if (workspaceData.workspace) {
-            // Multi-root workspace
-            const workspaceRef = workspaceData.workspace || '';
-            workspaceMapping[workspaceDir.replace('/', '')] = `multi-root: ${workspaceRef}`;
-            this.logger.debug?.(`Mapped workspace ${workspaceDir} -> multi-root: ${workspaceRef}`);
-          }
-        } catch (error) {
-          this.logger.debug?.(
-            `Failed to read workspace.json from ${workspaceJsonPath}:`,
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-      }
-    } catch (error) {
-      this.logger.error?.(
-        'Error building workspace mapping:',
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-
-    return workspaceMapping;
   }
 
   /**
@@ -348,6 +265,169 @@ export class CopilotParser extends BaseParser {
   }
 
   /**
+   * Get the base path for the target application based on applicationId
+   */
+  private getTargetBasePath(applicationId: string): string | undefined {
+    const vscodePaths = this.getStoragePaths();
+    for (const basePath of vscodePaths) {
+      const isInsiders = basePath.includes('Insiders');
+      const appId = isInsiders ? 'vscode-insiders' : 'vscode';
+
+      if (appId === applicationId) {
+        try {
+          stat(basePath);
+          return basePath;
+        } catch (error) {
+          console.warn(chalk.yellow(`VS Code path not found: ${basePath}`));
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Get mapping from workspace storage directory to actual workspace path
+   */
+  private async getWorkspaceMapping(basePath: string): Promise<Record<string, string>> {
+    const workspaceMapping: Record<string, string> = {};
+
+    try {
+      const workspaceStoragePath = resolve(basePath, 'workspaceStorage');
+
+      // Get all workspace directories
+      const workspaceDirs = await fg('*/', {
+        cwd: workspaceStoragePath,
+        onlyDirectories: true,
+      });
+
+      for (const workspaceDir of workspaceDirs) {
+        const workspaceDirPath = resolve(workspaceStoragePath, workspaceDir);
+        const workspaceJsonPath = resolve(workspaceDirPath, 'workspace.json');
+
+        try {
+          const workspaceJsonContent = await readFile(workspaceJsonPath, 'utf-8');
+          const workspaceData = JSON.parse(workspaceJsonContent);
+
+          const folderUri = workspaceData.folder || '';
+          if (folderUri.startsWith('file://')) {
+            const folderPath = folderUri.slice(7); // Remove file:// prefix
+
+            // Use the full path as the workspace identifier
+            workspaceMapping[workspaceDir.replace('/', '')] = folderPath;
+          } else if (workspaceData.workspace) {
+            // Multi-root workspace
+            const workspaceRef = workspaceData.workspace || '';
+            workspaceMapping[workspaceDir.replace('/', '')] = `multi-root: ${workspaceRef}`;
+          }
+        } catch (error) {
+          // Failed to read workspace.json, skip this workspace
+        }
+      }
+    } catch (error) {
+      // Error building workspace mapping
+    }
+
+    return workspaceMapping;
+  }
+
+  /**
+   * Extract all chat turns from a specific session
+   */
+  private extractChatTurns(sessionId: string, sessionData: any): ChatTurn[] {
+    try {
+      const turns: ChatTurn[] = [];
+
+      for (const request of sessionData.requests || []) {
+        const requestTimestamp = new Date(
+          request.timestamp || sessionData.creationDate || Date.now(),
+        );
+
+        const turnId = request.requestId;
+
+        const turn: ChatTurn = {
+          id: turnId,
+          sessionId,
+          metadata: {
+            turnType: 'request_response_cycle',
+            status: request.isCanceled ? 'cancelled' : 'completed',
+            startedAt: requestTimestamp,
+            completedAt: requestTimestamp,
+            requestId: request.requestId,
+            responseId: request.responseId,
+            modelId: sessionData.modelId || request.modelId,
+            isCanceled: request.isCanceled,
+            userRequest: request.message,
+            variableData: request.variableData,
+            followups: request.followups,
+            contentReferences: request.contentReferences,
+            codeCitations: request.codeCitations,
+            timings: request.result?.timings,
+            agentInfo: request.agent,
+            messageCount: (request.response || []).length + 1, // +1 for user message
+          },
+          createdAt: requestTimestamp,
+          updatedAt: requestTimestamp,
+          messages: this.extractChatMessages(turnId, request),
+        };
+
+        turns.push(turn);
+      }
+
+      return turns;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
+   * Extract all chat messages from a specific turn
+   */
+  private extractChatMessages(turnId: string, requestData: any): ChatMessage[] {
+    try {
+      const requestTimestamp = new Date(requestData.timestamp || Date.now());
+      const messages: ChatMessage[] = [];
+
+      // User message
+      const userMessageText = requestData.message?.text || '';
+      if (userMessageText) {
+        const userMessage: ChatMessage = {
+          id: `${requestData.requestId}_user`,
+          turnId,
+          role: 'user',
+          content: userMessageText,
+          timestamp: requestTimestamp,
+          metadata: {
+            type: 'user_message',
+            variableData: requestData.variableData || {},
+          },
+        };
+        messages.push(userMessage);
+      }
+
+      // Parse assistant responses (response is an array)
+      if (requestData.response && Array.isArray(requestData.response)) {
+        for (let i = 0; i < requestData.response.length; i++) {
+          const responseItem = requestData.response[i];
+          const responseMessage = this.parseResponseItem(
+            responseItem,
+            requestData.requestId,
+            i,
+            requestTimestamp,
+            turnId,
+          );
+          if (responseMessage) {
+            messages.push(responseMessage);
+          }
+        }
+      }
+
+      return messages;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  /**
    * Parse a single response item from the response array
    */
   private parseResponseItem(
@@ -355,6 +435,7 @@ export class CopilotParser extends BaseParser {
     requestId: string,
     index: number,
     timestamp: Date,
+    turnId: string,
   ): ChatMessage | null {
     if (!responseItem) return null;
 
@@ -364,10 +445,11 @@ export class CopilotParser extends BaseParser {
     switch (responseItem.kind) {
       case 'prepareToolInvocation':
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: `Preparing to use tool: ${responseItem.toolName || 'unknown'}`,
           timestamp,
-          id: messageId,
           metadata: {
             type: 'tool_preparation',
             toolName: responseItem.toolName,
@@ -381,10 +463,11 @@ export class CopilotParser extends BaseParser {
           responseItem.pastTenseMessage?.value ||
           'Tool invocation';
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: toolMessage,
           timestamp,
-          id: messageId,
           metadata: {
             type: 'tool_invocation',
             toolId: responseItem.toolId,
@@ -394,15 +477,19 @@ export class CopilotParser extends BaseParser {
             resultDetails: responseItem.resultDetails,
             toolSpecificData: responseItem.toolSpecificData,
             kind: responseItem.kind,
+            invocationMessage: responseItem.invocationMessage,
+            pastTenseMessage: responseItem.pastTenseMessage,
+            originMessage: responseItem.originMessage,
           },
         };
 
       case 'textEditGroup':
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: `Made text edits to ${responseItem.uri?.path || 'file'}`,
           timestamp,
-          id: messageId,
           metadata: {
             type: 'text_edit',
             uri: responseItem.uri,
@@ -414,27 +501,27 @@ export class CopilotParser extends BaseParser {
 
       case 'codeblockUri':
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: `Modified code in ${responseItem.uri?.path || 'file'}`,
           timestamp,
-          id: messageId,
           metadata: {
             type: 'code_edit',
             uri: responseItem.uri,
-            isEdit: responseItem.isEdit,
             kind: responseItem.kind,
           },
         };
 
       case 'undoStop':
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: 'Undo stop marker',
           timestamp,
-          id: messageId,
           metadata: {
             type: 'undo_stop',
-            undoId: responseItem.id,
             kind: responseItem.kind,
           },
         };
@@ -442,10 +529,11 @@ export class CopilotParser extends BaseParser {
       case 'inlineReference':
         const refPath = responseItem.inlineReference?.path || 'unknown file';
         return {
+          id: messageId,
+          turnId,
           role: 'assistant',
           content: `Referenced: ${refPath}`,
           timestamp,
-          id: messageId,
           metadata: {
             type: 'inline_reference',
             inlineReference: responseItem.inlineReference,
@@ -457,12 +545,14 @@ export class CopilotParser extends BaseParser {
         // Handle plain text responses (no kind property)
         if (responseItem.value) {
           return {
+            id: messageId,
+            turnId,
             role: 'assistant',
             content: responseItem.value,
             timestamp,
-            id: messageId,
             metadata: {
               type: 'text_response',
+              value: responseItem.value,
               supportThemeIcons: responseItem.supportThemeIcons,
               supportHtml: responseItem.supportHtml,
               baseUri: responseItem.baseUri,
@@ -475,38 +565,19 @@ export class CopilotParser extends BaseParser {
         // Handle other unknown response types
         if (responseItem.kind) {
           return {
+            id: messageId,
+            turnId,
             role: 'assistant',
             content: `Unknown response type: ${responseItem.kind}`,
             timestamp,
-            id: messageId,
             metadata: {
               type: 'unknown_response',
               kind: responseItem.kind,
-              rawData: responseItem,
             },
           };
         }
 
         return null;
     }
-  }
-
-  private getTargetBasePath(applicationId: string): string | undefined {
-    const vscodePaths = this.getStoragePaths();
-    for (const basePath of vscodePaths) {
-      const isInsiders = basePath.includes('Insiders');
-      const appId = isInsiders ? 'vscode-insiders' : 'vscode';
-
-      if (appId === applicationId) {
-        try {
-          stat(basePath);
-          return basePath;
-        } catch (error) {
-          this.logger.debug?.(`VS Code path not found: ${basePath}`);
-        }
-      }
-    }
-    this.logger.error?.(`Application not found: ${applicationId}`);
-    return undefined;
   }
 }

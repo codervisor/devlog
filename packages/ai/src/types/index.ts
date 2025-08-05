@@ -13,4 +13,5 @@ export * from './common.js';
 export * from './application.js';
 export * from './workspace.js';
 export * from './chat-session.js';
+export * from './chat-turn.js';
 export * from './chat-message.js';

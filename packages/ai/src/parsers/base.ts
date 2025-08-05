@@ -4,20 +4,17 @@
  * Provides a common interface for parsing chat history from various AI coding assistants
  * like GitHub Copilot, Cursor, Claude Code, etc.
  *
- * Supports three-level hierarchy: Application -> Workspace -> Session
+ * Supports four-level hierarchy: Application → Workspace → Session → Turn → Message
  */
 
-import type { ChatSession, Application, Workspace, ParserType } from '../types/index.js';
-import { Logger, ConsoleLogger } from './utils.js';
+import type { ChatSession, ChatTurn, ChatMessage, Application, Workspace, ParserType } from '../types/index.js';
 
 /**
  * Abstract base class for AI assistant parsers
  */
 export abstract class BaseParser {
-  protected logger: Logger;
-
-  protected constructor(logger?: Logger) {
-    this.logger = logger || new ConsoleLogger();
+  protected constructor() {
+    // Base parser constructor
   }
 
   /**

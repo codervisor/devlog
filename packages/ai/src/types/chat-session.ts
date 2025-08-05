@@ -1,32 +1,62 @@
 /**
- * ChatSession model for AI Chat processing
+ * Chat Session model - represents a complete conversation session
+ * Hierarchy: Application → Workspace → Chat Session → Chat Turn → Chat Message
  */
 
+import type { ChatTurn } from "./chat-turn.js";
+
+// Session-level metadata based on actual Copilot data structure
 export interface ChatSessionMetadata {
-  version?: string;
-  requesterUsername?: string;
-  responderUsername?: string;
-  initialLocation?: Record<string, unknown>;
+  /** Version of the chat session format */
+  version: number;
+  /** Username of the person making requests */
+  requesterUsername: string;
+  /** Avatar info for the requester */
+  requesterAvatarIconUri?: {
+    $mid?: number;
+    path?: string;
+    scheme?: string;
+    authority?: string;
+    query?: string;
+  };
+  /** Username of the AI assistant responding */
+  responderUsername: string;
+  /** Avatar info for the responder */
+  responderAvatarIconUri?: {
+    id?: string;
+  };
+  /** Where the session was initiated (panel, editor, etc.) */
+  initialLocation?: string;
+  /** Session creation and last activity dates */
   creationDate?: string;
   lastMessageDate?: string;
+  /** Whether this session was imported from external source */
   isImported?: boolean;
+  /** Custom title for the session */
   customTitle?: string;
-  type?: 'chat_session' | 'chat_editing_session' | string; // Allow any string for flexibility
+  /** Type of session */
+  type?: 'chat_session' | 'chat_editing_session' | string;
+  /** Source file if imported */
   source_file?: string;
+  /** Total number of requests/turns in the session */
   total_requests?: number;
   [key: string]: unknown; // Allow additional properties
 }
 
-// TypeScript interface
+// Chat Session represents a complete conversation
 export interface ChatSession {
-  /** Unique session identifier */
-  id?: string;
-  /** Workspace identifier */
+  /** Unique identifier for the session */
+  id: string;
+  /** Workspace identifier this session belongs to */
   workspaceId?: string;
   /** Custom title for the session */
   title?: string;
-  /** Timestamp when the session was created */
-  timestamp: Date;
-  /** Additional metadata */
+  /** Session-level metadata */
   metadata: ChatSessionMetadata;
+  /** When this session was created */
+  createdAt: Date;
+  /** When this session was last updated */
+  updatedAt: Date;
+  /** Chat turns */
+  turns: ChatTurn[];
 }

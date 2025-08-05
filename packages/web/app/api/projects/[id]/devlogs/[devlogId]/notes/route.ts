@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import type { NoteCategory } from '@codervisor/devlog-core';
+import type { DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib';
 import { RealtimeEventType } from '@/lib/realtime';
@@ -103,7 +103,7 @@ export async function POST(
     // Add the note directly using the new addNote method
     const newNote = await devlogService.addNote(devlogId, {
       content: note,
-      category: (category || 'progress') as NoteCategory,
+      category: (category || 'progress') as DevlogNoteCategory,
     });
 
     return createSuccessResponse(newNote, {
@@ -168,7 +168,7 @@ export async function PUT(
     // Add the note using the dedicated method
     await devlogService.addNote(devlogId, {
       content: note,
-      category: (category || 'progress') as NoteCategory,
+      category: (category || 'progress') as DevlogNoteCategory,
     });
 
     // Return the updated entry with the note

@@ -15,7 +15,7 @@ import {
   Network,
   Wrench,
 } from 'lucide-react';
-import { DevlogEntry, DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import { DevlogEntry, DevlogNote, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import {
@@ -550,7 +550,7 @@ export function DevlogDetails({
                             )}
                           >
                             <div className="flex items-center space-x-2 mb-4">
-                              {getCategoryIconRaw(note.category as NoteCategory)}
+                              {getCategoryIconRaw(note.category as DevlogNoteCategory)}
                               <Badge variant="secondary" className="text-xs">
                                 {note.category}
                               </Badge>

@@ -4,23 +4,22 @@
 
 import { z } from 'zod';
 import {
-  DevlogIdSchema,
-  TitleSchema,
+  AcceptanceCriteriaSchema,
+  BusinessContextSchema,
   DescriptionSchema,
-  DevlogTypeSchema,
+  DevlogIdSchema,
+  DevlogNoteCategorySchema,
+  DevlogNoteContentSchema,
   DevlogPrioritySchema,
+  DevlogsSortBySchema,
   DevlogStatusSchema,
-  NoteCategorySchema,
-  NoteContentSchema,
-  FilesSchema,
+  DevlogTypeSchema,
   KeywordsSchema,
   LimitSchema,
-  BusinessContextSchema,
-  TechnicalContextSchema,
-  AcceptanceCriteriaSchema,
   PageSchema,
-  DevlogsSortBySchema,
   SortOrderSchema,
+  TechnicalContextSchema,
+  TitleSchema,
 } from './base.js';
 
 // === CREATE DEVLOG ===
@@ -29,8 +28,8 @@ export const CreateDevlogSchema = z.object({
   description: DescriptionSchema,
   type: DevlogTypeSchema,
   priority: DevlogPrioritySchema,
-  businessContext: BusinessContextSchema,
-  technicalContext: TechnicalContextSchema,
+  businessContext: BusinessContextSchema.optional(),
+  technicalContext: TechnicalContextSchema.optional(),
   acceptanceCriteria: AcceptanceCriteriaSchema,
 });
 
@@ -44,11 +43,15 @@ export const UpdateDevlogSchema = z.object({
   id: DevlogIdSchema,
   status: DevlogStatusSchema.optional(),
   priority: DevlogPrioritySchema.optional(),
-  note: z.string().optional(),
-  files: FilesSchema,
-  businessContext: BusinessContextSchema,
-  technicalContext: TechnicalContextSchema,
-  acceptanceCriteria: AcceptanceCriteriaSchema,
+  businessContext: BusinessContextSchema.optional(),
+  technicalContext: TechnicalContextSchema.optional(),
+  acceptanceCriteria: AcceptanceCriteriaSchema.optional(),
+  note: z
+    .object({
+      content: DevlogNoteContentSchema,
+      category: DevlogNoteCategorySchema,
+    })
+    .optional(),
 });
 
 // === LIST/SEARCH DEVLOGS ===
@@ -62,22 +65,15 @@ export const ListDevlogSchema = z.object({
   sortOrder: SortOrderSchema,
 });
 
-// === ADD NOTE ===
-export const AddNoteSchema = z.object({
+// === ADD DEVLOG NOTE ===
+export const AddDevlogNoteSchema = z.object({
   id: DevlogIdSchema,
-  note: NoteContentSchema,
-  category: NoteCategorySchema,
-  files: FilesSchema,
+  content: DevlogNoteContentSchema,
+  category: DevlogNoteCategorySchema,
 });
 
-// === COMPLETE DEVLOG ===
-export const CompleteDevlogSchema = z.object({
-  id: DevlogIdSchema,
-  summary: z.string().optional(),
-});
-
-// === FIND RELATED ===
-export const FindRelatedSchema = z.object({
+// === FIND RELATED DEVLOGS ===
+export const FindRelatedDevlogsSchema = z.object({
   description: DescriptionSchema,
   type: DevlogTypeSchema.optional(),
   keywords: KeywordsSchema,
@@ -89,6 +85,5 @@ export type CreateDevlogArgs = z.infer<typeof CreateDevlogSchema>;
 export type GetDevlogArgs = z.infer<typeof GetDevlogSchema>;
 export type UpdateDevlogArgs = z.infer<typeof UpdateDevlogSchema>;
 export type ListDevlogArgs = z.infer<typeof ListDevlogSchema>;
-export type AddNoteArgs = z.infer<typeof AddNoteSchema>;
-export type CompleteDevlogArgs = z.infer<typeof CompleteDevlogSchema>;
-export type FindRelatedArgs = z.infer<typeof FindRelatedSchema>;
+export type AddDevlogNoteArgs = z.infer<typeof AddDevlogNoteSchema>;
+export type FindRelatedDevlogsArgs = z.infer<typeof FindRelatedDevlogsSchema>;

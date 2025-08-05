@@ -1,31 +1,6 @@
-// Logger interface for parsers
-export interface Logger {
-  error?(message: string, ...args: unknown[]): void;
+/**
+ * Utility functions and types for AI parsers
+ */
 
-  warn?(message: string, ...args: unknown[]): void;
-
-  info?(message: string, ...args: unknown[]): void;
-
-  debug?(message: string, ...args: unknown[]): void;
-}
-// Simple console logger implementation
-export class ConsoleLogger implements Logger {
-  error(message: string, ...args: unknown[]): void {
-    console.error(`[ERROR] ${message}`, ...args);
-  }
-
-  warn(message: string, ...args: unknown[]): void {
-    console.warn(`[WARN] ${message}`, ...args);
-  }
-
-  info(message: string, ...args: unknown[]): void {
-    console.log(`[INFO] ${message}`, ...args);
-  }
-
-  debug(message: string, ...args: unknown[]): void {
-    // Only log debug in development or when DEBUG env var is set
-    if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
-      console.debug(`[DEBUG] ${message}`, ...args);
-    }
-  }
-}
+// This file is reserved for parser utility functions
+// Logger functionality has been removed in favor of direct chalk usage

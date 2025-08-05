@@ -29,6 +29,7 @@
 - **Must create devlogs**: For features, refactoring, or multistep work (>30min)
 - **Required progress updates**: Add notes after successful builds, major changes, or blockers
 - **Always complete**: Document learnings and close devlogs when work is finished
+- **Required details**: Include necessary information in devlogs for comprehensive context
 
 ## 🎯 Essential Patterns
 

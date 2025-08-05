@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import type { NoteCategory } from '@codervisor/devlog-core';
+import type { DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core';
 import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib';
 import { RealtimeEventType } from '@/lib/realtime';
@@ -89,10 +89,12 @@ export async function PUT(
     // Update the note
     const updatedNote = await devlogService.updateNote(noteId, {
       ...updates,
-      category: updates.category as NoteCategory | undefined,
+      category: updates.category as DevlogNoteCategory | undefined,
     });
 
-    return createSuccessResponse(updatedNote, { sseEventType: RealtimeEventType.DEVLOG_NOTE_UPDATED });
+    return createSuccessResponse(updatedNote, {
+      sseEventType: RealtimeEventType.DEVLOG_NOTE_UPDATED,
+    });
   } catch (error) {
     console.error('Error updating note:', error);
     if (error instanceof Error && error.message.includes('not found')) {
