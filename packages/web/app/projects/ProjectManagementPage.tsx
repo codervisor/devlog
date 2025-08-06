@@ -24,6 +24,7 @@ import {
   LoaderIcon,
   PlusIcon,
   Search,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeEventType } from '@/lib';
@@ -95,6 +96,11 @@ export function ProjectManagementPage() {
     router.push(`/projects/${projectId}`);
   };
 
+  const handleProjectSettings = (e: React.MouseEvent, projectId: number) => {
+    e.stopPropagation(); // Prevent card click from triggering
+    router.push(`/projects/${projectId}/settings`);
+  };
+
   if (projectsContext.error) {
     return (
       <Alert variant="destructive" className="m-5 flex items-center gap-2">
@@ -112,7 +118,12 @@ export function ProjectManagementPage() {
       <div className="w-full max-w-full p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <Button className="bg-primary">New Project</Button>
+            <Button 
+              className="bg-primary"
+              onClick={() => setIsModalVisible(true)}
+            >
+              New Project
+            </Button>
             <div className="relative">
               <Input
                 className="pl-10 w-64 focus-visible:outline-none focus-within:outline-none"
@@ -131,17 +142,26 @@ export function ProjectManagementPage() {
           ) : (
             <>
               {/* Projects grid */}
-              <div className="flex items-center gap-6 flex-wrap">
+              <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-2">
                 {projects?.map((project) => (
                   <Card
                     key={project.id}
-                    className="w-96 h-48 cursor-pointer transition-all hover:bg-muted/50"
+                    className="h-48 cursor-pointer transition-all hover:bg-muted/50"
                     onClick={() => handleViewProject(project.id)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <CardTitle className="text-lg">{project.name}</CardTitle>
                         <div className="flex items-center gap-2 h-7">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-muted"
+                            onClick={(e) => handleProjectSettings(e, project.id)}
+                            title="Project Settings"
+                          >
+                            <Settings size={14} />
+                          </Button>
                           <ChevronRight size={16} />
                         </div>
                       </div>
