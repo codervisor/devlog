@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppLayoutSkeleton, ErrorBoundary, NavigationSidebar, TopNavbar } from '@/components';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { Toaster } from 'sonner';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <ErrorBoundary>
+      <Toaster />
       <div className="min-h-screen bg-background w-full">
         <TopNavbar />
         <SidebarProvider>

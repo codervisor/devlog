@@ -307,7 +307,7 @@ export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
             <CardDescription>View project metadata and statistics</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 lg:grid-cols-4 md:grid-cols-2">
               <div>
                 <Label className="text-sm text-muted-foreground">Project ID</Label>
                 <p className="text-sm font-mono">{project.id}</p>

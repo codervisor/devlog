@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProjectCardSkeleton() {
   return (
-    <Card className="w-96 h-48">
+    <Card className="h-48">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <Skeleton className="h-6 w-32" />
@@ -28,7 +28,7 @@ export function ProjectCardSkeleton() {
 
 export function ProjectGridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="flex items-center gap-6 flex-wrap">
+    <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2">
       {Array.from({ length: count }).map((_, index) => (
         <ProjectCardSkeleton key={index} />
       ))}

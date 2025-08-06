@@ -1,5 +1,5 @@
-import { ProjectManagementPage } from './ProjectManagementPage';
+import { ProjectListPage } from './ProjectListPage';
 
 export default function ProjectsPage() {
-  return <ProjectManagementPage />;
+  return <ProjectListPage />;
 }

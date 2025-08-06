@@ -56,11 +56,8 @@ export const PUT = withErrorHandling(
       return projectResult.response;
     }
 
-    // Parse request body
-    const data = await request.json();
-
     // Update project
-    const updatedProject = await projectResult.data.projectService.update(projectId, data);
+    const updatedProject = await projectResult.data.projectService.update(projectId, bodyValidation.data);
 
     return createSuccessResponse(updatedProject, { sseEventType: RealtimeEventType.PROJECT_UPDATED });
   },

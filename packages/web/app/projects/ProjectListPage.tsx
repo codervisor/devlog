@@ -34,7 +34,7 @@ interface ProjectFormData {
   description?: string;
 }
 
-export function ProjectManagementPage() {
+export function ProjectListPage() {
   const { projectsContext, fetchProjects } = useProjectStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -43,11 +43,14 @@ export function ProjectManagementPage() {
   const { subscribe, unsubscribe } = useRealtimeStore();
 
   useEffect(() => {
-    subscribe(RealtimeEventType.PROJECT_CREATED, fetchProjects);
+    subscribe(RealtimeEventType.PROJECT_CREATED, async () => {
+      await fetchProjects();
+      toast.success('Project created successfully');
+    });
     return () => {
       unsubscribe(RealtimeEventType.PROJECT_CREATED);
     };
-  }, []);
+  }, [fetchProjects]);
 
   useEffect(() => {
     fetchProjects();
@@ -118,10 +121,7 @@ export function ProjectManagementPage() {
       <div className="w-full max-w-full p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <Button 
-              className="bg-primary"
-              onClick={() => setIsModalVisible(true)}
-            >
+            <Button className="bg-primary" onClick={() => setIsModalVisible(true)}>
               New Project
             </Button>
             <div className="relative">
@@ -138,11 +138,11 @@ export function ProjectManagementPage() {
 
           {/* Show skeleton loading state */}
           {isLoadingProjects ? (
-            <ProjectGridSkeleton count={3} />
+            <ProjectGridSkeleton count={2} />
           ) : (
             <>
               {/* Projects grid */}
-              <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-2">
+              <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2">
                 {projects?.map((project) => (
                   <Card
                     key={project.id}

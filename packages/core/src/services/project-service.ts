@@ -43,34 +43,11 @@ export class ProjectService {
           this.database.entityMetadatas.length,
         );
         console.log('[ProjectService] Repository initialized:', !!this.repository);
-
-        // Create default project if it doesn't exist
-        await this.createDefaultProject();
       }
     } catch (error) {
       console.error('[ProjectService] Failed to initialize:', error);
       throw error;
     }
-  }
-
-  /**
-   * Create default project
-   */
-  private async createDefaultProject(): Promise<void> {
-    const defaultProject: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'> = {
-      name: 'Default Project',
-      description: 'Default devlog project',
-    };
-
-    // Create project directly without initialization check since this is called during initialization
-    const existing = await this.repository.findOne({ where: { name: defaultProject.name } });
-    if (existing) {
-      return; // Default project already exists
-    }
-
-    // Create and save new project entity
-    const entity = ProjectEntity.fromProjectData(defaultProject);
-    await this.repository.save(entity);
   }
 
   async list(): Promise<Project[]> {

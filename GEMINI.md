@@ -385,9 +385,6 @@ export class ProjectService {
     if (!this.database.isInitialized) {
       await this.database.initialize();
     }
-
-    // Create default project if it doesn't exist
-    await this.createDefaultProject();
   }
 
   async list(): Promise<ProjectMetadata[]> {
