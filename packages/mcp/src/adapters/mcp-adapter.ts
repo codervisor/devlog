@@ -11,13 +11,13 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DevlogApiClient, type DevlogApiClientConfig } from '../api/devlog-api-client.js';
 import type {
-  AddNoteArgs,
-  CompleteDevlogArgs,
+  AddDevlogNoteArgs,
   CreateDevlogArgs,
-  FindRelatedArgs,
+  FindRelatedDevlogsArgs,
   GetCurrentProjectArgs,
   GetDevlogArgs,
   ListDevlogArgs,
+  ListDevlogNotesArgs,
   ListProjectsArgs,
   SwitchProjectArgs,
   UpdateDevlogArgs,
@@ -134,7 +134,7 @@ export class MCPAdapter {
 
   // === DEVLOG OPERATIONS ===
 
-  async create(args: CreateDevlogArgs): Promise<CallToolResult> {
+  async createDevlog(args: CreateDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
@@ -164,7 +164,7 @@ export class MCPAdapter {
     }
   }
 
-  async get(args: GetDevlogArgs): Promise<CallToolResult> {
+  async getDevlog(args: GetDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
@@ -175,39 +175,39 @@ export class MCPAdapter {
     }
   }
 
-  async update(args: UpdateDevlogArgs): Promise<CallToolResult> {
+  async updateDevlog(args: UpdateDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
-      // Handle update with optional note
-      if (args.note) {
-        // First update the fields if provided
-        if (args.status || args.priority) {
-          await this.apiClient.updateDevlog(args.id, {
-            status: args.status,
-            priority: args.priority,
-          });
-        }
-
-        // Then add the note
-        await this.apiClient.addDevlogNote(args.id, args.note, 'progress');
-
-        return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id} with note`);
-      } else {
-        // Regular update without note
-        const entry = await this.apiClient.updateDevlog(args.id, {
+      // First update the fields if provided
+      if (
+        args.status ||
+        args.priority ||
+        args.businessContext ||
+        args.technicalContext ||
+        args.acceptanceCriteria
+      ) {
+        await this.apiClient.updateDevlog(args.id, {
           status: args.status,
           priority: args.priority,
+          businessContext: args.businessContext,
+          technicalContext: args.technicalContext,
+          acceptanceCriteria: args.acceptanceCriteria,
         });
-
-        return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id}`);
       }
+
+      // Handle update with optional note
+      if (args.note) {
+        await this.apiClient.addDevlogNote(args.id, args.note.content, args.note.category);
+      }
+
+      return this.toStandardResponse(true, { id: args.id }, `Updated entry ${args.id}`);
     } catch (error) {
       return this.handleError('Failed to update entry', error);
     }
   }
 
-  async list(args: ListDevlogArgs): Promise<CallToolResult> {
+  async listDevlogs(args: ListDevlogArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
@@ -234,43 +234,7 @@ export class MCPAdapter {
     }
   }
 
-  async addNote(args: AddNoteArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      await this.apiClient.addDevlogNote(args.id, args.note, args.category);
-
-      return this.toStandardResponse(
-        true,
-        { id: args.id },
-        `Added ${args.category} note to entry ${args.id}`,
-      );
-    } catch (error) {
-      return this.handleError('Failed to add note', error);
-    }
-  }
-
-  async complete(args: CompleteDevlogArgs): Promise<CallToolResult> {
-    await this.ensureInitialized();
-
-    try {
-      await this.apiClient.updateDevlog(args.id, { status: 'done' });
-
-      if (args.summary) {
-        await this.apiClient.addDevlogNote(args.id, `Completed: ${args.summary}`, 'progress');
-      }
-
-      return this.toStandardResponse(
-        true,
-        { id: args.id, status: 'done' },
-        `Completed entry ${args.id}${args.summary ? ` - ${args.summary}` : ''}`,
-      );
-    } catch (error) {
-      return this.handleError('Failed to complete entry', error);
-    }
-  }
-
-  async findRelated(args: FindRelatedArgs): Promise<CallToolResult> {
+  async findRelatedDevlogs(args: FindRelatedDevlogsArgs): Promise<CallToolResult> {
     await this.ensureInitialized();
 
     try {
@@ -303,6 +267,42 @@ export class MCPAdapter {
       );
     } catch (error) {
       return this.handleError('Failed to find related entries', error);
+    }
+  }
+
+  async addDevlogNote(args: AddDevlogNoteArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      await this.apiClient.addDevlogNote(args.id, args.content, args.category);
+
+      return this.toStandardResponse(
+        true,
+        { id: args.id },
+        `Added ${args.category} note to entry ${args.id}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to add note', error);
+    }
+  }
+
+  async listDevlogNotes(args: ListDevlogNotesArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      const result = await this.apiClient.listDevlogNotes(args.id, args.category, args.limit);
+
+      return this.toStandardResponse(
+        true,
+        {
+          devlogId: args.id,
+          total: result.total,
+          notes: result.notes,
+        },
+        `Found ${result.notes.length} notes for devlog ${args.id}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to list notes', error);
     }
   }
 

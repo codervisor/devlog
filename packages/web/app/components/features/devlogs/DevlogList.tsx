@@ -42,7 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
-import { DevlogEntry, DevlogFilter, DevlogId, NoteCategory } from '@codervisor/devlog-core';
+import { DevlogEntry, DevlogFilter, DevlogId, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
 import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
 import { TableDataContext } from '@/stores/base';
@@ -82,7 +82,7 @@ export function DevlogList({
   });
   const [batchNoteForm, setBatchNoteForm] = useState({
     content: '',
-    category: 'progress' as NoteCategory,
+    category: 'progress' as DevlogNoteCategory,
   });
   const [batchOperationProgress, setBatchOperationProgress] = useState<{
     visible: boolean;

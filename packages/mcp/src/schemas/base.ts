@@ -25,7 +25,7 @@ export const DevlogStatusSchema = z.enum([
 
 export const DevlogPrioritySchema = z.enum(['low', 'medium', 'high', 'critical']).default('medium');
 
-export const NoteCategorySchema = z
+export const DevlogNoteCategorySchema = z
   .enum(['progress', 'issue', 'solution', 'idea', 'reminder'])
   .default('progress');
 
@@ -34,11 +34,9 @@ export const TitleSchema = z.string().min(1, 'Title is required').max(200, 'Titl
 
 export const DescriptionSchema = z.string().min(1, 'Description is required');
 
-export const NoteContentSchema = z.string().min(1, 'Note content is required');
+export const DevlogNoteContentSchema = z.string().min(1, 'Note content is required');
 
-export const FilesSchema = z.array(z.string()).optional();
-
-export const KeywordsSchema = z.array(z.string()).optional();
+export const KeywordsSchema = z.array(z.string());
 
 // === CONTEXT FIELD SCHEMAS ===
 export const BusinessContextSchema = z.string();

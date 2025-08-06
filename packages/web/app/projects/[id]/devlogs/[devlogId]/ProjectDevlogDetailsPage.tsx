@@ -2,12 +2,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, DevlogDetails, Popover, PopoverContent, PopoverTrigger } from '@/components';
-import { useDevlogStore, useProjectStore, useRealtimeStore } from '@/stores';
+import { useDevlogStore, useProjectStore } from '@/stores';
+import { useDevlogEvents, useNoteEvents } from '@/hooks/use-realtime';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { SSEEventType } from '@/lib';
 import { DevlogEntry } from '@codervisor/devlog-core';
+import { RealtimeEventType } from '@/lib/realtime';
 
 interface ProjectDevlogDetailsPageProps {
   projectId: number;
@@ -31,7 +32,8 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     clearCurrentDevlog,
   } = useDevlogStore();
 
-  const { connect, disconnect, subscribe, unsubscribe } = useRealtimeStore();
+  const { onDevlogUpdated, onDevlogDeleted } = useDevlogEvents();
+  const { onNoteCreated, onNoteUpdated, onNoteDeleted } = useNoteEvents();
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,29 +43,42 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   const discardHandlerRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    connect();
-    subscribe(SSEEventType.DEVLOG_UPDATED, ({ id }: DevlogEntry) => {
-      if (id === currentDevlogId) {
+    const unsubscribeUpdated = onDevlogUpdated((devlog: DevlogEntry) => {
+      if (devlog.id === currentDevlogId) {
         fetchCurrentDevlog();
       }
     });
-    subscribe(SSEEventType.DEVLOG_DELETED, ({ id }: DevlogEntry) => {
+
+    const unsubscribeDeleted = onDevlogDeleted(({ id }: { id: number }) => {
       if (id === currentDevlogId) {
         router.push(`/projects/${projectId}/devlogs`);
       }
     });
-    subscribe(SSEEventType.DEVLOG_NOTE_CREATED, fetchCurrentDevlogNotes);
-    subscribe(SSEEventType.DEVLOG_NOTE_UPDATED, fetchCurrentDevlogNotes);
-    subscribe(SSEEventType.DEVLOG_NOTE_DELETED, fetchCurrentDevlogNotes);
+
+    // Subscribe to note events
+    const unsubscribeNoteCreated = onNoteCreated(fetchCurrentDevlogNotes);
+    const unsubscribeNoteUpdated = onNoteUpdated(fetchCurrentDevlogNotes);
+    const unsubscribeNoteDeleted = onNoteDeleted(fetchCurrentDevlogNotes);
+
     return () => {
-      unsubscribe(SSEEventType.DEVLOG_UPDATED);
-      unsubscribe(SSEEventType.DEVLOG_DELETED);
-      unsubscribe(SSEEventType.DEVLOG_NOTE_CREATED);
-      unsubscribe(SSEEventType.DEVLOG_NOTE_UPDATED);
-      unsubscribe(SSEEventType.DEVLOG_NOTE_DELETED);
-      disconnect();
+      unsubscribeUpdated();
+      unsubscribeDeleted();
+      unsubscribeNoteCreated();
+      unsubscribeNoteUpdated();
+      unsubscribeNoteDeleted();
     };
-  }, []);
+  }, [
+    currentDevlogId,
+    fetchCurrentDevlog,
+    fetchCurrentDevlogNotes,
+    onDevlogUpdated,
+    onDevlogDeleted,
+    onNoteCreated,
+    onNoteUpdated,
+    onNoteDeleted,
+    router,
+    projectId,
+  ]);
 
   useEffect(() => {
     setCurrentProjectId(projectId);
@@ -77,8 +92,12 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   useEffect(() => {
     if (!currentDevlogId) return;
 
-    fetchCurrentDevlog();
-    fetchCurrentDevlogNotes();
+    try {
+      fetchCurrentDevlog();
+      fetchCurrentDevlogNotes();
+    } catch (error) {
+      console.warn('Failed to fetch devlog:', error);
+    }
 
     // Clear selected devlog when component unmounts
     return () => {

@@ -8,5 +8,12 @@
     "chat.agent.maxRequests": 100,
     "github.copilot.chat.languageContext.typescript.enabled": true,
     "github.copilot.chat.codesearch.enabled": true,
-    "github.copilot.chat.scopeSelection": true
+    "github.copilot.chat.scopeSelection": true,
+    "chat.mcp.serverSampling": {
+        "devlog/.vscode/mcp.json: devlog": {
+            "allowedModels": [
+                "copilot/claude-sonnet-4"
+            ]
+        }
+    }
 }

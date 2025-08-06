@@ -1,13 +1,12 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { zodToJsonSchema } from '../utils/schema-converter.js';
 import {
+  AddDevlogNoteSchema,
   CreateDevlogSchema,
+  FindRelatedDevlogsSchema,
   GetDevlogSchema,
-  UpdateDevlogSchema,
   ListDevlogSchema,
-  AddNoteSchema,
-  CompleteDevlogSchema,
-  FindRelatedSchema,
+  UpdateDevlogSchema,
 } from '../schemas/index.js';
 
 /**
@@ -36,7 +35,7 @@ export const devlogTools: Tool[] = [
 
   {
     name: 'update_devlog',
-    description: 'Update entry status, priority, or add progress notes',
+    description: 'Update entry status, priority, or add a note',
     inputSchema: zodToJsonSchema(UpdateDevlogSchema),
   },
 
@@ -49,18 +48,12 @@ export const devlogTools: Tool[] = [
   {
     name: 'add_devlog_note',
     description: 'Add a timestamped progress note to an entry',
-    inputSchema: zodToJsonSchema(AddNoteSchema),
-  },
-
-  {
-    name: 'complete_devlog',
-    description: 'Mark entry as completed (automatically archives)',
-    inputSchema: zodToJsonSchema(CompleteDevlogSchema),
+    inputSchema: zodToJsonSchema(AddDevlogNoteSchema),
   },
 
   {
     name: 'find_related_devlogs',
     description: 'Find existing entries related to planned work (prevents duplicates)',
-    inputSchema: zodToJsonSchema(FindRelatedSchema),
+    inputSchema: zodToJsonSchema(FindRelatedDevlogsSchema),
   },
 ];

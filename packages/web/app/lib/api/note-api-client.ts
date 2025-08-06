@@ -1,14 +1,14 @@
-import type { DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import type { DevlogNote, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { apiClient } from './api-client';
 
 export interface CreateNoteRequest {
   content: string;
-  category?: NoteCategory;
+  category?: DevlogNoteCategory;
 }
 
 export interface UpdateNoteRequest {
   content?: string;
-  category?: NoteCategory;
+  category?: DevlogNoteCategory;
 }
 
 export class NoteApiClient {

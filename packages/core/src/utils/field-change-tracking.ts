@@ -3,7 +3,7 @@
  * Extends the existing acceptance criteria tracking to all devlog fields
  */
 
-import type { DevlogEntry, DevlogNote, NoteCategory } from '../types/core.js';
+import type { DevlogEntry, DevlogNote, DevlogNoteCategory } from '../types/core.js';
 import type {
   ChangeRecord,
   FieldChange,
@@ -283,7 +283,7 @@ function generateChangeNoteContent(changes: FieldChange[], changeRecord: ChangeR
 /**
  * Determine the appropriate note category for field changes
  */
-function determineNoteCategory(changes: FieldChange[]): NoteCategory {
+function determineNoteCategory(changes: FieldChange[]): DevlogNoteCategory {
   // Check if any workflow changes (status, archived, etc.)
   const hasWorkflowChanges = changes.some((c) => c.category === 'workflow');
   if (hasWorkflowChanges) {

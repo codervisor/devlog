@@ -100,7 +100,7 @@ export type DevlogPriority = 'low' | 'medium' | 'high' | 'critical';
  * };
  * ```
  */
-export type NoteCategory =
+export type DevlogNoteCategory =
   /**
    * **Progress** - Work progress updates, milestones, and status changes
    * - General updates on development progress
@@ -159,7 +159,7 @@ export type DevlogId = number;
 export interface DevlogNote {
   id: string;
   timestamp: string;
-  category: NoteCategory;
+  category: DevlogNoteCategory;
   content: string;
 }
 

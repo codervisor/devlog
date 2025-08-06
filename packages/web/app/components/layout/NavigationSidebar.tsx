@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Boxes, Home, SquareKanban } from 'lucide-react';
+import { Boxes, Home, Settings, SquareKanban } from 'lucide-react';
 
 interface SidebarItem {
   key: string;
@@ -62,6 +62,12 @@ export function NavigationSidebar() {
       icon: <SquareKanban />,
       onClick: () => router.push(`/projects/${getProjectId()}/devlogs`),
     },
+    {
+      key: 'settings',
+      label: 'Settings',
+      icon: <Settings />,
+      onClick: () => router.push(`/projects/${getProjectId()}/settings`),
+    },
   ];
 
   // Get contextual menu items based on current path
@@ -85,13 +91,11 @@ export function NavigationSidebar() {
 
     if (pathname === '/' || pathname === '/projects') return 'projects';
     if (pathParts.length === 2 && pathParts[0] === 'projects') return 'overview';
-    if (pathParts.length === 3 && pathParts[2] === 'devlogs') return 'list';
-    if (pathParts.length === 4 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length >= 3 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length >= 3 && pathParts[2] === 'settings') return 'settings';
 
     return 'overview';
-  };
-
-  // Don't render menu items until mounted to prevent hydration issues
+  };  // Don't render menu items until mounted to prevent hydration issues
   if (!mounted) {
     return null;
   }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NoteCategory } from '@codervisor/devlog-core';
+import { DevlogNoteCategory } from '@codervisor/devlog-core';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   BellIcon,
@@ -27,7 +27,7 @@ export interface NoteCategoryConfig {
 /**
  * Complete configuration for all note categories
  */
-export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
+export const noteCategoryConfig: Record<DevlogNoteCategory, NoteCategoryConfig> = {
   progress: {
     icon: <TrophyIcon size={16} className="text-green-600" />,
     label: 'Progress',
@@ -75,7 +75,7 @@ export const noteCategoryConfig: Record<NoteCategory, NoteCategoryConfig> = {
  * @param category - The note category
  * @returns React node containing the appropriate icon with color and tooltip
  */
-export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
+export const getCategoryIcon = (category: DevlogNoteCategory): React.ReactNode => {
   const config = noteCategoryConfig[category];
   const icon = config?.icon || <MessageCircleIcon size={16} className="text-gray-500" />;
   const label = config?.label || category;
@@ -95,7 +95,7 @@ export const getCategoryIcon = (category: NoteCategory): React.ReactNode => {
  * @param category - The note category
  * @returns React node containing the appropriate icon with color
  */
-export const getCategoryIconRaw = (category: NoteCategory): React.ReactNode => {
+export const getCategoryIconRaw = (category: DevlogNoteCategory): React.ReactNode => {
   const config = noteCategoryConfig[category];
   return config?.icon || <MessageCircleIcon size={16} className="text-muted-foreground" />;
 };
@@ -105,7 +105,7 @@ export const getCategoryIconRaw = (category: NoteCategory): React.ReactNode => {
  * @param category - The note category
  * @returns Human-readable label for the category
  */
-export const getCategoryLabel = (category: NoteCategory): string => {
+export const getCategoryLabel = (category: DevlogNoteCategory): string => {
   return noteCategoryConfig[category]?.label || category;
 };
 
@@ -114,7 +114,7 @@ export const getCategoryLabel = (category: NoteCategory): string => {
  * @param category - The note category
  * @returns Description of when to use this category
  */
-export const getCategoryDescription = (category: NoteCategory): string => {
+export const getCategoryDescription = (category: DevlogNoteCategory): string => {
   return noteCategoryConfig[category]?.description || '';
 };
 
@@ -123,7 +123,7 @@ export const getCategoryDescription = (category: NoteCategory): string => {
  * @param category - The note category
  * @returns Tailwind color class for the category
  */
-export const getCategoryColor = (category: NoteCategory): string => {
+export const getCategoryColor = (category: DevlogNoteCategory): string => {
   return noteCategoryConfig[category]?.color || 'muted-foreground';
 };
 
@@ -133,7 +133,7 @@ export const getCategoryColor = (category: NoteCategory): string => {
  */
 export const getNoteCategoryOptions = () => {
   return Object.entries(noteCategoryConfig).map(([value, config]) => ({
-    value: value as NoteCategory,
+    value: value as DevlogNoteCategory,
     label: config.label,
     description: config.description,
     icon: config.icon,

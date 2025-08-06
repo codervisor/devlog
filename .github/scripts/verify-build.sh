@@ -38,8 +38,8 @@ else
     FAILED=1
 fi
 
-# Check web package (uses .next-build for standalone builds)
-if [ -d "packages/web/.next-build" ]; then
+# Check web package
+if [ -d "packages/web/.next" ]; then
     echo "✅ Web package build artifacts verified"
 else
     echo "❌ Web package build artifacts missing"

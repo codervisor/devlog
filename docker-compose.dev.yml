@@ -15,7 +15,6 @@ services:
       - .:/app
       - /app/node_modules
       - /app/packages/web/.next
-      - /app/packages/web/.next-build
       - './scripts:/app/scripts'
     env_file:
       - .env

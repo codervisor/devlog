@@ -5,7 +5,7 @@
 
 import 'reflect-metadata';
 import { Column, Entity, Index, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
-import type { NoteCategory } from '../types/index.js';
+import type { DevlogNoteCategory } from '../types/index.js';
 import { DevlogEntryEntity } from './devlog-entry.entity.js';
 import { JsonColumn, TimestampColumn } from './decorators.js';
 
@@ -28,7 +28,7 @@ export class DevlogNoteEntity {
     length: 50,
     enum: ['progress', 'issue', 'solution', 'idea', 'reminder', 'feedback', 'acceptance-criteria'],
   })
-  category!: NoteCategory;
+  category!: DevlogNoteCategory;
 
   @Column({ type: 'text' })
   content!: string;

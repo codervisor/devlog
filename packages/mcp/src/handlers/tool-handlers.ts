@@ -5,26 +5,26 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { MCPAdapter } from '../adapters/index.js';
 import {
-  CreateDevlogSchema,
-  GetDevlogSchema,
-  UpdateDevlogSchema,
-  ListDevlogSchema,
-  AddNoteSchema,
-  CompleteDevlogSchema,
-  FindRelatedSchema,
-  ListProjectsSchema,
-  GetCurrentProjectSchema,
-  SwitchProjectSchema,
+  type AddDevlogNoteArgs,
+  AddDevlogNoteSchema,
   type CreateDevlogArgs,
-  type GetDevlogArgs,
-  type UpdateDevlogArgs,
-  type ListDevlogArgs,
-  type AddNoteArgs,
-  type CompleteDevlogArgs,
-  type FindRelatedArgs,
-  type ListProjectsArgs,
+  CreateDevlogSchema,
+  type FindRelatedDevlogsArgs,
+  FindRelatedDevlogsSchema,
   type GetCurrentProjectArgs,
+  GetCurrentProjectSchema,
+  type GetDevlogArgs,
+  GetDevlogSchema,
+  type ListDevlogArgs,
+  ListDevlogNotesArgs,
+  ListDevlogNotesSchema,
+  ListDevlogSchema,
+  type ListProjectsArgs,
+  ListProjectsSchema,
   type SwitchProjectArgs,
+  SwitchProjectSchema,
+  type UpdateDevlogArgs,
+  UpdateDevlogSchema,
 } from '../schemas/index.js';
 
 /**
@@ -59,43 +59,46 @@ export const toolHandlers = {
   // Devlog operations
   create_devlog: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<CreateDevlogArgs>(CreateDevlogSchema, args, 'create_devlog', (validArgs) =>
-      adapter.create(validArgs),
+      adapter.createDevlog(validArgs),
     ),
 
   get_devlog: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<GetDevlogArgs>(GetDevlogSchema, args, 'get_devlog', (validArgs) =>
-      adapter.get(validArgs),
+      adapter.getDevlog(validArgs),
     ),
 
   update_devlog: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<UpdateDevlogArgs>(UpdateDevlogSchema, args, 'update_devlog', (validArgs) =>
-      adapter.update(validArgs),
+      adapter.updateDevlog(validArgs),
     ),
 
   list_devlogs: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<ListDevlogArgs>(ListDevlogSchema, args, 'list_devlogs', (validArgs) =>
-      adapter.list(validArgs),
-    ),
-
-  add_devlog_note: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<AddNoteArgs>(AddNoteSchema, args, 'add_devlog_note', (validArgs) =>
-      adapter.addNote(validArgs),
-    ),
-
-  complete_devlog: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<CompleteDevlogArgs>(
-      CompleteDevlogSchema,
-      args,
-      'complete_devlog',
-      (validArgs) => adapter.complete(validArgs),
+      adapter.listDevlogs(validArgs),
     ),
 
   find_related_devlogs: (adapter: MCPAdapter, args: unknown) =>
-    validateAndHandle<FindRelatedArgs>(
-      FindRelatedSchema,
+    validateAndHandle<FindRelatedDevlogsArgs>(
+      FindRelatedDevlogsSchema,
       args,
       'find_related_devlogs',
-      (validArgs) => adapter.findRelated(validArgs),
+      (validArgs) => adapter.findRelatedDevlogs(validArgs),
+    ),
+
+  add_devlog_note: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<AddDevlogNoteArgs>(
+      AddDevlogNoteSchema,
+      args,
+      'add_devlog_note',
+      (validArgs) => adapter.addDevlogNote(validArgs),
+    ),
+
+  list_devlog_notes: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<ListDevlogNotesArgs>(
+      ListDevlogNotesSchema,
+      args,
+      'list_devlog_notes',
+      (validArgs) => adapter.listDevlogNotes(validArgs),
     ),
 
   // Project operations

@@ -28,11 +28,12 @@ export type RealtimeProviderType = 'sse' | 'pusher';
 export interface RealtimeConfig {
   provider: RealtimeProviderType;
   pusher?: {
-    appId: string;
-    key: string;
-    secret: string;
-    cluster: string;
+    appId?: string;
+    key?: string;
+    secret?: string;
+    cluster?: string;
     useTLS?: boolean;
+    channelName?: string;
   };
   sse?: {
     endpoint: string;

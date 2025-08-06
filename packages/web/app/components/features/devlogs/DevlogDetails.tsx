@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  AlertTriangleIcon,
   Briefcase,
   CheckCircle,
   ChevronRight,
@@ -14,7 +15,7 @@ import {
   Network,
   Wrench,
 } from 'lucide-react';
-import { DevlogEntry, DevlogNote, NoteCategory } from '@codervisor/devlog-core';
+import { DevlogEntry, DevlogNote, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { EditableField } from '@/components/custom/EditableField';
 import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
 import {
@@ -25,7 +26,13 @@ import {
   statusOptions,
   typeOptions,
 } from '@/lib';
-import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
+import {
+  Alert,
+  AlertDescription,
+  DevlogPriorityTag,
+  DevlogStatusTag,
+  DevlogTypeTag,
+} from '@/components';
 import { DevlogAnchorNav } from './DevlogAnchorNav';
 import { DataContext } from '@/stores/base';
 
@@ -195,6 +202,18 @@ export function DevlogDetails({
       onUnsavedChangesChange(hasUnsavedChanges, handleSave, handleDiscard);
     }
   }, [hasUnsavedChanges, handleSave, handleDiscard, onUnsavedChangesChange]);
+
+  if (devlogContext.error) {
+    return (
+      <Alert variant="destructive" className="m-5 flex items-center gap-2">
+        <AlertTriangleIcon size={16} />
+        <div>
+          <div className="font-semibold">Error Loading Devlog</div>
+          <AlertDescription>{devlogContext.error}</AlertDescription>
+        </div>
+      </Alert>
+    );
+  }
 
   const skeletonHeaders = (
     <div className="space-y-4">
@@ -531,7 +550,7 @@ export function DevlogDetails({
                             )}
                           >
                             <div className="flex items-center space-x-2 mb-4">
-                              {getCategoryIconRaw(note.category as NoteCategory)}
+                              {getCategoryIconRaw(note.category as DevlogNoteCategory)}
                               <Badge variant="secondary" className="text-xs">
                                 {note.category}
                               </Badge>
