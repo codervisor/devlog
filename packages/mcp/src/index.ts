@@ -101,7 +101,7 @@ async function main() {
   // Create adapter configuration
   const config: MCPAdapterConfig = {
     apiClient: {
-      baseUrl: process.env.DEVLOG_BASE_URL || 'https://devlog.codervisor.dev',
+      baseUrl: process.env.DEVLOG_API_URL || 'https://devlog.codervisor.dev/api',
       timeout: 30000,
       retries: 3,
     },

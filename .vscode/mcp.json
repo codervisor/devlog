@@ -9,14 +9,14 @@
 			"type": "stdio"
 		},
 		"devlog": {
-			"type": "stdio",
 			"command": "npx",
 			"args": [
 				"@codervisor/devlog-mcp@dev"
 			],
+			"type": "stdio",
 			"env": {
-				// "DEVLOG_BASE_URL": "http://localhost:3200"
-			}
+				// "DEVLOG_API_URL": "http://localhost:3200/api"
+			},
 		},
 		"sequential-thinking": {
 			"command": "npx",

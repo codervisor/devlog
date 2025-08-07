@@ -195,23 +195,23 @@ export class DevlogApiClient {
    */
   private getProjectEndpoint(): string {
     const projectId = this.currentProjectId || 'default';
-    return `/api/projects/${projectId}`;
+    return `/projects/${projectId}`;
   }
 
   // Project Management
   async listProjects(): Promise<any[]> {
-    const response = await this.get('/api/projects');
+    const response = await this.get('/projects');
     return this.unwrapApiResponse<any[]>(response);
   }
 
   async getProject(projectId?: number): Promise<any> {
     const id = projectId || this.currentProjectId || 0;
-    const response = await this.get(`/api/projects/${id}`);
+    const response = await this.get(`/projects/${id}`);
     return this.unwrapApiResponse<any>(response);
   }
 
   async createProject(data: any): Promise<any> {
-    const response = await this.post('/api/projects', data);
+    const response = await this.post('/projects', data);
     return this.unwrapApiResponse<any>(response);
   }
 
@@ -308,7 +308,9 @@ export class DevlogApiClient {
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {
-      const response = await this.get('/api/health');
+      console.log('Performing health check...');
+      console.log('API Base URL:', this.baseUrl);
+      const response = await this.get('/health');
       const result = this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
 
       // Validate the health check response
@@ -319,20 +321,11 @@ export class DevlogApiClient {
       return result;
     } catch (error) {
       // If health endpoint doesn't exist, try a basic endpoint
-      console.warn('Health endpoint failed, trying projects endpoint as backup...');
-      try {
-        await this.get('/api/projects');
-        return {
-          status: 'ok',
-          timestamp: new Date().toISOString(),
-        };
-      } catch (backupError) {
-        throw new DevlogApiClientError(
-          `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
-          0,
-          error,
-        );
-      }
+      throw new DevlogApiClientError(
+        `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        0,
+        error,
+      );
     }
   }
 
