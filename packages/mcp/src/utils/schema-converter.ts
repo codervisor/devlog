@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { logger } from '../server/index.js';
 
 /**
  * Convert a Zod schema to JSON Schema format for MCP tool inputSchema
@@ -128,7 +129,7 @@ function zodToJsonSchemaRecursive(def: any): any {
 
     default:
       // Fallback for unsupported types
-      console.warn(`Unsupported Zod type: ${def.typeName}, falling back to any`);
+      logger.warn(`Unsupported Zod type: ${def.typeName}, falling back to any`);
       return {};
   }
 }

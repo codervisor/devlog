@@ -11,10 +11,11 @@ loadRootEnv();
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, SetLevelRequestSchema, type LoggingLevel } from '@modelcontextprotocol/sdk/types.js';
 import { MCPAdapter, type MCPAdapterConfig } from './adapters/index.js';
 import { allTools } from './tools/index.js';
 import { toolHandlers } from './handlers/tool-handlers.js';
+import { ServerManager, logger } from './server/index.js';
 
 const server = new Server(
   {
@@ -35,12 +36,12 @@ FEATURES:
 • AI-friendly progress tracking and status workflows
 • Project-based organization with multi-project support
 • Duplicate detection and relationship management
-
-This server provides 10 tools: 7 devlog operations + 3 project management tools.`,
+`,
   },
   {
     capabilities: {
       tools: {},
+      logging: {},
     },
   },
 );
@@ -48,12 +49,21 @@ This server provides 10 tools: 7 devlog operations + 3 project management tools.
 // Initialize the adapter
 let adapter: MCPAdapter;
 
+server.setRequestHandler(SetLevelRequestSchema, async (request) => {
+  logger.setLoggingLevel(request.params.level);
+  return { success: true, level: request.params.level };
+});
+
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return { tools: allTools };
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+  console.error(request.params);
+
+  if (name === 'logging/setLevel') {
+  }
 
   try {
     // Get handler for the tool
@@ -85,7 +95,7 @@ async function main() {
   const defaultProjectStr =
     projectArgIndex !== -1 && args[projectArgIndex + 1]
       ? args[projectArgIndex + 1]
-      : process.env.MCP_DEFAULT_PROJECT || '1';
+      : process.env.DEVLOG_DEFAULT_PROJECT || '1';
 
   // Convert to number, defaulting to 1 if invalid
   let defaultProjectId = 1;
@@ -95,8 +105,15 @@ async function main() {
       defaultProjectId = parsed;
     }
   } catch {
-    console.error(`Invalid project ID '${defaultProjectStr}', using default project 1`);
+    logger.error(`Invalid project ID '${defaultProjectStr}', using default project 1`);
   }
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+
+  // Register server with ServerManager for centralized logging
+  const serverManager = ServerManager.getInstance();
+  serverManager.setServer(server);
 
   // Create adapter configuration
   const config: MCPAdapterConfig = {
@@ -112,25 +129,26 @@ async function main() {
   adapter = new MCPAdapter(config);
   await adapter.initialize();
 
-  console.error(`Set current project to: ${defaultProjectId}`);
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-
-  console.error(`Devlog MCP Server started with project: ${defaultProjectId}`);
+  logger.info(`Set current project to: ${defaultProjectId}`);
+  logger.info(`Devlog MCP Server started with project: ${defaultProjectId}`);
 }
 
 // Cleanup on process exit
 process.on('SIGINT', async () => {
-  console.error('Shutting down server...');
+  logger.info('Shutting down server...');
   await adapter.dispose();
+  ServerManager.getInstance().dispose();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.error('Shutting down server...');
+  logger.info('Shutting down server...');
   await adapter.dispose();
+  ServerManager.getInstance().dispose();
   process.exit(0);
 });
 
-main().catch(console.error);
+main().catch((error) => {
+  logger.error('Failed to start MCP server:', error);
+  process.exit(1);
+});

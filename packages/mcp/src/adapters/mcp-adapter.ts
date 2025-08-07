@@ -10,6 +10,7 @@
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { DevlogApiClient, type DevlogApiClientConfig } from '../api/devlog-api-client.js';
+import { logger } from '../server/index.js';
 import type {
   AddDevlogNoteArgs,
   CreateDevlogArgs,
@@ -66,10 +67,10 @@ export class MCPAdapter {
 
     try {
       await this.apiClient.healthCheck();
-      console.log('✅ MCP adapter initialized successfully');
+      logger.info('✅ MCP adapter initialized successfully');
       this.initialized = true;
     } catch (error) {
-      console.error('❌ Failed to initialize MCP adapter:', error);
+      logger.error('❌ Failed to initialize MCP adapter:', error);
       throw new Error(
         `Failed to connect to devlog API: ${error instanceof Error ? error.message : String(error)}`,
       );
@@ -127,7 +128,7 @@ export class MCPAdapter {
 
   private handleError(operation: string, error: unknown): CallToolResult {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`${operation}:`, errorMessage);
+    logger.error(`${operation}:`, { error: errorMessage });
 
     return this.toStandardResponse(false, undefined, undefined, `${operation}: ${errorMessage}`);
   }

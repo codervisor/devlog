@@ -4,6 +4,7 @@
  */
 
 import axios, { type AxiosInstance, type AxiosError, type AxiosRequestConfig } from 'axios';
+import tunnel from 'tunnel';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
@@ -15,6 +16,7 @@ import type {
   SortOptions,
   UpdateDevlogRequest,
 } from '@codervisor/devlog-core';
+import { logger } from '../server/index.js';
 
 export interface DevlogApiClientConfig {
   /** Base URL for the web API */
@@ -50,12 +52,34 @@ export class DevlogApiClient {
   constructor(config: DevlogApiClientConfig) {
     this.retries = config.retries || 3;
     
+    // Create HTTPS agent for proxy tunneling to fix redirect loops
+    let httpsAgent;
+    const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY;
+    
+    if (proxyUrl && config.baseUrl.includes('devlog.codervisor.dev')) {
+      // Use tunnel agent for devlog.codervisor.dev to avoid redirect loops
+      const proxyMatch = proxyUrl.match(/https?:\/\/([^:]+):(\d+)/);
+      if (proxyMatch) {
+        httpsAgent = tunnel.httpsOverHttp({
+          proxy: {
+            host: proxyMatch[1],
+            port: parseInt(proxyMatch[2]),
+          },
+        });
+      }
+    }
+    
     this.axiosInstance = axios.create({
       baseURL: config.baseUrl.replace(/\/$/, ''), // Remove trailing slash
       timeout: config.timeout || 30000,
       headers: {
         'Content-Type': 'application/json',
       },
+      // Use custom agent if we created one, otherwise let axios handle proxy normally
+      ...(httpsAgent && { 
+        httpsAgent,
+        proxy: false, // Disable built-in proxy when using custom agent
+      }),
     });
 
     // Setup response interceptor for error handling
@@ -89,6 +113,7 @@ export class DevlogApiClient {
     let statusCode: number | undefined;
     let responseData: any;
 
+    logger.error('API request failed', { error: error.message, code: error.code });
     if (error.response) {
       // Server responded with error status
       statusCode = error.response.status;
@@ -107,6 +132,13 @@ export class DevlogApiClient {
     } else if (error.request) {
       // Request was made but no response received
       errorMessage = `Network error: ${error.message}`;
+      
+      // Handle specific proxy/network related errors with helpful context
+      if (error.code === 'ERR_FR_TOO_MANY_REDIRECTS') {
+        errorMessage += '. Fixed: Using tunnel agent to avoid proxy redirect loops.';
+      } else if (error.code === 'ECONNRESET') {
+        errorMessage += '. The server may be unreachable from this network.';
+      }
     }
 
     return new DevlogApiClientError(errorMessage, statusCode, responseData);
@@ -121,6 +153,7 @@ export class DevlogApiClient {
     attempt = 1,
   ): Promise<any> {
     try {
+      logger.debug(`Making request to ${endpoint}`, options);
       const response = await this.axiosInstance.request({
         url: endpoint,
         ...options,
@@ -137,7 +170,7 @@ export class DevlogApiClient {
       );
       
       if (shouldRetry) {
-        console.warn(`Request failed (attempt ${attempt}/${this.retries}), retrying...`);
+        logger.warn(`Request failed (attempt ${attempt}/${this.retries}), retrying...`);
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         return this.makeRequest(endpoint, options, attempt + 1);
       }
@@ -327,8 +360,8 @@ export class DevlogApiClient {
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {
-      console.log('Performing health check...');
-      console.log('API Base URL:', this.axiosInstance.defaults.baseURL);
+      logger.info('Performing health check...');
+      logger.debug('API Base URL', { baseURL: this.axiosInstance.defaults.baseURL });
       const response = await this.get('/health');
       const result = this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
 

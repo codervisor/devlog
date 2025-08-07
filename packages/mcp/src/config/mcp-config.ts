@@ -3,6 +3,8 @@
  * Uses HTTP API client for secure and isolated access to devlog operations
  */
 
+import { logger } from '../server/index.js';
+
 export interface MCPServerConfig {
   /** Default project ID */
   defaultProjectId?: string;
@@ -71,11 +73,11 @@ export function validateMCPConfig(config: MCPServerConfig): void {
  * Print configuration summary for debugging
  */
 export function printConfigSummary(config: MCPServerConfig): void {
-  console.log('\n=== MCP Server Configuration ===');
-  console.log(`Default Project: ${config.defaultProjectId}`);
-  console.log(`Web API URL: ${config.webApi.baseUrl}`);
-  console.log(`Timeout: ${config.webApi.timeout}ms`);
-  console.log(`Retries: ${config.webApi.retries}`);
-  console.log(`Auto-discover: ${config.webApi.autoDiscover}`);
-  console.log('================================\n');
+  logger.info('\n=== MCP Server Configuration ===');
+  logger.info(`Default Project: ${config.defaultProjectId}`);
+  logger.info(`Web API URL: ${config.webApi.baseUrl}`);
+  logger.info(`Timeout: ${config.webApi.timeout}ms`);
+  logger.info(`Retries: ${config.webApi.retries}`);
+  logger.info(`Auto-discover: ${config.webApi.autoDiscover}`);
+  logger.info('================================\n');
 }

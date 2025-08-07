@@ -204,6 +204,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.13.0
+      '@types/tunnel':
+        specifier: 0.0.7
+        version: 0.0.7
       axios:
         specifier: ^1.11.0
         version: 1.11.0
@@ -213,6 +216,9 @@ importers:
       dotenv:
         specifier: 16.5.0
         version: 16.5.0
+      tunnel:
+        specifier: 0.0.6
+        version: 0.0.6
       zod:
         specifier: ^3.22.4
         version: 3.25.67
@@ -1547,6 +1553,9 @@ packages:
 
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
+
+  '@types/tunnel@0.0.7':
+    resolution: {integrity: sha512-VYKjZSmb2PvUwXoux4Gy4LAk7kzOB1ktkjyL4lxvpkqL2adgR+Qrh/yFyWluvJgIXWFicqs7XuzPI2NbTO/r3Q==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -3762,6 +3771,10 @@ packages:
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
 
+  tunnel@0.0.6:
+    resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
+    engines: {node: '>=0.6.11 <=0.7.0 || >=0.7.3'}
+
   turbo-darwin-64@2.5.5:
     resolution: {integrity: sha512-RYnTz49u4F5tDD2SUwwtlynABNBAfbyT2uU/brJcyh5k6lDLyNfYKdKmqd3K2ls4AaiALWrFKVSBsiVwhdFNzQ==}
     cpu: [x64]
@@ -5097,6 +5110,10 @@ snapshots:
       csstype: 3.1.3
 
   '@types/semver@7.7.0': {}
+
+  '@types/tunnel@0.0.7':
+    dependencies:
+      '@types/node': 20.19.1
 
   '@types/unist@2.0.11': {}
 
@@ -7717,6 +7734,8 @@ snapshots:
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  tunnel@0.0.6: {}
 
   turbo-darwin-64@2.5.5:
     optional: true
