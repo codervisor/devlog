@@ -3,6 +3,7 @@
  * Provides project-aware interface to @codervisor/devlog-web API endpoints
  */
 
+import axios, { type AxiosInstance, type AxiosError, type AxiosRequestConfig } from 'axios';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
@@ -42,15 +43,28 @@ export class DevlogApiClientError extends Error {
  * HTTP API client for devlog operations
  */
 export class DevlogApiClient {
-  private baseUrl: string;
-  private timeout: number;
+  private axiosInstance: AxiosInstance;
   private retries: number;
   private currentProjectId: number | null = null;
 
   constructor(config: DevlogApiClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
-    this.timeout = config.timeout || 30000;
     this.retries = config.retries || 3;
+    
+    this.axiosInstance = axios.create({
+      baseURL: config.baseUrl.replace(/\/$/, ''), // Remove trailing slash
+      timeout: config.timeout || 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Setup response interceptor for error handling
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => {
+        throw this.handleAxiosError(error);
+      }
+    );
   }
 
   /**
@@ -68,58 +82,67 @@ export class DevlogApiClient {
   }
 
   /**
+   * Handle axios errors and convert to DevlogApiClientError
+   */
+  private handleAxiosError(error: AxiosError): DevlogApiClientError {
+    let errorMessage = error.message;
+    let statusCode: number | undefined;
+    let responseData: any;
+
+    if (error.response) {
+      // Server responded with error status
+      statusCode = error.response.status;
+      responseData = error.response.data;
+      
+      // Try to extract error message from response
+      if (responseData) {
+        if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else if (typeof responseData === 'object') {
+          errorMessage = responseData.error?.message || responseData.message || error.message;
+        }
+      }
+      
+      errorMessage = `HTTP ${statusCode}: ${errorMessage}`;
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = `Network error: ${error.message}`;
+    }
+
+    return new DevlogApiClientError(errorMessage, statusCode, responseData);
+  }
+
+  /**
    * Make HTTP request with retry logic
    */
   private async makeRequest(
     endpoint: string,
-    options: RequestInit = {},
+    options: AxiosRequestConfig = {},
     attempt = 1,
-  ): Promise<Response> {
-    const url = `${this.baseUrl}${endpoint}`;
-
-    const requestOptions: RequestInit = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      signal: AbortSignal.timeout(this.timeout),
-    };
-
+  ): Promise<any> {
     try {
-      const response = await fetch(url, requestOptions);
+      const response = await this.axiosInstance.request({
+        url: endpoint,
+        ...options,
+      });
 
-      if (!response.ok) {
-        let errorText: string;
-        try {
-          errorText = await response.text();
-        } catch {
-          errorText = response.statusText;
-        }
-
-        // Try to parse JSON error response
-        let errorData = errorText;
-        try {
-          const parsed = JSON.parse(errorText);
-          errorData = parsed.error?.message || parsed.message || errorText;
-        } catch {
-          // Keep original text if not JSON
-        }
-
-        throw new DevlogApiClientError(
-          `HTTP ${response.status}: ${errorData}`,
-          response.status,
-          errorText,
-        );
-      }
-
-      return response;
+      return response.data;
     } catch (error) {
-      if (attempt < this.retries && !(error instanceof DevlogApiClientError)) {
+      const axiosError = error as AxiosError;
+      
+      // Only retry on network errors or 5xx server errors, not on client errors
+      const shouldRetry = attempt < this.retries && (
+        !axiosError.response || 
+        (axiosError.response.status >= 500)
+      );
+      
+      if (shouldRetry) {
         console.warn(`Request failed (attempt ${attempt}/${this.retries}), retrying...`);
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         return this.makeRequest(endpoint, options, attempt + 1);
       }
+      
+      // Re-throw the error (will be handled by the response interceptor)
       throw error;
     }
   }
@@ -156,38 +179,34 @@ export class DevlogApiClient {
    * GET request helper
    */
   private async get(endpoint: string): Promise<any> {
-    const response = await this.makeRequest(endpoint, { method: 'GET' });
-    return response.json();
+    return this.makeRequest(endpoint, { method: 'GET' });
   }
 
   /**
    * POST request helper
    */
   private async post(endpoint: string, data?: any): Promise<any> {
-    const response = await this.makeRequest(endpoint, {
+    return this.makeRequest(endpoint, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      data: data,
     });
-    return response.json();
   }
 
   /**
    * PUT request helper
    */
   private async put(endpoint: string, data?: any): Promise<any> {
-    const response = await this.makeRequest(endpoint, {
+    return this.makeRequest(endpoint, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      data: data,
     });
-    return response.json();
   }
 
   /**
    * DELETE request helper
    */
   private async delete(endpoint: string): Promise<any> {
-    const response = await this.makeRequest(endpoint, { method: 'DELETE' });
-    return response.json();
+    return this.makeRequest(endpoint, { method: 'DELETE' });
   }
 
   /**
@@ -309,7 +328,7 @@ export class DevlogApiClient {
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {
       console.log('Performing health check...');
-      console.log('API Base URL:', this.baseUrl);
+      console.log('API Base URL:', this.axiosInstance.defaults.baseURL);
       const response = await this.get('/health');
       const result = this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
 

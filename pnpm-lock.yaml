@@ -204,6 +204,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.0
         version: 1.13.0
+      axios:
+        specifier: ^1.11.0
+        version: 1.11.0
       better-sqlite3:
         specifier: ^11.10.0
         version: 11.10.0
