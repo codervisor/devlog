@@ -18,11 +18,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  AlertTriangleIcon,
+  AlertTriangle,
   ChevronRight,
-  FolderIcon,
-  LoaderIcon,
-  PlusIcon,
+  Folder,
+  Loader2,
+  Plus,
   Search,
   Settings,
 } from 'lucide-react';
@@ -107,7 +107,7 @@ export function ProjectListPage() {
   if (projectsContext.error) {
     return (
       <Alert variant="destructive" className="m-5 flex items-center gap-2">
-        <AlertTriangleIcon size={16} />
+        <AlertTriangle size={16} />
         <div>
           <div className="font-semibold">Error Loading Projects</div>
           <AlertDescription>{projectsContext.error}</AlertDescription>
@@ -180,7 +180,7 @@ export function ProjectListPage() {
               {projects?.length === 0 && (
                 <div className="min-h-[60vh] flex items-center justify-center">
                   <Card className="text-center p-16 border-dashed border-2 bg-muted/50 max-w-2xl w-full">
-                    <FolderIcon size={80} className="mx-auto mb-8 text-muted-foreground" />
+                    <Folder size={80} className="mx-auto mb-8 text-muted-foreground" />
                     <h3 className="text-2xl font-semibold mb-4 text-muted-foreground">
                       No Projects Found
                     </h3>
@@ -193,7 +193,7 @@ export function ProjectListPage() {
                       onClick={() => setIsModalVisible(true)}
                       className="flex items-center gap-2 px-8 py-3"
                     >
-                      <PlusIcon size={18} />
+                      <Plus size={18} />
                       Create First Project
                     </Button>
                   </Card>
@@ -244,7 +244,7 @@ export function ProjectListPage() {
               <Button type="submit" disabled={creating}>
                 {creating ? (
                   <>
-                    <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating...
                   </>
                 ) : (

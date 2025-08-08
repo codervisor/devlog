@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDevlogStore, useProjectStore } from '@/stores';
-import { CheckIcon, ChevronsUpDown, NotepadText, Package } from 'lucide-react';
+import { Check, ChevronsUpDown, NotepadText, Package } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -103,7 +103,7 @@ export function NavigationBreadcrumb() {
                       <div className="text-xs text-muted-foreground truncate">{project.id}</div>
                     </div>
                     {isCurrentProject && (
-                      <CheckIcon size={14} className="text-primary flex-shrink-0" />
+                      <Check size={14} className="text-primary flex-shrink-0" />
                     )}
                   </DropdownMenuItem>
                 );
