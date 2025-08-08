@@ -60,10 +60,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-  console.error(request.params);
-
-  if (name === 'logging/setLevel') {
-  }
 
   try {
     // Get handler for the tool

@@ -335,8 +335,8 @@ export function DevlogList({
           <p className="text-muted-foreground mb-4">No devlogs found</p>
         </div>
       ) : (
-        <div className={`h-[calc(100%-4rem)] ${loading ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
-          <Table className="h-[calc(100%-3rem)]">
+        <div className={cn('h-[calc(100%-4rem)] flex flex-col', loading ? 'overflow-y-hidden' : 'overflow-y-auto')}>
+          <Table>
             <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
               <TableRow>
                 <TableHead className="w-12">
@@ -362,7 +362,7 @@ export function DevlogList({
                 <TableHead className="w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="min-h-[calc(100%-6rem)]">
+            <TableBody>
               {loading
                 ? Array.from({ length: 20 }).map((_, i) => (
                     <TableRow key={`skeleton-${i}`}>
@@ -401,7 +401,7 @@ export function DevlogList({
                 : devlogs.map((devlog) => (
                     <TableRow
                       key={devlog.id}
-                      className="hover:bg-muted/50 cursor-pointer"
+                      className="hover:bg-muted/50 cursor-pointer h-14"
                       onClick={() => onViewDevlog(devlog)}
                     >
                       <TableCell onClick={(e) => e.stopPropagation()}>
@@ -460,10 +460,13 @@ export function DevlogList({
             </TableBody>
           </Table>
 
+          {/* Gutter */}
+          <div className="flex-1"/>
+
           {/* Pagination */}
           {pagination && (
             <Pagination
-              className="sticky bottom-0 z-10 h-12 bg-background border-t pr-4"
+              className="sticky bottom-0 w-full z-10 h-12 flex-shrink-0 bg-background border-t pr-4"
               pagination={pagination}
               disabled={loading}
               onPageChange={onPageChange || (() => {})}
