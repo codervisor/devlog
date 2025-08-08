@@ -5,8 +5,8 @@ import {
   PaginationMeta,
   ProjectService,
 } from '@codervisor/devlog-core';
-import { ApiValidator, DevlogSearchQuerySchema, ProjectIdParamSchema } from '@/schemas';
-import { ApiErrors, createSuccessResponse } from '@/lib';
+import { ApiValidator, DevlogSearchQuerySchema } from '@/schemas';
+import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -35,11 +35,13 @@ interface SearchResponse {
 // GET /api/projects/[id]/devlogs/search - Enhanced search for devlogs
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+    // Parse and validate project name parameter
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
+
+    const { identifier, identifierType } = paramResult.data;
 
     // Validate query parameters
     const url = new URL(request.url);
@@ -48,14 +50,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return queryValidation.response;
     }
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(paramValidation.data.id);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(paramValidation.data.id);
+    const devlogService = DevlogService.getInstance(project.id);
 
     const queryData = queryValidation.data;
     const searchQuery = queryData.q;

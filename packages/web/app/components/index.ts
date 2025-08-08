@@ -18,4 +18,5 @@ export * from './features/dashboard';
 export * from './features/devlogs';
 
 // Project Components
+export { ProjectResolver } from './ProjectResolver';
 export * from './project';

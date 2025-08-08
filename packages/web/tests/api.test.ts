@@ -5,7 +5,7 @@
  * Tests parameter validation, error handling, and service integration patterns.
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { RouteParams, ServiceHelper, ApiErrors, ApiResponses, withErrorHandling } from '@/lib';
 
@@ -42,85 +42,110 @@ describe('API Utilities Test Suite', () => {
 
   describe('RouteParams', () => {
     describe('parseProjectId', () => {
-      it('should parse valid numeric project ID', () => {
+      it('should parse valid project name', () => {
+        const params = { id: 'my-project' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.identifier).toBe('my-project');
+          expect(result.data.identifierType).toBe('name');
+        }
+      });
+
+      it('should accept project names with underscores', () => {
+        const params = { id: 'my_project_name' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.identifier).toBe('my_project_name');
+          expect(result.data.identifierType).toBe('name');
+        }
+      });
+
+      it('should accept mixed case project names', () => {
+        const params = { id: 'MyProject' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.identifier).toBe('MyProject');
+          expect(result.data.identifierType).toBe('name');
+        }
+      });
+
+      it('should reject project names starting with hyphen', () => {
+        const params = { id: '-invalid' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject project names ending with hyphen', () => {
+        const params = { id: 'invalid-' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject project names with special characters', () => {
+        const params = { id: 'invalid@name' };
+        const result = RouteParams.parseProjectId(params);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject numeric IDs (name-only routing)', () => {
         const params = { id: '123' };
         const result = RouteParams.parseProjectId(params);
 
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(result.data.projectId).toBe(123);
-        }
-      });
-
-      it('should reject invalid project ID', () => {
-        const params = { id: 'invalid' };
-        const result = RouteParams.parseProjectId(params);
-
         expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.response).toBeInstanceOf(NextResponse);
-        }
-      });
-
-      it('should reject negative project ID', () => {
-        const params = { id: '-1' };
-        const result = RouteParams.parseProjectId(params);
-
-        expect(result.success).toBe(false);
-      });
-
-      it('should reject zero as project ID', () => {
-        const params = { id: '0' };
-        const result = RouteParams.parseProjectId(params);
-
-        expect(result.success).toBe(false);
-      });
-
-      it('should accept floating point numbers (parsed as integers)', () => {
-        const params = { id: '123.45' };
-        const result = RouteParams.parseProjectId(params);
-
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(result.data.projectId).toBe(123); // parseInt truncates to 123
-        }
       });
     });
 
     describe('parseProjectAndDevlogId', () => {
-      it('should parse valid numeric IDs', () => {
-        const params = { id: '123', devlogId: '456' };
+      it('should parse valid project name and devlog ID', () => {
+        const params = { id: 'my-project', devlogId: '456' };
         const result = RouteParams.parseProjectAndDevlogId(params);
 
         expect(result.success).toBe(true);
         if (result.success) {
-          expect(result.data.projectId).toBe(123);
+          expect(result.data.identifier).toBe('my-project');
+          expect(result.data.identifierType).toBe('name');
           expect(result.data.devlogId).toBe(456);
         }
       });
 
-      it('should reject invalid project ID', () => {
-        const params = { id: 'invalid', devlogId: '456' };
+      it('should reject invalid project name', () => {
+        const params = { id: '-invalid', devlogId: '456' };
         const result = RouteParams.parseProjectAndDevlogId(params);
 
         expect(result.success).toBe(false);
       });
 
       it('should reject invalid devlog ID', () => {
-        const params = { id: '123', devlogId: 'invalid' };
+        const params = { id: 'my-project', devlogId: 'invalid' };
+        const result = RouteParams.parseProjectAndDevlogId(params);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject numeric project identifiers (name-only routing)', () => {
+        const params = { id: '123', devlogId: '456' };
         const result = RouteParams.parseProjectAndDevlogId(params);
 
         expect(result.success).toBe(false);
       });
 
       it('should provide descriptive error messages', async () => {
-        const params = { id: 'invalid', devlogId: '456' };
+        const params = { id: '-invalid', devlogId: '456' };
         const result = RouteParams.parseProjectAndDevlogId(params);
 
         expect(result.success).toBe(false);
         if (!result.success) {
           const responseJson = await result.response.json();
-          expect(responseJson.error).toContain('Invalid project ID: must be a positive integer');
+          expect(responseJson.error).toContain('Invalid project name');
         }
       });
     });
@@ -377,7 +402,7 @@ describe('Route Handler Integration Tests', () => {
 
       expect(result.status).toBe(400);
       const json = await result.json();
-      expect(json.error).toContain('Invalid project ID: must be a positive integer');
+      expect(json.error).toContain('Invalid project name');
     });
 
     it('should handle nonexistent project', async () => {

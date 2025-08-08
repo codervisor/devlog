@@ -4,9 +4,12 @@
  */
 
 import { DevlogId } from '@codervisor/devlog-core';
+import { isValidProjectIdentifier, generateSlugFromName } from '@codervisor/devlog-core';
 
 export interface ParsedProjectParams {
   projectId: number;
+  projectIdentifier: string; // The project name
+  identifierType: 'name';
 }
 
 export interface ParsedDevlogParams extends ParsedProjectParams {
@@ -14,7 +17,29 @@ export interface ParsedDevlogParams extends ParsedProjectParams {
 }
 
 /**
- * Parse and validate a numeric ID parameter
+ * Parse and validate a project name (name-only routing)
+ */
+function parseProjectIdentifier(value: string, paramName: string): {
+  projectId: number;
+  projectIdentifier: string;
+  identifierType: 'name';
+} {
+  const validation = isValidProjectIdentifier(value);
+  
+  if (!validation.valid) {
+    throw new Error(`Invalid ${paramName}: must be a valid project name following GitHub naming conventions`);
+  }
+
+  // Always name-based identifiers now
+  return {
+    projectId: -1, // Will be resolved later by service helper
+    projectIdentifier: value,
+    identifierType: 'name',
+  };
+}
+
+/**
+ * Parse and validate a numeric ID parameter (for devlog IDs)
  */
 function parseId(value: string, paramName: string): number {
   const parsed = parseInt(value, 10);
@@ -35,9 +60,7 @@ export const RouteParamParsers = {
    * For routes like: /projects/[id]/...
    */
   parseProjectParams(params: { id: string }): ParsedProjectParams {
-    return {
-      projectId: parseId(params.id, 'project ID'),
-    };
+    return parseProjectIdentifier(params.id, 'project identifier');
   },
 
   /**
@@ -45,8 +68,9 @@ export const RouteParamParsers = {
    * For routes like: /projects/[id]/devlogs/[devlogId]/...
    */
   parseDevlogParams(params: { id: string; devlogId: string }): ParsedDevlogParams {
+    const projectInfo = parseProjectIdentifier(params.id, 'project identifier');
     return {
-      projectId: parseId(params.id, 'project ID'),
+      ...projectInfo,
       devlogId: parseId(params.devlogId, 'devlog ID') as DevlogId,
     };
   },

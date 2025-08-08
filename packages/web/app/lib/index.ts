@@ -18,6 +18,9 @@ export * from './devlog';
 // Routing utilities
 export * from './routing';
 
+// Project URL utilities
+export * from './project-urls';
+
 // Realtime utilities
 export * from './realtime';
 

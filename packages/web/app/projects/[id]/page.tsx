@@ -1,4 +1,5 @@
 import { ProjectDetailsPage } from './ProjectDetailsPage';
+import { ProjectResolver } from '@/components/ProjectResolver';
 import { RouteParamParsers } from '@/lib';
 
 // Disable static generation for this page since it uses client-side features
@@ -11,6 +12,19 @@ interface ProjectPageProps {
 }
 
 export default function ProjectPage({ params }: ProjectPageProps) {
-  const { projectId } = RouteParamParsers.parseProjectParams(params);
-  return <ProjectDetailsPage projectId={projectId} />;
+  const { projectIdentifier, identifierType } = RouteParamParsers.parseProjectParams(params);
+  
+  return (
+    <ProjectResolver
+      identifier={projectIdentifier}
+      identifierType={identifierType}
+      onNotFound={() => {
+        // This will be handled in the ProjectResolver component
+      }}
+    >
+      {(projectId, project) => (
+        <ProjectDetailsPage projectId={projectId} />
+      )}
+    </ProjectResolver>
+  );
 }

@@ -1,4 +1,5 @@
 import { ProjectDevlogListPage } from './ProjectDevlogListPage';
+import { ProjectResolver } from '@/components/ProjectResolver';
 import { RouteParamParsers } from '@/lib';
 
 // Disable static generation for this page since it uses client-side features
@@ -11,6 +12,14 @@ interface ProjectDevlogsPageProps {
 }
 
 export default function ProjectDevlogsPage({ params }: ProjectDevlogsPageProps) {
-  const { projectId } = RouteParamParsers.parseProjectParams(params);
-  return <ProjectDevlogListPage projectId={projectId} />;
+  const { projectIdentifier, identifierType } = RouteParamParsers.parseProjectParams(params);
+  
+  return (
+    <ProjectResolver
+      identifier={projectIdentifier}
+      identifierType={identifierType}
+    >
+      {(projectId) => <ProjectDevlogListPage projectId={projectId} />}
+    </ProjectResolver>
+  );
 }

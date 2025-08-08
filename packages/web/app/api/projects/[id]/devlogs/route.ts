@@ -9,13 +9,14 @@ import {
   ApiValidator,
   CreateDevlogBodySchema,
   DevlogListQuerySchema,
-  ProjectIdParamSchema,
 } from '@/schemas';
 import {
   ApiErrors,
   createCollectionResponse,
   createSimpleCollectionResponse,
   createSuccessResponse,
+  RouteParams,
+  ServiceHelper,
 } from '@/lib';
 import { RealtimeEventType } from '@/lib/realtime';
 
@@ -25,11 +26,13 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[id]/devlogs - List devlogs for a project
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+    // Parse and validate project identifier
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
+
+    const { identifier, identifierType } = paramResult.data;
 
     // Validate query parameters
     const url = new URL(request.url);
@@ -38,14 +41,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return queryValidation.response;
     }
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(paramValidation.data.id);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(paramValidation.data.id);
+    const devlogService = DevlogService.getInstance(project.id);
 
     const queryData = queryValidation.data;
     const filter: any = {};
@@ -99,11 +104,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 // POST /api/projects/[id]/devlogs - Create new devlog entry
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Validate project ID parameter
-    const paramValidation = ApiValidator.validateParams(params, ProjectIdParamSchema);
-    if (!paramValidation.success) {
-      return paramValidation.response;
+    // Parse and validate project identifier
+    const paramResult = RouteParams.parseProjectId(params);
+    if (!paramResult.success) {
+      return paramResult.response;
     }
+
+    const { identifier, identifierType } = paramResult.data;
 
     // Validate request body
     const bodyValidation = await ApiValidator.validateJsonBody(request, CreateDevlogBodySchema);
@@ -111,28 +118,31 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return bodyValidation.response;
     }
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(paramValidation.data.id);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(paramValidation.data.id);
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Add required fields and get next ID
     const now = new Date().toISOString();
     const nextId = await devlogService.getNextId();
 
-    const devlogEntry = {
-      id: nextId,
+    const entry = {
       ...bodyValidation.data,
+      id: nextId,
       createdAt: now,
       updatedAt: now,
-      projectId: paramValidation.data.id, // Ensure project context
+      projectId: project.id, // Ensure project context
     };
-
-    await devlogService.save(devlogEntry);
+    
+    // Save the entry
+    await devlogService.save(entry);
 
     // Retrieve the actual saved entry to ensure we have the correct ID
     const savedEntry = await devlogService.get(nextId, false); // Don't include notes for performance

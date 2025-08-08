@@ -11,6 +11,7 @@ import type {
   ResponseMeta,
 } from '@/schemas/responses';
 import { PaginationMeta } from '@codervisor/devlog-core';
+import { isValidProjectIdentifier } from '@codervisor/devlog-core';
 import { broadcastUpdate } from '@/lib';
 
 /**
@@ -18,48 +19,54 @@ import { broadcastUpdate } from '@/lib';
  */
 export const RouteParams = {
   /**
-   * Parse project ID parameter
+   * Parse project name parameter (name-only routing)
    * Usage: /api/projects/[id]
    */
   parseProjectId(params: { id: string }) {
     try {
-      const projectId = parseInt(params.id, 10);
-      if (isNaN(projectId) || projectId <= 0) {
+      const validation = isValidProjectIdentifier(params.id);
+      
+      if (!validation.valid) {
         return {
           success: false as const,
           response: NextResponse.json(
-            { error: 'Invalid project ID: must be a positive integer' },
+            { error: 'Invalid project name: must follow GitHub naming conventions' },
             { status: 400 },
           ),
         };
       }
 
+      // Always name-based routing now
       return {
         success: true as const,
-        data: { projectId },
+        data: { 
+          projectId: -1, // Will be resolved by service helper
+          identifier: params.id, 
+          identifierType: 'name' as const 
+        },
       };
     } catch (error) {
       return {
         success: false as const,
-        response: NextResponse.json({ error: 'Invalid project ID format' }, { status: 400 }),
+        response: NextResponse.json({ error: 'Invalid project name format' }, { status: 400 }),
       };
     }
   },
 
   /**
-   * Parse project ID and devlog ID parameters
+   * Parse project name and devlog ID parameters (name-only routing for projects)
    * Usage: /api/projects/[id]/devlogs/[devlogId]
    */
   parseProjectAndDevlogId(params: { id: string; devlogId: string }) {
     try {
-      const projectId = parseInt(params.id, 10);
+      const projectValidation = isValidProjectIdentifier(params.id);
       const devlogId = parseInt(params.devlogId, 10);
 
-      if (isNaN(projectId) || projectId <= 0) {
+      if (!projectValidation.valid) {
         return {
           success: false as const,
           response: NextResponse.json(
-            { error: 'Invalid project ID: must be a positive integer' },
+            { error: 'Invalid project name: must follow GitHub naming conventions' },
             { status: 400 },
           ),
         };
@@ -75,9 +82,15 @@ export const RouteParams = {
         };
       }
 
+      // Always name-based routing for projects now
       return {
         success: true as const,
-        data: { projectId, devlogId },
+        data: { 
+          projectId: -1, // Will be resolved by service helper
+          devlogId, 
+          identifier: params.id, 
+          identifierType: 'name' as const 
+        },
       };
     } catch (error) {
       return {
@@ -94,12 +107,29 @@ export const RouteParams = {
  */
 export class ServiceHelper {
   /**
-   * Get project and ensure it exists
+   * Get project by ID and ensure it exists
    */
   static async getProjectOrFail(projectId: number) {
     const { ProjectService } = await import('@codervisor/devlog-core');
     const projectService = ProjectService.getInstance();
     const project = await projectService.get(projectId);
+    if (!project) {
+      return { success: false as const, response: ApiErrors.projectNotFound() };
+    }
+
+    return { success: true as const, data: { project, projectService } };
+  }
+
+  /**
+   * Get project by name and ensure it exists (case-insensitive lookup)
+   */
+  static async getProjectByIdentifierOrFail(identifier: string, identifierType: 'name') {
+    const { ProjectService } = await import('@codervisor/devlog-core');
+    const projectService = ProjectService.getInstance();
+    
+    // Only name-based routing supported now
+    const project = await projectService.getByName(identifier);
+    
     if (!project) {
       return { success: false as const, response: ApiErrors.projectNotFound() };
     }

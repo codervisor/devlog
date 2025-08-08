@@ -6,21 +6,28 @@
  */
 
 import { z } from 'zod';
+import { validateProjectName, isValidProjectIdentifier } from '@codervisor/devlog-core';
 
 /**
- * Project ID parameter validation (from URL params)
+ * Project name parameter validation (from URL params) - name-only routing
  */
 export const ProjectIdParamSchema = z
   .object({
-    id: z.string().regex(/^\d+$/, 'Project ID must be a valid number'),
+    id: z.string().min(1, 'Project name is required'),
   })
-  .transform((data) => ({ id: Number(data.id) }));
+  .refine(
+    (data) => isValidProjectIdentifier(data.id).valid,
+    'Project name must follow GitHub naming conventions'
+  );
 
 /**
  * Project creation request body schema
  */
 export const CreateProjectBodySchema = z.object({
-  name: z.string().min(1, 'Project name is required'),
+  name: z
+    .string()
+    .min(1, 'Project name is required')
+    .refine(validateProjectName, 'Project name must follow GitHub naming conventions: letters, numbers, hyphens, underscores only; cannot start/end with hyphens'),
   description: z.string().optional(),
   repositoryUrl: z.string().optional(),
   settings: z

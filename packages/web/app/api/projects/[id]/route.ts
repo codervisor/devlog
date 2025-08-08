@@ -20,10 +20,10 @@ export const GET = withErrorHandling(
       return paramResult.response;
     }
 
-    const { projectId } = paramResult.data;
+    const { identifier, identifierType } = paramResult.data;
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -42,7 +42,7 @@ export const PUT = withErrorHandling(
       return paramResult.response;
     }
 
-    const { projectId } = paramResult.data;
+    const { identifier, identifierType } = paramResult.data;
 
     // Validate request body (HTTP layer validation)
     const bodyValidation = await ApiValidator.validateJsonBody(request, UpdateProjectBodySchema);
@@ -51,13 +51,13 @@ export const PUT = withErrorHandling(
     }
 
     // Get project and service
-    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
     if (!projectResult.success) {
       return projectResult.response;
     }
 
-    // Update project
-    const updatedProject = await projectResult.data.projectService.update(projectId, bodyValidation.data);
+    // Update project using the resolved project ID
+    const updatedProject = await projectResult.data.projectService.update(projectResult.data.project.id, bodyValidation.data);
 
     return createSuccessResponse(updatedProject, { sseEventType: RealtimeEventType.PROJECT_UPDATED });
   },
@@ -72,13 +72,15 @@ export const DELETE = withErrorHandling(
       return paramResult.response;
     }
 
-    const { projectId } = paramResult.data;
+    const { identifier, identifierType } = paramResult.data;
 
     // Get project service
-    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
     if (!projectResult.success) {
       return projectResult.response;
     }
+
+    const projectId = projectResult.data.project.id;
 
     // Delete project
     await projectResult.data.projectService.delete(projectId);

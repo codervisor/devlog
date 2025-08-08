@@ -13,7 +13,7 @@ export interface Project {
   /** Unique project identifier */
   id: number;
 
-  /** Human-readable project name */
+  /** Human-readable project name (also used as URL slug) */
   name: string;
 
   /** Optional project description */
