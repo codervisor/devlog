@@ -6,12 +6,10 @@ import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
+import { useProjectName } from '../ProjectProvider';
 
-interface ProjectDevlogListPageProps {
-  projectName: string;
-}
-
-export function ProjectDevlogListPage({ projectName }: ProjectDevlogListPageProps) {
+export function ProjectDevlogListPage() {
+  const projectName = useProjectName();
   const router = useRouter();
 
   const { currentProjectName, setCurrentProjectName } = useProjectStore();

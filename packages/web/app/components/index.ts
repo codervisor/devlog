@@ -18,5 +18,6 @@ export * from './features/dashboard';
 export * from './features/devlogs';
 
 // Project Components
-export { ProjectResolver } from './ProjectResolver';
+// Note: ProjectResolver is not exported as it's only used server-side in layout.tsx
+export { ProjectNotFound } from './ProjectNotFound';
 export * from './project';

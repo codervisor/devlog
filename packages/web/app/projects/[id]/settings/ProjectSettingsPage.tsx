@@ -25,17 +25,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { LoaderIcon, SaveIcon, TrashIcon, AlertTriangleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Project } from '@codervisor/devlog-core';
-
-interface ProjectSettingsPageProps {
-  projectName: string;
-}
+import { useProjectName } from '../ProjectProvider';
 
 interface ProjectFormData {
   name: string;
   description?: string;
 }
 
-export function ProjectSettingsPage({ projectName }: ProjectSettingsPageProps) {
+export function ProjectSettingsPage() {
+  const projectName = useProjectName();
   const router = useRouter();
   const {
     currentProjectContext,

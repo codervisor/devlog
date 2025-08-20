@@ -1,7 +1,4 @@
-'use client';
-
 import { ProjectDevlogDetailsPage } from './ProjectDevlogDetailsPage';
-import { ProjectResolver } from '@/components/ProjectResolver';
 import { RouteParamParsers } from '@/lib';
 
 interface ProjectDevlogPageProps {
@@ -12,16 +9,7 @@ interface ProjectDevlogPageProps {
 }
 
 export default function ProjectDevlogPage({ params }: ProjectDevlogPageProps) {
-  const { projectIdentifier, identifierType, devlogId } = RouteParamParsers.parseDevlogParams(params);
+  const { devlogId } = RouteParamParsers.parseDevlogParams(params);
   
-  return (
-    <ProjectResolver
-      identifier={projectIdentifier}
-      identifierType={identifierType}
-    >
-      {(projectName) => (
-        <ProjectDevlogDetailsPage projectName={projectName} devlogId={devlogId} />
-      )}
-    </ProjectResolver>
-  );
+  return <ProjectDevlogDetailsPage devlogId={devlogId} />;
 }
