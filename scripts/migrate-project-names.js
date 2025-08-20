@@ -13,7 +13,7 @@ async function migrateProjectNames() {
   try {
     // Dynamic imports for ES modules
     const { ProjectService } = await import('@codervisor/devlog-core');
-    const { validateProjectName, generateUniqueProjectName } = await import('@codervisor/devlog-core');
+    const { validateProjectDisplayName, normalizeProjectName, generateUniqueProjectName } = await import('@codervisor/devlog-core');
     
     const projectService = ProjectService.getInstance();
     const projects = await projectService.list();
@@ -27,17 +27,13 @@ async function migrateProjectNames() {
     for (const project of projects) {
       const currentName = project.name;
       
-      if (validateProjectName(currentName)) {
+      if (validateProjectDisplayName(currentName)) {
         // Name is already valid, just track for uniqueness
         existingNames.push(currentName);
         console.log(`✅ "${currentName}" - already valid`);
       } else {
-        // Name needs to be fixed
-        let fixedName = currentName
-          .replace(/\s+/g, '-')           // Replace spaces with hyphens
-          .replace(/[^a-zA-Z0-9_-]/g, '') // Remove invalid characters
-          .replace(/^-+|-+$/g, '')        // Remove leading/trailing hyphens
-          .replace(/-+/g, '-');           // Collapse multiple hyphens
+        // Name needs to be fixed using centralized normalization
+        let fixedName = normalizeProjectName(currentName);
         
         if (!fixedName) {
           fixedName = `project-${project.id}`; // Fallback for empty names

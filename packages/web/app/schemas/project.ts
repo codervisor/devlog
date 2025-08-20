@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { validateProjectName, isValidProjectIdentifier } from '@codervisor/devlog-core';
+import { validateProjectDisplayName, isValidProjectIdentifier } from '@codervisor/devlog-core';
 
 /**
  * Project name parameter validation (from URL params) - name-only routing
@@ -27,7 +27,7 @@ export const CreateProjectBodySchema = z.object({
   name: z
     .string()
     .min(1, 'Project name is required')
-    .refine(validateProjectName, 'Project name must follow GitHub naming conventions: letters, numbers, hyphens, underscores only; cannot start/end with hyphens'),
+    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.'),
   description: z.string().optional(),
   repositoryUrl: z.string().optional(),
   settings: z

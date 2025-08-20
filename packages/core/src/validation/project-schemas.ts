@@ -7,7 +7,7 @@
 
 import { z } from 'zod';
 import type { Project } from '../types/project.js';
-import { validateProjectName } from '../utils/project-name.js';
+import { validateProjectDisplayName } from '../utils/project-name.js';
 
 /**
  * Project creation request schema (excludes auto-generated fields)
@@ -17,7 +17,7 @@ export const CreateProjectRequestSchema = z.object({
     .string()
     .min(1, 'Project name is required')
     .max(100, 'Project name must be less than 100 characters')
-    .refine(validateProjectName, 'Project name must follow GitHub naming conventions: letters, numbers, hyphens, underscores only; cannot start/end with hyphens'),
+    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.'),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
 }) satisfies z.ZodType<Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>>;
 
@@ -29,7 +29,7 @@ export const UpdateProjectRequestSchema = z.object({
     .string()
     .min(1, 'Project name is required')
     .max(100, 'Project name must be less than 100 characters')
-    .refine(validateProjectName, 'Project name must follow GitHub naming conventions: letters, numbers, hyphens, underscores only; cannot start/end with hyphens')
+    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.')
     .optional(),
   description: z
     .string()
