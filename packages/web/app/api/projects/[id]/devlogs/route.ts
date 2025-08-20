@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server';
 import {
-  DevlogService,
   PaginationMeta,
-  ProjectService,
   SortOptions,
 } from '@codervisor/devlog-core';
+import {
+  DevlogService,
+  ProjectService,
+} from '@codervisor/devlog-core/server';
 import {
   ApiValidator,
   CreateDevlogBodySchema,
@@ -17,7 +19,7 @@ import {
   createSuccessResponse,
   RouteParams,
   ServiceHelper,
-} from '@/lib';
+} from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
 
 // Mark this route as dynamic to prevent static generation

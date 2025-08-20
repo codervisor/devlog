@@ -2,9 +2,24 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Project } from '@codervisor/devlog-core';
-import { generateSlugFromName } from '@codervisor/devlog-core';
 import { apiClient, ApiError } from '@/lib';
+
+// Local type definition to avoid importing from core package in client component
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Local utility function to avoid importing from core package
+function generateSlugFromName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 interface ProjectResolverProps {
   identifier: string;

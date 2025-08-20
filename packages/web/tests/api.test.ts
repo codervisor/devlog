@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
-import { RouteParams, ServiceHelper, ApiErrors, ApiResponses, withErrorHandling } from '@/lib';
+import { RouteParams, ServiceHelper, ApiErrors, ApiResponses, withErrorHandling } from '@/lib/api/api-utils';
 
 // Mock the devlog-core services
 const mockProjectService = {

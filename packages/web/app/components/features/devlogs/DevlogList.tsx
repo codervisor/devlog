@@ -44,7 +44,7 @@ import { toast } from 'sonner';
 import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
-import { cn, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
+import { cn, debounce, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
 import { TableDataContext } from '@/stores/base';
 
 interface DevlogListProps {
@@ -177,7 +177,7 @@ export function DevlogList({
   };
 
   // Handle search
-  const handleSearch = (value: string) => {
+  const handleSearch = debounce((value: string) => {
     setSearchText(value);
     if (onFilterChange) {
       onFilterChange({
@@ -185,7 +185,7 @@ export function DevlogList({
         search: value || undefined,
       });
     }
-  };
+  });
 
   // Handle filter changes
   const handleFilterChange = (key: string, value: string | undefined) => {

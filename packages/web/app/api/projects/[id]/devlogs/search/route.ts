@@ -1,12 +1,14 @@
 import { NextRequest } from 'next/server';
 import {
   DevlogFilter,
-  DevlogService,
   PaginationMeta,
-  ProjectService,
 } from '@codervisor/devlog-core';
+import {
+  DevlogService,
+  ProjectService,
+} from '@codervisor/devlog-core/server';
 import { ApiValidator, DevlogSearchQuerySchema } from '@/schemas';
-import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib';
+import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib/api/api-utils';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

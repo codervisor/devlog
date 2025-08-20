@@ -10,3 +10,6 @@ export * from './field-change-tracking.js';
 export * from './change-history.js';
 export * from './key-generator.js';
 export * from './project-name.js';
+
+// NOTE: typeorm-config.ts is NOT exported here to prevent client-side import issues
+// Import directly from '@codervisor/devlog-core/server' when needed server-side

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import type { DevlogNoteCategory } from '@codervisor/devlog-core';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core';
-import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
+import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
 import { DevlogAddNoteBodySchema, DevlogUpdateWithNoteBodySchema } from '@/schemas';
 

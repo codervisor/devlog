@@ -110,7 +110,7 @@ export class ServiceHelper {
    * Get project by ID and ensure it exists
    */
   static async getProjectOrFail(projectId: number) {
-    const { ProjectService } = await import('@codervisor/devlog-core');
+    const { ProjectService } = await import('@codervisor/devlog-core/server');
     const projectService = ProjectService.getInstance();
     const project = await projectService.get(projectId);
     if (!project) {
@@ -124,7 +124,7 @@ export class ServiceHelper {
    * Get project by name and ensure it exists (case-insensitive lookup)
    */
   static async getProjectByIdentifierOrFail(identifier: string, identifierType: 'name') {
-    const { ProjectService } = await import('@codervisor/devlog-core');
+    const { ProjectService } = await import('@codervisor/devlog-core/server');
     const projectService = ProjectService.getInstance();
     
     // Only name-based routing supported now
@@ -141,7 +141,7 @@ export class ServiceHelper {
    * Get devlog service for a project
    */
   static async getDevlogService(projectId: number) {
-    const { DevlogService } = await import('@codervisor/devlog-core');
+    const { DevlogService } = await import('@codervisor/devlog-core/server');
     return DevlogService.getInstance(projectId);
   }
 

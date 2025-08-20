@@ -3,9 +3,9 @@ import {
   createSuccessResponse,
   RouteParams,
   ServiceHelper,
-  RealtimeEventType,
   withErrorHandling,
-} from '@/lib';
+} from '@/lib/api/api-utils';
+import { RealtimeEventType } from '@/lib/realtime';
 import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 
 // Mark this route as dynamic to prevent static generation
