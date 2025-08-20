@@ -1,12 +1,6 @@
 import { NextRequest } from 'next/server';
-import {
-  DevlogFilter,
-  PaginationMeta,
-} from '@codervisor/devlog-core';
-import {
-  DevlogService,
-  ProjectService,
-} from '@codervisor/devlog-core/server';
+import { DevlogFilter, PaginationMeta } from '@codervisor/devlog-core';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
 import { ApiValidator, DevlogSearchQuerySchema } from '@/schemas';
 import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib/api/api-utils';
 
@@ -34,7 +28,7 @@ interface SearchResponse {
   };
 }
 
-// GET /api/projects/[id]/devlogs/search - Enhanced search for devlogs
+// GET /api/projects/[name]/devlogs/search - Enhanced search for devlogs
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Parse and validate project name parameter
@@ -53,7 +47,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }

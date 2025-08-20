@@ -1,17 +1,7 @@
 import { NextRequest } from 'next/server';
-import {
-  PaginationMeta,
-  SortOptions,
-} from '@codervisor/devlog-core';
-import {
-  DevlogService,
-  ProjectService,
-} from '@codervisor/devlog-core/server';
-import {
-  ApiValidator,
-  CreateDevlogBodySchema,
-  DevlogListQuerySchema,
-} from '@/schemas';
+import { PaginationMeta, SortOptions } from '@codervisor/devlog-core';
+import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
+import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema } from '@/schemas';
 import {
   ApiErrors,
   createCollectionResponse,
@@ -25,7 +15,7 @@ import { RealtimeEventType } from '@/lib/realtime';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[id]/devlogs - List devlogs for a project
+// GET /api/projects/[name]/devlogs - List devlogs for a project
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Parse and validate project identifier
@@ -44,7 +34,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -103,7 +96,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// POST /api/projects/[id]/devlogs - Create new devlog entry
+// POST /api/projects/[name]/devlogs - Create new devlog entry
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Parse and validate project identifier
@@ -121,7 +114,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -142,7 +138,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       updatedAt: now,
       projectId: project.id, // Ensure project context
     };
-    
+
     // Save the entry
     await devlogService.save(entry);
 

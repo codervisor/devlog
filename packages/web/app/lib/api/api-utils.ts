@@ -20,12 +20,12 @@ import { broadcastUpdate } from '@/lib/api/server-realtime';
 export const RouteParams = {
   /**
    * Parse project name parameter (name-only routing)
-   * Usage: /api/projects/[id]
+   * Usage: /api/projects/[name]
    */
   parseProjectId(params: { id: string }) {
     try {
       const validation = isValidProjectIdentifier(params.id);
-      
+
       if (!validation.valid) {
         return {
           success: false as const,
@@ -39,10 +39,10 @@ export const RouteParams = {
       // Always name-based routing now
       return {
         success: true as const,
-        data: { 
+        data: {
           projectId: -1, // Will be resolved by service helper
-          identifier: params.id, 
-          identifierType: 'name' as const 
+          identifier: params.id,
+          identifierType: 'name' as const,
         },
       };
     } catch (error) {
@@ -55,7 +55,7 @@ export const RouteParams = {
 
   /**
    * Parse project name and devlog ID parameters (name-only routing for projects)
-   * Usage: /api/projects/[id]/devlogs/[devlogId]
+   * Usage: /api/projects/[name]/devlogs/[devlogId]
    */
   parseProjectAndDevlogId(params: { id: string; devlogId: string }) {
     try {
@@ -85,11 +85,11 @@ export const RouteParams = {
       // Always name-based routing for projects now
       return {
         success: true as const,
-        data: { 
+        data: {
           projectId: -1, // Will be resolved by service helper
-          devlogId, 
-          identifier: params.id, 
-          identifierType: 'name' as const 
+          devlogId,
+          identifier: params.id,
+          identifierType: 'name' as const,
         },
       };
     } catch (error) {
@@ -126,10 +126,10 @@ export class ServiceHelper {
   static async getProjectByIdentifierOrFail(identifier: string, identifierType: 'name') {
     const { ProjectService } = await import('@codervisor/devlog-core/server');
     const projectService = ProjectService.getInstance();
-    
+
     // Only name-based routing supported now
     const project = await projectService.getByName(identifier);
-    
+
     if (!project) {
       return { success: false as const, response: ApiErrors.projectNotFound() };
     }

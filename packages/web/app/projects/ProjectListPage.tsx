@@ -43,6 +43,8 @@ export function ProjectListPage() {
   const { subscribe, unsubscribe } = useRealtimeStore();
 
   useEffect(() => {
+    fetchProjects();
+
     subscribe(RealtimeEventType.PROJECT_CREATED, async () => {
       await fetchProjects();
       toast.success('Project created successfully');
@@ -51,10 +53,6 @@ export function ProjectListPage() {
       unsubscribe(RealtimeEventType.PROJECT_CREATED);
     };
   }, [fetchProjects]);
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
 
   const { data: projects, loading: isLoadingProjects } = projectsContext;
 
@@ -95,13 +93,13 @@ export function ProjectListPage() {
     }
   };
 
-  const handleViewProject = (projectId: number) => {
-    router.push(`/projects/${projectId}`);
+  const handleViewProject = (projectName: string) => {
+    router.push(`/projects/${projectName}`);
   };
 
-  const handleProjectSettings = (e: React.MouseEvent, projectId: number) => {
+  const handleProjectSettings = (e: React.MouseEvent, projectName: string) => {
     e.stopPropagation(); // Prevent card click from triggering
-    router.push(`/projects/${projectId}/settings`);
+    router.push(`/projects/${projectName}/settings`);
   };
 
   if (projectsContext.error) {
@@ -147,7 +145,7 @@ export function ProjectListPage() {
                   <Card
                     key={project.id}
                     className="h-48 cursor-pointer transition-all hover:bg-muted/50"
-                    onClick={() => handleViewProject(project.id)}
+                    onClick={() => handleViewProject(project.name)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
@@ -157,7 +155,7 @@ export function ProjectListPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 w-7 p-0 hover:bg-muted"
-                            onClick={(e) => handleProjectSettings(e, project.id)}
+                            onClick={(e) => handleProjectSettings(e, project.name)}
                             title="Project Settings"
                           >
                             <Settings size={14} />

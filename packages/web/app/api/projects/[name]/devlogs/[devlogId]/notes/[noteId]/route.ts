@@ -14,7 +14,7 @@ const UpdateNoteBodySchema = z.object({
   category: z.string().optional(),
 });
 
-// GET /api/projects/[id]/devlogs/[devlogId]/notes/[noteId] - Get specific note
+// GET /api/projects/[name]/devlogs/[devlogId]/notes/[noteId] - Get specific note
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string; noteId: string } },
@@ -52,7 +52,7 @@ export async function GET(
   }
 }
 
-// PUT /api/projects/[id]/devlogs/[devlogId]/notes/[noteId] - Update specific note
+// PUT /api/projects/[name]/devlogs/[devlogId]/notes/[noteId] - Update specific note
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string; noteId: string } },
@@ -104,7 +104,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/projects/[id]/devlogs/[devlogId]/notes/[noteId] - Delete specific note
+// DELETE /api/projects/[name]/devlogs/[devlogId]/notes/[noteId] - Delete specific note
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string; noteId: string } },

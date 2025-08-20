@@ -10,7 +10,7 @@ import {
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[id]/devlogs/stats/overview - Get overview statistics
+// GET /api/projects/[name]/devlogs/stats/timeseries - Get time series statistics
 export const GET = withErrorHandling(
   async (request: NextRequest, { params }: { params: { id: string } }) => {
     // Parse and validate parameters
@@ -27,9 +27,29 @@ export const GET = withErrorHandling(
       return projectResult.response;
     }
 
-    // Get devlog service and stats
+    // Parse query parameters
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const days = parseInt(searchParams.get('days') || '30');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+
+    // Validate days parameter
+    if (isNaN(days) || days <= 0) {
+      return ApiErrors.invalidRequest('days parameter must be a positive integer');
+    }
+
+    const timeSeriesRequest = {
+      days,
+      ...(from && { from }),
+      ...(to && { to }),
+      projectId,
+    };
+
+    // Get devlog service and time series stats
     const devlogService = await ServiceHelper.getDevlogService(projectId);
-    const stats = await devlogService.getStats();
+    const stats = await devlogService.getTimeSeriesStats(projectId, timeSeriesRequest);
 
     return createSuccessResponse(stats);
   },

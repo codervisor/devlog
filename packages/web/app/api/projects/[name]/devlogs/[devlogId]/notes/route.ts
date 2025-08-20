@@ -8,7 +8,7 @@ import { DevlogAddNoteBodySchema, DevlogUpdateWithNoteBodySchema } from '@/schem
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[id]/devlogs/[devlogId]/notes - List notes for a devlog entry
+// GET /api/projects/[name]/devlogs/[devlogId]/notes - List notes for a devlog entry
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string } },
@@ -67,7 +67,7 @@ export async function GET(
   }
 }
 
-// POST /api/projects/[id]/devlogs/[devlogId]/notes - Add note to devlog entry
+// POST /api/projects/[name]/devlogs/[devlogId]/notes - Add note to devlog entry
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string } },
@@ -116,7 +116,7 @@ export async function POST(
   }
 }
 
-// PUT /api/projects/[id]/devlogs/[devlogId]/notes - Update devlog and add note in one operation
+// PUT /api/projects/[name]/devlogs/[devlogId]/notes - Update devlog and add note in one operation
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string; devlogId: string } },

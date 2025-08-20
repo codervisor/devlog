@@ -19,15 +19,20 @@ export interface ParsedDevlogParams extends ParsedProjectParams {
 /**
  * Parse and validate a project name (name-only routing)
  */
-function parseProjectIdentifier(value: string, paramName: string): {
+function parseProjectIdentifier(
+  value: string,
+  paramName: string,
+): {
   projectId: number;
   projectIdentifier: string;
   identifierType: 'name';
 } {
   const validation = isValidProjectIdentifier(value);
-  
+
   if (!validation.valid) {
-    throw new Error(`Invalid ${paramName}: must be a valid project name following GitHub naming conventions`);
+    throw new Error(
+      `Invalid ${paramName}: must be a valid project name following GitHub naming conventions`,
+    );
   }
 
   // Always name-based identifiers now
@@ -57,7 +62,7 @@ function parseId(value: string, paramName: string): number {
 export const RouteParamParsers = {
   /**
    * Parse project route parameters
-   * For routes like: /projects/[id]/...
+   * For routes like: /projects/[name]/...
    */
   parseProjectParams(params: { id: string }): ParsedProjectParams {
     return parseProjectIdentifier(params.id, 'project identifier');
@@ -65,7 +70,7 @@ export const RouteParamParsers = {
 
   /**
    * Parse project + devlog route parameters
-   * For routes like: /projects/[id]/devlogs/[devlogId]/...
+   * For routes like: /projects/[name]/devlogs/[devlogId]/...
    */
   parseDevlogParams(params: { id: string; devlogId: string }): ParsedDevlogParams {
     const projectInfo = parseProjectIdentifier(params.id, 'project identifier');
@@ -77,7 +82,7 @@ export const RouteParamParsers = {
 
   /**
    * Parse single devlog ID parameter
-   * For routes like: /devlogs/[id]/...
+   * For routes like: /devlogs/[name]/...
    */
   parseDevlogId(params: { id: string }): { devlogId: DevlogId } {
     return {

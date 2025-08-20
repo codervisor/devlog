@@ -11,7 +11,7 @@ import { ApiValidator, UpdateProjectBodySchema } from '@/schemas';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[id] - Get specific project
+// GET /api/projects/[name] - Get specific project
 export const GET = withErrorHandling(
   async (request: NextRequest, { params }: { params: { id: string } }) => {
     // Parse and validate parameters
@@ -23,7 +23,10 @@ export const GET = withErrorHandling(
     const { identifier, identifierType } = paramResult.data;
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -33,7 +36,7 @@ export const GET = withErrorHandling(
   },
 );
 
-// PUT /api/projects/[id] - Update project
+// PUT /api/projects/[name] - Update project
 export const PUT = withErrorHandling(
   async (request: NextRequest, { params }: { params: { id: string } }) => {
     // Parse and validate parameters
@@ -51,19 +54,27 @@ export const PUT = withErrorHandling(
     }
 
     // Get project and service
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }
 
     // Update project using the resolved project ID
-    const updatedProject = await projectResult.data.projectService.update(projectResult.data.project.id, bodyValidation.data);
+    const updatedProject = await projectResult.data.projectService.update(
+      projectResult.data.project.id,
+      bodyValidation.data,
+    );
 
-    return createSuccessResponse(updatedProject, { sseEventType: RealtimeEventType.PROJECT_UPDATED });
+    return createSuccessResponse(updatedProject, {
+      sseEventType: RealtimeEventType.PROJECT_UPDATED,
+    });
   },
 );
 
-// DELETE /api/projects/[id] - Delete project
+// DELETE /api/projects/[name] - Delete project
 export const DELETE = withErrorHandling(
   async (request: NextRequest, { params }: { params: { id: string } }) => {
     // Parse and validate parameters
@@ -75,7 +86,10 @@ export const DELETE = withErrorHandling(
     const { identifier, identifierType } = paramResult.data;
 
     // Get project service
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(identifier, identifierType);
+    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
+      identifier,
+      identifierType,
+    );
     if (!projectResult.success) {
       return projectResult.response;
     }
