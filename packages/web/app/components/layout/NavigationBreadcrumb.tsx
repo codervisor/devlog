@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 export function NavigationBreadcrumb() {
   const router = useRouter();
   const pathname = usePathname();
-  const { currentProjectContext, currentProjectId, projectsContext, fetchProjects } =
+  const { currentProjectContext, currentProjectName, projectsContext, fetchProjects } =
     useProjectStore();
   const { currentDevlogContext, currentDevlogId } = useDevlogStore();
 
@@ -31,19 +31,19 @@ export function NavigationBreadcrumb() {
     return null;
   }
 
-  const switchProject = async (projectId: number) => {
-    if (currentProjectId === projectId) return;
+  const switchProject = async (projectName: string) => {
+    if (currentProjectName === projectName) return;
 
     try {
-      const targetProject = projectsContext.data?.find((p) => p.id === projectId);
+      const targetProject = projectsContext.data?.find((p) => p.name === projectName);
       if (!targetProject) {
         throw new Error('Project not found');
       }
 
       toast.success(`Switched to project: ${targetProject.name}`);
 
-      // Navigate to the project dashboard
-      router.push(`/projects/${projectId}`);
+      // Navigate to the project dashboard using project name
+      router.push(`/projects/${projectName}`);
     } catch (error) {
       console.error('Error switching project:', error);
       toast.error('Failed to switch project');
@@ -89,18 +89,18 @@ export function NavigationBreadcrumb() {
                 </DropdownMenuItem>
               ))
             : projectsContext.data?.map((project) => {
-                const isCurrentProject = currentProjectId === project.id;
+                const isCurrentProject = currentProjectName === project.name;
 
                 return (
                   <DropdownMenuItem
                     key={project.id}
                     disabled={isCurrentProject}
-                    onClick={() => !isCurrentProject && switchProject(project.id)}
+                    onClick={() => !isCurrentProject && switchProject(project.name)}
                     className="flex items-center gap-3 p-3 cursor-pointer"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{project.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{project.id}</div>
+                      <div className="text-xs text-muted-foreground truncate">{project.description}</div>
                     </div>
                     {isCurrentProject && (
                       <Check size={14} className="text-primary flex-shrink-0" />
@@ -134,7 +134,7 @@ export function NavigationBreadcrumb() {
   return (
     <Breadcrumb className="navigation-breadcrumb">
       <BreadcrumbList>
-        {currentProjectId && <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>}
+        {currentProjectName && <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>}
         {currentDevlogId && (
           <>
             <BreadcrumbSeparator />

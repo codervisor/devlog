@@ -46,7 +46,7 @@ export interface BatchNoteRequest {
 }
 
 export class DevlogApiClient {
-  constructor(private projectId: number) {}
+  constructor(private projectName: string) {}
 
   /**
    * Get all devlogs for the project
@@ -84,7 +84,7 @@ export class DevlogApiClient {
     if (sortOptions?.sortOrder) params.append('sortOrder', sortOptions.sortOrder);
 
     const queryString = params.toString();
-    const url = `/api/projects/${this.projectId}/devlogs${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/projects/${this.projectName}/devlogs${queryString ? `?${queryString}` : ''}`;
 
     return apiClient.getList<DevlogEntry>(url);
   }
@@ -93,28 +93,28 @@ export class DevlogApiClient {
    * Get a specific devlog by ID
    */
   async get(devlogId: DevlogId): Promise<DevlogEntry> {
-    return apiClient.get<DevlogEntry>(`/api/projects/${this.projectId}/devlogs/${devlogId}`);
+    return apiClient.get<DevlogEntry>(`/api/projects/${this.projectName}/devlogs/${devlogId}`);
   }
 
   /**
    * Create a new devlog
    */
   async create(data: CreateDevlogRequest): Promise<DevlogEntry> {
-    return apiClient.post<DevlogEntry>(`/api/projects/${this.projectId}/devlogs`, data);
+    return apiClient.post<DevlogEntry>(`/api/projects/${this.projectName}/devlogs`, data);
   }
 
   /**
    * Update an existing devlog
    */
   async update(devlogId: DevlogId, data: UpdateDevlogRequest): Promise<DevlogEntry> {
-    return apiClient.put<DevlogEntry>(`/api/projects/${this.projectId}/devlogs/${devlogId}`, data);
+    return apiClient.put<DevlogEntry>(`/api/projects/${this.projectName}/devlogs/${devlogId}`, data);
   }
 
   /**
    * Delete a devlog
    */
   async delete(devlogId: DevlogId): Promise<void> {
-    return apiClient.delete<void>(`/api/projects/${this.projectId}/devlogs/${devlogId}`);
+    return apiClient.delete<void>(`/api/projects/${this.projectName}/devlogs/${devlogId}`);
   }
 
   /**
@@ -125,7 +125,7 @@ export class DevlogApiClient {
     updates: BatchUpdateRequest,
   ): Promise<{ updated: DevlogId[]; failed: DevlogId[] }> {
     return apiClient.post<{ updated: DevlogId[]; failed: DevlogId[] }>(
-      `/api/projects/${this.projectId}/devlogs/batch/update`,
+      `/api/projects/${this.projectName}/devlogs/batch/update`,
       { ids: devlogIds, updates },
     );
   }
@@ -134,7 +134,7 @@ export class DevlogApiClient {
    * Batch delete multiple devlogs
    */
   async batchDelete(devlogIds: DevlogId[]): Promise<void> {
-    return apiClient.post<void>(`/api/projects/${this.projectId}/devlogs/batch/delete`, {
+    return apiClient.post<void>(`/api/projects/${this.projectName}/devlogs/batch/delete`, {
       ids: devlogIds,
     });
   }
@@ -143,7 +143,7 @@ export class DevlogApiClient {
    * Get devlog statistics overview
    */
   async getStatsOverview(): Promise<DevlogStats> {
-    return apiClient.get<DevlogStats>(`/api/projects/${this.projectId}/devlogs/stats/overview`);
+    return apiClient.get<DevlogStats>(`/api/projects/${this.projectName}/devlogs/stats/overview`);
   }
 
   /**
@@ -154,7 +154,7 @@ export class DevlogApiClient {
   ): Promise<TimeSeriesStats> {
     const params = period ? `?period=${period}` : '';
     return apiClient.get<TimeSeriesStats>(
-      `/api/projects/${this.projectId}/devlogs/stats/timeseries${params}`,
+      `/api/projects/${this.projectName}/devlogs/stats/timeseries${params}`,
     );
   }
 
@@ -163,7 +163,7 @@ export class DevlogApiClient {
    */
   async addNote(devlogId: number, data: CreateNoteRequest): Promise<DevlogNote> {
     return apiClient.post<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes`,
       data,
     );
   }
@@ -173,7 +173,7 @@ export class DevlogApiClient {
    */
   async getNote(devlogId: number, noteId: string): Promise<DevlogNote> {
     return apiClient.get<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
     );
   }
 
@@ -182,7 +182,7 @@ export class DevlogApiClient {
    */
   async updateNote(devlogId: number, noteId: string, data: UpdateNoteRequest): Promise<DevlogNote> {
     return apiClient.put<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
       data,
     );
   }
@@ -192,7 +192,7 @@ export class DevlogApiClient {
    */
   async deleteNote(devlogId: number, noteId: string): Promise<void> {
     return apiClient.delete<void>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
     );
   }
 
@@ -202,7 +202,7 @@ export class DevlogApiClient {
   async getNotes(devlogId: number, limit?: number): Promise<DevlogNote[]> {
     const params = limit ? `?limit=${limit}` : '';
     const response = await apiClient.get<{ devlogId: number; total: number; notes: DevlogNote[] }>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes${params}`,
     );
     return response.notes;
   }

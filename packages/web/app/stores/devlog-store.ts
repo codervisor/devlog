@@ -25,8 +25,8 @@ import {
 
 // Helper function to get DevlogApiClient
 const getDevlogApiClient = () => {
-  const currentProjectId = useProjectStore.getState().currentProjectId;
-  return currentProjectId ? new DevlogApiClient(currentProjectId) : null;
+  const { currentProjectName } = useProjectStore.getState();
+  return currentProjectName ? new DevlogApiClient(currentProjectName) : null;
 };
 
 interface DevlogState {

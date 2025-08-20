@@ -19,7 +19,7 @@ export interface FormattedChartData {
  * Converts TimeSeriesStats to chart-ready data with proper date formatting
  */
 export function formatTimeSeriesData(timeSeriesData: TimeSeriesStats | null): FormattedChartData[] {
-  if (!timeSeriesData) return [];
+  if (!timeSeriesData || !timeSeriesData.dataPoints) return [];
 
   return timeSeriesData.dataPoints.map((point) => ({
     ...point,

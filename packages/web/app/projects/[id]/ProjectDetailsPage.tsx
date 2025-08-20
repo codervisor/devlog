@@ -4,17 +4,17 @@ import React, { useEffect } from 'react';
 import { Dashboard } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
-import { DevlogEntry } from '@codervisor/devlog-core';
+import { DevlogEntry, Project } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 interface ProjectDetailsPageProps {
-  projectId: number;
+  projectName: string;
 }
 
-export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
+export function ProjectDetailsPage({ projectName }: ProjectDetailsPageProps) {
   const router = useRouter();
 
-  const { currentProjectId, setCurrentProjectId } = useProjectStore();
+  const { currentProjectName, setCurrentProjectName } = useProjectStore();
 
   const {
     devlogsContext,
@@ -44,17 +44,17 @@ export function ProjectDetailsPage({ projectId }: ProjectDetailsPageProps) {
   }, [onDevlogCreated, onDevlogUpdated, onDevlogDeleted]);
 
   useEffect(() => {
-    setCurrentProjectId(projectId);
-  }, [projectId]);
+    setCurrentProjectName(projectName);
+  }, [projectName]);
 
   useEffect(() => {
-    if (currentProjectId) {
+    if (currentProjectName) {
       fetchAll();
     }
-  }, [currentProjectId]);
+  }, [currentProjectName]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
-    router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
+    router.push(`/projects/${projectName}/devlogs/${devlog.id}`);
   };
 
   return (

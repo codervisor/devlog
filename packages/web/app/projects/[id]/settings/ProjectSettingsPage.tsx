@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 import { Project } from '@codervisor/devlog-core';
 
 interface ProjectSettingsPageProps {
-  projectId: number;
+  projectName: string;
 }
 
 interface ProjectFormData {
@@ -35,12 +35,12 @@ interface ProjectFormData {
   description?: string;
 }
 
-export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
+export function ProjectSettingsPage({ projectName }: ProjectSettingsPageProps) {
   const router = useRouter();
   const {
     currentProjectContext,
-    currentProjectId,
-    setCurrentProjectId,
+    currentProjectName,
+    setCurrentProjectName,
     updateProject,
     deleteProject,
     fetchCurrentProject,
@@ -54,8 +54,8 @@ export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
   const project = currentProjectContext.data;
 
   useEffect(() => {
-    setCurrentProjectId(projectId);
-  }, [projectId]);
+    setCurrentProjectName(projectName);
+  }, [projectName]);
 
   // Initialize form data when project loads
   useEffect(() => {
@@ -79,7 +79,7 @@ export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
   // Fetch project data if not loaded
   useEffect(() => {
     fetchCurrentProject();
-  }, [currentProjectId]);
+  }, [currentProjectName]);
 
   const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +102,7 @@ export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
         description: formData.description?.trim() || undefined,
       };
 
-      await updateProject(project.id, updates);
+      await updateProject(project.name, updates);
       toast.success('Project updated successfully');
       setHasChanges(false);
     } catch (error) {
@@ -121,7 +121,7 @@ export function ProjectSettingsPage({ projectId }: ProjectSettingsPageProps) {
 
     try {
       setIsDeleting(true);
-      await deleteProject(project.id);
+      await deleteProject(project.name);
       toast.success(`Project "${project.name}" deleted successfully`);
 
       // Navigate back to projects list

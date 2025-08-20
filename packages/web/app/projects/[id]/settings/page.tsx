@@ -11,6 +11,6 @@ interface ProjectSettingsPageProps {
 }
 
 export default function ProjectSettings({ params }: ProjectSettingsPageProps) {
-  const { projectId } = RouteParamParsers.parseProjectParams(params);
-  return <ProjectSettingsPage projectId={projectId} />;
+  const { projectIdentifier } = RouteParamParsers.parseProjectParams(params);
+  return <ProjectSettingsPage projectName={projectIdentifier} />;
 }

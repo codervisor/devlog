@@ -165,3 +165,6 @@ tmp/
 
 # Turbo configuration files
 .turbo
+
+# Playwright
+.playwright-mcp

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient, ApiError } from '@/lib';
+import { apiClient, ApiError, debounce } from '@/lib';
 
 // Local type definition to avoid importing from core package in client component
 interface Project {
@@ -24,7 +24,7 @@ function generateSlugFromName(name: string): string {
 interface ProjectResolverProps {
   identifier: string;
   identifierType: 'id' | 'name';
-  children: (projectId: number, project?: Project) => React.ReactNode;
+  children: (projectName: string, project?: Project) => React.ReactNode;
   onNotFound?: () => void;
 }
 
@@ -32,11 +32,11 @@ interface ProjectResolverProps {
  * Resolves a project identifier (ID or name) to a project ID and project data
  * Handles URL redirects when using name-based routing
  */
-export function ProjectResolver({ 
-  identifier, 
-  identifierType, 
-  children, 
-  onNotFound 
+export function ProjectResolver({
+  identifier,
+  identifierType,
+  children,
+  onNotFound,
 }: ProjectResolverProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ export function ProjectResolver({
   const router = useRouter();
 
   useEffect(() => {
-    async function resolveProject() {
+    const resolveProject = debounce(async () => {
       try {
         setLoading(true);
         setError(null);
@@ -60,15 +60,17 @@ export function ProjectResolver({
           if (identifier !== canonicalSlug) {
             // Redirect to canonical URL
             const currentPath = window.location.pathname;
-            const newPath = currentPath.replace(`/projects/${identifier}`, `/projects/${canonicalSlug}`);
+            const newPath = currentPath.replace(
+              `/projects/${identifier}`,
+              `/projects/${canonicalSlug}`,
+            );
             router.replace(newPath);
             return;
           }
         }
-
       } catch (error) {
         console.error('Error resolving project:', error);
-        
+
         // Handle specific API errors
         if (error instanceof ApiError && error.status === 404) {
           onNotFound?.();
@@ -79,7 +81,7 @@ export function ProjectResolver({
       } finally {
         setLoading(false);
       }
-    }
+    });
 
     resolveProject();
   }, [identifier, identifierType, router, onNotFound]);
@@ -100,8 +102,10 @@ export function ProjectResolver({
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Project Not Found</h1>
-          <p className="text-gray-600 mb-4">{error || 'The requested project could not be found.'}</p>
-          <button 
+          <p className="text-gray-600 mb-4">
+            {error || 'The requested project could not be found.'}
+          </p>
+          <button
             onClick={() => router.push('/projects')}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -112,5 +116,5 @@ export function ProjectResolver({
     );
   }
 
-  return <>{children(project.id, project)}</>;
+  return <>{children(project.name, project)}</>;
 }

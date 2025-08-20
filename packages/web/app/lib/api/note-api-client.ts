@@ -12,14 +12,14 @@ export interface UpdateNoteRequest {
 }
 
 export class NoteApiClient {
-  constructor(private projectId: number) {}
+  constructor(private projectName: string) {}
 
   /**
    * Add a note to a devlog
    */
   async addNote(devlogId: string, data: CreateNoteRequest): Promise<DevlogNote> {
     return apiClient.post<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes`,
       data,
     );
   }
@@ -29,7 +29,7 @@ export class NoteApiClient {
    */
   async getNote(devlogId: string, noteId: string): Promise<DevlogNote> {
     return apiClient.get<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
     );
   }
 
@@ -38,7 +38,7 @@ export class NoteApiClient {
    */
   async updateNote(devlogId: string, noteId: string, data: UpdateNoteRequest): Promise<DevlogNote> {
     return apiClient.put<DevlogNote>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
       data,
     );
   }
@@ -48,7 +48,7 @@ export class NoteApiClient {
    */
   async deleteNote(devlogId: string, noteId: string): Promise<void> {
     return apiClient.delete<void>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes/${noteId}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes/${noteId}`,
     );
   }
 
@@ -58,7 +58,7 @@ export class NoteApiClient {
   async getNotes(devlogId: string, limit?: number): Promise<DevlogNote[]> {
     const params = limit ? `?limit=${limit}` : '';
     const response = await apiClient.get<{ devlogId: number; total: number; notes: DevlogNote[] }>(
-      `/api/projects/${this.projectId}/devlogs/${devlogId}/notes${params}`,
+      `/api/projects/${this.projectName}/devlogs/${devlogId}/notes${params}`,
     );
     return response.notes;
   }

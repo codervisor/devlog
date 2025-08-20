@@ -8,16 +8,16 @@ import { DataContext, getDefaultDataContext } from '@/stores/base';
 
 interface ProjectState {
   // State
-  currentProjectId: number | null;
+  currentProjectName: string | null;
   currentProjectContext: DataContext<Project>;
   projectsContext: DataContext<Project[]>;
 
   // Actions
-  setCurrentProjectId: (id: number | null) => void;
+  setCurrentProjectName: (name: string | null) => void;
   fetchCurrentProject: () => Promise<void>;
   fetchProjects: () => Promise<void>;
-  updateProject: (id: number, updates: Partial<Project>) => Promise<Project>;
-  deleteProject: (id: number) => Promise<void>;
+  updateProject: (name: string, updates: Partial<Project>) => Promise<Project>;
+  deleteProject: (name: string) => Promise<void>;
   clearErrors: () => void;
 }
 
@@ -25,13 +25,14 @@ export const useProjectStore = create<ProjectState>()(
   subscribeWithSelector((set, get) => {
     // Create debounced version of the actual fetch function
     const debouncedFetch = debounce(async () => {
-      const currentProjectId = get().currentProjectId;
-      if (!currentProjectId) {
+      const { currentProjectName } = get();
+      
+      if (!currentProjectName) {
         set((state) => ({
           currentProjectContext: {
             ...state.currentProjectContext,
             loading: false,
-            error: 'No project ID selected',
+            error: 'No project name selected',
           },
         }));
         return;
@@ -45,13 +46,15 @@ export const useProjectStore = create<ProjectState>()(
             error: null,
           },
         }));
-        const currentProject = await apiClient.get<Project>(`/api/projects/${currentProjectId}`);
+        const currentProject = await apiClient.get<Project>(`/api/projects/${currentProjectName}`);
         set((state) => ({
           currentProjectContext: {
             ...state.currentProjectContext,
             data: currentProject,
             error: null,
           },
+          // Update the name in case the API returns a canonical form
+          currentProjectName: currentProject.name,
         }));
       } catch (e) {
         const errorMessage = handleApiError(e);
@@ -74,13 +77,13 @@ export const useProjectStore = create<ProjectState>()(
 
     return {
       // Initial state
-      currentProjectId: null,
+      currentProjectName: null,
       currentProjectContext: getDefaultDataContext<Project>(),
       projectsContext: getDefaultDataContext<Project[]>(),
 
       // Actions
-      setCurrentProjectId: (id: number | null) => {
-        set({ currentProjectId: id });
+      setCurrentProjectName: (name: string | null) => {
+        set({ currentProjectName: name });
       },
 
       fetchCurrentProject: async () => {
@@ -136,19 +139,20 @@ export const useProjectStore = create<ProjectState>()(
         }));
       },
 
-      updateProject: async (id: number, updates: Partial<Project>) => {
+      updateProject: async (name: string, updates: Partial<Project>) => {
         try {
-          const updatedProject = await apiClient.put<Project>(`/api/projects/${id}`, updates);
+          const updatedProject = await apiClient.put<Project>(`/api/projects/${name}`, updates);
 
           // Update current project if it's the one being updated
-          const currentProjectId = get().currentProjectId;
-          if (currentProjectId === id) {
+          const currentProjectName = get().currentProjectName;
+          if (currentProjectName === name) {
             set((state) => ({
               currentProjectContext: {
                 ...state.currentProjectContext,
                 data: updatedProject,
                 error: null,
               },
+              currentProjectName: updatedProject.name, // Update name in case it changed
             }));
           }
 
@@ -158,7 +162,7 @@ export const useProjectStore = create<ProjectState>()(
               ...state.projectsContext,
               data: state.projectsContext.data
                 ? state.projectsContext.data.map((project) =>
-                    project.id === id ? updatedProject : project,
+                    project.name === name ? updatedProject : project,
                   )
                 : null,
               error: null,
@@ -178,15 +182,15 @@ export const useProjectStore = create<ProjectState>()(
         }
       },
 
-      deleteProject: async (id: number) => {
+      deleteProject: async (name: string) => {
         try {
-          await apiClient.delete(`/api/projects/${id}`);
+          await apiClient.delete(`/api/projects/${name}`);
 
           // Clear current project if it's the one being deleted
-          const currentProjectId = get().currentProjectId;
-          if (currentProjectId === id) {
+          const currentProjectName = get().currentProjectName;
+          if (currentProjectName === name) {
             set({
-              currentProjectId: null,
+              currentProjectName: null,
               currentProjectContext: getDefaultDataContext<Project>(),
             });
           }
@@ -196,7 +200,7 @@ export const useProjectStore = create<ProjectState>()(
             projectsContext: {
               ...state.projectsContext,
               data: state.projectsContext.data
-                ? state.projectsContext.data.filter((project) => project.id !== id)
+                ? state.projectsContext.data.filter((project) => project.name !== name)
                 : null,
               error: null,
             },
@@ -226,7 +230,7 @@ export const initializeProjectStore = () => {
   const store = useProjectStore.getState();
 
   useProjectStore.subscribe(
-    (state) => state.currentProjectId,
+    (state) => state.currentProjectName,
     async () => {
       await store.fetchCurrentProject();
     },

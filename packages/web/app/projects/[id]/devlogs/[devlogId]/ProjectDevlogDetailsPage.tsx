@@ -11,14 +11,14 @@ import { DevlogEntry } from '@codervisor/devlog-core';
 import { RealtimeEventType } from '@/lib/realtime';
 
 interface ProjectDevlogDetailsPageProps {
-  projectId: number;
+  projectName: string;
   devlogId: number;
 }
 
-export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogDetailsPageProps) {
+export function ProjectDevlogDetailsPage({ projectName, devlogId }: ProjectDevlogDetailsPageProps) {
   const router = useRouter();
 
-  const { setCurrentProjectId } = useProjectStore();
+  const { setCurrentProjectName } = useProjectStore();
 
   const {
     currentDevlogId,
@@ -51,7 +51,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
 
     const unsubscribeDeleted = onDevlogDeleted(({ id }: { id: number }) => {
       if (id === currentDevlogId) {
-        router.push(`/projects/${projectId}/devlogs`);
+        router.push(`/projects/${projectName}/devlogs`);
       }
     });
 
@@ -77,12 +77,12 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
     onNoteUpdated,
     onNoteDeleted,
     router,
-    projectId,
+    projectName,
   ]);
 
   useEffect(() => {
-    setCurrentProjectId(projectId);
-  }, [projectId]);
+    setCurrentProjectName(projectName);
+  }, [projectName]);
 
   useEffect(() => {
     setCurrentDevlogId(devlogId);
@@ -133,7 +133,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
       // Delete the devlog (this will also clear selected devlog via context)
       await deleteDevlog(devlogId);
 
-      router.push(`/projects/${projectId}/devlogs`);
+      router.push(`/projects/${projectName}/devlogs`);
     } catch (error) {
       console.error('Failed to delete devlog:', error);
       toast.error('Failed to delete devlog');
@@ -141,7 +141,7 @@ export function ProjectDevlogDetailsPage({ projectId, devlogId }: ProjectDevlogD
   };
 
   const handleBack = () => {
-    router.push(`/projects/${projectId}/devlogs`);
+    router.push(`/projects/${projectName}/devlogs`);
   };
 
   const actions = (

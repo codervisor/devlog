@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { activeConnections } from '@/lib/api';
+import { activeConnections } from '@/lib/api/server-realtime';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';

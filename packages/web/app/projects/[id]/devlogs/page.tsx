@@ -1,9 +1,8 @@
+'use client';
+
 import { ProjectDevlogListPage } from './ProjectDevlogListPage';
 import { ProjectResolver } from '@/components/ProjectResolver';
 import { RouteParamParsers } from '@/lib';
-
-// Disable static generation for this page since it uses client-side features
-export const dynamic = 'force-dynamic';
 
 interface ProjectDevlogsPageProps {
   params: {
@@ -19,7 +18,7 @@ export default function ProjectDevlogsPage({ params }: ProjectDevlogsPageProps) 
       identifier={projectIdentifier}
       identifierType={identifierType}
     >
-      {(projectId) => <ProjectDevlogListPage projectId={projectId} />}
+      {(projectName) => <ProjectDevlogListPage projectName={projectName} />}
     </ProjectResolver>
   );
 }

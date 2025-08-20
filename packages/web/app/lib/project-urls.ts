@@ -53,9 +53,15 @@ export class ProjectUrls {
  * Legacy support - helper to get project name from current context
  * This can be used when we have projectId but need to fetch the name
  */
-export async function getProjectName(projectId: number): Promise<string | null> {
+export async function getProjectName(projectNameOrId: string | number): Promise<string | null> {
   try {
-    const project = await apiClient.get<{ name: string }>(`/api/projects/${projectId}`);
+    // If it's already a string (project name), return it
+    if (typeof projectNameOrId === 'string') {
+      return projectNameOrId;
+    }
+    
+    // If it's a number (legacy project ID), fetch the name
+    const project = await apiClient.get<{ name: string }>(`/api/projects/${projectNameOrId}`);
     return project.name;
   } catch (error) {
     console.error('Failed to fetch project name:', error);

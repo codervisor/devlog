@@ -8,13 +8,13 @@ import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 
 interface ProjectDevlogListPageProps {
-  projectId: number;
+  projectName: string;
 }
 
-export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps) {
+export function ProjectDevlogListPage({ projectName }: ProjectDevlogListPageProps) {
   const router = useRouter();
 
-  const { currentProjectId, setCurrentProjectId } = useProjectStore();
+  const { currentProjectName, setCurrentProjectName } = useProjectStore();
 
   const {
     devlogsContext,
@@ -41,13 +41,13 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   }, [onDevlogCreated, onDevlogUpdated, onDevlogDeleted, fetchDevlogs]);
 
   useEffect(() => {
-    setCurrentProjectId(projectId);
-  }, [projectId]);
+    setCurrentProjectName(projectName);
+  }, [projectName]);
 
   useEffect(() => {
     fetchDevlogs();
   }, [
-    currentProjectId,
+    currentProjectName,
     devlogsContext.filters.search,
     devlogsContext.filters.type,
     devlogsContext.filters.status,
@@ -57,7 +57,7 @@ export function ProjectDevlogListPage({ projectId }: ProjectDevlogListPageProps)
   ]);
 
   const handleViewDevlog = (devlog: DevlogEntry) => {
-    router.push(`/projects/${projectId}/devlogs/${devlog.id}`);
+    router.push(`/projects/${projectName}/devlogs/${devlog.id}`);
   };
 
   const handleDeleteDevlog = async (id: DevlogId) => {

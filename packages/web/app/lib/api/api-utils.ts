@@ -12,7 +12,7 @@ import type {
 } from '@/schemas/responses';
 import { PaginationMeta } from '@codervisor/devlog-core';
 import { isValidProjectIdentifier } from '@codervisor/devlog-core';
-import { broadcastUpdate } from '@/lib';
+import { broadcastUpdate } from '@/lib/api/server-realtime';
 
 /**
  * Type-safe parameter parser for API routes
