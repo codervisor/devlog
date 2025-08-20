@@ -3,68 +3,43 @@
  */
 
 import { generateSlugFromName } from '@codervisor/devlog-core';
-import { apiClient } from '@/lib';
 
 /**
- * Generate project URLs using name-based routing
- * Falls back to ID-based routing if name is not available
+ * Generate project URLs using name-based routing only
  */
 export class ProjectUrls {
   /**
    * Generate URL for project main page
    */
-  static project(projectId: number, projectName?: string): string {
-    if (projectName) {
-      return `/projects/${generateSlugFromName(projectName)}`;
-    }
-    return `/projects/${projectId}`;
+  static project(projectName: string): string {
+    return `/projects/${generateSlugFromName(projectName)}`;
   }
 
   /**
    * Generate URL for project devlogs list
    */
-  static devlogs(projectId: number, projectName?: string): string {
-    return `${this.project(projectId, projectName)}/devlogs`;
+  static devlogs(projectName: string): string {
+    return `${this.project(projectName)}/devlogs`;
   }
 
   /**
    * Generate URL for specific devlog
    */
-  static devlog(projectId: number, devlogId: number, projectName?: string): string {
-    return `${this.devlogs(projectId, projectName)}/${devlogId}`;
+  static devlog(projectName: string, devlogId: number): string {
+    return `${this.devlogs(projectName)}/${devlogId}`;
   }
 
   /**
    * Generate URL for project settings
    */
-  static settings(projectId: number, projectName?: string): string {
-    return `${this.project(projectId, projectName)}/settings`;
+  static settings(projectName: string): string {
+    return `${this.project(projectName)}/settings`;
   }
 
   /**
    * Generate URL for creating a new devlog in project
    */
-  static createDevlog(projectId: number, projectName?: string): string {
-    return `${this.devlogs(projectId, projectName)}/create`;
-  }
-}
-
-/**
- * Legacy support - helper to get project name from current context
- * This can be used when we have projectId but need to fetch the name
- */
-export async function getProjectName(projectNameOrId: string | number): Promise<string | null> {
-  try {
-    // If it's already a string (project name), return it
-    if (typeof projectNameOrId === 'string') {
-      return projectNameOrId;
-    }
-    
-    // If it's a number (legacy project ID), fetch the name
-    const project = await apiClient.get<{ name: string }>(`/api/projects/${projectNameOrId}`);
-    return project.name;
-  } catch (error) {
-    console.error('Failed to fetch project name:', error);
-    return null;
+  static createDevlog(projectName: string): string {
+    return `${this.devlogs(projectName)}/create`;
   }
 }

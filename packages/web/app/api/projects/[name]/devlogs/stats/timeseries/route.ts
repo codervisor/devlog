@@ -12,20 +12,22 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[name]/devlogs/stats/timeseries - Get time series statistics
 export const GET = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params }: { params: { name: string } }) => {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId } = paramResult.data;
+    const { projectName } = paramResult.data;
 
-    // Ensure project exists
-    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }
+
+    const project = projectResult.data.project;
 
     // Parse query parameters
     const url = new URL(request.url);
@@ -44,12 +46,12 @@ export const GET = withErrorHandling(
       days,
       ...(from && { from }),
       ...(to && { to }),
-      projectId,
+      projectId: project.id,
     };
 
     // Get devlog service and time series stats
-    const devlogService = await ServiceHelper.getDevlogService(projectId);
-    const stats = await devlogService.getTimeSeriesStats(projectId, timeSeriesRequest);
+    const devlogService = await ServiceHelper.getDevlogService(project.id);
+    const stats = await devlogService.getTimeSeriesStats(project.id, timeSeriesRequest);
 
     return createSuccessResponse(stats);
   },

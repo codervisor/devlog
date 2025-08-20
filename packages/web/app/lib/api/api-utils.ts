@@ -22,9 +22,9 @@ export const RouteParams = {
    * Parse project name parameter (name-only routing)
    * Usage: /api/projects/[name]
    */
-  parseProjectId(params: { id: string }) {
+  parseProjectName(params: { name: string }) {
     try {
-      const validation = isValidProjectIdentifier(params.id);
+      const validation = isValidProjectIdentifier(params.name);
 
       if (!validation.valid) {
         return {
@@ -40,9 +40,7 @@ export const RouteParams = {
       return {
         success: true as const,
         data: {
-          projectId: -1, // Will be resolved by service helper
-          identifier: params.id,
-          identifierType: 'name' as const,
+          projectName: params.name,
         },
       };
     } catch (error) {
@@ -57,9 +55,9 @@ export const RouteParams = {
    * Parse project name and devlog ID parameters (name-only routing for projects)
    * Usage: /api/projects/[name]/devlogs/[devlogId]
    */
-  parseProjectAndDevlogId(params: { id: string; devlogId: string }) {
+  parseProjectNameAndDevlogId(params: { name: string; devlogId: string }) {
     try {
-      const projectValidation = isValidProjectIdentifier(params.id);
+      const projectValidation = isValidProjectIdentifier(params.name);
       const devlogId = parseInt(params.devlogId, 10);
 
       if (!projectValidation.valid) {
@@ -86,10 +84,8 @@ export const RouteParams = {
       return {
         success: true as const,
         data: {
-          projectId: -1, // Will be resolved by service helper
+          projectName: params.name,
           devlogId,
-          identifier: params.id,
-          identifierType: 'name' as const,
         },
       };
     } catch (error) {
@@ -107,28 +103,12 @@ export const RouteParams = {
  */
 export class ServiceHelper {
   /**
-   * Get project by ID and ensure it exists
+   * Get project by name and ensure it exists
    */
-  static async getProjectOrFail(projectId: number) {
+  static async getProjectByNameOrFail(projectName: string) {
     const { ProjectService } = await import('@codervisor/devlog-core/server');
     const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return { success: false as const, response: ApiErrors.projectNotFound() };
-    }
-
-    return { success: true as const, data: { project, projectService } };
-  }
-
-  /**
-   * Get project by name and ensure it exists (case-insensitive lookup)
-   */
-  static async getProjectByIdentifierOrFail(identifier: string, identifierType: 'name') {
-    const { ProjectService } = await import('@codervisor/devlog-core/server');
-    const projectService = ProjectService.getInstance();
-
-    // Only name-based routing supported now
-    const project = await projectService.getByName(identifier);
+    const project = await projectService.getByName(projectName);
 
     if (!project) {
       return { success: false as const, response: ApiErrors.projectNotFound() };

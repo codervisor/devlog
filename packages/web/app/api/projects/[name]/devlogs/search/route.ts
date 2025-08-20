@@ -29,15 +29,15 @@ interface SearchResponse {
 }
 
 // GET /api/projects/[name]/devlogs/search - Enhanced search for devlogs
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project name parameter
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
+    const { projectName } = paramResult.data;
 
     // Validate query parameters
     const url = new URL(request.url);
@@ -47,10 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }

@@ -16,15 +16,15 @@ import { RealtimeEventType } from '@/lib/realtime';
 export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[name]/devlogs - List devlogs for a project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project identifier
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
+    const { projectName } = paramResult.data;
 
     // Validate query parameters
     const url = new URL(request.url);
@@ -34,10 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -97,15 +94,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // POST /api/projects/[name]/devlogs - Create new devlog entry
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project identifier
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
+    const { projectName } = paramResult.data;
 
     // Validate request body
     const bodyValidation = await ApiValidator.validateJsonBody(request, CreateDevlogBodySchema);
@@ -114,10 +111,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }

@@ -13,39 +13,32 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[name] - Get specific project
 export const GET = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
-    // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectId(params);
+  async (req: NextRequest, { params }: { params: { name: string } }) => {
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
-
-    // Get project using helper
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const { projectName } = paramResult.data;
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }
 
-    // Transform and return project data
-    return createSuccessResponse(projectResult.data!.project);
+    return createSuccessResponse(projectResult.data.project);
   },
 );
 
 // PUT /api/projects/[name] - Update project
 export const PUT = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params }: { params: { name: string } }) => {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
+    const { projectName } = paramResult.data;
 
     // Validate request body (HTTP layer validation)
     const bodyValidation = await ApiValidator.validateJsonBody(request, UpdateProjectBodySchema);
@@ -54,10 +47,7 @@ export const PUT = withErrorHandling(
     }
 
     // Get project and service
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }
@@ -76,20 +66,17 @@ export const PUT = withErrorHandling(
 
 // DELETE /api/projects/[name] - Delete project
 export const DELETE = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params }: { params: { name: string } }) => {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { identifier, identifierType } = paramResult.data;
+    const { projectName } = paramResult.data;
 
     // Get project service
-    const projectResult = await ServiceHelper.getProjectByIdentifierOrFail(
-      identifier,
-      identifierType,
-    );
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }

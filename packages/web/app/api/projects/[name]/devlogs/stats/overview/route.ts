@@ -12,23 +12,25 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/projects/[name]/devlogs/stats/overview - Get overview statistics
 export const GET = withErrorHandling(
-  async (request: NextRequest, { params }: { params: { id: string } }) => {
+  async (request: NextRequest, { params }: { params: { name: string } }) => {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectId(params);
+    const paramResult = RouteParams.parseProjectName(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId } = paramResult.data;
+    const { projectName } = paramResult.data;
 
-    // Ensure project exists
-    const projectResult = await ServiceHelper.getProjectOrFail(projectId);
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
     if (!projectResult.success) {
       return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Get devlog service and stats
-    const devlogService = await ServiceHelper.getDevlogService(projectId);
+    const devlogService = await ServiceHelper.getDevlogService(project.id);
     const stats = await devlogService.getStats();
 
     return createSuccessResponse(stats);

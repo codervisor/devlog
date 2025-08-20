@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import type { DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
-import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib/api/api-utils';
+import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
 import { DevlogAddNoteBodySchema, DevlogUpdateWithNoteBodySchema } from '@/schemas';
 
@@ -11,16 +11,16 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[name]/devlogs/[devlogId]/notes - List notes for a devlog entry
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
@@ -32,15 +32,16 @@ export async function GET(
       return ApiErrors.invalidRequest('Limit must be a number between 1 and 1000');
     }
 
-    // Ensure project exists
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(projectId);
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Verify devlog exists
     const devlogEntry = await devlogService.get(devlogId, false); // Don't load notes yet
@@ -70,16 +71,16 @@ export async function GET(
 // POST /api/projects/[name]/devlogs/[devlogId]/notes - Add note to devlog entry
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
     // Validate request body
     const data = await request.json();
@@ -90,15 +91,16 @@ export async function POST(
 
     const { note, category } = validationResult.data;
 
-    // Ensure project exists
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(projectId);
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Add the note directly using the new addNote method
     const newNote = await devlogService.addNote(devlogId, {
@@ -119,16 +121,16 @@ export async function POST(
 // PUT /api/projects/[name]/devlogs/[devlogId]/notes - Update devlog and add note in one operation
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
     // Validate request body
     const data = await request.json();
@@ -139,15 +141,16 @@ export async function PUT(
 
     const { note, category, ...updateFields } = validationResult.data;
 
-    // Ensure project exists
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
+    const project = projectResult.data.project;
+
     // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(projectId);
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Get the existing devlog entry
     const existingEntry = await devlogService.get(devlogId, false); // Don't load notes

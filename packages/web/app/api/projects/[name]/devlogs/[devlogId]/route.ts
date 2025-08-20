@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
-import { ApiErrors, createSuccessResponse, RouteParams } from '@/lib/api/api-utils';
+import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
 
 // Mark this route as dynamic to prevent static generation
@@ -9,16 +9,16 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects/[name]/devlogs/[devlogId] - Get specific devlog entry
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
     // Parse query parameters for notes
     const { searchParams } = new URL(request.url);
@@ -27,13 +27,15 @@ export async function GET(
       ? parseInt(searchParams.get('notesLimit')!)
       : undefined;
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
-    const devlogService = DevlogService.getInstance(projectId);
+    const project = projectResult.data.project;
+
+    const devlogService = DevlogService.getInstance(project.id);
     const entry = await devlogService.get(devlogId, includeNotes);
 
     if (!entry) {
@@ -56,26 +58,27 @@ export async function GET(
 // PUT /api/projects/[name]/devlogs/[devlogId] - Update devlog entry
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
+
+    const project = projectResult.data.project;
 
     const data = await request.json();
 
-    const devlogService = DevlogService.getInstance(projectId);
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(devlogId);
@@ -88,7 +91,7 @@ export async function PUT(
       ...existingEntry,
       ...data,
       id: devlogId,
-      projectId: projectId, // Ensure project context is maintained
+      projectId: project.id, // Ensure project context is maintained
       updatedAt: new Date().toISOString(),
     };
 
@@ -106,25 +109,25 @@ export async function PUT(
 // DELETE /api/projects/[name]/devlogs/[devlogId] - Delete devlog entry
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; devlogId: string } },
+  { params }: { params: { name: string; devlogId: string } },
 ) {
   try {
     // Parse and validate parameters
-    const paramResult = RouteParams.parseProjectAndDevlogId(params);
+    const paramResult = RouteParams.parseProjectNameAndDevlogId(params);
     if (!paramResult.success) {
       return paramResult.response;
     }
 
-    const { projectId, devlogId } = paramResult.data;
+    const { projectName, devlogId } = paramResult.data;
 
-    const projectService = ProjectService.getInstance();
-    const project = await projectService.get(projectId);
-
-    if (!project) {
-      return ApiErrors.projectNotFound();
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
     }
 
-    const devlogService = DevlogService.getInstance(projectId);
+    const project = projectResult.data.project;
+
+    const devlogService = DevlogService.getInstance(project.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(devlogId);
