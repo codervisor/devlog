@@ -20,14 +20,34 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Parse project name and devlog ID from URL instead of using context hooks
+  // since this component is rendered at app level, outside of the provider hierarchy
+  const pathSegments = pathname.split('/').filter(Boolean);
+  let projectName: string | null = null;
+  let devlogId: number | null = null;
+
+  // Check if we're in a project path: /projects/[name] or /projects/[name]/devlogs/[id]
+  if (pathSegments[0] === 'projects' && pathSegments[1]) {
+    projectName = pathSegments[1];
+    
+    // Check if we're in a devlog path
+    if (pathSegments[2] === 'devlogs' && pathSegments[3]) {
+      const parsedDevlogId = parseInt(pathSegments[3], 10);
+      if (!isNaN(parsedDevlogId)) {
+        devlogId = parsedDevlogId;
+      }
+    }
+  }
+
   const { currentProjectContext, currentProjectName, projectsContext, fetchProjects } =
     useProjectStore();
-  const { currentDevlogContext, currentDevlogId } = useDevlogStore();
+  const { currentDevlogContext } = useDevlogStore();
 
-  // Don't show breadcrumb on the home or project list page
-  if (['/', '/projects'].includes(pathname)) {
+  // If we are not in a project context, do not render the breadcrumb
+  if (!projectName) {
     return null;
   }
 
@@ -50,12 +70,15 @@ export function NavigationBreadcrumb() {
     }
   };
 
-  const handleDropdownOpenChange = (open: boolean) => {
-    if (open) {
-      // Load projects when dropdown is opened
-      fetchProjects();
-    }
-  };
+  const dropdownSkeletons = Array.from({ length: 3 }).map((_, index) => (
+    <DropdownMenuItem key={index} disabled className="flex items-center gap-3 p-3">
+      <Skeleton className="w-6 h-6 rounded-full flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-1">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-3 w-8" />
+      </div>
+    </DropdownMenuItem>
+  ));
 
   const renderProjectDropdown = () => {
     // Show skeleton if current project is loading
@@ -68,29 +91,24 @@ export function NavigationBreadcrumb() {
     }
 
     return (
-      <DropdownMenu onOpenChange={handleDropdownOpenChange}>
+      <DropdownMenu
+        onOpenChange={async (open) => {
+          if (open) await fetchProjects();
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer rounded">
             <Package size={14} />
-            <span>{currentProjectContext.data?.name}</span>
+            <span>{projectName}</span>
             <ChevronsUpDown size={14} className="text-muted-foreground" />
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           {/* Show skeleton items if projects list is loading */}
           {projectsContext.loading
-            ? Array.from({ length: 3 }).map((_, index) => (
-                <DropdownMenuItem key={index} disabled className="flex items-center gap-3 p-3">
-                  <Skeleton className="w-6 h-6 rounded-full flex-shrink-0" />
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-3 w-8" />
-                  </div>
-                </DropdownMenuItem>
-              ))
+            ? dropdownSkeletons
             : projectsContext.data?.map((project) => {
-                const isCurrentProject = currentProjectName === project.name;
-
+                const isCurrentProject = projectName === project.name;
                 return (
                   <DropdownMenuItem
                     key={project.id}
@@ -100,11 +118,11 @@ export function NavigationBreadcrumb() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{project.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{project.description}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {project.description}
+                      </div>
                     </div>
-                    {isCurrentProject && (
-                      <Check size={14} className="text-primary flex-shrink-0" />
-                    )}
+                    {isCurrentProject && <Check size={14} className="text-primary flex-shrink-0" />}
                   </DropdownMenuItem>
                 );
               })}
@@ -134,8 +152,8 @@ export function NavigationBreadcrumb() {
   return (
     <Breadcrumb className="navigation-breadcrumb">
       <BreadcrumbList>
-        {currentProjectName && <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>}
-        {currentDevlogId && (
+        <BreadcrumbItem>{renderProjectDropdown()}</BreadcrumbItem>
+        {devlogId && (
           <>
             <BreadcrumbSeparator />
             <BreadcrumbItem>{renderDevlogDropdown()}</BreadcrumbItem>

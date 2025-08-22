@@ -27,6 +27,7 @@ export function DevlogProvider({
 
 export function useDevlog(): DevlogContextValue {
   const context = useContext(DevlogContext);
+  console.debug('useDevlog', 'context', context);
   if (!context) {
     throw new Error('useDevlog must be used within a DevlogProvider');
   }

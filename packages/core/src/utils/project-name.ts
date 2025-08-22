@@ -44,9 +44,8 @@ export function generateSlugFromName(name: string): string {
 }
 
 /**
- * Validate a project display name (more permissive than slugs):
- * - Can contain letters, numbers, spaces, hyphens, underscores, dots
- * - Cannot start or end with whitespace
+ * Validate a project display name following GitHub repository naming rules:
+ * - Can only contain ASCII letters, digits, and the characters -, ., and _
  * - Must not be empty
  * - Length between 1-100 characters
  */
@@ -55,13 +54,8 @@ export function validateProjectDisplayName(name: string): boolean {
     return false;
   }
 
-  // Check for leading/trailing whitespace
-  if (name.trim() !== name) {
-    return false;
-  }
-
-  // Must contain only valid display characters
-  if (!/^[a-zA-Z0-9\s._-]+$/.test(name)) {
+  // Must contain only ASCII letters, digits, hyphens, dots, and underscores
+  if (!/^[a-zA-Z0-9._-]+$/.test(name)) {
     return false;
   }
 

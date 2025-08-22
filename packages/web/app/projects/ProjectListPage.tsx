@@ -201,11 +201,14 @@ export function ProjectListPage() {
               <Label htmlFor="name">Project Name</Label>
               <Input
                 id="name"
-                placeholder="e.g., My Development Project"
+                placeholder="e.g., My-Dev-Project_2025"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
               />
+              <p className="text-sm text-muted-foreground mt-1">
+                Can only contain ASCII letters, digits, and the characters -, ., and _
+              </p>
             </div>
             <div>
               <Label htmlFor="description">Description (Optional)</Label>

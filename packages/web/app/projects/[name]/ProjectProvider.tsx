@@ -27,6 +27,7 @@ export function ProjectProvider({
 
 export function useProject(): ProjectContextValue {
   const context = useContext(ProjectContext);
+  console.debug('useProject', 'context', context);
   if (!context) {
     throw new Error('useProject must be used within a ProjectProvider');
   }

@@ -27,7 +27,7 @@ export const CreateProjectBodySchema = z.object({
   name: z
     .string()
     .min(1, 'Project name is required')
-    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.'),
+    .refine(validateProjectDisplayName, 'The repository name can only contain ASCII letters, digits, and the characters -, ., and _.'),
   description: z.string().optional(),
   repositoryUrl: z.string().optional(),
   settings: z
