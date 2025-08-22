@@ -15,7 +15,7 @@ import { RealtimeEventType } from '@/lib/realtime';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[name]/devlogs - List devlogs for a project
+// GET /api/projects/[name]/devlog - List devlog for a project
 export async function GET(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project identifier
@@ -84,16 +84,16 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
     if (result.pagination) {
       return createCollectionResponse(result.items, result.pagination);
     } else {
-      // Transform devlogs and return as simple collection
+      // Transform devlog and return as simple collection
       return createSimpleCollectionResponse(result.items);
     }
   } catch (error) {
-    console.error('Error fetching devlogs:', error);
-    return ApiErrors.internalError('Failed to fetch devlogs');
+    console.error('Error fetching devlog:', error);
+    return ApiErrors.internalError('Failed to fetch devlog');
   }
 }
 
-// POST /api/projects/[name]/devlogs - Create new devlog entry
+// POST /api/projects/[name]/devlog - Create new devlog entry
 export async function POST(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project identifier

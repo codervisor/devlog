@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { AppProviders } from './AppProviders';
-import './globals.css';
-import './fonts.css';
+import { AppProviders } from '@/components/provider/app-providers';
+import '@/styles/globals.css';
+import '@/styles/fonts.css';
 
 export const metadata: Metadata = {
   title: 'Devlog Management',

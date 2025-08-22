@@ -73,7 +73,7 @@ describe.skipIf(!runIntegrationTests)('API Integration Tests', () => {
       }
     });
 
-    it('should list devlogs with pagination', async () => {
+    it('should list devlog with pagination', async () => {
       const result = await client.get(`/projects/${testProjectId}/devlogs`);
       expect(result.data).toHaveProperty('items');
       expect(result.data).toHaveProperty('pagination');
@@ -104,7 +104,7 @@ describe.skipIf(!runIntegrationTests)('API Integration Tests', () => {
       expect(result.data).toHaveProperty('error', 'Devlog entry not found');
     });
 
-    it('should filter devlogs by status', async () => {
+    it('should filter devlog by status', async () => {
       const result = await client.get(`/projects/${testProjectId}/devlogs?status=done`);
       expect(result.data).toHaveProperty('items');
 
@@ -114,7 +114,7 @@ describe.skipIf(!runIntegrationTests)('API Integration Tests', () => {
       });
     });
 
-    it('should search devlogs', async () => {
+    it('should search devlog', async () => {
       const result = await client.get(`/projects/${testProjectId}/devlogs?search=test`);
       expect(result.data).toHaveProperty('items');
       expect(result.data).toHaveProperty('pagination');
@@ -167,7 +167,7 @@ describe.skipIf(!runIntegrationTests)('API Integration Tests', () => {
       testDevlogIds = result.data.items.map((item: any) => item.id);
     });
 
-    it.skipIf(!testDevlogIds?.length)('should batch update devlogs', async () => {
+    it.skipIf(!testDevlogIds?.length)('should batch update devlog', async () => {
       if (!testDevlogIds?.length) return; // TypeScript guard
       const updateData = {
         ids: testDevlogIds.slice(0, 2),
@@ -196,7 +196,7 @@ describe.skipIf(!runIntegrationTests)('API Integration Tests', () => {
       expect(result.data.error).toContain('ids (array) and updates (object) are required');
     });
 
-    it.skipIf(!testDevlogIds?.length)('should batch add notes to devlogs', async () => {
+    it.skipIf(!testDevlogIds?.length)('should batch add notes to devlog', async () => {
       if (!testDevlogIds?.length) return; // TypeScript guard
       const noteData = {
         ids: testDevlogIds.slice(0, 1),

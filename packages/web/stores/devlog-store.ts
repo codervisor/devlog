@@ -33,7 +33,7 @@ interface DevlogState {
   // Devlogs state
   devlogsContext: TableDataContext<DevlogEntry[], DevlogFilter>;
 
-  // Navigation devlogs state (for dropdowns/navigation - separate from main list)
+  // Navigation devlog state (for dropdowns/navigation - separate from main list)
   navigationDevlogsContext: DataContext<DevlogEntry[]>;
 
   // Current devlog state (for detail views)
@@ -75,7 +75,7 @@ export const useDevlogStore = create<DevlogState>()(
     // Initial state
     devlogsContext: getDefaultTableDataContext(),
 
-    // Navigation devlogs state
+    // Navigation devlog state
     navigationDevlogsContext: getDefaultDataContext(),
 
     // Selected devlog state
@@ -231,11 +231,11 @@ export const useDevlogStore = create<DevlogState>()(
           },
         }));
 
-        // Fetch recent devlogs for navigation - limit to 50 most recent
+        // Fetch recent devlog for navigation - limit to 50 most recent
         const { items: data } = await devlogApiClient.list(
           {}, // No filters
           { page: 1, limit: 50 }, // Simple pagination
-          { sortBy: 'id', sortOrder: 'desc' } // Sort by ID descending
+          { sortBy: 'id', sortOrder: 'desc' }, // Sort by ID descending
         );
 
         set((state) => ({

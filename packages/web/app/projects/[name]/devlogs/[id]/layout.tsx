@@ -1,7 +1,7 @@
 import React from 'react';
 import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
 import { notFound } from 'next/navigation';
-import { DevlogProvider } from '../DevlogProvider';
+import { DevlogProvider } from '../../../../../components/provider/devlog-provider';
 
 interface DevlogLayoutProps {
   children: React.ReactNode;

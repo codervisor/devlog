@@ -25,7 +25,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./app/*"],
+      "@/*": ["./*"],
       "@codervisor/devlog-core": ["../core/build"],
       "@codervisor/devlog-ai": ["../ai/build"]
     }

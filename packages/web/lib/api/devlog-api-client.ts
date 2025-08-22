@@ -59,7 +59,7 @@ export class DevlogApiClient {
   constructor(private projectName: string) {}
 
   /**
-   * Get all devlogs for the project
+   * Get all devlog for the project
    */
   async list(
     filter?: DevlogFilter,
@@ -131,7 +131,7 @@ export class DevlogApiClient {
   }
 
   /**
-   * Batch update multiple devlogs
+   * Batch update multiple devlog
    */
   async batchUpdate(
     devlogIds: DevlogId[],
@@ -144,7 +144,7 @@ export class DevlogApiClient {
   }
 
   /**
-   * Batch delete multiple devlogs
+   * Batch delete multiple devlog
    */
   async batchDelete(devlogIds: DevlogId[]): Promise<void> {
     return apiClient.post<void>(`/api/projects/${this.projectName}/devlogs/batch/delete`, {

@@ -10,7 +10,7 @@ import {
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[name]/devlogs/stats/timeseries - Get time series statistics
+// GET /api/projects/[name]/devlog/stats/timeseries - Get time series statistics
 export const GET = withErrorHandling(
   async (request: NextRequest, { params }: { params: { name: string } }) => {
     // Parse and validate parameters

@@ -1,8 +1,8 @@
 'use client';
 
-import { ThemeProvider } from '@/components/providers/theme-provider';
-import { AppLayout } from './AppLayout';
-import { StoreProvider } from '@/components/providers/store-provider';
+import { ThemeProvider } from '@/components/provider/theme-provider';
+import { AppLayout } from '@/components/layout/app-layout';
+import { StoreProvider } from '@/components/provider/store-provider';
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (

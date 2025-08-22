@@ -4,9 +4,9 @@ import React, { useEffect } from 'react';
 import { Dashboard } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
-import { DevlogEntry, Project } from '@codervisor/devlog-core';
+import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { useProjectName } from './ProjectProvider';
+import { useProjectName } from '@/components/provider/ProjectProvider';
 
 export function ProjectDetailsPage() {
   const projectName = useProjectName();

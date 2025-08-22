@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 export function NavigationBreadcrumb() {
   const pathname = usePathname();
   const router = useRouter();
-  
+
   // State for devlog search
   const [devlogSearchText, setDevlogSearchText] = useState('');
 
@@ -33,10 +33,10 @@ export function NavigationBreadcrumb() {
   let projectName: string | null = null;
   let devlogId: number | null = null;
 
-  // Check if we're in a project path: /projects/[name] or /projects/[name]/devlogs/[id]
+  // Check if we're in a project path: /projects/[name] or /projects/[name]/devlog/[id]
   if (pathSegments[0] === 'projects' && pathSegments[1]) {
     projectName = pathSegments[1];
-    
+
     // Check if we're in a devlog path
     if (pathSegments[2] === 'devlogs' && pathSegments[3]) {
       const parsedDevlogId = parseInt(pathSegments[3], 10);
@@ -48,26 +48,28 @@ export function NavigationBreadcrumb() {
 
   const { currentProjectContext, currentProjectName, projectsContext, fetchProjects } =
     useProjectStore();
-  const { currentDevlogContext, navigationDevlogsContext, fetchNavigationDevlogs } = useDevlogStore();
+  const { currentDevlogContext, navigationDevlogsContext, fetchNavigationDevlogs } =
+    useDevlogStore();
 
-  // Filter devlogs for search
+  // Filter devlog for search
   const filteredDevlogs = useMemo(() => {
     const devlogs = navigationDevlogsContext.data || [];
     const sorted = devlogs.sort((a, b) => {
       // Sort by ID descending (most recent first)
       return (b.id ?? 0) - (a.id ?? 0);
     });
-    
+
     // Apply search filter
     if (!devlogSearchText.trim()) {
       return sorted;
     }
-    
-    return sorted.filter(devlog => 
-      devlog.title?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
-      devlog.id?.toString().includes(devlogSearchText) ||
-      devlog.status?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
-      devlog.type?.toLowerCase().includes(devlogSearchText.toLowerCase())
+
+    return sorted.filter(
+      (devlog) =>
+        devlog.title?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
+        devlog.id?.toString().includes(devlogSearchText) ||
+        devlog.status?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
+        devlog.type?.toLowerCase().includes(devlogSearchText.toLowerCase()),
     );
   }, [navigationDevlogsContext.data, devlogSearchText]);
 
@@ -183,7 +185,7 @@ export function NavigationBreadcrumb() {
       <DropdownMenu
         onOpenChange={async (open) => {
           if (open) {
-            // Fetch devlogs when opening the dropdown
+            // Fetch devlog when opening the dropdown
             await fetchNavigationDevlogs();
             // Reset search when opening
             setDevlogSearchText('');
@@ -210,7 +212,7 @@ export function NavigationBreadcrumb() {
               />
             </div>
           </div>
-          
+
           {/* Loading State */}
           {navigationDevlogsContext.loading ? (
             <>
@@ -226,10 +228,10 @@ export function NavigationBreadcrumb() {
               {/* No Results */}
               {filteredDevlogs.length === 0 && (
                 <DropdownMenuItem disabled className="p-3 text-center text-muted-foreground">
-                  {devlogSearchText ? 'No devlogs found' : 'No devlogs available'}
+                  {devlogSearchText ? 'No devlog found' : 'No devlog available'}
                 </DropdownMenuItem>
               )}
-              
+
               {/* Devlog Items */}
               {filteredDevlogs.map((devlog) => {
                 const isCurrentDevlog = devlogId === devlog.id;

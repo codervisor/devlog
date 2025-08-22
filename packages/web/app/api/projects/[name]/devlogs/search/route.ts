@@ -28,7 +28,7 @@ interface SearchResponse {
   };
 }
 
-// GET /api/projects/[name]/devlogs/search - Enhanced search for devlogs
+// GET /api/projects/[name]/devlog/search - Enhanced search for devlog
 export async function GET(request: NextRequest, { params }: { params: { name: string } }) {
   try {
     // Parse and validate project name parameter

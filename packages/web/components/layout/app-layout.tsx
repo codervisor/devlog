@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { AppLayoutSkeleton, ErrorBoundary, NavigationSidebar, TopNavbar } from '@/components';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from 'sonner';
+import { AppLayoutSkeleton } from '@/components/layout/app-layout-skeleton';
+import { ErrorBoundary } from '@/components/custom/ErrorBoundary';
+import { TopNavbar } from '@/components/layout/TopNavbar';
+import { NavigationSidebar } from '@/components/layout/navigation-sidebar';
 
 interface AppLayoutProps {
   children: React.ReactNode;

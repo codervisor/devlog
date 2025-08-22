@@ -44,7 +44,14 @@ import { toast } from 'sonner';
 import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogNoteCategory } from '@codervisor/devlog-core';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
-import { cn, debounce, formatTimeAgoWithTooltip, priorityOptions, statusOptions, typeOptions } from '@/lib';
+import {
+  cn,
+  debounce,
+  formatTimeAgoWithTooltip,
+  priorityOptions,
+  statusOptions,
+  typeOptions,
+} from '@/lib';
 import { TableDataContext } from '@/stores/base';
 
 interface DevlogListProps {
@@ -114,7 +121,7 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Updating devlogs...',
+      operation: 'Updating devlog...',
     });
 
     try {
@@ -152,7 +159,7 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Deleting devlogs...',
+      operation: 'Deleting devlog...',
     });
 
     try {
@@ -335,7 +342,12 @@ export function DevlogList({
           <p className="text-muted-foreground mb-4">No devlogs found</p>
         </div>
       ) : (
-        <div className={cn('h-[calc(100%-4rem)] flex flex-col', loading ? 'overflow-y-hidden' : 'overflow-y-auto')}>
+        <div
+          className={cn(
+            'h-[calc(100%-4rem)] flex flex-col',
+            loading ? 'overflow-y-hidden' : 'overflow-y-auto',
+          )}
+        >
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border">
               <TableRow>
@@ -461,7 +473,7 @@ export function DevlogList({
           </Table>
 
           {/* Gutter */}
-          <div className="flex-1"/>
+          <div className="flex-1" />
 
           {/* Pagination */}
           {pagination && (

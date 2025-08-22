@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { DevlogList } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { useProjectName } from '../ProjectProvider';
+import { useProjectName } from '@/components/provider/ProjectProvider';
+import { DevlogList } from '@/components/feature/devlog/DevlogList';
 
 export function ProjectDevlogListPage() {
   const projectName = useProjectName();
@@ -70,7 +70,7 @@ export function ProjectDevlogListPage() {
     try {
       await batchUpdate(ids, updates);
     } catch (error) {
-      console.error('Failed to batch update devlogs:', error);
+      console.error('Failed to batch update devlog:', error);
       throw error;
     }
   };
@@ -79,7 +79,7 @@ export function ProjectDevlogListPage() {
     try {
       await batchDelete(ids);
     } catch (error) {
-      console.error('Failed to batch delete devlogs:', error);
+      console.error('Failed to batch delete devlog:', error);
       throw error;
     }
   };

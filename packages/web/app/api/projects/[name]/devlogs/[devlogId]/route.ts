@@ -6,7 +6,7 @@ import { RealtimeEventType } from '@/lib/realtime';
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
-// GET /api/projects/[name]/devlogs/[id] - Get specific devlog entry
+// GET /api/projects/[name]/devlog/[id] - Get specific devlog entry
 export async function GET(
   request: NextRequest,
   { params }: { params: { name: string; devlogId: string } },
@@ -55,7 +55,7 @@ export async function GET(
   }
 }
 
-// PUT /api/projects/[name]/devlogs/[id] - Update devlog entry
+// PUT /api/projects/[name]/devlog/[id] - Update devlog entry
 export async function PUT(
   request: NextRequest,
   { params }: { params: { name: string; devlogId: string } },
@@ -106,7 +106,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/projects/[name]/devlogs/[id] - Delete devlog entry
+// DELETE /api/projects/[name]/devlog/[id] - Delete devlog entry
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { name: string; devlogId: string } },

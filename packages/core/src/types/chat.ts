@@ -180,7 +180,7 @@ export interface ChatStats {
   linkageStats: {
     linked: number;
     unlinked: number;
-    multiLinked: number; // Sessions linked to multiple devlogs
+    multiLinked: number; // Sessions linked to multiple devlog
   };
 }
 

@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Button, DevlogDetails, Popover, PopoverContent, PopoverTrigger } from '@/components';
+import { Button, Popover, PopoverContent, PopoverTrigger } from '@/components';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents, useNoteEvents } from '@/hooks/use-realtime';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { DevlogEntry } from '@codervisor/devlog-core';
-import { useProjectName } from '@/projects/[name]/ProjectProvider';
-import { useDevlogId } from '@/projects/[name]/devlogs/DevlogProvider';
+import { useProjectName } from '@/components/provider/ProjectProvider';
+import { useDevlogId } from '@/components/provider/devlog-provider';
+import { DevlogDetails } from '@/components/feature/devlog/DevlogDetails';
 
 export function ProjectDevlogDetailsPage() {
   const projectName = useProjectName();

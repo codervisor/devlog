@@ -59,7 +59,7 @@ const entry = await devlog.createDevlog({
   type: 'feature',
   description: 'Add JWT-based authentication system',
   priority: 'high',
-  businessContext: 'Users need secure login to access protected features',
+  businessContext: 'Users need secure login to access protected feature',
   technicalContext: 'Using JWT tokens with refresh mechanism',
   acceptanceCriteria: [
     'Users can register with email/password',
@@ -81,16 +81,16 @@ await devlog.addNote(entry.id, {
   content: 'Fixed validation issues with email format',
 });
 
-// List all devlogs
+// List all devlog
 const allDevlogs = await devlog.listDevlogs();
 
-// Filter devlogs
+// Filter devlog
 const inProgressTasks = await devlog.listDevlogs({
   status: ['in-progress'],
   type: ['feature', 'bugfix'],
 });
 
-// Search devlogs
+// Search devlog
 const authDevlogs = await devlog.searchDevlogs('authentication');
 
 // Get active context for AI assistants

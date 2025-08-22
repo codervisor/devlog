@@ -53,7 +53,7 @@ export const RouteParams = {
 
   /**
    * Parse project name and devlog ID parameters (name-only routing for projects)
-   * Usage: /api/projects/[name]/devlogs/[id]
+   * Usage: /api/projects/[name]/devlog/[id]
    */
   parseProjectNameAndDevlogId(params: { name: string; devlogId: string }) {
     try {

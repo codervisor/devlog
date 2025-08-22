@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { NavigationBreadcrumb } from './NavigationBreadcrumb';
+import { NavigationBreadcrumb } from './navigation-breadcrumb';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export function TopNavbar() {

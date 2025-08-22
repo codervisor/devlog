@@ -37,7 +37,7 @@ export type DevlogStatus =
    * **In Progress** - Work is actively being developed
    * - Developer/AI is actively working on the implementation
    * - Main development phase where code is being written
-   * - Use when: Starting work, making changes, implementing features
+   * - Use when: Starting work, making changes, implementing feature
    */
   | 'in-progress'
   /**
@@ -292,8 +292,8 @@ export interface TimeSeriesDataPoint {
   date: string; // ISO date string (YYYY-MM-DD)
 
   // Cumulative data (primary Y-axis) - shows total project progress over time
-  totalCreated: number; // Running total of all created devlogs
-  totalClosed: number; // Running total of closed devlogs (based on closedAt timestamp)
+  totalCreated: number; // Running total of all created devlog
+  totalClosed: number; // Running total of closed devlog (based on closedAt timestamp)
 
   // Snapshot data (secondary Y-axis) - shows workload at this point in time
   open: number; // Entries that were open as of this date (totalCreated - totalClosed)

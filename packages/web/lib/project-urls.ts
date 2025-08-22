@@ -16,7 +16,7 @@ export class ProjectUrls {
   }
 
   /**
-   * Generate URL for project devlogs list
+   * Generate URL for project devlog list
    */
   static devlogs(projectName: string): string {
     return `${this.project(projectName)}/devlogs`;
