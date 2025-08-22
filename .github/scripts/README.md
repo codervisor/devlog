@@ -19,7 +19,7 @@ Sets up Node.js environment and installs dependencies with pnpm.
 ```bash
 ./.github/scripts/setup-node.sh [node_version] [pnpm_version]
 ```
-- **Default**: Node.js 20, pnpm 10.13.1
+- **Default**: Node.js 20, pnpm 10.15.0
 - **Used in**: All workflows that need Node.js
 
 #### `build-packages.sh`

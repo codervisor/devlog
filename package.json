@@ -70,5 +70,5 @@
     "dotenv": "16.5.0",
     "tsx": "^4.0.0"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.15.0"
 }

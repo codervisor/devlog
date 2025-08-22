@@ -22,7 +22,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   NODE_VERSION: 22
-  PNPM_VERSION: 10.13.1
+  PNPM_VERSION: 10.15.0
 
 jobs:
   # Phase 1: Build and Test
