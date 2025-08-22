@@ -43,6 +43,23 @@ services:
     networks:
       - devlog-network
 
+  # Development web service
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: devlog-web-dev
+    command: pnpm dev:web
+    ports:
+      - "3200:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/web/.next
+      - './scripts:/app/scripts'
+    env_file:
+      - .env
+
 networks:
   devlog-network:
     driver: bridge

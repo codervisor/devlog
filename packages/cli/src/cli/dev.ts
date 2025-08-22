@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import { exec } from 'child_process';
 import ora from 'ora';
 
-const DEV_COMPOSE_FILE = 'docker-compose.dev.yml';
+const DEV_COMPOSE_FILE = 'docker-compose.yml';
 
 // Helper function to run shell commands
 const runCommand = (command: string): Promise<string> => {

@@ -33,6 +33,9 @@ interface DevlogState {
   // Devlogs state
   devlogsContext: TableDataContext<DevlogEntry[], DevlogFilter>;
 
+  // Navigation devlogs state (for dropdowns/navigation - separate from main list)
+  navigationDevlogsContext: DataContext<DevlogEntry[]>;
+
   // Current devlog state (for detail views)
   currentDevlogId: DevlogId | null;
   currentDevlogContext: DataContext<DevlogEntry>;
@@ -48,8 +51,9 @@ interface DevlogState {
   setCurrentDevlogId: (id: DevlogId) => void;
   setDevlogsFilters: (filters: DevlogFilter) => void;
   setDevlogsPagination: (pagination: PaginationMeta) => void;
-  setDevlogsSortOptions: (sortOptions: { field: string; direction: 'asc' | 'desc' }) => void;
+  setDevlogsSortOptions: (sortOptions: SortOptions) => void;
   fetchDevlogs: () => Promise<void>;
+  fetchNavigationDevlogs: () => Promise<void>;
   fetchStats: () => Promise<void>;
   fetchTimeSeriesStats: () => Promise<void>;
   fetchCurrentDevlog: () => Promise<void>;
@@ -70,6 +74,9 @@ export const useDevlogStore = create<DevlogState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     devlogsContext: getDefaultTableDataContext(),
+
+    // Navigation devlogs state
+    navigationDevlogsContext: getDefaultDataContext(),
 
     // Selected devlog state
     currentDevlogId: null,
@@ -196,6 +203,59 @@ export const useDevlogStore = create<DevlogState>()(
         set((state) => ({
           devlogsContext: {
             ...state.devlogsContext,
+            loading: false,
+          },
+        }));
+      }
+    },
+
+    fetchNavigationDevlogs: async () => {
+      const devlogApiClient = getDevlogApiClient();
+
+      if (!devlogApiClient) {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            loading: false,
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            loading: true,
+            error: null,
+          },
+        }));
+
+        // Fetch recent devlogs for navigation - limit to 50 most recent
+        const { items: data } = await devlogApiClient.list(
+          {}, // No filters
+          { page: 1, limit: 50 }, // Simple pagination
+          { sortBy: 'id', sortOrder: 'desc' } // Sort by ID descending
+        );
+
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            data,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            error: handleApiError(err),
+          },
+        }));
+      } finally {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
             loading: false,
           },
         }));
@@ -533,6 +593,10 @@ export const useDevlogStore = create<DevlogState>()(
       set((state) => ({
         devlogsContext: {
           ...state.devlogsContext,
+          error: null,
+        },
+        navigationDevlogsContext: {
+          ...state.navigationDevlogsContext,
           error: null,
         },
         statsContext: {

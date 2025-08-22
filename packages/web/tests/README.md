@@ -35,7 +35,7 @@ pnpm --filter @codervisor/devlog-web test:ui
 
 ```bash
 # Start development server first
-docker compose -f docker-compose.dev.yml up web-dev -d --wait
+docker compose up web-dev -d --wait
 
 # Run integration tests
 pnpm --filter @codervisor/devlog-web test:integration

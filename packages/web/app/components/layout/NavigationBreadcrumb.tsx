@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDevlogStore, useProjectStore } from '@/stores';
-import { Check, ChevronsUpDown, NotepadText, Package } from 'lucide-react';
+import { Check, ChevronsUpDown, NotepadText, Package, Search } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,12 +16,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export function NavigationBreadcrumb() {
   const pathname = usePathname();
   const router = useRouter();
+  
+  // State for devlog search
+  const [devlogSearchText, setDevlogSearchText] = useState('');
 
   // Parse project name and devlog ID from URL instead of using context hooks
   // since this component is rendered at app level, outside of the provider hierarchy
@@ -44,7 +48,28 @@ export function NavigationBreadcrumb() {
 
   const { currentProjectContext, currentProjectName, projectsContext, fetchProjects } =
     useProjectStore();
-  const { currentDevlogContext } = useDevlogStore();
+  const { currentDevlogContext, navigationDevlogsContext, fetchNavigationDevlogs } = useDevlogStore();
+
+  // Filter devlogs for search
+  const filteredDevlogs = useMemo(() => {
+    const devlogs = navigationDevlogsContext.data || [];
+    const sorted = devlogs.sort((a, b) => {
+      // Sort by ID descending (most recent first)
+      return (b.id ?? 0) - (a.id ?? 0);
+    });
+    
+    // Apply search filter
+    if (!devlogSearchText.trim()) {
+      return sorted;
+    }
+    
+    return sorted.filter(devlog => 
+      devlog.title?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
+      devlog.id?.toString().includes(devlogSearchText) ||
+      devlog.status?.toLowerCase().includes(devlogSearchText.toLowerCase()) ||
+      devlog.type?.toLowerCase().includes(devlogSearchText.toLowerCase())
+    );
+  }, [navigationDevlogsContext.data, devlogSearchText]);
 
   // If we are not in a project context, do not render the breadcrumb
   if (!projectName) {
@@ -67,6 +92,20 @@ export function NavigationBreadcrumb() {
     } catch (error) {
       console.error('Error switching project:', error);
       toast.error('Failed to switch project');
+    }
+  };
+
+  const switchDevlog = async (devlogId: number) => {
+    if (!projectName) return;
+
+    try {
+      toast.success(`Switched to devlog: #${devlogId}`);
+
+      // Navigate to the devlog detail page
+      router.push(`/projects/${projectName}/devlogs/${devlogId}`);
+    } catch (error) {
+      console.error('Error switching devlog:', error);
+      toast.error('Failed to switch devlog');
     }
   };
 
@@ -141,11 +180,83 @@ export function NavigationBreadcrumb() {
     }
 
     return (
-      <div className="flex items-center gap-2 cursor-pointer rounded">
-        <NotepadText size={14} />
-        <span>{currentDevlogContext.data?.id}</span>
-        <ChevronsUpDown size={14} className="text-muted-foreground" />
-      </div>
+      <DropdownMenu
+        onOpenChange={async (open) => {
+          if (open) {
+            // Fetch devlogs when opening the dropdown
+            await fetchNavigationDevlogs();
+            // Reset search when opening
+            setDevlogSearchText('');
+          }
+        }}
+      >
+        <DropdownMenuTrigger asChild>
+          <div className="flex items-center gap-2 cursor-pointer rounded hover:bg-accent px-2 py-1">
+            <NotepadText size={14} />
+            <span>#{currentDevlogContext.data?.id || devlogId}</span>
+            <ChevronsUpDown size={14} className="text-muted-foreground" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-[400px]">
+          {/* Search Input */}
+          <div className="p-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search devlogs..."
+                value={devlogSearchText}
+                onChange={(e) => setDevlogSearchText(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          
+          {/* Loading State */}
+          {navigationDevlogsContext.loading ? (
+            <>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <DropdownMenuItem key={index} disabled className="flex items-center gap-3 p-3">
+                  <Skeleton className="w-8 h-4" />
+                  <Skeleton className="w-full h-4" />
+                </DropdownMenuItem>
+              ))}
+            </>
+          ) : (
+            <>
+              {/* No Results */}
+              {filteredDevlogs.length === 0 && (
+                <DropdownMenuItem disabled className="p-3 text-center text-muted-foreground">
+                  {devlogSearchText ? 'No devlogs found' : 'No devlogs available'}
+                </DropdownMenuItem>
+              )}
+              
+              {/* Devlog Items */}
+              {filteredDevlogs.map((devlog) => {
+                const isCurrentDevlog = devlogId === devlog.id;
+                return (
+                  <DropdownMenuItem
+                    key={devlog.id}
+                    disabled={isCurrentDevlog}
+                    onClick={() => !isCurrentDevlog && switchDevlog(devlog.id!)}
+                    className="flex items-center gap-3 p-3 cursor-pointer"
+                  >
+                    <span className="text-xs font-mono text-muted-foreground shrink-0">
+                      #{devlog.id}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{devlog.title}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {devlog.status} • {devlog.type}
+                      </div>
+                    </div>
+                    {isCurrentDevlog && <Check size={14} className="text-primary shrink-0" />}
+                  </DropdownMenuItem>
+                );
+              })}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
