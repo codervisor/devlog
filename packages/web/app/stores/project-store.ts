@@ -2,7 +2,8 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { apiClient, debounce, handleApiError } from '@/lib';
+import { debounce, handleApiError } from '@/lib';
+import { projectApiClient } from '@/lib/api';
 import { Project } from '@codervisor/devlog-core';
 import { DataContext, getDefaultDataContext } from '@/stores/base';
 
@@ -46,7 +47,7 @@ export const useProjectStore = create<ProjectState>()(
             error: null,
           },
         }));
-        const currentProject = await apiClient.get<Project>(`/api/projects/${currentProjectName}`);
+        const currentProject = await projectApiClient.get(currentProjectName);
         set((state) => ({
           currentProjectContext: {
             ...state.currentProjectContext,
@@ -99,7 +100,7 @@ export const useProjectStore = create<ProjectState>()(
               error: null,
             },
           }));
-          const projectsList = await apiClient.get<Project[]>('/api/projects');
+          const projectsList = await projectApiClient.list();
           set((state) => ({
             projectsContext: {
               ...state.projectsContext,
@@ -141,7 +142,7 @@ export const useProjectStore = create<ProjectState>()(
 
       updateProject: async (name: string, updates: Partial<Project>) => {
         try {
-          const updatedProject = await apiClient.put<Project>(`/api/projects/${name}`, updates);
+          const updatedProject = await projectApiClient.update(name, updates);
 
           // Update current project if it's the one being updated
           const currentProjectName = get().currentProjectName;
@@ -184,7 +185,7 @@ export const useProjectStore = create<ProjectState>()(
 
       deleteProject: async (name: string) => {
         try {
-          await apiClient.delete(`/api/projects/${name}`);
+          await projectApiClient.delete(name);
 
           // Clear current project if it's the one being deleted
           const currentProjectName = get().currentProjectName;

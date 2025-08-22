@@ -6,7 +6,7 @@
  * and response format processing.
  */
 
-import { ApiClient, ApiError } from './api-client.js';
+import { ApiClient, ApiError } from './api-client';
 import type { Project } from '@codervisor/devlog-core';
 
 /**

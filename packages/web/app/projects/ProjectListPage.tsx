@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RealtimeEventType } from '@/lib';
+import { projectApiClient } from '@/lib/api';
 
 interface ProjectFormData {
   name: string;
@@ -67,19 +68,7 @@ export function ProjectListPage() {
     try {
       setCreating(true);
 
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create project');
-      }
-
-      const newProject = await response.json();
+      const newProject = await projectApiClient.create(formData);
       toast.success(`Project "${newProject.name}" created successfully`);
 
       setIsModalVisible(false);
