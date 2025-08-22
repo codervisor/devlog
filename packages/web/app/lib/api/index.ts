@@ -5,3 +5,4 @@
 
 export * from './api-client';
 export * from './devlog-api-client';
+export * from './project-api-client';

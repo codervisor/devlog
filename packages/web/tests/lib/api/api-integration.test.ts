@@ -10,7 +10,7 @@ import {
   createTestEnvironment,
   isTestServerAvailable,
   type TestApiClient,
-} from './utils/test-server.js';
+} from '../../utils/test-server.js';
 
 // Skip integration tests by default unless explicitly enabled or server is available
 const runIntegrationTests = process.env.RUN_INTEGRATION_TESTS === 'true';

@@ -6,13 +6,6 @@ This document describes the comprehensive test suite for the Devlog Web API, des
 
 ## Test Architecture
 
-### 🔬 **Unit Tests** (`tests/api.test.ts`)
-
-- **Isolated testing** using mocks and no external dependencies
-- **Fast execution** - runs in milliseconds
-- **Safe for CI/CD** - no database or network dependencies
-- **Always run** during development and deployment
-
 ### 🚀 **Integration Tests** (`tests/api-integration.test.ts`)
 
 - **End-to-end testing** against actual API endpoints
@@ -153,26 +146,6 @@ DATABASE_URL=sqlite::memory:   # In-memory database for unit tests
 NODE_ENV=test                 # Test environment marker
 ```
 
-### Mock Configuration
-
-```typescript
-// Service mocks
-const mockProjectService = {
-  getInstance: vi.fn(),
-  get: vi.fn(),
-  update: vi.fn(),
-  delete: vi.fn(),
-};
-
-const mockDevlogService = {
-  getInstance: vi.fn(),
-  get: vi.fn(),
-  save: vi.fn(),
-  delete: vi.fn(),
-  // ... other methods
-};
-```
-
 ## Test Safety Features
 
 ### 🛡️ **Production Protection**
@@ -200,10 +173,9 @@ const mockDevlogService = {
 
 ### Adding New Tests
 
-1. **Unit tests**: Add to `tests/api.test.ts` with proper mocking
-2. **Integration tests**: Add to `tests/api-integration.test.ts` with safety guards
-3. **New utilities**: Mock in test setup and add comprehensive unit tests
-4. **New endpoints**: Follow existing patterns for parameter validation
+1. **Integration tests**: Add to `tests/api-integration.test.ts` with safety guards
+2. **New utilities**: Mock in test setup and add comprehensive unit tests
+3. **New endpoints**: Follow existing patterns for parameter validation
 
 ### Test Data Management
 
@@ -267,9 +239,3 @@ DEBUG=* pnpm --filter @codervisor/devlog-web test
 - ✅ All service integration patterns verified
 - ✅ Response format consistency validated
 - ✅ No production data dependencies
-
----
-
-**Status**: ✅ **COMPLETE - Comprehensive test suite implemented with safety isolation**
-
-The test suite provides robust coverage of the API route overhaul while maintaining complete isolation from production systems through extensive mocking and environment-specific configurations.
