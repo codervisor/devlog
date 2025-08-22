@@ -20,7 +20,7 @@ import {
 import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 import { formatTimeAgoWithTooltip, getStatusChartColor } from '@/lib';
-import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components';
+import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components/custom/devlog-tags';
 import {
   CHART_COLORS,
   CHART_OPACITY,

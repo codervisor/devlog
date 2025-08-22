@@ -31,7 +31,7 @@ import {
   DevlogPriorityTag,
   DevlogStatusTag,
   DevlogTypeTag,
-} from '@/components';
+} from '@/components/custom/devlog-tags';
 import { DevlogAnchorNav } from './devlog-anchor-nav';
 import { DataContext } from '@/stores/base';
 
