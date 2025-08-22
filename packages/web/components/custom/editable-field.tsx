@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Edit2 } from 'lucide-react';
-import { MarkdownEditor } from './MarkdownEditor';
+import { MarkdownEditor } from './markdown-editor';
 import { cn } from '@/lib';
 
 interface EditableFieldProps {

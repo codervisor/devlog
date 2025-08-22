@@ -16,8 +16,8 @@ import {
   Wrench,
 } from 'lucide-react';
 import { DevlogEntry, DevlogNote, DevlogNoteCategory } from '@codervisor/devlog-core';
-import { EditableField } from '@/components/custom/EditableField';
-import { MarkdownRenderer } from '@/components/custom/MarkdownRenderer';
+import { EditableField } from '@/components/custom/editable-field';
+import { MarkdownRenderer } from '@/components/custom/markdown-renderer';
 import {
   cn,
   formatTimeAgoWithTooltip,
@@ -26,14 +26,13 @@ import {
   statusOptions,
   typeOptions,
 } from '@/lib';
+import { Alert, AlertDescription } from '@/components/ui';
 import {
-  Alert,
-  AlertDescription,
   DevlogPriorityTag,
   DevlogStatusTag,
   DevlogTypeTag,
 } from '@/components';
-import { DevlogAnchorNav } from './DevlogAnchorNav';
+import { DevlogAnchorNav } from './devlog-anchor-nav';
 import { DataContext } from '@/stores/base';
 
 interface DevlogDetailsProps {

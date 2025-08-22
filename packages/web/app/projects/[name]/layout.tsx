@@ -1,9 +1,9 @@
 import React from 'react';
 import { ProjectService } from '@codervisor/devlog-core/server';
 import { generateSlugFromName } from '@codervisor/devlog-core';
-import { ProjectNotFound } from '@/components/custom/project/ProjectNotFound';
+import { ProjectNotFound } from '@/components/custom/project/project-not-found';
 import { redirect } from 'next/navigation';
-import { ProjectProvider } from '@/components/provider/ProjectProvider';
+import { ProjectProvider } from '@/components/provider/project-provider';
 
 interface ProjectLayoutProps {
   children: React.ReactNode;

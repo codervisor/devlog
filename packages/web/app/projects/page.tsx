@@ -1,4 +1,4 @@
-import { ProjectListPage } from './ProjectListPage';
+import { ProjectListPage } from './project-list-page';
 
 export const dynamic = 'force-dynamic';
 

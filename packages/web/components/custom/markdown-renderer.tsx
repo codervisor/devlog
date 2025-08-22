@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
-import { StickyHeadings } from './StickyHeadings';
+import { StickyHeadings } from './sticky-headings';
 import { cn } from '@/lib';
 
 // Import highlight.js CSS theme

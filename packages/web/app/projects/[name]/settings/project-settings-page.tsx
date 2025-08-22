@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { LoaderIcon, SaveIcon, TrashIcon, AlertTriangleIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Project } from '@codervisor/devlog-core';
-import { useProjectName } from '@/components/provider/ProjectProvider';
+import { useProjectName } from '@/components/provider/project-provider';
 
 interface ProjectFormData {
   name: string;
