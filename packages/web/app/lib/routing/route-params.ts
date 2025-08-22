@@ -63,46 +63,9 @@ export const RouteParamParsers = {
   /**
    * Parse project route parameters
    * For routes like: /projects/[name]/...
+   * @deprecated
    */
   parseProjectParams(params: { id: string }): ParsedProjectParams {
     return parseProjectIdentifier(params.id, 'project identifier');
   },
-
-  /**
-   * Parse project + devlog route parameters
-   * For routes like: /projects/[name]/devlogs/[devlogId]/...
-   */
-  parseDevlogParams(params: { id: string; devlogId: string }): ParsedDevlogParams {
-    const projectInfo = parseProjectIdentifier(params.id, 'project identifier');
-    return {
-      ...projectInfo,
-      devlogId: parseId(params.devlogId, 'devlog ID') as DevlogId,
-    };
-  },
-
-  /**
-   * Parse single devlog ID parameter
-   * For routes like: /devlogs/[name]/...
-   */
-  parseDevlogId(params: { id: string }): { devlogId: DevlogId } {
-    return {
-      devlogId: parseId(params.id, 'devlog ID') as DevlogId,
-    };
-  },
 };
-
-/**
- * Hook for parsing route parameters in client components
- */
-export function useRouteParams<P extends Record<string, string>, T>(
-  params: P,
-  parser: (params: P) => T,
-): T {
-  try {
-    return parser(params);
-  } catch (error) {
-    throw new Error(
-      `Route parameter error: ${error instanceof Error ? error.message : 'Invalid parameters'}`,
-    );
-  }
-}

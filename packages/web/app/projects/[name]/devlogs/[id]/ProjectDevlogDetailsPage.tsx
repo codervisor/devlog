@@ -8,15 +8,12 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, SaveIcon, TrashIcon, UndoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { DevlogEntry } from '@codervisor/devlog-core';
-import { RealtimeEventType } from '@/lib/realtime';
-import { useProjectName } from '../../ProjectProvider';
+import { useProjectName } from '@/projects/[name]/ProjectProvider';
+import { useDevlogId } from '@/projects/[name]/devlogs/DevlogProvider';
 
-interface ProjectDevlogDetailsPageProps {
-  devlogId: number;
-}
-
-export function ProjectDevlogDetailsPage({ devlogId }: ProjectDevlogDetailsPageProps) {
+export function ProjectDevlogDetailsPage() {
   const projectName = useProjectName();
+  const devlogId = useDevlogId();
   const router = useRouter();
 
   const { setCurrentProjectName } = useProjectStore();

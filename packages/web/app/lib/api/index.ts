@@ -5,4 +5,3 @@
 
 export * from './api-client';
 export * from './devlog-api-client';
-export * from './note-api-client';

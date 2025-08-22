@@ -2,18 +2,19 @@
 
 ## Overview
 
-The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This provides better organization and clearer URL structure for project-scoped operations.
+The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This
+provides better organization and clearer URL structure for project-scoped operations.
 
 ## Route Structure
 
 ### Hierarchical Project-Based Routes (Primary)
+
 ```
 /                                           - Dashboard (homepage)
 /projects                                   - Project management page
-/projects/[id]                             - Project details page
-/projects/[id]/devlogs                     - List of devlogs for specific project
-/projects/[id]/devlogs/create              - Create new devlog in specific project
-/projects/[id]/devlogs/[devlogId]          - Individual devlog details within project
+/projects/[name]                            - Project details page
+/projects/[name]/devlogs                    - List of devlogs for specific project
+/projects/[name]/devlogs/[id]               - Individual devlog details within project
 ```
 
 ````markdown
@@ -21,11 +22,13 @@ The web package uses Next.js 14 App Router with hierarchical routing structure t
 
 ## Overview
 
-The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This provides better organization and clearer URL structure for project-scoped operations.
+The web package uses Next.js 14 App Router with hierarchical routing structure that matches the API endpoints. This
+provides better organization and clearer URL structure for project-scoped operations.
 
 ## Route Structure
 
 ### Hierarchical Project-Based Routes (Primary)
+
 ```
 /                                           - Redirects to /projects
 /projects                                   - Project list page (main entry point)
@@ -38,11 +41,14 @@ The web package uses Next.js 14 App Router with hierarchical routing structure t
 ## Key Changes Made
 
 ### Route Purpose Updates
+
 - **`/` (Homepage)**: Now redirects to `/projects` as the main entry point
 - **`/projects`**: Project list/management page - browse and manage all projects
-- **`/projects/[id]`**: Project dashboard - overview with stats, charts, and recent devlogs (formerly the homepage dashboard)
+- **`/projects/[id]`**: Project dashboard - overview with stats, charts, and recent devlogs (formerly the homepage
+  dashboard)
 
 ### Navigation Flow
+
 1. **User visits `/`** → Automatically redirected to `/projects`
 2. **User browses projects** at `/projects` → Can view all projects and create new ones
 3. **User selects a project** → Goes to `/projects/[id]` for that project's dashboard
@@ -79,16 +85,19 @@ app/
 ## Component Responsibilities
 
 ### ProjectManagementPage (/projects)
+
 - **Primary function**: Project list and management interface
 - **Features**: Browse projects, create new projects, view project cards
 - **Navigation**: Links to individual project dashboards
 
 ### ProjectDetailsPage (/projects/[id])
+
 - **Primary function**: Project-specific dashboard and overview
 - **Features**: Project stats, time series charts, recent devlogs, overview stats
 - **Context**: Sets project context for the entire project section
 
 ### DashboardPage Component
+
 - **Usage**: Embedded in ProjectDetailsPage for project-specific dashboards
 - **Features**: Stats visualization, time series data, recent devlogs display
 - **Scope**: Project-scoped rather than global

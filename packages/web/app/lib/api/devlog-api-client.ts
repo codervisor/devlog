@@ -3,6 +3,7 @@ import type {
   DevlogFilter,
   DevlogId,
   DevlogNote,
+  DevlogNoteCategory,
   DevlogPriority,
   DevlogStats,
   DevlogStatus,
@@ -13,7 +14,6 @@ import type {
   TimeSeriesStats,
 } from '@codervisor/devlog-core';
 import { apiClient } from './api-client';
-import { CreateNoteRequest, UpdateNoteRequest } from '@/lib';
 
 export interface CreateDevlogRequest {
   title: string;
@@ -38,6 +38,16 @@ export interface BatchUpdateRequest {
   priority?: DevlogPriority;
   type?: DevlogType;
   tags?: string[];
+}
+
+export interface CreateNoteRequest {
+  content: string;
+  category?: DevlogNoteCategory;
+}
+
+export interface UpdateNoteRequest {
+  content?: string;
+  category?: DevlogNoteCategory;
 }
 
 export interface BatchNoteRequest {
@@ -107,7 +117,10 @@ export class DevlogApiClient {
    * Update an existing devlog
    */
   async update(devlogId: DevlogId, data: UpdateDevlogRequest): Promise<DevlogEntry> {
-    return apiClient.put<DevlogEntry>(`/api/projects/${this.projectName}/devlogs/${devlogId}`, data);
+    return apiClient.put<DevlogEntry>(
+      `/api/projects/${this.projectName}/devlogs/${devlogId}`,
+      data,
+    );
   }
 
   /**

@@ -10,10 +10,10 @@ interface ProjectContextValue {
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
-export function ProjectProvider({ 
-  children, 
-  project 
-}: { 
+export function ProjectProvider({
+  children,
+  project,
+}: {
   children: React.ReactNode;
   project: Project;
 }) {
@@ -22,11 +22,7 @@ export function ProjectProvider({
     projectName: project.name,
   };
 
-  return (
-    <ProjectContext.Provider value={value}>
-      {children}
-    </ProjectContext.Provider>
-  );
+  return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;
 }
 
 export function useProject(): ProjectContextValue {
