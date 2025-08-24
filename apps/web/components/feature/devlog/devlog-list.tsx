@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -185,15 +185,22 @@ export function DevlogList({
   };
 
   // Handle search
-  const handleSearch = debounce((value: string) => {
+  const debouncedFilterChange = useMemo(
+    () => debounce((value: string) => {
+      if (onFilterChange) {
+        onFilterChange({
+          ...filters,
+          search: value || undefined,
+        });
+      }
+    }, 300),
+    [onFilterChange, filters]
+  );
+
+  const handleSearch = useCallback((value: string) => {
     setSearchText(value);
-    if (onFilterChange) {
-      onFilterChange({
-        ...filters,
-        search: value || undefined,
-      });
-    }
-  });
+    debouncedFilterChange(value);
+  }, [debouncedFilterChange]);
 
   // Handle filter changes
   const handleFilterChange = (key: string, value: string | undefined) => {
