@@ -1,5 +1,5 @@
-import { ProjectDevlogListPage } from './project-devlog-list-page';
+import { DevlogListPage } from './devlog-list-page';
 
 export default function ProjectDevlogsPage() {
-  return <ProjectDevlogListPage />;
+  return <DevlogListPage />;
 }

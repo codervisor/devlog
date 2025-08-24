@@ -12,7 +12,7 @@ import { useProjectName } from '@/components/provider/project-provider';
 import { useDevlogId } from '@/components/provider/devlog-provider';
 import { DevlogDetails } from '@/components/feature/devlog/devlog-details';
 
-export function ProjectDevlogDetailsPage() {
+export function DevlogDetailsPage() {
   const projectName = useProjectName();
   const devlogId = useDevlogId();
   const router = useRouter();

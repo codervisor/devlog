@@ -25,9 +25,9 @@ interface ProjectState {
 export const useProjectStore = create<ProjectState>()(
   subscribeWithSelector((set, get) => {
     // Create debounced version of the actual fetch function
-    const debouncedFetch = debounce(async () => {
+    const debouncedFetchCurrentProject = debounce(async () => {
       const { currentProjectName } = get();
-      
+
       if (!currentProjectName) {
         set((state) => ({
           currentProjectContext: {
@@ -88,7 +88,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       fetchCurrentProject: async () => {
-        debouncedFetch();
+        debouncedFetchCurrentProject();
       },
 
       fetchProjects: async () => {

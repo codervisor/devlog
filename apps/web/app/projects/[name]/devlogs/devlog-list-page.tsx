@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useProjectName } from '@/components/provider/project-provider';
 import { DevlogList } from '@/components/feature/devlog/devlog-list';
 
-export function ProjectDevlogListPage() {
+export function DevlogListPage() {
   const projectName = useProjectName();
   const router = useRouter();
 

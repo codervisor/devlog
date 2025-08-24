@@ -14,7 +14,7 @@ import {
   SortOptions,
   TimeSeriesStats,
 } from '@codervisor/devlog-core';
-import { DevlogApiClient, handleApiError } from '@/lib';
+import { debounce, DevlogApiClient, handleApiError } from '@/lib';
 import { useProjectStore } from './project-store';
 import {
   DataContext,
@@ -71,67 +71,8 @@ interface DevlogState {
 }
 
 export const useDevlogStore = create<DevlogState>()(
-  subscribeWithSelector((set, get) => ({
-    // Initial state
-    devlogsContext: getDefaultTableDataContext(),
-
-    // Navigation devlog state
-    navigationDevlogsContext: getDefaultDataContext(),
-
-    // Selected devlog state
-    currentDevlogId: null,
-    currentDevlogContext: getDefaultDataContext(),
-    currentDevlogNotesContext: getDefaultDataContext(),
-
-    // Stats state
-    statsContext: getDefaultDataContext(),
-
-    // Time series stats state
-    timeSeriesStatsContext: getDefaultDataContext(),
-
-    // Actions
-    setCurrentDevlogId: (id: DevlogId) => {
-      set({
-        currentDevlogId: id,
-        currentDevlogContext: getDefaultDataContext(),
-      });
-    },
-
-    setDevlogsFilters: (filters) => {
-      const currentFilters = get().devlogsContext.filters;
-      set((state) => ({
-        devlogsContext: {
-          ...state.devlogsContext,
-          filters: {
-            ...currentFilters,
-            ...filters,
-          },
-        },
-      }));
-    },
-
-    setDevlogsPagination: (pagination: PaginationMeta) => {
-      set((state) => ({
-        devlogsContext: {
-          ...state.devlogsContext,
-          pagination: {
-            ...state.devlogsContext.pagination,
-            ...pagination,
-          },
-        },
-      }));
-    },
-
-    setDevlogsSortOptions: (sortOptions: SortOptions) => {
-      set((state) => ({
-        devlogsContext: {
-          ...state.devlogsContext,
-          sortOptions,
-        },
-      }));
-    },
-
-    fetchDevlogs: async () => {
+  subscribeWithSelector((set, get) => {
+    const debouncedFetchDevlogs = debounce(async () => {
       const devlogApiClient = getDevlogApiClient();
 
       if (!devlogApiClient) {
@@ -207,415 +148,480 @@ export const useDevlogStore = create<DevlogState>()(
           },
         }));
       }
-    },
+    });
 
-    fetchNavigationDevlogs: async () => {
-      const devlogApiClient = getDevlogApiClient();
+    return {
+      // Initial state
+      devlogsContext: getDefaultTableDataContext(),
 
-      if (!devlogApiClient) {
+      // Navigation devlog state
+      navigationDevlogsContext: getDefaultDataContext(),
+
+      // Selected devlog state
+      currentDevlogId: null,
+      currentDevlogContext: getDefaultDataContext(),
+      currentDevlogNotesContext: getDefaultDataContext(),
+
+      // Stats state
+      statsContext: getDefaultDataContext(),
+
+      // Time series stats state
+      timeSeriesStatsContext: getDefaultDataContext(),
+
+      // Actions
+      setCurrentDevlogId: (id: DevlogId) => {
+        set({
+          currentDevlogId: id,
+          currentDevlogContext: getDefaultDataContext(),
+        });
+      },
+
+      setDevlogsFilters: (filters) => {
+        const currentFilters = get().devlogsContext.filters;
         set((state) => ({
-          navigationDevlogsContext: {
-            ...state.navigationDevlogsContext,
-            loading: false,
+          devlogsContext: {
+            ...state.devlogsContext,
+            filters: {
+              ...currentFilters,
+              ...filters,
+            },
           },
         }));
-        return;
-      }
+      },
 
-      try {
+      setDevlogsPagination: (pagination: PaginationMeta) => {
         set((state) => ({
-          navigationDevlogsContext: {
-            ...state.navigationDevlogsContext,
-            loading: true,
-            error: null,
+          devlogsContext: {
+            ...state.devlogsContext,
+            pagination: {
+              ...state.devlogsContext.pagination,
+              ...pagination,
+            },
           },
         }));
+      },
 
-        // Fetch recent devlog for navigation - limit to 50 most recent
-        const { items: data } = await devlogApiClient.list(
-          {}, // No filters
-          { page: 1, limit: 50 }, // Simple pagination
-          { sortBy: 'id', sortOrder: 'desc' }, // Sort by ID descending
-        );
-
+      setDevlogsSortOptions: (sortOptions: SortOptions) => {
         set((state) => ({
-          navigationDevlogsContext: {
-            ...state.navigationDevlogsContext,
-            data,
-            error: null,
+          devlogsContext: {
+            ...state.devlogsContext,
+            sortOptions,
           },
         }));
-      } catch (err) {
-        set((state) => ({
-          navigationDevlogsContext: {
-            ...state.navigationDevlogsContext,
-            error: handleApiError(err),
-          },
-        }));
-      } finally {
-        set((state) => ({
-          navigationDevlogsContext: {
-            ...state.navigationDevlogsContext,
-            loading: false,
-          },
-        }));
-      }
-    },
+      },
 
-    fetchStats: async () => {
-      const devlogApiClient = getDevlogApiClient();
+      fetchDevlogs: async () => {
+        debouncedFetchDevlogs();
+      },
 
-      if (!devlogApiClient) {
-        set((state) => ({
-          statsContext: {
-            ...state.statsContext,
-            loading: false,
-          },
-        }));
-        return;
-      }
+      fetchNavigationDevlogs: async () => {
+        const devlogApiClient = getDevlogApiClient();
 
-      try {
-        set((state) => ({
-          statsContext: {
-            ...state.statsContext,
-            loading: true,
-            error: null,
-          },
-        }));
-        const statsData = await devlogApiClient.getStatsOverview();
-        set((state) => ({
-          statsContext: {
-            ...state.statsContext,
-            data: statsData,
-            error: null,
-          },
-        }));
-      } catch (err) {
-        const errorMessage = handleApiError(err);
-        console.error('Failed to fetch stats:', err);
-        set((state) => ({
-          statsContext: {
-            ...state.statsContext,
-            error: errorMessage,
-          },
-        }));
-      } finally {
-        set((state) => ({
-          statsContext: {
-            ...state.statsContext,
-            loading: false,
-          },
-        }));
-      }
-    },
-
-    fetchTimeSeriesStats: async () => {
-      const devlogApiClient = getDevlogApiClient();
-
-      if (!devlogApiClient) {
-        set((state) => ({
-          timeSeriesStatsContext: {
-            ...state.timeSeriesStatsContext,
-            loading: false,
-          },
-        }));
-        return;
-      }
-
-      try {
-        set((state) => ({
-          timeSeriesStatsContext: {
-            ...state.timeSeriesStatsContext,
-            loading: true,
-            error: null,
-          },
-        }));
-        const timeSeriesData = await devlogApiClient.getStatsTimeseries('month');
-        set((state) => ({
-          timeSeriesStatsContext: {
-            ...state.timeSeriesStatsContext,
-            data: timeSeriesData,
-            error: null,
-          },
-        }));
-      } catch (err) {
-        const errorMessage = handleApiError(err);
-        console.error('Failed to fetch time series stats:', err);
-        set((state) => ({
-          timeSeriesStatsContext: {
-            ...state.timeSeriesStatsContext,
-            error: errorMessage,
-          },
-        }));
-      } finally {
-        set((state) => ({
-          timeSeriesStatsContext: {
-            ...state.timeSeriesStatsContext,
-            loading: false,
-          },
-        }));
-      }
-    },
-
-    fetchCurrentDevlog: async () => {
-      const { currentDevlogId } = get();
-      const devlogApiClient = getDevlogApiClient();
-      if (!currentDevlogId || !devlogApiClient) {
-        set((state) => ({
-          currentDevlogContext: {
-            ...state.currentDevlogContext,
-            loading: false,
-            error: 'No devlog selected or API client unavailable',
-          },
-        }));
-        return;
-      }
-
-      try {
-        set((state) => ({
-          currentDevlogContext: {
-            ...state.currentDevlogContext,
-            loading: true,
-            error: null,
-          },
-        }));
-        const currentDevlog = await devlogApiClient.get(currentDevlogId);
-        set((state) => ({
-          currentDevlogContext: {
-            ...state.currentDevlogContext,
-            data: currentDevlog,
-            error: null,
-          },
-        }));
-      } catch (err) {
-        const errorMessage = handleApiError(err);
-        console.error('Failed to fetch selected devlog:', err);
-        set((state) => ({
-          currentDevlogContext: {
-            ...state.currentDevlogContext,
-            error: errorMessage,
-          },
-        }));
-      } finally {
-        set((state) => ({
-          currentDevlogContext: {
-            ...state.currentDevlogContext,
-            loading: false,
-          },
-        }));
-      }
-    },
-
-    clearCurrentDevlog: () => {
-      set({
-        currentDevlogContext: getDefaultDataContext(),
-      });
-    },
-
-    fetchCurrentDevlogNotes: async () => {
-      const { currentDevlogId } = get();
-      const devlogApiClient = getDevlogApiClient();
-
-      if (!currentDevlogId || !devlogApiClient) {
-        set((state) => ({
-          currentDevlogNotesContext: {
-            ...state.currentDevlogNotesContext,
-            loading: false,
-            error: 'No devlog selected or API client unavailable',
-          },
-        }));
-        return;
-      }
-
-      try {
-        // set({ currentDevlogNotesLoading: true, currentDevlogNotesError: null });
-        set((state) => ({
-          currentDevlogNotesContext: {
-            ...state.currentDevlogNotesContext,
-            loading: true,
-            error: null,
-          },
-        }));
-        const notes = await devlogApiClient.getNotes(currentDevlogId);
-        set((state) => ({
-          currentDevlogNotesContext: {
-            ...state.currentDevlogNotesContext,
-            data: notes,
-            error: null,
-          },
-        }));
-      } catch (err) {
-        const errorMessage = handleApiError(err);
-        console.error('Failed to fetch devlog notes:', err);
-        set((state) => ({
-          currentDevlogNotesContext: {
-            ...state.currentDevlogNotesContext,
-            error: errorMessage,
-          },
-        }));
-        // set({ currentDevlogNotesError: errorMessage });
-      } finally {
-        set((state) => ({
-          currentDevlogNotesContext: {
-            ...state.currentDevlogNotesContext,
-            loading: false,
-          },
-        }));
-      }
-    },
-
-    clearCurrentDevlogNotes: () => {
-      set({ currentDevlogNotesContext: getDefaultDataContext() });
-    },
-
-    createDevlog: async (data: Partial<DevlogEntry>) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
-
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
-
-      return devlogApiClient.create(data as any);
-    },
-
-    updateDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
-
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
-
-      const { id, ...updateData } = data;
-      return devlogApiClient.update(id, updateData as any);
-    },
-
-    updateSelectedDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
-
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
-
-      const { id, ...updateData } = data;
-      const updatedDevlog = await devlogApiClient.update(id, updateData as any);
-
-      // Update both selected devlog and list if the devlog exists in the list
-      set((state) => ({
-        currentDevlogContext: {
-          ...state.currentDevlogContext,
-          data: updatedDevlog,
-          error: null,
-        },
-      }));
-
-      const { devlogsContext } = get();
-      const devlogs = devlogsContext.data;
-      if (devlogs) {
-        const index = devlogs.findIndex((devlog) => devlog.id === updatedDevlog.id);
-        if (index >= 0) {
-          const updated = [...devlogs];
-          updated[index] = updatedDevlog;
+        if (!devlogApiClient) {
           set((state) => ({
-            devlogsContext: {
-              ...state.devlogsContext,
-              data: updated,
+            navigationDevlogsContext: {
+              ...state.navigationDevlogsContext,
+              loading: false,
+            },
+          }));
+          return;
+        }
+
+        try {
+          set((state) => ({
+            navigationDevlogsContext: {
+              ...state.navigationDevlogsContext,
+              loading: true,
+              error: null,
+            },
+          }));
+
+          // Fetch recent devlog for navigation - limit to 50 most recent
+          const { items: data } = await devlogApiClient.list(
+            {}, // No filters
+            { page: 1, limit: 50 }, // Simple pagination
+            { sortBy: 'id', sortOrder: 'desc' }, // Sort by ID descending
+          );
+
+          set((state) => ({
+            navigationDevlogsContext: {
+              ...state.navigationDevlogsContext,
+              data,
+              error: null,
+            },
+          }));
+        } catch (err) {
+          set((state) => ({
+            navigationDevlogsContext: {
+              ...state.navigationDevlogsContext,
+              error: handleApiError(err),
+            },
+          }));
+        } finally {
+          set((state) => ({
+            navigationDevlogsContext: {
+              ...state.navigationDevlogsContext,
+              loading: false,
             },
           }));
         }
-      }
+      },
 
-      return updatedDevlog;
-    },
+      fetchStats: async () => {
+        const devlogApiClient = getDevlogApiClient();
 
-    deleteDevlog: async (id: DevlogId) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
+        if (!devlogApiClient) {
+          set((state) => ({
+            statsContext: {
+              ...state.statsContext,
+              loading: false,
+            },
+          }));
+          return;
+        }
 
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
+        try {
+          set((state) => ({
+            statsContext: {
+              ...state.statsContext,
+              loading: true,
+              error: null,
+            },
+          }));
+          const statsData = await devlogApiClient.getStatsOverview();
+          set((state) => ({
+            statsContext: {
+              ...state.statsContext,
+              data: statsData,
+              error: null,
+            },
+          }));
+        } catch (err) {
+          const errorMessage = handleApiError(err);
+          console.error('Failed to fetch stats:', err);
+          set((state) => ({
+            statsContext: {
+              ...state.statsContext,
+              error: errorMessage,
+            },
+          }));
+        } finally {
+          set((state) => ({
+            statsContext: {
+              ...state.statsContext,
+              loading: false,
+            },
+          }));
+        }
+      },
 
-      try {
-        await devlogApiClient.delete(id);
-      } catch (error) {
-        throw error;
-      } finally {
+      fetchTimeSeriesStats: async () => {
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!devlogApiClient) {
+          set((state) => ({
+            timeSeriesStatsContext: {
+              ...state.timeSeriesStatsContext,
+              loading: false,
+            },
+          }));
+          return;
+        }
+
+        try {
+          set((state) => ({
+            timeSeriesStatsContext: {
+              ...state.timeSeriesStatsContext,
+              loading: true,
+              error: null,
+            },
+          }));
+          const timeSeriesData = await devlogApiClient.getStatsTimeseries('month');
+          set((state) => ({
+            timeSeriesStatsContext: {
+              ...state.timeSeriesStatsContext,
+              data: timeSeriesData,
+              error: null,
+            },
+          }));
+        } catch (err) {
+          const errorMessage = handleApiError(err);
+          console.error('Failed to fetch time series stats:', err);
+          set((state) => ({
+            timeSeriesStatsContext: {
+              ...state.timeSeriesStatsContext,
+              error: errorMessage,
+            },
+          }));
+        } finally {
+          set((state) => ({
+            timeSeriesStatsContext: {
+              ...state.timeSeriesStatsContext,
+              loading: false,
+            },
+          }));
+        }
+      },
+
+      fetchCurrentDevlog: async () => {
+        const { currentDevlogId } = get();
+        const devlogApiClient = getDevlogApiClient();
+        if (!currentDevlogId || !devlogApiClient) {
+          set((state) => ({
+            currentDevlogContext: {
+              ...state.currentDevlogContext,
+              loading: false,
+              error: 'No devlog selected or API client unavailable',
+            },
+          }));
+          return;
+        }
+
+        try {
+          set((state) => ({
+            currentDevlogContext: {
+              ...state.currentDevlogContext,
+              loading: true,
+              error: null,
+            },
+          }));
+          const currentDevlog = await devlogApiClient.get(currentDevlogId);
+          set((state) => ({
+            currentDevlogContext: {
+              ...state.currentDevlogContext,
+              data: currentDevlog,
+              error: null,
+            },
+          }));
+        } catch (err) {
+          const errorMessage = handleApiError(err);
+          console.error('Failed to fetch selected devlog:', err);
+          set((state) => ({
+            currentDevlogContext: {
+              ...state.currentDevlogContext,
+              error: errorMessage,
+            },
+          }));
+        } finally {
+          set((state) => ({
+            currentDevlogContext: {
+              ...state.currentDevlogContext,
+              loading: false,
+            },
+          }));
+        }
+      },
+
+      clearCurrentDevlog: () => {
+        set({
+          currentDevlogContext: getDefaultDataContext(),
+        });
+      },
+
+      fetchCurrentDevlogNotes: async () => {
+        const { currentDevlogId } = get();
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentDevlogId || !devlogApiClient) {
+          set((state) => ({
+            currentDevlogNotesContext: {
+              ...state.currentDevlogNotesContext,
+              loading: false,
+              error: 'No devlog selected or API client unavailable',
+            },
+          }));
+          return;
+        }
+
+        try {
+          // set({ currentDevlogNotesLoading: true, currentDevlogNotesError: null });
+          set((state) => ({
+            currentDevlogNotesContext: {
+              ...state.currentDevlogNotesContext,
+              loading: true,
+              error: null,
+            },
+          }));
+          const notes = await devlogApiClient.getNotes(currentDevlogId);
+          set((state) => ({
+            currentDevlogNotesContext: {
+              ...state.currentDevlogNotesContext,
+              data: notes,
+              error: null,
+            },
+          }));
+        } catch (err) {
+          const errorMessage = handleApiError(err);
+          console.error('Failed to fetch devlog notes:', err);
+          set((state) => ({
+            currentDevlogNotesContext: {
+              ...state.currentDevlogNotesContext,
+              error: errorMessage,
+            },
+          }));
+          // set({ currentDevlogNotesError: errorMessage });
+        } finally {
+          set((state) => ({
+            currentDevlogNotesContext: {
+              ...state.currentDevlogNotesContext,
+              loading: false,
+            },
+          }));
+        }
+      },
+
+      clearCurrentDevlogNotes: () => {
+        set({ currentDevlogNotesContext: getDefaultDataContext() });
+      },
+
+      createDevlog: async (data: Partial<DevlogEntry>) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
+
+        return devlogApiClient.create(data as any);
+      },
+
+      updateDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
+
+        const { id, ...updateData } = data;
+        return devlogApiClient.update(id, updateData as any);
+      },
+
+      updateSelectedDevlog: async (data: Partial<DevlogEntry> & { id: DevlogId }) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
+
+        const { id, ...updateData } = data;
+        const updatedDevlog = await devlogApiClient.update(id, updateData as any);
+
+        // Update both selected devlog and list if the devlog exists in the list
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            data: updatedDevlog,
+            error: null,
+          },
+        }));
+
+        const { devlogsContext } = get();
+        const devlogs = devlogsContext.data;
+        if (devlogs) {
+          const index = devlogs.findIndex((devlog) => devlog.id === updatedDevlog.id);
+          if (index >= 0) {
+            const updated = [...devlogs];
+            updated[index] = updatedDevlog;
+            set((state) => ({
+              devlogsContext: {
+                ...state.devlogsContext,
+                data: updated,
+              },
+            }));
+          }
+        }
+
+        return updatedDevlog;
+      },
+
+      deleteDevlog: async (id: DevlogId) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
+
+        try {
+          await devlogApiClient.delete(id);
+        } catch (error) {
+          throw error;
+        } finally {
+          await get().fetchDevlogs();
+        }
+      },
+
+      batchUpdate: async (ids: DevlogId[], updates: any) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
+
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
+
+        const result = await devlogApiClient.batchUpdate(ids, updates);
         await get().fetchDevlogs();
-      }
-    },
+        return result;
+      },
 
-    batchUpdate: async (ids: DevlogId[], updates: any) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
+      batchDelete: async (ids: DevlogId[]) => {
+        const currentProject = useProjectStore.getState().currentProjectContext.data;
+        const devlogApiClient = getDevlogApiClient();
 
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
+        if (!currentProject || !devlogApiClient) {
+          throw new Error('No project selected or API client unavailable');
+        }
 
-      const result = await devlogApiClient.batchUpdate(ids, updates);
-      await get().fetchDevlogs();
-      return result;
-    },
+        await devlogApiClient.batchDelete(ids);
+        await get().fetchDevlogs();
+      },
 
-    batchDelete: async (ids: DevlogId[]) => {
-      const currentProject = useProjectStore.getState().currentProjectContext.data;
-      const devlogApiClient = getDevlogApiClient();
+      handleStatusFilter: (filterValue: FilterType | DevlogStatus) => {
+        const { devlogsContext } = get();
+        const { filters } = devlogsContext;
+        if (['total', 'open', 'closed'].includes(filterValue)) {
+          get().setDevlogsFilters({
+            ...filters,
+            status: undefined,
+          });
+        } else {
+          get().setDevlogsFilters({
+            ...filters,
+            status: [filterValue as DevlogStatus],
+          });
+        }
+      },
 
-      if (!currentProject || !devlogApiClient) {
-        throw new Error('No project selected or API client unavailable');
-      }
-
-      await devlogApiClient.batchDelete(ids);
-      await get().fetchDevlogs();
-    },
-
-    handleStatusFilter: (filterValue: FilterType | DevlogStatus) => {
-      const { devlogsContext } = get();
-      const { filters } = devlogsContext;
-      if (['total', 'open', 'closed'].includes(filterValue)) {
-        get().setDevlogsFilters({
-          ...filters,
-          status: undefined,
-        });
-      } else {
-        get().setDevlogsFilters({
-          ...filters,
-          status: [filterValue as DevlogStatus],
-        });
-      }
-    },
-
-    clearErrors: () => {
-      set((state) => ({
-        devlogsContext: {
-          ...state.devlogsContext,
-          error: null,
-        },
-        navigationDevlogsContext: {
-          ...state.navigationDevlogsContext,
-          error: null,
-        },
-        statsContext: {
-          ...state.statsContext,
-          error: null,
-        },
-        timeSeriesStatsContext: {
-          ...state.timeSeriesStatsContext,
-          error: null,
-        },
-        currentDevlogContext: {
-          ...state.currentDevlogContext,
-          error: null,
-        },
-        currentDevlogNotesContext: {
-          ...state.currentDevlogNotesContext,
-          error: null,
-        },
-      }));
-    },
-  })),
+      clearErrors: () => {
+        set((state) => ({
+          devlogsContext: {
+            ...state.devlogsContext,
+            error: null,
+          },
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            error: null,
+          },
+          statsContext: {
+            ...state.statsContext,
+            error: null,
+          },
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            error: null,
+          },
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            error: null,
+          },
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            error: null,
+          },
+        }));
+      },
+    };
+  }),
 );
