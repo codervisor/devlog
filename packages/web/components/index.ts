@@ -14,8 +14,9 @@ export * from './custom';
 export * from './forms';
 
 // Feature Components
-export * from '@/components/feature/dashboard';
+export * from './feature/dashboard';
+export * from './feature/devlog';
 
 // Project Components
 // Note: ProjectResolver is not exported as it's only used server-side in layout.tsx
-export { ProjectNotFound } from './custom/project/ProjectNotFound';
+export { ProjectNotFound } from './custom/project/project-not-found';

@@ -1,1 +1,1 @@
-export { DevlogForm } from './DevlogForm';
+export { DevlogForm } from './devlog-form';

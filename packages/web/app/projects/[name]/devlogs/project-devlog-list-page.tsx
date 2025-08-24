@@ -5,8 +5,8 @@ import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { useProjectName } from '@/components/provider/ProjectProvider';
-import { DevlogList } from '@/components/feature/devlog/DevlogList';
+import { useProjectName } from '@/components/provider/project-provider';
+import { DevlogList } from '@/components/feature/devlog/devlog-list';
 
 export function ProjectDevlogListPage() {
   const projectName = useProjectName();

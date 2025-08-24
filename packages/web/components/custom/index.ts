@@ -1,5 +1,7 @@
-export { LoadingPage } from './LoadingPage';
-export { MarkdownRenderer } from './MarkdownRenderer';
-export { EditableField } from './EditableField';
-export { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from './DevlogTags';
-export { StickyHeadings } from './StickyHeadings';
+export { LoadingPage } from './loading-page';
+export { ErrorBoundary } from './error-boundary';
+export { MarkdownRenderer } from './markdown-renderer';
+export { EditableField } from './editable-field';
+export { DevlogStatusTag, DevlogPriorityTag, DevlogTypeTag } from './devlog-tags';
+export { StickyHeadings } from './sticky-headings';
+export { MarkdownEditor } from './markdown-editor';

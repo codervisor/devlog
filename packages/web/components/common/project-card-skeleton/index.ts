@@ -1,1 +1,1 @@
-export { ProjectCardSkeleton, ProjectGridSkeleton } from './ProjectCardSkeleton';
+export { ProjectCardSkeleton, ProjectGridSkeleton } from './project-card-skeleton';

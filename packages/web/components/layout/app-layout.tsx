@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from 'sonner';
 import { AppLayoutSkeleton } from '@/components/layout/app-layout-skeleton';
-import { ErrorBoundary } from '@/components/custom/ErrorBoundary';
-import { TopNavbar } from '@/components/layout/TopNavbar';
+import { ErrorBoundary } from '@/components/custom/error-boundary';
+import { TopNavbar } from '@/components/layout/top-navbar';
 import { NavigationSidebar } from '@/components/layout/navigation-sidebar';
 
 interface AppLayoutProps {

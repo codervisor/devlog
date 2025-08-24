@@ -43,7 +43,8 @@ import {
 import { toast } from 'sonner';
 import { Edit, Eye, Search, Trash2, X } from 'lucide-react';
 import { DevlogEntry, DevlogFilter, DevlogId, DevlogNoteCategory } from '@codervisor/devlog-core';
-import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag, Pagination } from '@/components';
+import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components/custom/devlog-tags';
+import { Pagination } from '@/components/common/pagination';
 import {
   cn,
   debounce,

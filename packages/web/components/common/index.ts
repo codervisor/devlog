@@ -1,4 +1,4 @@
 // Common Components
-export * from '@/components/common/overview-stats/OverviewStats';
-export * from '@/components/common/project-card-skeleton';
-export { Pagination } from './Pagination';
+export { OverviewStats, type OverviewStatsVariant } from './overview-stats/overview-stats';
+export * from './project-card-skeleton';
+export { Pagination } from './pagination';

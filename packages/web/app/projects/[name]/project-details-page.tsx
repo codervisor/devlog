@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Dashboard } from '@/components';
+import { Dashboard } from '@/components/feature/dashboard/dashboard';
 import { useDevlogStore, useProjectStore } from '@/stores';
 import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
-import { useProjectName } from '@/components/provider/ProjectProvider';
+import { useProjectName } from '@/components/provider/project-provider';
 
 export function ProjectDetailsPage() {
   const projectName = useProjectName();
