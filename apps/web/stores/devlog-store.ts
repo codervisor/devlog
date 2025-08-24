@@ -150,6 +150,254 @@ export const useDevlogStore = create<DevlogState>()(
       }
     });
 
+    const debouncedFetchNavigationDevlogs = debounce(async () => {
+      const devlogApiClient = getDevlogApiClient();
+
+      if (!devlogApiClient) {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            loading: false,
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            loading: true,
+            error: null,
+          },
+        }));
+
+        // Fetch recent devlog for navigation - limit to 50 most recent
+        const { items: data } = await devlogApiClient.list(
+          {}, // No filters
+          { page: 1, limit: 50 }, // Simple pagination
+          { sortBy: 'id', sortOrder: 'desc' }, // Sort by ID descending
+        );
+
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            data,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            error: handleApiError(err),
+          },
+        }));
+      } finally {
+        set((state) => ({
+          navigationDevlogsContext: {
+            ...state.navigationDevlogsContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
+    const debouncedFetchStats = debounce(async () => {
+      const devlogApiClient = getDevlogApiClient();
+
+      if (!devlogApiClient) {
+        set((state) => ({
+          statsContext: {
+            ...state.statsContext,
+            loading: false,
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          statsContext: {
+            ...state.statsContext,
+            loading: true,
+            error: null,
+          },
+        }));
+        const statsData = await devlogApiClient.getStatsOverview();
+        set((state) => ({
+          statsContext: {
+            ...state.statsContext,
+            data: statsData,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        console.error('Failed to fetch stats:', err);
+        set((state) => ({
+          statsContext: {
+            ...state.statsContext,
+            error: errorMessage,
+          },
+        }));
+      } finally {
+        set((state) => ({
+          statsContext: {
+            ...state.statsContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
+    const debouncedFetchTimeSeriesStats = debounce(async () => {
+      const devlogApiClient = getDevlogApiClient();
+
+      if (!devlogApiClient) {
+        set((state) => ({
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            loading: false,
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            loading: true,
+            error: null,
+          },
+        }));
+        const timeSeriesData = await devlogApiClient.getStatsTimeseries('month');
+        set((state) => ({
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            data: timeSeriesData,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        console.error('Failed to fetch time series stats:', err);
+        set((state) => ({
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            error: errorMessage,
+          },
+        }));
+      } finally {
+        set((state) => ({
+          timeSeriesStatsContext: {
+            ...state.timeSeriesStatsContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
+    const debouncedFetchCurrentDevlog = debounce(async () => {
+      const { currentDevlogId } = get();
+      const devlogApiClient = getDevlogApiClient();
+      if (!currentDevlogId || !devlogApiClient) {
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            loading: false,
+            error: 'No devlog selected or API client unavailable',
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            loading: true,
+            error: null,
+          },
+        }));
+        const currentDevlog = await devlogApiClient.get(currentDevlogId);
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            data: currentDevlog,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        console.error('Failed to fetch selected devlog:', err);
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            error: errorMessage,
+          },
+        }));
+      } finally {
+        set((state) => ({
+          currentDevlogContext: {
+            ...state.currentDevlogContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
+    const debouncedFetchCurrentDevlogNotes = debounce(async () => {
+      const { currentDevlogId } = get();
+      const devlogApiClient = getDevlogApiClient();
+
+      if (!currentDevlogId || !devlogApiClient) {
+        set((state) => ({
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            loading: false,
+            error: 'No devlog selected or API client unavailable',
+          },
+        }));
+        return;
+      }
+
+      try {
+        set((state) => ({
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            loading: true,
+            error: null,
+          },
+        }));
+        const notes = await devlogApiClient.getNotes(currentDevlogId);
+        set((state) => ({
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            data: notes,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        console.error('Failed to fetch devlog notes:', err);
+        set((state) => ({
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            error: errorMessage,
+          },
+        }));
+      } finally {
+        set((state) => ({
+          currentDevlogNotesContext: {
+            ...state.currentDevlogNotesContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
     return {
       // Initial state
       devlogsContext: getDefaultTableDataContext(),
@@ -215,201 +463,19 @@ export const useDevlogStore = create<DevlogState>()(
       },
 
       fetchNavigationDevlogs: async () => {
-        const devlogApiClient = getDevlogApiClient();
-
-        if (!devlogApiClient) {
-          set((state) => ({
-            navigationDevlogsContext: {
-              ...state.navigationDevlogsContext,
-              loading: false,
-            },
-          }));
-          return;
-        }
-
-        try {
-          set((state) => ({
-            navigationDevlogsContext: {
-              ...state.navigationDevlogsContext,
-              loading: true,
-              error: null,
-            },
-          }));
-
-          // Fetch recent devlog for navigation - limit to 50 most recent
-          const { items: data } = await devlogApiClient.list(
-            {}, // No filters
-            { page: 1, limit: 50 }, // Simple pagination
-            { sortBy: 'id', sortOrder: 'desc' }, // Sort by ID descending
-          );
-
-          set((state) => ({
-            navigationDevlogsContext: {
-              ...state.navigationDevlogsContext,
-              data,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          set((state) => ({
-            navigationDevlogsContext: {
-              ...state.navigationDevlogsContext,
-              error: handleApiError(err),
-            },
-          }));
-        } finally {
-          set((state) => ({
-            navigationDevlogsContext: {
-              ...state.navigationDevlogsContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchNavigationDevlogs();
       },
 
       fetchStats: async () => {
-        const devlogApiClient = getDevlogApiClient();
-
-        if (!devlogApiClient) {
-          set((state) => ({
-            statsContext: {
-              ...state.statsContext,
-              loading: false,
-            },
-          }));
-          return;
-        }
-
-        try {
-          set((state) => ({
-            statsContext: {
-              ...state.statsContext,
-              loading: true,
-              error: null,
-            },
-          }));
-          const statsData = await devlogApiClient.getStatsOverview();
-          set((state) => ({
-            statsContext: {
-              ...state.statsContext,
-              data: statsData,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          const errorMessage = handleApiError(err);
-          console.error('Failed to fetch stats:', err);
-          set((state) => ({
-            statsContext: {
-              ...state.statsContext,
-              error: errorMessage,
-            },
-          }));
-        } finally {
-          set((state) => ({
-            statsContext: {
-              ...state.statsContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchStats();
       },
 
       fetchTimeSeriesStats: async () => {
-        const devlogApiClient = getDevlogApiClient();
-
-        if (!devlogApiClient) {
-          set((state) => ({
-            timeSeriesStatsContext: {
-              ...state.timeSeriesStatsContext,
-              loading: false,
-            },
-          }));
-          return;
-        }
-
-        try {
-          set((state) => ({
-            timeSeriesStatsContext: {
-              ...state.timeSeriesStatsContext,
-              loading: true,
-              error: null,
-            },
-          }));
-          const timeSeriesData = await devlogApiClient.getStatsTimeseries('month');
-          set((state) => ({
-            timeSeriesStatsContext: {
-              ...state.timeSeriesStatsContext,
-              data: timeSeriesData,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          const errorMessage = handleApiError(err);
-          console.error('Failed to fetch time series stats:', err);
-          set((state) => ({
-            timeSeriesStatsContext: {
-              ...state.timeSeriesStatsContext,
-              error: errorMessage,
-            },
-          }));
-        } finally {
-          set((state) => ({
-            timeSeriesStatsContext: {
-              ...state.timeSeriesStatsContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchTimeSeriesStats();
       },
 
       fetchCurrentDevlog: async () => {
-        const { currentDevlogId } = get();
-        const devlogApiClient = getDevlogApiClient();
-        if (!currentDevlogId || !devlogApiClient) {
-          set((state) => ({
-            currentDevlogContext: {
-              ...state.currentDevlogContext,
-              loading: false,
-              error: 'No devlog selected or API client unavailable',
-            },
-          }));
-          return;
-        }
-
-        try {
-          set((state) => ({
-            currentDevlogContext: {
-              ...state.currentDevlogContext,
-              loading: true,
-              error: null,
-            },
-          }));
-          const currentDevlog = await devlogApiClient.get(currentDevlogId);
-          set((state) => ({
-            currentDevlogContext: {
-              ...state.currentDevlogContext,
-              data: currentDevlog,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          const errorMessage = handleApiError(err);
-          console.error('Failed to fetch selected devlog:', err);
-          set((state) => ({
-            currentDevlogContext: {
-              ...state.currentDevlogContext,
-              error: errorMessage,
-            },
-          }));
-        } finally {
-          set((state) => ({
-            currentDevlogContext: {
-              ...state.currentDevlogContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchCurrentDevlog();
       },
 
       clearCurrentDevlog: () => {
@@ -419,55 +485,7 @@ export const useDevlogStore = create<DevlogState>()(
       },
 
       fetchCurrentDevlogNotes: async () => {
-        const { currentDevlogId } = get();
-        const devlogApiClient = getDevlogApiClient();
-
-        if (!currentDevlogId || !devlogApiClient) {
-          set((state) => ({
-            currentDevlogNotesContext: {
-              ...state.currentDevlogNotesContext,
-              loading: false,
-              error: 'No devlog selected or API client unavailable',
-            },
-          }));
-          return;
-        }
-
-        try {
-          // set({ currentDevlogNotesLoading: true, currentDevlogNotesError: null });
-          set((state) => ({
-            currentDevlogNotesContext: {
-              ...state.currentDevlogNotesContext,
-              loading: true,
-              error: null,
-            },
-          }));
-          const notes = await devlogApiClient.getNotes(currentDevlogId);
-          set((state) => ({
-            currentDevlogNotesContext: {
-              ...state.currentDevlogNotesContext,
-              data: notes,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          const errorMessage = handleApiError(err);
-          console.error('Failed to fetch devlog notes:', err);
-          set((state) => ({
-            currentDevlogNotesContext: {
-              ...state.currentDevlogNotesContext,
-              error: errorMessage,
-            },
-          }));
-          // set({ currentDevlogNotesError: errorMessage });
-        } finally {
-          set((state) => ({
-            currentDevlogNotesContext: {
-              ...state.currentDevlogNotesContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchCurrentDevlogNotes();
       },
 
       clearCurrentDevlogNotes: () => {
