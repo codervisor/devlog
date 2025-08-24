@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,32 +52,32 @@ export function OverviewStats({
     return null;
   }
 
-  const isStatusActive = (status: DevlogStatus) => {
+  const isStatusActive = useCallback((status: DevlogStatus) => {
     return !!currentFilters?.status?.includes(status);
-  };
+  }, [currentFilters]);
 
-  const isTotalActive = () => {
+  const isTotalActive = useCallback(() => {
     return (
       (!currentFilters?.filterType || currentFilters.filterType === 'total') &&
       (!currentFilters?.status || currentFilters.status.length === 0)
     );
-  };
+  }, [currentFilters]);
 
-  const isOpenActive = () => {
+  const isOpenActive = useCallback(() => {
     return currentFilters?.filterType === 'open';
-  };
+  }, [currentFilters]);
 
-  const isClosedActive = () => {
+  const isClosedActive = useCallback(() => {
     return currentFilters?.filterType === 'closed';
-  };
+  }, [currentFilters]);
 
-  const handleStatClick = (status: FilterType) => {
+  const handleStatClick = useCallback((status: FilterType) => {
     if (onFilterToggle) {
       onFilterToggle(status);
     }
-  };
+  }, [onFilterToggle]);
 
-  const getStatClasses = (filterType: FilterType, isIndividualStatus = false) => {
+  const getStatClasses = useCallback((filterType: FilterType, isIndividualStatus = false) => {
     let isActive: boolean;
     if (filterType === 'total') {
       isActive = isTotalActive();
@@ -99,9 +99,9 @@ export function OverviewStats({
         'hover:bg-muted': isClickable && !isActive,
       },
     );
-  };
+  }, [isTotalActive, isOpenActive, isClosedActive, isStatusActive, onFilterToggle]);
 
-  const getStatusColor = (status: DevlogStatus) => {
+  const getStatusColor = useCallback((status: DevlogStatus) => {
     const colors = {
       new: 'text-blue-600',
       'in-progress': 'text-orange-600',
@@ -112,7 +112,7 @@ export function OverviewStats({
       cancelled: 'text-gray-600',
     };
     return colors[status] || 'text-foreground';
-  };
+  }, []);
 
   const StatItem = ({
     value,

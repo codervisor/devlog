@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -66,30 +66,26 @@ export function EditableField({
     }
   }, [isEditing]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     onSave(editValue);
     setIsEditing(false);
-  };
+  }, [editValue, onSave]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setEditValue(value);
     setIsEditing(false);
-  };
+  }, [value]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !multiline && type !== 'textarea') {
       e.preventDefault();
       handleSave();
     } else if (e.key === 'Escape') {
       handleCancel();
     }
-  };
+  }, [multiline, type, handleSave, handleCancel]);
 
-  const handleBlur = () => {
-    handleBlurWithValue(editValue);
-  };
-
-  const handleBlurWithValue = (currentValue: string) => {
+  const handleBlurWithValue = useCallback((currentValue: string) => {
     if (draftMode) {
       // In draft mode, just save the local value and exit edit mode
       // The parent component will handle when to actually save
@@ -101,20 +97,44 @@ export function EditableField({
       // Original behavior: save changes when losing focus
       handleSave();
     }
-  };
+  }, [draftMode, value, onSave, handleSave]);
 
-  const handleEnterEdit = () => {
+  const handleBlur = useCallback(() => {
+    handleBlurWithValue(editValue);
+  }, [editValue, handleBlurWithValue]);
+
+  const handleEnterEdit = useCallback(() => {
     setIsEditing(true);
-  };
+  }, []);
+
+  const handleEditValueChange = useCallback((newValue: string) => {
+    setEditValue(newValue);
+  }, []);
+
+  const handleSelectValueChange = useCallback((newValue: string) => {
+    setEditValue(newValue);
+    if (draftMode) {
+      if (newValue !== value) {
+        onSave(newValue);
+      }
+      setIsEditing(false);
+    }
+  }, [draftMode, value, onSave]);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   const renderInput = () => {
     if (type === 'markdown') {
       return (
         <MarkdownEditor
           value={editValue || ''}
-          onChange={(value) => {
-            setEditValue(value);
-          }}
+          onChange={handleEditValueChange}
           onBlur={handleBlurWithValue}
           onCancel={handleCancel}
           placeholder={placeholder}
@@ -127,15 +147,7 @@ export function EditableField({
       return (
         <Select
           value={editValue}
-          onValueChange={(newValue) => {
-            setEditValue(newValue);
-            if (draftMode) {
-              if (newValue !== value) {
-                onSave(newValue);
-              }
-              setIsEditing(false);
-            }
-          }}
+          onValueChange={handleSelectValueChange}
           open={isEditing}
           onOpenChange={setIsEditing}
         >
@@ -163,7 +175,7 @@ export function EditableField({
         <Textarea
           ref={textareaRef}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(e) => handleEditValueChange(e.target.value)}
           onKeyDown={handleKeyPress}
           onBlur={handleBlur}
           placeholder={placeholder}
@@ -178,7 +190,7 @@ export function EditableField({
         <Input
           ref={inputRef}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={(e) => handleEditValueChange(e.target.value)}
           onKeyDown={handleKeyPress}
           onBlur={handleBlur}
           placeholder={placeholder}
@@ -216,8 +228,8 @@ export function EditableField({
         className,
       )}
       onClick={handleEnterEdit}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       title="Click to edit"
     >
       {renderContent()}

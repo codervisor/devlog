@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useProjectStore, useRealtimeStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { ProjectGridSkeleton } from '@/components/common';
@@ -57,7 +57,7 @@ export function ProjectListPage() {
 
   const { data: projects, loading: isLoadingProjects } = projectsContext;
 
-  const handleCreateProject = async (e: React.FormEvent) => {
+  const handleCreateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
@@ -80,16 +80,29 @@ export function ProjectListPage() {
     } finally {
       setCreating(false);
     }
-  };
+  }, [formData, fetchProjects]);
 
-  const handleViewProject = (projectName: string) => {
+  const handleViewProject = useCallback((projectName: string) => {
     router.push(`/projects/${projectName}`);
-  };
+  }, [router]);
 
-  const handleProjectSettings = (e: React.MouseEvent, projectName: string) => {
+  const handleProjectSettings = useCallback((e: React.MouseEvent, projectName: string) => {
     e.stopPropagation(); // Prevent card click from triggering
     router.push(`/projects/${projectName}/settings`);
-  };
+  }, [router]);
+
+  const handleOpenModal = useCallback(() => {
+    setIsModalVisible(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalVisible(false);
+    setFormData({ name: '', description: '' });
+  }, []);
+
+  const handleFormChange = useCallback((field: keyof ProjectFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   if (projectsContext.error) {
     return (
@@ -108,7 +121,7 @@ export function ProjectListPage() {
       <div className="w-full max-w-full p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <Button className="bg-primary" onClick={() => setIsModalVisible(true)}>
+            <Button className="bg-primary" onClick={handleOpenModal}>
               New Project
             </Button>
             <div className="relative">
@@ -177,7 +190,7 @@ export function ProjectListPage() {
                     </p>
                     <Button
                       size="lg"
-                      onClick={() => setIsModalVisible(true)}
+                      onClick={handleOpenModal}
                       className="flex items-center gap-2 px-8 py-3"
                     >
                       <Plus size={18} />
@@ -203,7 +216,7 @@ export function ProjectListPage() {
                 id="name"
                 placeholder="e.g., My-Dev-Project_2025"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleFormChange('name', e.target.value)}
                 required
               />
               <p className="text-sm text-muted-foreground mt-1">
@@ -216,7 +229,7 @@ export function ProjectListPage() {
                 id="description"
                 placeholder="Describe what this project is about..."
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => handleFormChange('description', e.target.value)}
                 rows={3}
               />
             </div>
@@ -224,10 +237,7 @@ export function ProjectListPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setIsModalVisible(false);
-                  setFormData({ name: '', description: '' });
-                }}
+                onClick={handleCloseModal}
               >
                 Cancel
               </Button>

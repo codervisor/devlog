@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useProjectStore } from '@/stores';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -79,7 +79,7 @@ export function ProjectSettingsPage() {
     fetchCurrentProject();
   }, [currentProjectName]);
 
-  const handleUpdateProject = async (e: React.FormEvent) => {
+  const handleUpdateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
@@ -109,9 +109,9 @@ export function ProjectSettingsPage() {
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, [formData, project, updateProject]);
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = useCallback(async () => {
     if (!project) {
       toast.error('Project not found');
       return;
@@ -130,9 +130,9 @@ export function ProjectSettingsPage() {
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [project, deleteProject, router]);
 
-  const handleResetForm = () => {
+  const handleResetForm = useCallback(() => {
     if (project) {
       setFormData({
         name: project.name,
@@ -140,7 +140,12 @@ export function ProjectSettingsPage() {
       });
       setHasChanges(false);
     }
-  };
+  }, [project]);
+
+  const handleFormChange = useCallback((field: keyof ProjectFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  }, []);
 
   if (currentProjectContext.loading || !project) {
     return (
@@ -250,7 +255,7 @@ export function ProjectSettingsPage() {
                   id="name"
                   placeholder="e.g., My Development Project"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => handleFormChange('name', e.target.value)}
                   required
                 />
               </div>
@@ -261,7 +266,7 @@ export function ProjectSettingsPage() {
                   id="description"
                   placeholder="Describe what this project is about..."
                   value={formData.description || ''}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => handleFormChange('description', e.target.value)}
                   rows={3}
                 />
               </div>

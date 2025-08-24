@@ -202,6 +202,18 @@ export function DevlogList({
     debouncedFilterChange(value);
   }, [debouncedFilterChange]);
 
+  const handleClearSelection = useCallback(() => {
+    setSelectedRowKeys([]);
+  }, []);
+
+  const handleToggleDeleteConfirm = useCallback(() => {
+    setDeleteConfirmVisible(true);
+  }, []);
+
+  const handleCloseBatchModal = useCallback(() => {
+    setBatchOperationModal({ visible: false, type: 'update', title: '' });
+  }, []);
+
   // Handle filter changes
   const handleFilterChange = (key: string, value: string | undefined) => {
     if (onFilterChange) {
@@ -258,13 +270,13 @@ export function DevlogList({
               <Button
                 size="sm"
                 variant="destructive"
-                onClick={() => setDeleteConfirmVisible(true)}
+                onClick={handleToggleDeleteConfirm}
                 disabled={!onBatchDelete}
               >
                 <Trash2 className="h-3 w-3 mr-1" />
                 Delete
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedRowKeys([])}>
+              <Button size="sm" variant="ghost" onClick={handleClearSelection}>
                 <X className="h-3 w-3" />
               </Button>
               <div className="h-6 w-px bg-border mx-2" />
@@ -588,7 +600,7 @@ export function DevlogList({
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setBatchOperationModal({ visible: false, type: 'update', title: '' })}
+              onClick={handleCloseBatchModal}
             >
               Cancel
             </Button>
