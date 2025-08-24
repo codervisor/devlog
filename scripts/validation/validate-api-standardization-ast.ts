@@ -23,7 +23,7 @@ const WARNINGS: ValidationIssue[] = [];
 // Standard error codes
 const STANDARD_ERROR_CODES = [
   'PROJECT_NOT_FOUND',
-  'DEVLOG_NOT_FOUND', 
+  'DEVLOG_NOT_FOUND',
   'NOTE_NOT_FOUND',
   'BAD_REQUEST',
   'VALIDATION_FAILED',
@@ -31,7 +31,7 @@ const STANDARD_ERROR_CODES = [
   'UNAUTHORIZED',
   'FORBIDDEN',
   'METHOD_NOT_ALLOWED',
-  'RATE_LIMITED'
+  'RATE_LIMITED',
 ] as const;
 
 /**
@@ -59,13 +59,19 @@ function createProgram(filePaths: string[]): ts.Program {
 /**
  * Visit AST nodes recursively with proper error handling
  */
-function visitNode(node: ts.Node, sourceFile: ts.SourceFile, visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void): void {
+function visitNode(
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+  visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void,
+): void {
   try {
     visitor(node, sourceFile);
-    node.forEachChild(child => visitNode(child, sourceFile, visitor));
+    node.forEachChild((child) => visitNode(child, sourceFile, visitor));
   } catch (error) {
     // Skip problematic nodes and continue
-    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`);
+    console.warn(
+      `⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -105,11 +111,13 @@ function isApiRoute(filePath: string): boolean {
  * Check if node is a frontend file
  */
 function isFrontendFile(filePath: string): boolean {
-  return (filePath.includes('/contexts/') || 
-          filePath.includes('/hooks/') || 
-          filePath.includes('/lib/') ||
-          filePath.includes('/components/')) && 
-         !filePath.includes('/api/');
+  return (
+    (filePath.includes('/contexts/') ||
+      filePath.includes('/hooks/') ||
+      filePath.includes('/lib/') ||
+      filePath.includes('/components/')) &&
+    !filePath.includes('/api/')
+  );
 }
 
 /**
@@ -123,19 +131,26 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
-    
+
     // Check imports
     if (ts.isImportDeclaration(node)) {
       const importPath = (node.moduleSpecifier as ts.StringLiteral)?.text;
       if (importPath) {
         imports.add(importPath);
-        
+
         // Check for api-utils imports
         if (importPath.includes('api-utils')) {
-          if (node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
-            node.importClause.namedBindings.elements.forEach(element => {
+          if (
+            node.importClause?.namedBindings &&
+            ts.isNamedImports(node.importClause.namedBindings)
+          ) {
+            node.importClause.namedBindings.elements.forEach((element) => {
               const importName = element.name.text;
-              if (['apiResponse', 'apiError', 'apiCollection', 'withErrorHandling'].includes(importName)) {
+              if (
+                ['apiResponse', 'apiError', 'apiCollection', 'withErrorHandling'].includes(
+                  importName,
+                )
+              ) {
                 hasApiResponseUtil = true;
               }
               if (importName === 'withErrorHandling') {
@@ -150,7 +165,7 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
     // Check function calls
     if (ts.isCallExpression(node)) {
       const callText = getNodeText(sourceFile, node);
-      
+
       // Check for standardized response utilities
       if (node.expression && ts.isIdentifier(node.expression)) {
         const functionName = node.expression.text;
@@ -161,13 +176,15 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
           hasWithErrorHandling = true;
         }
       }
-      
+
       // Check for manual Response.json calls
-      if (ts.isPropertyAccessExpression(node.expression) &&
-          node.expression.expression && ts.isIdentifier(node.expression.expression) &&
-          node.expression.expression.text === 'Response' &&
-          node.expression.name.text === 'json') {
-        
+      if (
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.expression &&
+        ts.isIdentifier(node.expression.expression) &&
+        node.expression.expression.text === 'Response' &&
+        node.expression.name.text === 'json'
+      ) {
         // Check if it's not using standardized format
         const parentText = getNodeText(sourceFile, node.parent!);
         if (!parentText.includes('.success')) {
@@ -183,8 +200,12 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
       }
 
       // Check for apiError calls with proper error codes
-      if (node.expression && ts.isIdentifier(node.expression) && 
-          node.expression.text === 'apiError' && node.arguments.length > 0) {
+      if (
+        node.expression &&
+        ts.isIdentifier(node.expression) &&
+        node.expression.text === 'apiError' &&
+        node.arguments.length > 0
+      ) {
         const firstArg = node.arguments[0];
         if (ts.isStringLiteral(firstArg)) {
           const errorCode = firstArg.text;
@@ -210,21 +231,30 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
     }
 
     // Check for export assignments (Next.js route handlers)
-    if (ts.isExportAssignment(node) || 
-        (ts.isVariableStatement(node) && node.modifiers?.some(m => m.kind === ts.SyntaxKind.ExportKeyword))) {
-      
+    if (
+      ts.isExportAssignment(node) ||
+      (ts.isVariableStatement(node) &&
+        node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword))
+    ) {
       // Look for route handler exports (GET, POST, etc.)
       if (ts.isVariableStatement(node)) {
-        node.declarationList.declarations.forEach(decl => {
-          if (ts.isIdentifier(decl.name) && ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(decl.name.text)) {
+        node.declarationList.declarations.forEach((decl) => {
+          if (
+            ts.isIdentifier(decl.name) &&
+            ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(decl.name.text)
+          ) {
             // Check if it uses withErrorHandling
-            if (decl.initializer && !getNodeText(sourceFile, decl.initializer).includes('withErrorHandling')) {
+            if (
+              decl.initializer &&
+              !getNodeText(sourceFile, decl.initializer).includes('withErrorHandling')
+            ) {
               WARNINGS.push({
                 file: filePath,
                 line: getLineNumber(sourceFile, decl),
                 type: 'API_ERROR_HANDLING',
                 message: `${decl.name.text} handler should use withErrorHandling() wrapper`,
-                suggestion: 'Wrap your handler with withErrorHandling() for consistent error responses',
+                suggestion:
+                  'Wrap your handler with withErrorHandling() for consistent error responses',
               });
             }
           }
@@ -235,13 +265,18 @@ function validateAPIEndpointAST(filePath: string, sourceFile: ts.SourceFile): vo
 
   // File-level validations
   if (isApiRoute(filePath)) {
-    if (!imports.has('./api-utils') && !imports.has('../api-utils') && !Array.from(imports).some(i => i.includes('api-utils'))) {
+    if (
+      !imports.has('./api-utils') &&
+      !imports.has('../api-utils') &&
+      !Array.from(imports).some((i) => i.includes('api-utils'))
+    ) {
       WARNINGS.push({
         file: filePath,
         line: 1,
         type: 'API_UTILS_IMPORT',
         message: 'API endpoint should import standardized utilities',
-        suggestion: 'Import { apiResponse, apiError, apiCollection, withErrorHandling } from api-utils',
+        suggestion:
+          'Import { apiResponse, apiError, apiCollection, withErrorHandling } from api-utils',
       });
     }
   }
@@ -257,15 +292,18 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
-    
+
     // Check imports
     if (ts.isImportDeclaration(node)) {
       const importPath = (node.moduleSpecifier as ts.StringLiteral)?.text;
       if (importPath) {
         imports.add(importPath);
-        
-        if (node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
-          node.importClause.namedBindings.elements.forEach(element => {
+
+        if (
+          node.importClause?.namedBindings &&
+          ts.isNamedImports(node.importClause.namedBindings)
+        ) {
+          node.importClause.namedBindings.elements.forEach((element) => {
             const importName = element.name.text;
             if (importName === 'ApiClient' || importName === 'apiClient') {
               hasApiClientImport = true;
@@ -278,10 +316,9 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
     // Check function calls
     if (ts.isCallExpression(node)) {
       // Check for manual fetch calls
-      if (node.expression && ts.isIdentifier(node.expression) && 
-          node.expression.text === 'fetch') {
+      if (node.expression && ts.isIdentifier(node.expression) && node.expression.text === 'fetch') {
         hasManualFetch = true;
-        
+
         // Skip warning for ApiClient implementation itself
         if (!filePath.includes('/lib/api-client.ts')) {
           WARNINGS.push({
@@ -295,9 +332,12 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
       }
 
       // Check for response.json() calls in frontend
-      if (ts.isPropertyAccessExpression(node.expression) &&
-          node.expression.name.text === 'json' &&
-          hasManualFetch && !filePath.includes('/lib/api-client.ts')) {
+      if (
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === 'json' &&
+        hasManualFetch &&
+        !filePath.includes('/lib/api-client.ts')
+      ) {
         ERRORS.push({
           file: filePath,
           line: lineNum,
@@ -311,16 +351,19 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
     // Check catch clauses for proper error handling
     if (ts.isCatchClause(node) && hasApiClientImport) {
       const catchText = getNodeText(sourceFile, node);
-      if (!catchText.includes('ApiError') && 
-          !catchText.includes('.isNotFound') && 
-          !catchText.includes('.isValidation') &&
-          !catchText.includes('.code')) {
+      if (
+        !catchText.includes('ApiError') &&
+        !catchText.includes('.isNotFound') &&
+        !catchText.includes('.isValidation') &&
+        !catchText.includes('.code')
+      ) {
         WARNINGS.push({
           file: filePath,
           line: lineNum,
           type: 'FRONTEND_ERROR_HANDLING',
           message: 'Error handling should check for ApiError type',
-          suggestion: 'Use error.isNotFound(), error.isValidation(), etc. for proper error handling',
+          suggestion:
+            'Use error.isNotFound(), error.isValidation(), etc. for proper error handling',
         });
       }
     }
@@ -329,24 +372,27 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
     if (ts.isPropertyAccessExpression(node)) {
       const propertyName = node.name.text;
       const objectText = getNodeText(sourceFile, node.expression);
-      
+
       // Check for direct response property access (not .data, .success, .error)
-      if (objectText.includes('response') && 
-          !['data', 'success', 'error', 'meta', 'status', 'headers', 'ok'].includes(propertyName) &&
-          isFrontendFile(filePath)) {
+      if (
+        objectText.includes('response') &&
+        !['data', 'success', 'error', 'meta', 'status', 'headers', 'ok'].includes(propertyName) &&
+        isFrontendFile(filePath)
+      ) {
         WARNINGS.push({
           file: filePath,
           line: lineNum,
           type: 'FRONTEND_ENVELOPE_ACCESS',
           message: 'Direct response property access - should use envelope format',
-          suggestion: 'Access data through response.data, check response.success, handle response.error',
+          suggestion:
+            'Access data through response.data, check response.success, handle response.error',
         });
       }
     }
   });
 
   // Check for legacy API client usage
-  if (Array.from(imports).some(i => i.includes('note-api-client')) && !hasApiClientImport) {
+  if (Array.from(imports).some((i) => i.includes('note-api-client')) && !hasApiClientImport) {
     WARNINGS.push({
       file: filePath,
       line: 1,
@@ -363,24 +409,28 @@ function validateFrontendAPIUsageAST(filePath: string, sourceFile: ts.SourceFile
 function validateTypeDefinitionsAST(filePath: string, sourceFile: ts.SourceFile): void {
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
-    
+
     // Check interface declarations
     if (ts.isInterfaceDeclaration(node)) {
       const interfaceName = node.name.text;
-      
+
       // Check response interfaces
       if (interfaceName.includes('Response')) {
         const members = node.members;
-        const memberNames = members.map(member => {
-          if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
-            return member.name.text;
-          }
-          return null;
-        }).filter(Boolean) as string[];
-        
-        if (!memberNames.includes('success') || 
-            !memberNames.includes('data') || 
-            !memberNames.includes('meta')) {
+        const memberNames = members
+          .map((member) => {
+            if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
+              return member.name.text;
+            }
+            return null;
+          })
+          .filter(Boolean) as string[];
+
+        if (
+          !memberNames.includes('success') ||
+          !memberNames.includes('data') ||
+          !memberNames.includes('meta')
+        ) {
           WARNINGS.push({
             file: filePath,
             line: lineNum,
@@ -390,17 +440,19 @@ function validateTypeDefinitionsAST(filePath: string, sourceFile: ts.SourceFile)
           });
         }
       }
-      
+
       // Check error interfaces
       if (interfaceName.includes('Error')) {
         const members = node.members;
-        const memberNames = members.map(member => {
-          if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
-            return member.name.text;
-          }
-          return null;
-        }).filter(Boolean) as string[];
-        
+        const memberNames = members
+          .map((member) => {
+            if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
+              return member.name.text;
+            }
+            return null;
+          })
+          .filter(Boolean) as string[];
+
         if (!memberNames.includes('code') || !memberNames.includes('message')) {
           WARNINGS.push({
             file: filePath,
@@ -420,10 +472,10 @@ function validateTypeDefinitionsAST(filePath: string, sourceFile: ts.SourceFile)
  */
 function validateFilesWithAST(filePaths: string[]): void {
   console.log(`🔍 Creating TypeScript program for ${filePaths.length} files...`);
-  
+
   const program = createProgram(filePaths);
-  
-  filePaths.forEach(filePath => {
+
+  filePaths.forEach((filePath) => {
     const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) {
       console.warn(`⚠️  Could not parse ${filePath}`);
@@ -434,11 +486,11 @@ function validateFilesWithAST(filePaths: string[]): void {
     if (isApiRoute(filePath)) {
       validateAPIEndpointAST(filePath, sourceFile);
     }
-    
+
     if (isFrontendFile(filePath)) {
       validateFrontendAPIUsageAST(filePath, sourceFile);
     }
-    
+
     if (filePath.includes('/types/') || filePath.includes('/schemas/')) {
       validateTypeDefinitionsAST(filePath, sourceFile);
     }
@@ -453,7 +505,7 @@ function findValidationFiles(): string[] {
 
   function findFilesRecursive(dir: string, predicate: (file: string) => boolean): void {
     if (!fs.existsSync(dir)) return;
-    
+
     const entries = fs.readdirSync(dir);
 
     for (const entry of entries) {
@@ -461,7 +513,9 @@ function findValidationFiles(): string[] {
       const stat = fs.statSync(fullPath);
 
       if (stat.isDirectory()) {
-        if (!['node_modules', 'build', 'dist', '.next', '.next-build', 'coverage'].includes(entry)) {
+        if (
+          !['node_modules', 'build', 'dist', '.next', '.next-build', 'coverage'].includes(entry)
+        ) {
           findFilesRecursive(fullPath, predicate);
         }
       } else if (predicate(fullPath)) {
@@ -471,11 +525,11 @@ function findValidationFiles(): string[] {
   }
 
   // Find TypeScript files in web package
-  const webAppDir = path.join(process.cwd(), 'packages/web/app');
+  const webAppDir = path.join(process.cwd(), 'apps/web/app');
   if (fs.existsSync(webAppDir)) {
-    findFilesRecursive(webAppDir, (file) => 
-      (file.endsWith('.ts') || file.endsWith('.tsx')) && 
-      !file.endsWith('.d.ts')
+    findFilesRecursive(
+      webAppDir,
+      (file) => (file.endsWith('.ts') || file.endsWith('.tsx')) && !file.endsWith('.d.ts'),
     );
   }
 

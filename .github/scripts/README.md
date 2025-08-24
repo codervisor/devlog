@@ -28,7 +28,7 @@ Builds all packages in dependency order (core → ai → mcp → cli → web).
 ./.github/scripts/build-packages.sh
 ```
 - **Dependencies**: Requires pnpm workspace setup
-- **Output**: Build artifacts in `packages/*/build` and `packages/web/.next-build`
+- **Output**: Build artifacts in `packages/*/build` and `apps/web/.next-build`
 
 #### `verify-build.sh`
 Verifies that all expected build artifacts exist.

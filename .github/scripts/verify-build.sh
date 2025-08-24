@@ -39,7 +39,7 @@ else
 fi
 
 # Check web package
-if [ -d "packages/web/.next" ]; then
+if [ -d "apps/web/.next" ]; then
     echo "✅ Web package build artifacts verified"
 else
     echo "❌ Web package build artifacts missing"

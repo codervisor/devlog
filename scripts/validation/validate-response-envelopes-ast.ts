@@ -23,7 +23,7 @@ const WARNINGS: ValidationIssue[] = [];
 // Standard error codes
 const STANDARD_ERROR_CODES = [
   'PROJECT_NOT_FOUND',
-  'DEVLOG_NOT_FOUND', 
+  'DEVLOG_NOT_FOUND',
   'NOTE_NOT_FOUND',
   'BAD_REQUEST',
   'VALIDATION_FAILED',
@@ -31,7 +31,7 @@ const STANDARD_ERROR_CODES = [
   'UNAUTHORIZED',
   'FORBIDDEN',
   'METHOD_NOT_ALLOWED',
-  'RATE_LIMITED'
+  'RATE_LIMITED',
 ] as const;
 
 interface EnvelopeStructure {
@@ -67,13 +67,19 @@ function createProgram(filePaths: string[]): ts.Program {
 /**
  * Visit AST nodes recursively with proper error handling
  */
-function visitNode(node: ts.Node, sourceFile: ts.SourceFile, visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void): void {
+function visitNode(
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+  visitor: (node: ts.Node, sourceFile: ts.SourceFile) => void,
+): void {
   try {
     visitor(node, sourceFile);
-    node.forEachChild(child => visitNode(child, sourceFile, visitor));
+    node.forEachChild((child) => visitNode(child, sourceFile, visitor));
   } catch (error) {
     // Skip problematic nodes and continue
-    console.warn(`⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`);
+    console.warn(
+      `⚠️  Skipping problematic node in ${sourceFile.fileName}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -107,12 +113,14 @@ function getNodeText(sourceFile: ts.SourceFile, node: ts.Node): string {
  */
 function hasEnvelopeStructure(objectLiteral: ts.ObjectLiteralExpression): EnvelopeStructure {
   const properties = objectLiteral.properties;
-  const propNames = properties.map(prop => {
-    if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-      return prop.name.text;
-    }
-    return null;
-  }).filter(Boolean) as string[];
+  const propNames = properties
+    .map((prop) => {
+      if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+        return prop.name.text;
+      }
+      return null;
+    })
+    .filter(Boolean) as string[];
 
   const hasSuccess = propNames.includes('success');
   const hasData = propNames.includes('data');
@@ -125,21 +133,24 @@ function hasEnvelopeStructure(objectLiteral: ts.ObjectLiteralExpression): Envelo
 /**
  * Check if success response has proper envelope format
  */
-function validateSuccessEnvelope(node: ts.ObjectLiteralExpression, sourceFile: ts.SourceFile, filePath: string): void {
+function validateSuccessEnvelope(
+  node: ts.ObjectLiteralExpression,
+  sourceFile: ts.SourceFile,
+  filePath: string,
+): void {
   const lineNum = getLineNumber(sourceFile, node);
   const envelope = hasEnvelopeStructure(node);
-  
+
   if (envelope.hasSuccess) {
     // Find success property value
-    const successProp = node.properties.find(prop => 
-      ts.isPropertyAssignment(prop) && 
-      ts.isIdentifier(prop.name) && 
-      prop.name.text === 'success'
+    const successProp = node.properties.find(
+      (prop) =>
+        ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name) && prop.name.text === 'success',
     ) as ts.PropertyAssignment | undefined;
-    
+
     if (successProp && successProp.initializer) {
       const isSuccessTrue = successProp.initializer.kind === ts.SyntaxKind.TrueKeyword;
-      
+
       if (isSuccessTrue) {
         // This is a success response, validate structure
         if (!envelope.hasData) {
@@ -151,31 +162,35 @@ function validateSuccessEnvelope(node: ts.ObjectLiteralExpression, sourceFile: t
             suggestion: 'Include data property in success response envelope',
           });
         }
-        
+
         if (!envelope.hasMeta) {
           ERRORS.push({
             file: filePath,
             line: lineNum,
             type: 'SUCCESS_MISSING_META',
             message: 'Success response missing meta field',
-            suggestion: 'Include meta: { timestamp: new Date().toISOString() } or use apiResponse()',
+            suggestion:
+              'Include meta: { timestamp: new Date().toISOString() } or use apiResponse()',
           });
         } else {
           // Check meta structure
-          const metaProp = node.properties.find(prop => 
-            ts.isPropertyAssignment(prop) && 
-            ts.isIdentifier(prop.name) && 
-            prop.name.text === 'meta'
+          const metaProp = node.properties.find(
+            (prop) =>
+              ts.isPropertyAssignment(prop) &&
+              ts.isIdentifier(prop.name) &&
+              prop.name.text === 'meta',
           ) as ts.PropertyAssignment | undefined;
-          
+
           if (metaProp && ts.isObjectLiteralExpression(metaProp.initializer)) {
-            const metaProps = metaProp.initializer.properties.map(prop => {
-              if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-                return prop.name.text;
-              }
-              return null;
-            }).filter(Boolean) as string[];
-            
+            const metaProps = metaProp.initializer.properties
+              .map((prop) => {
+                if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+                  return prop.name.text;
+                }
+                return null;
+              })
+              .filter(Boolean) as string[];
+
             if (!metaProps.includes('timestamp')) {
               WARNINGS.push({
                 file: filePath,
@@ -195,31 +210,36 @@ function validateSuccessEnvelope(node: ts.ObjectLiteralExpression, sourceFile: t
             line: lineNum,
             type: 'ERROR_MISSING_STRUCTURE',
             message: 'Error response missing error field',
-            suggestion: 'Include error: { code: "ERROR_CODE", message: "Description" } or use apiError()',
+            suggestion:
+              'Include error: { code: "ERROR_CODE", message: "Description" } or use apiError()',
           });
         } else {
           // Check error structure
-          const errorProp = node.properties.find(prop => 
-            ts.isPropertyAssignment(prop) && 
-            ts.isIdentifier(prop.name) && 
-            prop.name.text === 'error'
+          const errorProp = node.properties.find(
+            (prop) =>
+              ts.isPropertyAssignment(prop) &&
+              ts.isIdentifier(prop.name) &&
+              prop.name.text === 'error',
           ) as ts.PropertyAssignment | undefined;
-          
+
           if (errorProp && ts.isObjectLiteralExpression(errorProp.initializer)) {
-            const errorProps = errorProp.initializer.properties.map(prop => {
-              if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
-                return prop.name.text;
-              }
-              return null;
-            }).filter(Boolean) as string[];
-            
+            const errorProps = errorProp.initializer.properties
+              .map((prop) => {
+                if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+                  return prop.name.text;
+                }
+                return null;
+              })
+              .filter(Boolean) as string[];
+
             if (!errorProps.includes('code') || !errorProps.includes('message')) {
               ERRORS.push({
                 file: filePath,
                 line: lineNum,
                 type: 'ERROR_MISSING_STRUCTURE',
                 message: 'Error response missing required code/message fields',
-                suggestion: 'Include error: { code: "ERROR_CODE", message: "Description" } or use apiError()',
+                suggestion:
+                  'Include error: { code: "ERROR_CODE", message: "Description" } or use apiError()',
               });
             }
           }
@@ -239,13 +259,13 @@ function validateResponseEnvelopeAST(filePath: string, sourceFile: ts.SourceFile
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
-    
+
     // Check for standardized response utilities usage
     if (ts.isCallExpression(node) && node.expression && ts.isIdentifier(node.expression)) {
       const functionName = node.expression.text;
       if (['apiResponse', 'apiError', 'apiCollection'].includes(functionName)) {
         usesResponseUtils = true;
-        
+
         // Check apiError calls for proper error codes
         if (functionName === 'apiError' && node.arguments.length > 0) {
           const firstArg = node.arguments[0];
@@ -266,19 +286,21 @@ function validateResponseEnvelopeAST(filePath: string, sourceFile: ts.SourceFile
     }
 
     // Check for manual Response.json calls
-    if (ts.isCallExpression(node) &&
-        ts.isPropertyAccessExpression(node.expression) &&
-        node.expression.expression && ts.isIdentifier(node.expression.expression) &&
-        node.expression.expression.text === 'Response' &&
-        node.expression.name.text === 'json') {
-      
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.expression &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === 'Response' &&
+      node.expression.name.text === 'json'
+    ) {
       // Check the argument to Response.json()
       if (node.arguments.length > 0) {
         const jsonArg = node.arguments[0];
-        
+
         if (ts.isObjectLiteralExpression(jsonArg)) {
           const envelope = hasEnvelopeStructure(jsonArg);
-          
+
           if (envelope.hasSuccess) {
             hasSuccessEnvelope = true;
             validateSuccessEnvelope(jsonArg, sourceFile, filePath);
@@ -299,28 +321,31 @@ function validateResponseEnvelopeAST(filePath: string, sourceFile: ts.SourceFile
     // Check for object literals that might be response envelopes
     if (ts.isObjectLiteralExpression(node)) {
       const envelope = hasEnvelopeStructure(node);
-      
+
       if (envelope.hasSuccess) {
         const parentNode = node.parent;
         // Check if this is likely a response object (not just any object with success property)
-        if (ts.isReturnStatement(parentNode) || 
-            ts.isCallExpression(parentNode) ||
-            ts.isPropertyAssignment(parentNode)) {
+        if (
+          ts.isReturnStatement(parentNode) ||
+          ts.isCallExpression(parentNode) ||
+          ts.isPropertyAssignment(parentNode)
+        ) {
           validateSuccessEnvelope(node, sourceFile, filePath);
         }
       }
     }
 
     // Check for status code assignments
-    if (ts.isCallExpression(node) &&
-        ts.isPropertyAccessExpression(node.expression) &&
-        node.expression.name.text === 'status' &&
-        node.arguments.length > 0) {
-      
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === 'status' &&
+      node.arguments.length > 0
+    ) {
       const statusArg = node.arguments[0];
       if (ts.isNumericLiteral(statusArg)) {
         const status = parseInt(statusArg.text);
-        
+
         if (status >= 400 && !hasErrorEnvelope && !usesResponseUtils) {
           ERRORS.push({
             file: filePath,
@@ -340,13 +365,19 @@ function validateResponseEnvelopeAST(filePath: string, sourceFile: ts.SourceFile
         line: lineNum,
         type: 'UNHANDLED_ERROR',
         message: 'Thrown error may not be properly caught and formatted',
-        suggestion: 'Use withErrorHandling() wrapper or ensure error is caught and formatted as envelope',
+        suggestion:
+          'Use withErrorHandling() wrapper or ensure error is caught and formatted as envelope',
       });
     }
   });
 
   // File-level validations
-  if (filePath.includes('/api/') && !usesResponseUtils && !hasSuccessEnvelope && !hasErrorEnvelope) {
+  if (
+    filePath.includes('/api/') &&
+    !usesResponseUtils &&
+    !hasSuccessEnvelope &&
+    !hasErrorEnvelope
+  ) {
     WARNINGS.push({
       file: filePath,
       line: 1,
@@ -365,11 +396,14 @@ function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile
 
   visitNode(sourceFile, sourceFile, (node, sourceFile) => {
     const lineNum = getLineNumber(sourceFile, node);
-    
+
     // Check imports for ApiClient
-    if (ts.isImportDeclaration(node) && node.importClause?.namedBindings && 
-        ts.isNamedImports(node.importClause.namedBindings)) {
-      node.importClause.namedBindings.elements.forEach(element => {
+    if (
+      ts.isImportDeclaration(node) &&
+      node.importClause?.namedBindings &&
+      ts.isNamedImports(node.importClause.namedBindings)
+    ) {
+      node.importClause.namedBindings.elements.forEach((element) => {
         if (element.name.text === 'ApiClient' || element.name.text === 'apiClient') {
           hasApiClientUsage = true;
         }
@@ -380,7 +414,7 @@ function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile
     if (ts.isPropertyAccessExpression(node)) {
       const propertyName = node.name.text;
       const objectText = getNodeText(sourceFile, node.expression);
-      
+
       // Check for pagination access patterns
       if (propertyName === 'pagination' && !objectText.includes('.meta')) {
         if (hasApiClientUsage || objectText.includes('response')) {
@@ -395,14 +429,17 @@ function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile
       }
 
       // Check for direct response property access
-      if (objectText.includes('response') && 
-          !['data', 'success', 'error', 'meta', 'status', 'headers', 'ok'].includes(propertyName)) {
+      if (
+        objectText.includes('response') &&
+        !['data', 'success', 'error', 'meta', 'status', 'headers', 'ok'].includes(propertyName)
+      ) {
         WARNINGS.push({
           file: filePath,
           line: lineNum,
           type: 'DIRECT_RESPONSE_ACCESS',
           message: 'Direct response property access - may not handle envelope format',
-          suggestion: 'Access data through response.data, check response.success, handle response.error',
+          suggestion:
+            'Access data through response.data, check response.success, handle response.error',
         });
       }
     }
@@ -410,25 +447,32 @@ function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile
     // Check catch clauses for proper error handling
     if (ts.isCatchClause(node) && hasApiClientUsage) {
       const catchText = getNodeText(sourceFile, node);
-      if (!catchText.includes('ApiError') && 
-          !catchText.includes('.isNotFound') && 
-          !catchText.includes('.isValidation') &&
-          !catchText.includes('.code')) {
+      if (
+        !catchText.includes('ApiError') &&
+        !catchText.includes('.isNotFound') &&
+        !catchText.includes('.isValidation') &&
+        !catchText.includes('.code')
+      ) {
         WARNINGS.push({
           file: filePath,
           line: lineNum,
           type: 'INCOMPLETE_ERROR_HANDLING',
           message: 'Error handling may not properly handle ApiError types',
-          suggestion: 'Use ApiError methods like .isNotFound(), .isValidation(), or check .code property',
+          suggestion:
+            'Use ApiError methods like .isNotFound(), .isValidation(), or check .code property',
         });
       }
     }
 
     // Check for manual fetch without envelope handling
-    if (ts.isCallExpression(node) && 
-        node.expression && ts.isIdentifier(node.expression) && 
-        node.expression.text === 'fetch' &&
-        !hasApiClientUsage && !filePath.includes('/lib/api-client.ts')) {
+    if (
+      ts.isCallExpression(node) &&
+      node.expression &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'fetch' &&
+      !hasApiClientUsage &&
+      !filePath.includes('/lib/api-client.ts')
+    ) {
       WARNINGS.push({
         file: filePath,
         line: lineNum,
@@ -445,10 +489,10 @@ function validateEnvelopeHandlingAST(filePath: string, sourceFile: ts.SourceFile
  */
 function validateFilesWithAST(filePaths: string[]): void {
   console.log(`🔍 Creating TypeScript program for ${filePaths.length} files...`);
-  
+
   const program = createProgram(filePaths);
-  
-  filePaths.forEach(filePath => {
+
+  filePaths.forEach((filePath) => {
     const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) {
       console.warn(`⚠️  Could not parse ${filePath}`);
@@ -459,13 +503,15 @@ function validateFilesWithAST(filePaths: string[]): void {
     if (filePath.includes('/api/') && filePath.endsWith('route.ts')) {
       validateResponseEnvelopeAST(filePath, sourceFile);
     }
-    
+
     // Validate frontend files for envelope handling
-    if ((filePath.includes('/contexts/') || 
-         filePath.includes('/hooks/') || 
-         filePath.includes('/lib/') ||
-         filePath.includes('/components/')) && 
-        !filePath.includes('/api/')) {
+    if (
+      (filePath.includes('/contexts/') ||
+        filePath.includes('/hooks/') ||
+        filePath.includes('/lib/') ||
+        filePath.includes('/components/')) &&
+      !filePath.includes('/api/')
+    ) {
       validateEnvelopeHandlingAST(filePath, sourceFile);
     }
   });
@@ -479,7 +525,7 @@ function findEnvelopeValidationFiles(): string[] {
 
   function findFilesRecursive(dir: string, predicate: (file: string) => boolean): void {
     if (!fs.existsSync(dir)) return;
-    
+
     const entries = fs.readdirSync(dir);
 
     for (const entry of entries) {
@@ -487,7 +533,9 @@ function findEnvelopeValidationFiles(): string[] {
       const stat = fs.statSync(fullPath);
 
       if (stat.isDirectory()) {
-        if (!['node_modules', 'build', 'dist', '.next', '.next-build', 'coverage'].includes(entry)) {
+        if (
+          !['node_modules', 'build', 'dist', '.next', '.next-build', 'coverage'].includes(entry)
+        ) {
           findFilesRecursive(fullPath, predicate);
         }
       } else if (predicate(fullPath)) {
@@ -497,11 +545,11 @@ function findEnvelopeValidationFiles(): string[] {
   }
 
   // Find TypeScript files in web package
-  const webAppDir = path.join(process.cwd(), 'packages/web/app');
+  const webAppDir = path.join(process.cwd(), 'apps/web/app');
   if (fs.existsSync(webAppDir)) {
-    findFilesRecursive(webAppDir, (file) => 
-      (file.endsWith('.ts') || file.endsWith('.tsx')) && 
-      !file.endsWith('.d.ts')
+    findFilesRecursive(
+      webAppDir,
+      (file) => (file.endsWith('.ts') || file.endsWith('.tsx')) && !file.endsWith('.d.ts'),
     );
   }
 

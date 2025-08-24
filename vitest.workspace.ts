@@ -7,8 +7,8 @@ import { defineWorkspace } from 'vitest/config';
 export default defineWorkspace([
   // Include all packages with tests
   'packages/core',
-  'packages/mcp', 
+  'packages/mcp',
   'packages/ai',
   // Add web package when it gets tests
-  // 'packages/web',
+  // 'apps/web',
 ]);

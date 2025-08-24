@@ -64,8 +64,8 @@ function validateFile(filePath: string): void {
 
     // Rule 2: Avoid self-referencing @/ aliases within same package
     if (importPath.startsWith('@/')) {
-      // Check if we're in packages/web (where @/ is allowed for Next.js)
-      if (!filePath.includes('packages/web/')) {
+      // Check if we're in apps/web (where @/ is allowed for Next.js)
+      if (!filePath.includes('apps/web/')) {
         ERRORS.push({
           file: filePath,
           line: lineNum,
@@ -82,12 +82,12 @@ function validateFile(filePath: string): void {
         const currentPackageMatch = filePath.match(/packages\/([^\/]+)\//);
         if (currentPackageMatch) {
           const currentPackage = currentPackageMatch[1];
-          
+
           // Resolve the relative path to see if it crosses package boundaries
           const importSegments = importPath.split('/');
           let currentDir = filePath.split('/');
           currentDir.pop(); // Remove filename
-          
+
           for (const segment of importSegments) {
             if (segment === '..') {
               currentDir.pop();
@@ -95,10 +95,10 @@ function validateFile(filePath: string): void {
               currentDir.push(segment);
             }
           }
-          
+
           const resolvedPath = currentDir.join('/');
           const targetPackageMatch = resolvedPath.match(/packages\/([^\/]+)\//);
-          
+
           // Only flag if it actually crosses package boundaries
           if (targetPackageMatch && targetPackageMatch[1] !== currentPackage) {
             const targetPackage = targetPackageMatch[1];
@@ -135,7 +135,7 @@ function validateFile(filePath: string): void {
             file: filePath,
             line: lineNum,
             message: `Invalid package name in cross-package import: @codervisor/devlog-${packageName}`,
-            suggestion: `Valid packages are: ${validPackages.map(p => `@codervisor/devlog-${p}`).join(', ')}`,
+            suggestion: `Valid packages are: ${validPackages.map((p) => `@codervisor/devlog-${p}`).join(', ')}`,
           });
         }
       }
@@ -147,12 +147,12 @@ function validateFile(filePath: string): void {
       const currentPackageMatch = filePath.match(/packages\/([^\/]+)\//);
       if (currentPackageMatch) {
         const currentPackage = currentPackageMatch[1];
-        
+
         // Check if the relative import might be going to a different package
         const importSegments = importPath.split('/');
         let currentDir = filePath.split('/');
         currentDir.pop(); // Remove filename
-        
+
         // Resolve the relative path
         for (const segment of importSegments) {
           if (segment === '..') {
@@ -161,10 +161,10 @@ function validateFile(filePath: string): void {
             currentDir.push(segment);
           }
         }
-        
+
         const resolvedPath = currentDir.join('/');
         const targetPackageMatch = resolvedPath.match(/packages\/([^\/]+)\//);
-        
+
         if (targetPackageMatch && targetPackageMatch[1] !== currentPackage) {
           const targetPackage = targetPackageMatch[1];
           ERRORS.push({
