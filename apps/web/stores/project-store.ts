@@ -76,6 +76,42 @@ export const useProjectStore = create<ProjectState>()(
       }
     });
 
+    const debouncedFetchProjects = debounce(async () => {
+      try {
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            loading: true,
+            error: null,
+          },
+        }));
+        const projectsList = await projectApiClient.list();
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            data: projectsList,
+            error: null,
+          },
+        }));
+      } catch (err) {
+        const errorMessage = handleApiError(err);
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            error: errorMessage,
+          },
+        }));
+        console.error('Error loading projects:', err);
+      } finally {
+        set((state) => ({
+          projectsContext: {
+            ...state.projectsContext,
+            loading: false,
+          },
+        }));
+      }
+    });
+
     return {
       // Initial state
       currentProjectName: null,
@@ -92,39 +128,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       fetchProjects: async () => {
-        try {
-          set((state) => ({
-            projectsContext: {
-              ...state.projectsContext,
-              loading: true,
-              error: null,
-            },
-          }));
-          const projectsList = await projectApiClient.list();
-          set((state) => ({
-            projectsContext: {
-              ...state.projectsContext,
-              data: projectsList,
-              error: null,
-            },
-          }));
-        } catch (err) {
-          const errorMessage = handleApiError(err);
-          set((state) => ({
-            projectsContext: {
-              ...state.projectsContext,
-              error: errorMessage,
-            },
-          }));
-          console.error('Error loading projects:', err);
-        } finally {
-          set((state) => ({
-            projectsContext: {
-              ...state.projectsContext,
-              loading: false,
-            },
-          }));
-        }
+        debouncedFetchProjects();
       },
 
       clearErrors: () => {
