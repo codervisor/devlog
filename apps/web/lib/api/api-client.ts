@@ -226,8 +226,12 @@ export class ApiClient {
   /**
    * DELETE request
    */
-  async delete<T = any>(url: string, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T> {
-    return this.request<T>(url, { ...options, method: 'DELETE' });
+  async delete<T = any>(url: string, data?: any, options?: Omit<RequestInit, 'method' | 'body'>): Promise<T> {
+    return this.request<T>(url, {
+       ...options,
+      method: 'DELETE',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
   /**

@@ -147,9 +147,10 @@ export class DevlogApiClient {
    * Batch delete multiple devlog
    */
   async batchDelete(devlogIds: DevlogId[]): Promise<void> {
-    return apiClient.post<void>(`/api/projects/${this.projectName}/devlogs/batch/delete`, {
-      ids: devlogIds,
-    });
+    return apiClient.delete<void>(
+      `/api/projects/${this.projectName}/devlogs`, 
+      { ids: devlogIds },
+    );
   }
 
   /**

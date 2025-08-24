@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { PaginationMeta, SortOptions } from '@codervisor/devlog-core';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
-import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema } from '@/schemas';
+import { DevlogService } from '@codervisor/devlog-core/server';
+import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema, BatchDeleteDevlogsBodySchema } from '@/schemas';
 import {
   ApiErrors,
   createCollectionResponse,
@@ -75,9 +75,9 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
 
     let result;
     if (queryData.search) {
-      result = await devlogService.search(queryData.search, filter);
+      result = await devlogService.search(queryData.search, filter, pagination, sortOptions);
     } else {
-      result = await devlogService.list(filter);
+      result = await devlogService.list(filter, pagination, sortOptions);
     }
 
     // Check if result has pagination metadata
@@ -151,5 +151,91 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
   } catch (error) {
     console.error('Error creating devlog:', error);
     return ApiErrors.internalError('Failed to create devlog');
+  }
+}
+
+// DELETE /api/projects/[name]/devlogs - Batch delete devlog entries
+export async function DELETE(request: NextRequest, { params }: { params: { name: string } }) {
+  try {
+    // Parse and validate project identifier
+    const paramResult = RouteParams.parseProjectName(params);
+    if (!paramResult.success) {
+      return paramResult.response;
+    }
+
+    const { projectName } = paramResult.data;
+
+    // Validate request body
+    const bodyValidation = await ApiValidator.validateJsonBody(request, BatchDeleteDevlogsBodySchema);
+    if (!bodyValidation.success) {
+      return bodyValidation.response;
+    }
+
+    const { ids } = bodyValidation.data;
+
+    // Get project using helper
+    const projectResult = await ServiceHelper.getProjectByNameOrFail(projectName);
+    if (!projectResult.success) {
+      return projectResult.response;
+    }
+
+    const project = projectResult.data.project;
+
+    // Create project-aware devlog service
+    const devlogService = DevlogService.getInstance(project.id);
+
+    // Track successful and failed deletions
+    const results = {
+      deleted: [] as number[],
+      failed: [] as { id: number; error: string }[],
+    };
+
+    // Delete devlogs one by one and collect results
+    for (const id of ids) {
+      try {
+        await devlogService.delete(id);
+        results.deleted.push(id);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        results.failed.push({ id, error: errorMessage });
+      }
+    }
+
+    // Return results with appropriate status
+    if (results.failed.length === 0) {
+      // All deletions successful
+      return createSuccessResponse(
+        {
+          deleted: results.deleted,
+          deletedCount: results.deleted.length,
+        },
+        {
+          status: 200,
+          sseEventType: RealtimeEventType.DEVLOG_DELETED,
+        }
+      );
+    } else if (results.deleted.length === 0) {
+      // All deletions failed
+      return ApiErrors.badRequest('Failed to delete any devlogs', { 
+        failures: results.failed 
+      });
+    } else {
+      // Partial success
+      return createSuccessResponse(
+        {
+          deleted: results.deleted,
+          failed: results.failed,
+          deletedCount: results.deleted.length,
+          failedCount: results.failed.length,
+        },
+        {
+          status: 207, // Multi-status for partial success
+          sseEventType: RealtimeEventType.DEVLOG_DELETED,
+        }
+      );
+    }
+  } catch (error) {
+    console.error('Error batch deleting devlogs:', error);
+    return ApiErrors.internalError('Failed to delete devlogs');
   }
 }

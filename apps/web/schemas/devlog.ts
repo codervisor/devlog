@@ -80,3 +80,8 @@ export const DevlogUpdateWithNoteBodySchema = z.object({
   technicalContext: z.string().nullable().optional(),
   acceptanceCriteria: z.array(z.string()).optional(),
 });
+
+// Schema for batch delete request body
+export const BatchDeleteDevlogsBodySchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1, 'At least one devlog ID is required'),
+});
