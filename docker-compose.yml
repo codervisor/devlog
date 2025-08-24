@@ -59,6 +59,8 @@ services:
       - './scripts:/app/scripts'
     env_file:
       - .env
+    networks:
+      - devlog-network
 
 networks:
   devlog-network:
