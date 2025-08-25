@@ -38,13 +38,6 @@ for pkg in "${PACKAGE_ARRAY[@]}"; do
             PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-ai@$(grep '"version"' package.json | cut -d'"' -f4) "
             cd ../..
             ;;
-        "cli")
-            echo "📤 Publishing @codervisor/devlog-cli..."
-            cd packages/cli
-            pnpm publish --access public --no-git-checks
-            PUBLISHED_PACKAGES="$PUBLISHED_PACKAGES@codervisor/devlog-cli@$(grep '"version"' package.json | cut -d'"' -f4) "
-            cd ../..
-            ;;
         *)
             echo "⚠️  Unknown package: $pkg"
             ;;

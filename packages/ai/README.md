@@ -270,9 +270,6 @@ src/
 │   ├── exporters/       # Automation result exporters
 │   └── types/           # Automation-specific TypeScript types
 ├── utils/               # Cross-platform utilities
-├── cli/                 # Command-line interface
-│   ├── index.ts         # Main CLI with chat history commands
-│   └── automation.ts    # Automation-specific CLI commands
 └── index.ts             # Main exports
 ```
 

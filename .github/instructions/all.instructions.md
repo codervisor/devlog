@@ -273,7 +273,7 @@ pnpm --filter @codervisor/devlog-mcp build
 pnpm --filter @codervisor/devlog-web build
 
 # Start containerized development
-docker compose -f docker-compose.dev.yml up web-dev -d --wait
+docker compose up web-dev -d --wait
 
 # Test build without breaking dev server
 pnpm build 

@@ -9,7 +9,6 @@ PACKAGES=(
     "core:packages/core"
     "mcp:packages/mcp"
     "ai:packages/ai"
-    "cli:packages/cli"
 )
 
 PUBLISHED_PACKAGES=""

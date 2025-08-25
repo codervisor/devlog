@@ -3,6 +3,8 @@
  * Provides project-aware interface to @codervisor/devlog-web API endpoints
  */
 
+import axios, { type AxiosInstance, type AxiosError, type AxiosRequestConfig } from 'axios';
+import tunnel from 'tunnel';
 import type {
   CreateDevlogRequest,
   DevlogEntry,
@@ -14,6 +16,7 @@ import type {
   SortOptions,
   UpdateDevlogRequest,
 } from '@codervisor/devlog-core';
+import { logger } from '../server/index.js';
 
 export interface DevlogApiClientConfig {
   /** Base URL for the web API */
@@ -42,15 +45,50 @@ export class DevlogApiClientError extends Error {
  * HTTP API client for devlog operations
  */
 export class DevlogApiClient {
-  private baseUrl: string;
-  private timeout: number;
+  private axiosInstance: AxiosInstance;
   private retries: number;
   private currentProjectId: number | null = null;
 
   constructor(config: DevlogApiClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
-    this.timeout = config.timeout || 30000;
     this.retries = config.retries || 3;
+
+    // Create HTTPS agent for proxy tunneling to fix redirect loops
+    let httpsAgent;
+    const proxyUrl = process.env.https_proxy || process.env.HTTPS_PROXY;
+
+    if (proxyUrl && config.baseUrl.includes('devlog.codervisor.dev')) {
+      // Use tunnel agent for devlog.codervisor.dev to avoid redirect loops
+      const proxyMatch = proxyUrl.match(/https?:\/\/([^:]+):(\d+)/);
+      if (proxyMatch) {
+        httpsAgent = tunnel.httpsOverHttp({
+          proxy: {
+            host: proxyMatch[1],
+            port: parseInt(proxyMatch[2]),
+          },
+        });
+      }
+    }
+
+    this.axiosInstance = axios.create({
+      baseURL: config.baseUrl.replace(/\/$/, ''), // Remove trailing slash
+      timeout: config.timeout || 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Use custom agent if we created one, otherwise let axios handle proxy normally
+      ...(httpsAgent && {
+        httpsAgent,
+        proxy: false, // Disable built-in proxy when using custom agent
+      }),
+    });
+
+    // Setup response interceptor for error handling
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error: AxiosError) => {
+        throw this.handleAxiosError(error);
+      },
+    );
   }
 
   /**
@@ -68,58 +106,74 @@ export class DevlogApiClient {
   }
 
   /**
+   * Handle axios errors and convert to DevlogApiClientError
+   */
+  private handleAxiosError(error: AxiosError): DevlogApiClientError {
+    let errorMessage = error.message;
+    let statusCode: number | undefined;
+    let responseData: any;
+
+    logger.error('API request failed', { error: error.message, code: error.code });
+    if (error.response) {
+      // Server responded with error status
+      statusCode = error.response.status;
+      responseData = error.response.data;
+
+      // Try to extract error message from response
+      if (responseData) {
+        if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        } else if (typeof responseData === 'object') {
+          errorMessage = responseData.error?.message || responseData.message || error.message;
+        }
+      }
+
+      errorMessage = `HTTP ${statusCode}: ${errorMessage}`;
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = `Network error: ${error.message}`;
+
+      // Handle specific proxy/network related errors with helpful context
+      if (error.code === 'ERR_FR_TOO_MANY_REDIRECTS') {
+        errorMessage += '. Fixed: Using tunnel agent to avoid proxy redirect loops.';
+      } else if (error.code === 'ECONNRESET') {
+        errorMessage += '. The server may be unreachable from this network.';
+      }
+    }
+
+    return new DevlogApiClientError(errorMessage, statusCode, responseData);
+  }
+
+  /**
    * Make HTTP request with retry logic
    */
   private async makeRequest(
     endpoint: string,
-    options: RequestInit = {},
+    options: AxiosRequestConfig = {},
     attempt = 1,
-  ): Promise<Response> {
-    const url = `${this.baseUrl}${endpoint}`;
-
-    const requestOptions: RequestInit = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      signal: AbortSignal.timeout(this.timeout),
-    };
-
+  ): Promise<any> {
     try {
-      const response = await fetch(url, requestOptions);
+      logger.debug(`Making request to ${endpoint}`, options);
+      const response = await this.axiosInstance.request({
+        url: endpoint,
+        ...options,
+      });
 
-      if (!response.ok) {
-        let errorText: string;
-        try {
-          errorText = await response.text();
-        } catch {
-          errorText = response.statusText;
-        }
-
-        // Try to parse JSON error response
-        let errorData = errorText;
-        try {
-          const parsed = JSON.parse(errorText);
-          errorData = parsed.error?.message || parsed.message || errorText;
-        } catch {
-          // Keep original text if not JSON
-        }
-
-        throw new DevlogApiClientError(
-          `HTTP ${response.status}: ${errorData}`,
-          response.status,
-          errorText,
-        );
-      }
-
-      return response;
+      return response.data;
     } catch (error) {
-      if (attempt < this.retries && !(error instanceof DevlogApiClientError)) {
-        console.warn(`Request failed (attempt ${attempt}/${this.retries}), retrying...`);
+      const axiosError = error as AxiosError;
+
+      // Only retry on network errors or 5xx server errors, not on client errors
+      const shouldRetry =
+        attempt < this.retries && (!axiosError.response || axiosError.response.status >= 500);
+
+      if (shouldRetry) {
+        logger.warn(`Request failed (attempt ${attempt}/${this.retries}), retrying...`);
         await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         return this.makeRequest(endpoint, options, attempt + 1);
       }
+
+      // Re-throw the error (will be handled by the response interceptor)
       throw error;
     }
   }
@@ -138,7 +192,7 @@ export class DevlogApiClient {
       return response.data;
     }
 
-    // Handle paginated response format (devlogs list API)
+    // Handle paginated response format (devlog list API)
     if (
       response &&
       typeof response === 'object' &&
@@ -156,38 +210,34 @@ export class DevlogApiClient {
    * GET request helper
    */
   private async get(endpoint: string): Promise<any> {
-    const response = await this.makeRequest(endpoint, { method: 'GET' });
-    return response.json();
+    return this.makeRequest(endpoint, { method: 'GET' });
   }
 
   /**
    * POST request helper
    */
   private async post(endpoint: string, data?: any): Promise<any> {
-    const response = await this.makeRequest(endpoint, {
+    return this.makeRequest(endpoint, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      data: data,
     });
-    return response.json();
   }
 
   /**
    * PUT request helper
    */
   private async put(endpoint: string, data?: any): Promise<any> {
-    const response = await this.makeRequest(endpoint, {
+    return this.makeRequest(endpoint, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      data: data,
     });
-    return response.json();
   }
 
   /**
    * DELETE request helper
    */
   private async delete(endpoint: string): Promise<any> {
-    const response = await this.makeRequest(endpoint, { method: 'DELETE' });
-    return response.json();
+    return this.makeRequest(endpoint, { method: 'DELETE' });
   }
 
   /**
@@ -195,23 +245,23 @@ export class DevlogApiClient {
    */
   private getProjectEndpoint(): string {
     const projectId = this.currentProjectId || 'default';
-    return `/api/projects/${projectId}`;
+    return `/projects/${projectId}`;
   }
 
   // Project Management
   async listProjects(): Promise<any[]> {
-    const response = await this.get('/api/projects');
+    const response = await this.get('/projects');
     return this.unwrapApiResponse<any[]>(response);
   }
 
   async getProject(projectId?: number): Promise<any> {
     const id = projectId || this.currentProjectId || 0;
-    const response = await this.get(`/api/projects/${id}`);
+    const response = await this.get(`/projects/${id}`);
     return this.unwrapApiResponse<any>(response);
   }
 
   async createProject(data: any): Promise<any> {
-    const response = await this.post('/api/projects', data);
+    const response = await this.post('/projects', data);
     return this.unwrapApiResponse<any>(response);
   }
 
@@ -308,7 +358,9 @@ export class DevlogApiClient {
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {
-      const response = await this.get('/api/health');
+      logger.info('Performing health check...');
+      logger.debug('API Base URL', { baseURL: this.axiosInstance.defaults.baseURL });
+      const response = await this.get('/health');
       const result = this.unwrapApiResponse<{ status: string; timestamp: string }>(response);
 
       // Validate the health check response
@@ -319,20 +371,11 @@ export class DevlogApiClient {
       return result;
     } catch (error) {
       // If health endpoint doesn't exist, try a basic endpoint
-      console.warn('Health endpoint failed, trying projects endpoint as backup...');
-      try {
-        await this.get('/api/projects');
-        return {
-          status: 'ok',
-          timestamp: new Date().toISOString(),
-        };
-      } catch (backupError) {
-        throw new DevlogApiClientError(
-          `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
-          0,
-          error,
-        );
-      }
+      throw new DevlogApiClientError(
+        `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        0,
+        error,
+      );
     }
   }
 

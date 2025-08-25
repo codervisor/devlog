@@ -109,9 +109,6 @@ When adding a new package to the monorepo:
 - `@codervisor/devlog-core`: Core devlog management functionality, file system operations, CRUD, and all shared TypeScript types
 - `@codervisor/devlog-mcp`: MCP server implementation that wraps the core functionality
 - `@codervisor/devlog-web`: Next.js web interface for browsing and managing devlogs
-- Future packages might include:
-  - `@codervisor/devlog-cli`: Command-line interface for devlog management
-  - `@codervisor/devlog-utils`: Shared utilities
 
 ## Build System
 

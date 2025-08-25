@@ -6,7 +6,6 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
-import { fileURLToPath } from 'url';
 
 /**
  * Find the monorepo root directory by looking for package.json with workspaces or pnpm-workspace.yaml
@@ -84,19 +83,14 @@ export function loadRootEnv(): void {
       const result = dotenv.config({ path: envPath });
       
       if (!result.error) {
-        console.log(`✅ Loaded environment variables from ${envPath}`);
         loaded = true;
         break;
       }
     }
     
-    if (!loaded) {
-      console.log(`ℹ️  No .env files found in ${rootDir}, using system environment variables only`);
-    }
-    
     isLoaded = true;
   } catch (error) {
-    console.warn(`⚠️  Failed to load environment variables:`, error);
+    console.error(`⚠️  Failed to load environment variables:`, error);
     isLoaded = true; // Mark as loaded to prevent retry loops
   }
 }

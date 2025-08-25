@@ -15,7 +15,7 @@ This guide walks you through deploying the devlog web interface to Vercel with P
 1. Go to [vercel.com](https://vercel.com) and sign in
 2. Click "Import Project"
 3. Connect your GitHub account and select this repository
-4. **Important**: Set the **Root Directory** to `/` (repository root, not `packages/web`)
+4. **Important**: Set the **Root Directory** to `/` (repository root, not `apps/web`)
 
 ### Step 2: Configure Build Settings
 
@@ -25,7 +25,7 @@ Vercel should automatically detect the `vercel.json` configuration, but verify:
 - **Root Directory**: `/` (repository root)
 - **Build Command**: `pnpm run build:vercel`
 - **Install Command**: `pnpm install --frozen-lockfile`
-- **Output Directory**: `packages/web/.next-build`
+- **Output Directory**: `apps/web/.next-build`
 
 ### Step 3: Add PostgreSQL Database
 

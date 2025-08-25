@@ -43,8 +43,8 @@ This document outlines the revised color scheme and icon system for devlog statu
 5. **Distinctiveness**: Each category is easily distinguishable
 
 ## Implementation Files
-- `packages/web/app/lib/devlog-ui-utils.tsx` - Core color and icon functions
-- `packages/web/app/components/ui/DevlogTags.tsx` - Tag components using the utilities
+- `apps/web/lib/devlog-ui-utils.tsx` - Core color and icon functions
+- `apps/web/components/ui/DevlogTags.tsx` - Tag components using the utilities
 
 ## Benefits
 - **Faster Scanning**: Users can quickly identify work types and status

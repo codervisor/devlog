@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./scripts/database/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -40,6 +40,25 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - devlog-network
+
+  # Development web service
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: devlog-web-dev
+    command: pnpm dev:web
+    ports:
+      - "3200:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/.next
+      - './scripts:/app/scripts'
+    env_file:
+      - .env
     networks:
       - devlog-network
 

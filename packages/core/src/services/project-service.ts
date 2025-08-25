@@ -75,6 +75,26 @@ export class ProjectService {
     return entity.toProjectMetadata();
   }
 
+  async getByName(name: string): Promise<Project | null> {
+    await this.ensureInitialized(); // Ensure initialization
+
+    // Case-insensitive lookup using TypeORM's ILike operator
+    const entity = await this.repository
+      .createQueryBuilder('project')
+      .where('LOWER(project.name) = LOWER(:name)', { name })
+      .getOne();
+
+    if (!entity) {
+      return null;
+    }
+
+    // Update last accessed time
+    entity.lastAccessedAt = new Date();
+    await this.repository.save(entity);
+
+    return entity.toProjectMetadata();
+  }
+
   async create(project: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>): Promise<Project> {
     await this.ensureInitialized(); // Ensure initialization
 

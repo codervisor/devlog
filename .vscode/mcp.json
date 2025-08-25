@@ -9,26 +9,15 @@
 			"type": "stdio"
 		},
 		"devlog": {
-			"type": "stdio",
 			"command": "npx",
 			"args": [
 				"@codervisor/devlog-mcp@dev"
 			],
+			"type": "stdio",
 			"env": {
-				// "DEVLOG_BASE_URL": "http://localhost:3200"
-			}
-		},
-		"sequential-thinking": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-sequential-thinking@2025.7.1"
-			],
-			"env": {
-				"DISABLE_THOUGHT_LOGGING": "true"
+				// "DEVLOG_API_URL": "http://localhost:3200/api"
 			},
-			"type": "stdio"
-		}
+		},
 	},
 	"inputs": [
 		{

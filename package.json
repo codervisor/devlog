@@ -22,6 +22,7 @@
     "validate:list": "pnpm exec tsx scripts/validation/validate-all.ts --list",
     "validate:quick": "pnpm exec tsx scripts/validation/validate-all.ts --quick",
     "validate:imports": "pnpm exec tsx scripts/validation/validate-imports.ts",
+    "validate:naming": "pnpm exec tsx scripts/validation/validate-file-naming.ts",
     "validate:api": "pnpm exec tsx scripts/validation/validate-api-standardization-ast.ts",
     "validate:envelopes": "pnpm exec tsx scripts/validation/validate-response-envelopes-ast.ts",
     "validate:architecture": "pnpm exec tsx scripts/validation/validate-architecture-patterns-ast.ts",
@@ -70,5 +71,5 @@
     "dotenv": "16.5.0",
     "tsx": "^4.0.0"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.15.0"
 }

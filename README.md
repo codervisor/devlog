@@ -77,7 +77,7 @@ Next.js web interface for visual devlog management:
 
 ### Prerequisites
 - Node.js 18+ 
-- pnpm 10.13.1+
+- pnpm 10.15.0+
 
 ### Installation
 
