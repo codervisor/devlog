@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { SSOLoginSection } from './sso-login-section';
 
 interface LoginFormProps {
   onSuccess?: (user: any, tokens: any) => void;
@@ -69,7 +70,9 @@ export function LoginForm({ onSuccess, redirectTo = '/projects' }: LoginFormProp
           Enter your email and password to access your account
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <SSOLoginSection />
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
