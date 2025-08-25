@@ -10,6 +10,7 @@ import {
   Cell,
   ComposedChart,
   Legend,
+  Line,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -100,7 +101,7 @@ export function Dashboard({
             {/* Left Chart - Time Series */}
             <Card>
               <CardHeader>
-                <CardTitle>Project Progress & Current Workload</CardTitle>
+                <CardTitle>Daily Activity & Total Open</CardTitle>
               </CardHeader>
               <CardContent>
                 {timeSeriesLoading ? (
@@ -118,57 +119,53 @@ export function Dashboard({
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" fontSize={12} tickLine={false} />
 
-                      {/* Primary Y-axis for cumulative data */}
+                      {/* Primary Y-axis for daily activity */}
                       <YAxis
-                        yAxisId="cumulative"
+                        yAxisId="daily"
                         fontSize={12}
                         tickLine={false}
-                        label={{ value: 'Total Items', angle: -90, position: 'insideLeft' }}
+                        label={{ value: 'Daily Activity', angle: -90, position: 'insideLeft' }}
                       />
 
-                      {/* Secondary Y-axis for current workload */}
+                      {/* Secondary Y-axis for total open */}
                       <YAxis
-                        yAxisId="current"
+                        yAxisId="total"
                         orientation="right"
                         fontSize={12}
                         tickLine={false}
-                        label={{ value: 'Current Open', angle: 90, position: 'insideRight' }}
+                        label={{ value: 'Total Open', angle: 90, position: 'insideRight' }}
                       />
 
                       <Tooltip labelFormatter={formatTooltipLabel} formatter={formatTooltipValue} />
                       <Legend />
 
-                      {/* Cumulative data on primary axis with transparency */}
-                      <Area
-                        yAxisId="cumulative"
-                        type="monotone"
-                        dataKey="totalCreated"
-                        stackId="1"
-                        stroke={CHART_COLORS.primary}
-                        fill={CHART_COLORS.primary}
-                        fillOpacity={CHART_OPACITY.area}
-                        strokeWidth={2}
-                        name="Total Created"
-                      />
-                      <Area
-                        yAxisId="cumulative"
-                        type="monotone"
-                        dataKey="totalClosed"
-                        stackId="2"
-                        stroke={CHART_COLORS.success}
+                      {/* Daily opened as positive bars */}
+                      <Bar
+                        yAxisId="daily"
+                        dataKey="dailyCreated"
                         fill={CHART_COLORS.success}
-                        fillOpacity={CHART_OPACITY.area}
-                        strokeWidth={2}
-                        name="Total Closed"
+                        fillOpacity={CHART_OPACITY.bar}
+                        name="Created"
                       />
 
-                      {/* Current workload on secondary axis using bar chart */}
+                      {/* Daily closed as negative bars (diverging) */}
                       <Bar
-                        yAxisId="current"
-                        dataKey="open"
-                        fill={CHART_COLORS.warning}
+                        yAxisId="daily"
+                        dataKey="dailyClosedNegative"
+                        fill={CHART_COLORS.error}
                         fillOpacity={CHART_OPACITY.bar}
-                        name="Open"
+                        name="Closed"
+                      />
+
+                      {/* Total open as line on secondary axis */}
+                      <Line
+                        yAxisId="total"
+                        type="monotone"
+                        dataKey="open"
+                        stroke={CHART_COLORS.warning}
+                        strokeWidth={3}
+                        dot={{ fill: CHART_COLORS.warning, strokeWidth: 2, r: 4 }}
+                        name="Total Open"
                       />
                     </ComposedChart>
                   </ResponsiveContainer>

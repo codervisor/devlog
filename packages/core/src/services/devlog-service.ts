@@ -19,6 +19,7 @@ import type {
   SearchPaginatedResult,
   SearchResult,
   SortOptions,
+  TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
@@ -617,32 +618,95 @@ export class DevlogService {
       ? new Date(request.from)
       : new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    // For now, return a basic implementation
-    // This would need to be expanded based on specific time series requirements
-    const queryBuilder = this.devlogRepository.createQueryBuilder('devlog');
+    // Ensure 'to' date is end of day for inclusive range
+    const toEndOfDay = new Date(to);
+    toEndOfDay.setHours(23, 59, 59, 999);
 
-    queryBuilder.where('devlog.projectId = :projectId', {
-      projectId: projectId,
-    });
-
-    const entries = await queryBuilder
+    // Get daily created counts
+    const dailyCreatedQuery = this.devlogRepository
+      .createQueryBuilder('devlog')
       .select('DATE(devlog.createdAt)', 'date')
       .addSelect('COUNT(*)', 'count')
+      .where('devlog.projectId = :projectId', { projectId })
       .andWhere('devlog.createdAt >= :from', { from: from.toISOString() })
-      .andWhere('devlog.createdAt <= :to', { to: to.toISOString() })
+      .andWhere('devlog.createdAt <= :to', { to: toEndOfDay.toISOString() })
       .groupBy('DATE(devlog.createdAt)')
-      .orderBy('DATE(devlog.createdAt)', 'ASC')
-      .getRawMany();
+      .orderBy('DATE(devlog.createdAt)', 'ASC');
 
-    // Convert to TimeSeriesDataPoint format
-    const dataPoints = entries.map((entry) => ({
-      date: entry.date,
-      totalCreated: parseInt(entry.count), // Simplified - this should be cumulative
-      totalClosed: 0, // Would need to query closed entries
-      open: parseInt(entry.count), // Simplified
-      dailyCreated: parseInt(entry.count),
-      dailyClosed: 0,
-    }));
+    const dailyCreatedResults = await dailyCreatedQuery.getRawMany();
+
+    // Get daily closed counts (based on closedAt field)
+    const dailyClosedQuery = this.devlogRepository
+      .createQueryBuilder('devlog')
+      .select('DATE(devlog.closedAt)', 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('devlog.projectId = :projectId', { projectId })
+      .andWhere('devlog.closedAt IS NOT NULL')
+      .andWhere('devlog.closedAt >= :from', { from: from.toISOString() })
+      .andWhere('devlog.closedAt <= :to', { to: toEndOfDay.toISOString() })
+      .groupBy('DATE(devlog.closedAt)')
+      .orderBy('DATE(devlog.closedAt)', 'ASC');
+
+    const dailyClosedResults = await dailyClosedQuery.getRawMany();
+
+    // Get cumulative totals up to the start date (for proper baseline)
+    const totalCreatedBeforeFrom = await this.devlogRepository
+      .createQueryBuilder('devlog')
+      .where('devlog.projectId = :projectId', { projectId })
+      .andWhere('devlog.createdAt < :from', { from: from.toISOString() })
+      .getCount();
+
+    const totalClosedBeforeFrom = await this.devlogRepository
+      .createQueryBuilder('devlog')
+      .where('devlog.projectId = :projectId', { projectId })
+      .andWhere('devlog.closedAt IS NOT NULL')
+      .andWhere('devlog.closedAt < :from', { from: from.toISOString() })
+      .getCount();
+
+    // Create maps for quick lookup
+    const dailyCreatedMap = new Map<string, number>();
+    dailyCreatedResults.forEach((result) => {
+      // Convert date object to YYYY-MM-DD string format for consistent lookup
+      const dateString = new Date(result.date).toISOString().split('T')[0];
+      dailyCreatedMap.set(dateString, parseInt(result.count));
+    });
+
+    const dailyClosedMap = new Map<string, number>();
+    dailyClosedResults.forEach((result) => {
+      // Convert date object to YYYY-MM-DD string format for consistent lookup
+      const dateString = new Date(result.date).toISOString().split('T')[0];
+      dailyClosedMap.set(dateString, parseInt(result.count));
+    });
+
+    // Generate complete date range and calculate time series data
+    const dataPoints: TimeSeriesDataPoint[] = [];
+    const currentDate = new Date(from);
+    let cumulativeCreated = totalCreatedBeforeFrom;
+    let cumulativeClosed = totalClosedBeforeFrom;
+
+    while (currentDate <= to) {
+      const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      const dailyCreated = dailyCreatedMap.get(dateStr) || 0;
+      const dailyClosed = dailyClosedMap.get(dateStr) || 0;
+      
+      cumulativeCreated += dailyCreated;
+      cumulativeClosed += dailyClosed;
+      
+      const open = cumulativeCreated - cumulativeClosed;
+
+      dataPoints.push({
+        date: dateStr,
+        totalCreated: cumulativeCreated,
+        totalClosed: cumulativeClosed,
+        open: open,
+        dailyCreated: dailyCreated,
+        dailyClosed: dailyClosed,
+      });
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
 
     return {
       dataPoints,

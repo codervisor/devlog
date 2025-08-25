@@ -10,6 +10,9 @@ export interface FormattedChartData {
   totalCreated: number;
   totalClosed: number;
   open: number;
+  dailyCreated: number;
+  dailyClosed: number;
+  dailyClosedNegative: number; // For diverging chart display
   // Add other fields that might be used
   [key: string]: any;
 }
@@ -25,6 +28,7 @@ export function formatTimeSeriesData(timeSeriesData: TimeSeriesStats | null): Fo
     ...point,
     date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     fullDate: point.date,
+    dailyClosedNegative: -point.dailyClosed, // Negative for diverging chart
   }));
 }
 
@@ -58,9 +62,14 @@ export function formatTooltipValue(value: number, name: string): [number, string
     totalCreated: 'Total Created',
     totalClosed: 'Total Closed',
     open: 'Open',
+    dailyCreated: 'Created',
+    dailyClosed: 'Closed',
+    dailyClosedNegative: 'Closed',
   };
 
-  return [value, nameMap[name] || name];
+  // For negative values, show absolute value but keep the name
+  const displayValue = name === 'dailyClosedNegative' ? Math.abs(value) : value;
+  return [displayValue, nameMap[name] || name];
 }
 
 /**
