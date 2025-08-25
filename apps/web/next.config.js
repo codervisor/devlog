@@ -39,6 +39,15 @@ const nextConfig = {
     if (isServer) {
       // Ensure these packages are treated as externals for server-side
       config.externals = config.externals || [];
+      config.externals.push(
+        'bcrypt',
+        'jsonwebtoken',
+        '@mapbox/node-pre-gyp',
+        'node-pre-gyp',
+        'mock-aws-s3',
+        'aws-sdk',
+        'nock'
+      );
     }
 
     // Fix Monaco Editor issues for client-side
@@ -66,6 +75,11 @@ const nextConfig = {
         // Exclude authentication modules from client bundle
         'bcrypt': false,
         'jsonwebtoken': false,
+        '@mapbox/node-pre-gyp': false,
+        'node-pre-gyp': false,
+        'mock-aws-s3': false,
+        'aws-sdk': false,
+        'nock': false,
         // Exclude problematic TypeORM drivers
         'react-native-sqlite-storage': false,
         '@sap/hana-client': false,
