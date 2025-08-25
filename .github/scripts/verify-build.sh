@@ -30,14 +30,6 @@ else
     FAILED=1
 fi
 
-# Check cli package
-if [ -f "packages/cli/build/index.js" ] && [ -f "packages/cli/build/index.d.ts" ]; then
-    echo "✅ CLI package build artifacts verified"
-else
-    echo "❌ CLI package build artifacts missing"
-    FAILED=1
-fi
-
 # Check web package
 if [ -d "apps/web/.next" ]; then
     echo "✅ Web package build artifacts verified"

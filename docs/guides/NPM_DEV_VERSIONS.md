@@ -11,13 +11,11 @@ Development versions are automatically published from the `develop` branch and a
 npm install @codervisor/devlog-core@dev
 npm install @codervisor/devlog-mcp@dev
 npm install @codervisor/devlog-ai@dev
-npm install @codervisor/devlog-cli@dev
 
 # Or with pnpm
 pnpm add @codervisor/devlog-core@dev
 pnpm add @codervisor/devlog-mcp@dev
 pnpm add @codervisor/devlog-ai@dev
-pnpm add @codervisor/devlog-cli@dev
 ```
 
 ## Dev Version Format

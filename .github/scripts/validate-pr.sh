@@ -13,7 +13,6 @@ echo "🔨 Quick build test..."
 pnpm --filter @codervisor/devlog-core build
 pnpm --filter @codervisor/devlog-ai build
 pnpm --filter @codervisor/devlog-mcp build
-pnpm --filter @codervisor/devlog-cli build
 
 # Run tests
 echo "🧪 Running tests..."

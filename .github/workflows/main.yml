@@ -14,7 +14,7 @@ on:
         default: false
         type: boolean
       packages:
-        description: 'Specific packages to check (comma-separated: mcp,core,ai,cli or leave empty for all)'
+        description: 'Specific packages to check (comma-separated: mcp,core,ai or leave empty for all)'
         required: false
         type: string
 
@@ -304,7 +304,6 @@ jobs:
             echo "npm install @codervisor/devlog-core@dev" >> $GITHUB_STEP_SUMMARY
             echo "npm install @codervisor/devlog-mcp@dev" >> $GITHUB_STEP_SUMMARY
             echo "npm install @codervisor/devlog-ai@dev" >> $GITHUB_STEP_SUMMARY
-            echo "npm install @codervisor/devlog-cli@dev" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "### ❌ Dev Publishing Failed" >> $GITHUB_STEP_SUMMARY

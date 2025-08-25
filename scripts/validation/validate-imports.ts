@@ -126,7 +126,7 @@ function validateFile(filePath: string): void {
       }
 
       // Validate that cross-package imports reference actual packages
-      const validPackages = ['core', 'mcp', 'web', 'ai', 'cli'];
+      const validPackages = ['core', 'mcp', 'web', 'ai'];
       const packageMatch = importPath.match(/^@codervisor\/devlog-([^\/]+)/);
       if (packageMatch) {
         const packageName = packageMatch[1];

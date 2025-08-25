@@ -9,7 +9,6 @@ PACKAGES=(
     "mcp:packages/mcp"
     "core:packages/core" 
     "ai:packages/ai"
-    "cli:packages/cli"
 )
 
 # Generate timestamp for unique dev versions

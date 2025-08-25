@@ -23,7 +23,7 @@ Sets up Node.js environment and installs dependencies with pnpm.
 - **Used in**: All workflows that need Node.js
 
 #### `build-packages.sh`
-Builds all packages in dependency order (core → ai → mcp → cli → web).
+Builds all packages in dependency order (core → ai → mcp → web).
 ```bash
 ./.github/scripts/build-packages.sh
 ```
@@ -90,7 +90,7 @@ Runs lightweight validation checks for pull requests.
 ```
 - **Checks**:
   - TypeScript compilation
-  - Quick build test (core, ai, mcp, cli packages)
+  - Quick build test (core, ai, mcp packages)
   - Unit tests
   - Import structure validation (if script exists)
 

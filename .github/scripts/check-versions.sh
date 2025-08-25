@@ -14,7 +14,6 @@ declare -A PACKAGE_MAP=(
     ["mcp"]="packages/mcp"
     ["core"]="packages/core" 
     ["ai"]="packages/ai"
-    ["cli"]="packages/cli"
 )
 
 # If specific packages specified, filter to those

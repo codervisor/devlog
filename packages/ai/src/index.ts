@@ -9,6 +9,3 @@ export * from './types/index.js';
 
 // Export all parsers
 export * from './parsers/index.js';
-
-// Export automation layer
-export * from './automation/index.js';
