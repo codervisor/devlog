@@ -22,11 +22,7 @@ import { DevlogEntry, DevlogStats, TimeSeriesStats } from '@codervisor/devlog-co
 import { useRouter } from 'next/navigation';
 import { formatTimeAgoWithTooltip, getStatusChartColor } from '@/lib';
 import { DevlogPriorityTag, DevlogStatusTag, DevlogTypeTag } from '@/components/custom/devlog-tags';
-import {
-  CHART_COLORS,
-  CHART_OPACITY,
-  formatTimeSeriesData,
-} from './chart-utils';
+import { CHART_COLORS, CHART_OPACITY, formatTimeSeriesData } from './chart-utils';
 import { CustomTooltip, CustomPieTooltip } from './custom-tooltip';
 import { DataContext } from '@/stores/base';
 
@@ -114,7 +110,7 @@ export function Dashboard({
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <ComposedChart data={chartData}>
+                    <ComposedChart data={chartData} barGap="-50%" barCategoryGap="25%">
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" fontSize={12} tickLine={false} />
 
@@ -142,7 +138,7 @@ export function Dashboard({
                       <Bar
                         yAxisId="daily"
                         dataKey="dailyCreated"
-                        fill={CHART_COLORS.success}
+                        fill={CHART_COLORS.primary}
                         fillOpacity={CHART_OPACITY.bar}
                         name="Created"
                       />
@@ -151,7 +147,7 @@ export function Dashboard({
                       <Bar
                         yAxisId="daily"
                         dataKey="dailyClosedNegative"
-                        fill={CHART_COLORS.error}
+                        fill={CHART_COLORS.success}
                         fillOpacity={CHART_OPACITY.bar}
                         name="Closed"
                       />
