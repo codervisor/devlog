@@ -95,6 +95,17 @@ export async function PUT(
       updatedAt: new Date().toISOString(),
     };
 
+    // Set closedAt timestamp when status changes to 'done' or 'cancelled'
+    if (data.status && (data.status === 'done' || data.status === 'cancelled')) {
+      // Only set closedAt if it wasn't already set or if status is changing to closed
+      if (!existingEntry.closedAt || (existingEntry.status !== 'done' && existingEntry.status !== 'cancelled')) {
+        updatedEntry.closedAt = new Date().toISOString();
+      }
+    } else if (data.status && data.status !== 'done' && data.status !== 'cancelled') {
+      // Clear closedAt if status is changing back to an open status
+      updatedEntry.closedAt = null;
+    }
+
     await devlogService.save(updatedEntry);
 
     // Transform and return updated entry

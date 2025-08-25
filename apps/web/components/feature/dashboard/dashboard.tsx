@@ -26,9 +26,8 @@ import {
   CHART_COLORS,
   CHART_OPACITY,
   formatTimeSeriesData,
-  formatTooltipLabel,
-  formatTooltipValue,
 } from './chart-utils';
+import { CustomTooltip, CustomPieTooltip } from './custom-tooltip';
 import { DataContext } from '@/stores/base';
 
 interface DashboardProps {
@@ -136,7 +135,7 @@ export function Dashboard({
                         label={{ value: 'Total Open', angle: 90, position: 'insideRight' }}
                       />
 
-                      <Tooltip labelFormatter={formatTooltipLabel} formatter={formatTooltipValue} />
+                      <Tooltip content={<CustomTooltip />} />
                       <Legend />
 
                       {/* Daily opened as positive bars */}
@@ -208,10 +207,7 @@ export function Dashboard({
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        formatter={(value: number, name: string) => [value, name]}
-                        labelFormatter={() => ''}
-                      />
+                      <Tooltip content={<CustomPieTooltip />} />
                       <Legend
                         verticalAlign="bottom"
                         height={36}
