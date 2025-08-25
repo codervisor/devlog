@@ -14,6 +14,9 @@ const nextConfig = {
       'mysql2',
       'better-sqlite3',
       'reflect-metadata',
+      // Keep authentication dependencies server-side only
+      'bcrypt',
+      'jsonwebtoken',
     ],
   },
   webpack: (config, { isServer }) => {
@@ -26,6 +29,10 @@ const nextConfig = {
       /Module not found.*typeorm.*react-native/,
       /Module not found.*typeorm.*mysql/,
       /Module not found.*typeorm.*hana/,
+      // Bcrypt and authentication related warnings
+      /Module not found: Can't resolve 'mock-aws-s3'/,
+      /Module not found: Can't resolve 'aws-sdk'/,
+      /Module not found: Can't resolve 'nock'/,
     ];
 
     // Handle the workspace packages properly
@@ -56,6 +63,9 @@ const nextConfig = {
         mysql: false,
         'better-sqlite3': false,
         'reflect-metadata': false,
+        // Exclude authentication modules from client bundle
+        'bcrypt': false,
+        'jsonwebtoken': false,
         // Exclude problematic TypeORM drivers
         'react-native-sqlite-storage': false,
         '@sap/hana-client': false,

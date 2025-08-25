@@ -3,5 +3,6 @@ packages:
   - apps/*
 
 onlyBuiltDependencies:
+  - bcrypt
   - better-sqlite3
   - esbuild
