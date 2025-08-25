@@ -14,6 +14,9 @@ const nextConfig = {
       'mysql2',
       'better-sqlite3',
       'reflect-metadata',
+      // Keep authentication dependencies server-side only
+      'bcrypt',
+      'jsonwebtoken',
     ],
   },
   webpack: (config, { isServer }) => {
@@ -26,12 +29,25 @@ const nextConfig = {
       /Module not found.*typeorm.*react-native/,
       /Module not found.*typeorm.*mysql/,
       /Module not found.*typeorm.*hana/,
+      // Bcrypt and authentication related warnings
+      /Module not found: Can't resolve 'mock-aws-s3'/,
+      /Module not found: Can't resolve 'aws-sdk'/,
+      /Module not found: Can't resolve 'nock'/,
     ];
 
     // Handle the workspace packages properly
     if (isServer) {
       // Ensure these packages are treated as externals for server-side
       config.externals = config.externals || [];
+      config.externals.push(
+        'bcrypt',
+        'jsonwebtoken',
+        '@mapbox/node-pre-gyp',
+        'node-pre-gyp',
+        'mock-aws-s3',
+        'aws-sdk',
+        'nock'
+      );
     }
 
     // Fix Monaco Editor issues for client-side
@@ -56,6 +72,14 @@ const nextConfig = {
         mysql: false,
         'better-sqlite3': false,
         'reflect-metadata': false,
+        // Exclude authentication modules from client bundle
+        'bcrypt': false,
+        'jsonwebtoken': false,
+        '@mapbox/node-pre-gyp': false,
+        'node-pre-gyp': false,
+        'mock-aws-s3': false,
+        'aws-sdk': false,
+        'nock': false,
         // Exclude problematic TypeORM drivers
         'react-native-sqlite-storage': false,
         '@sap/hana-client': false,

@@ -5,4 +5,5 @@ export * from './project.entity.js';
 export * from './chat-session.entity.js';
 export * from './chat-message.entity.js';
 export * from './chat-devlog-link.entity.js';
+export * from './user.entity.js';
 export * from './decorators.js';

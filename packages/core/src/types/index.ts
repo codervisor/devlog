@@ -25,3 +25,6 @@ export * from './event.js';
 
 // Change tracking and field history types
 export * from './change-tracking.js';
+
+// Authentication and user management types
+export * from './auth.js';
