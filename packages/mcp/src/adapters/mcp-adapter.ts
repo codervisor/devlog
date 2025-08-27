@@ -14,14 +14,19 @@ import { logger } from '../server/index.js';
 import type {
   AddDevlogNoteArgs,
   CreateDevlogArgs,
+  DeleteDocumentArgs,
   FindRelatedDevlogsArgs,
   GetCurrentProjectArgs,
   GetDevlogArgs,
+  GetDocumentArgs,
   ListDevlogArgs,
   ListDevlogNotesArgs,
+  ListDocumentsArgs,
   ListProjectsArgs,
+  SearchDocumentsArgs,
   SwitchProjectArgs,
   UpdateDevlogArgs,
+  UploadDocumentArgs,
 } from '../schemas/index.js';
 
 /**
@@ -371,4 +376,196 @@ export class MCPAdapter {
       return this.handleError('Failed to switch project', error);
     }
   }
+
+  // === DOCUMENT OPERATIONS ===
+
+  async uploadDocument(args: UploadDocumentArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      // Decode base64 content
+      const content = Buffer.from(args.content, 'base64');
+      const size = content.length;
+
+      // Validate file size (10MB limit)
+      const maxSize = 10 * 1024 * 1024;
+      if (size > maxSize) {
+        return this.toStandardResponse(false, null, 'File size exceeds 10MB limit');
+      }
+
+      // Prepare form data for upload
+      const formData = new FormData();
+      const file = new Blob([content], { type: args.mimeType });
+      formData.append('file', file, args.filename);
+      
+      if (args.metadata) {
+        formData.append('metadata', JSON.stringify(args.metadata));
+      }
+
+      // Upload document via API client
+      const result = await this.apiClient.uploadDocument(args.devlogId, formData);
+
+      return this.toStandardResponse(
+        true,
+        result,
+        `Document "${args.filename}" uploaded successfully to devlog ${args.devlogId}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to upload document', error);
+    }
+  }
+
+  async listDocuments(args: ListDocumentsArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      const documents = await this.apiClient.listDocuments(args.devlogId);
+
+      // Apply limit if specified
+      const limitedDocuments = args.limit ? documents.slice(0, args.limit) : documents;
+
+      return this.toStandardResponse(
+        true,
+        { documents: limitedDocuments, total: documents.length },
+        `Found ${documents.length} document(s) for devlog ${args.devlogId}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to list documents', error);
+    }
+  }
+
+  async getDocument(args: GetDocumentArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      // For getDocument, we need to find which devlog contains the document
+      // This is a limitation of the current API design - we'll try a simple approach
+      // by searching through recent devlogs
+      const devlogs = await this.apiClient.listDevlogs({ 
+        page: 1, 
+        limit: 20,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc'
+      });
+
+      let document = null;
+      for (const devlog of devlogs.items || []) {
+        try {
+          document = await this.apiClient.getDocument(devlog.id!, args.documentId);
+          break;
+        } catch (err) {
+          // Document not found in this devlog, continue searching
+          continue;
+        }
+      }
+
+      if (!document) {
+        return this.toStandardResponse(false, null, `Document ${args.documentId} not found`);
+      }
+
+      return this.toStandardResponse(
+        true,
+        document,
+        `Retrieved document: ${document.originalName || args.documentId}`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to get document', error);
+    }
+  }
+
+  async deleteDocument(args: DeleteDocumentArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      // Similar to getDocument, search through devlogs to find the document
+      const devlogs = await this.apiClient.listDevlogs({ 
+        page: 1, 
+        limit: 20,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc'
+      });
+
+      let deleted = false;
+      for (const devlog of devlogs.items || []) {
+        try {
+          await this.apiClient.deleteDocument(devlog.id!, args.documentId);
+          deleted = true;
+          break;
+        } catch (err) {
+          // Document not found in this devlog, continue searching
+          continue;
+        }
+      }
+
+      if (!deleted) {
+        return this.toStandardResponse(false, null, `Document ${args.documentId} not found`);
+      }
+
+      return this.toStandardResponse(
+        true,
+        { documentId: args.documentId },
+        `Document ${args.documentId} deleted successfully`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to delete document', error);
+    }
+  }
+
+  async searchDocuments(args: SearchDocumentsArgs): Promise<CallToolResult> {
+    await this.ensureInitialized();
+
+    try {
+      let documents: any[] = [];
+
+      if (args.devlogId) {
+        // Search within specific devlog
+        const allDocuments = await this.apiClient.listDocuments(args.devlogId);
+        
+        // Filter documents by query
+        documents = allDocuments.filter((doc: any) =>
+          doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
+          (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
+          doc.filename?.toLowerCase().includes(args.query.toLowerCase())
+        );
+      } else {
+        // Search across all recent devlogs
+        const devlogs = await this.apiClient.listDevlogs({ 
+          page: 1, 
+          limit: 10,
+          sortBy: 'updatedAt',
+          sortOrder: 'desc'
+        });
+
+        for (const devlog of devlogs.items || []) {
+          try {
+            const devlogDocuments = await this.apiClient.listDocuments(devlog.id!);
+            
+            const matchingDocs = devlogDocuments.filter((doc: any) =>
+              doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
+              (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
+              doc.filename?.toLowerCase().includes(args.query.toLowerCase())
+            );
+
+            documents.push(...matchingDocs);
+          } catch (err) {
+            // Continue with other devlogs if one fails
+            console.warn(`Failed to search documents in devlog ${devlog.id}:`, err);
+          }
+        }
+      }
+
+      // Apply limit
+      const limitedDocuments = args.limit ? documents.slice(0, args.limit) : documents;
+
+      return this.toStandardResponse(
+        true,
+        { documents: limitedDocuments, total: documents.length },
+        `Found ${documents.length} document(s) matching "${args.query}"`,
+      );
+    } catch (error) {
+      return this.handleError('Failed to search documents', error);
+    }
+  }
+
+  // === HELPER METHODS ===
 }

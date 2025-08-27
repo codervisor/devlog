@@ -12,3 +12,6 @@ export * from './devlog-schemas.js';
 
 // Project operation schemas
 export * from './project-schemas.js';
+
+// Document operation schemas
+export * from './document-schemas.js';
