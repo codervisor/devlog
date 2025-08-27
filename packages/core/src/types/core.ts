@@ -163,6 +163,38 @@ export interface DevlogNote {
   content: string;
 }
 
+/**
+ * Document types supported by the devlog system
+ */
+export type DocumentType = 
+  | 'text' // Plain text files
+  | 'markdown' // Markdown files  
+  | 'image' // Images (png, jpg, gif, etc.)
+  | 'pdf' // PDF documents
+  | 'code' // Source code files
+  | 'json' // JSON data files
+  | 'csv' // CSV data files
+  | 'log' // Log files
+  | 'config' // Configuration files
+  | 'other'; // Other file types
+
+/**
+ * Document interface for files attached to devlog entries
+ */
+export interface DevlogDocument {
+  id: string;
+  devlogId: number;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number; // Size in bytes
+  type: DocumentType;
+  content?: string; // Text content for searchable documents
+  metadata?: Record<string, any>; // Additional file metadata
+  uploadedAt: string; // ISO timestamp
+  uploadedBy?: string; // User who uploaded the document
+}
+
 export interface DevlogEntry {
   id?: DevlogId;
   key?: string; // Semantic key (e.g., "web-ui-issues-investigation")
@@ -186,6 +218,7 @@ export interface DevlogEntry {
   // Related entities (loaded separately, not stored as JSON)
   notes?: DevlogNote[];
   dependencies?: Dependency[];
+  documents?: DevlogDocument[];
 }
 
 export interface Dependency {
