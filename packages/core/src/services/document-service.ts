@@ -293,7 +293,24 @@ export class DocumentService {
       return 'pdf';
     }
 
-    // Text-based types
+    // JSON (check before text types)
+    if (mimeType === 'application/json' || extension === '.json') {
+      return 'json';
+    }
+
+    // Code files (check before general text types)
+    const codeExtensions = ['.js', '.ts', '.py', '.java', '.cpp', '.c', '.go', '.rs', '.php', '.rb', '.swift', '.kt'];
+    if (codeExtensions.includes(extension.toLowerCase())) {
+      return 'code';
+    }
+
+    // Config files (check before general text types)
+    const configExtensions = ['.env', '.conf', '.ini', '.yaml', '.yml', '.toml', '.properties'];
+    if (configExtensions.includes(extension.toLowerCase())) {
+      return 'config';
+    }
+
+    // Text-based types (more specific checks first)
     if (mimeType.startsWith('text/')) {
       if (mimeType === 'text/markdown' || extension === '.md') {
         return 'markdown';
@@ -305,23 +322,6 @@ export class DocumentService {
         return 'log';
       }
       return 'text';
-    }
-
-    // JSON
-    if (mimeType === 'application/json' || extension === '.json') {
-      return 'json';
-    }
-
-    // Code files
-    const codeExtensions = ['.js', '.ts', '.py', '.java', '.cpp', '.c', '.go', '.rs', '.php', '.rb', '.swift', '.kt'];
-    if (codeExtensions.includes(extension.toLowerCase())) {
-      return 'code';
-    }
-
-    // Config files
-    const configExtensions = ['.env', '.conf', '.ini', '.yaml', '.yml', '.toml', '.properties'];
-    if (configExtensions.includes(extension.toLowerCase())) {
-      return 'config';
     }
 
     return 'other';

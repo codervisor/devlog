@@ -23,7 +23,7 @@ import type {
   TimeSeriesRequest,
   TimeSeriesStats,
 } from '../types/index.js';
-import { DevlogEntryEntity, DevlogNoteEntity } from '../entities/index.js';
+import { DevlogEntryEntity, DevlogNoteEntity, DevlogDocumentEntity } from '../entities/index.js';
 import { getDataSource } from '../utils/typeorm-config.js';
 import { getStorageType } from '../entities/decorators.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
@@ -40,6 +40,7 @@ export class DevlogService {
   private database: DataSource;
   private devlogRepository: Repository<DevlogEntryEntity>;
   private noteRepository: Repository<DevlogNoteEntity>;
+  private documentRepository: Repository<DevlogDocumentEntity>;
   private pgTrgmAvailable: boolean = false;
   private initPromise: Promise<void> | null = null;
 
@@ -48,6 +49,7 @@ export class DevlogService {
     this.database = null as any; // Temporary placeholder
     this.devlogRepository = null as any; // Temporary placeholder
     this.noteRepository = null as any; // Temporary placeholder
+    this.documentRepository = null as any; // Temporary placeholder
   }
 
   /**
@@ -72,6 +74,7 @@ export class DevlogService {
         this.database = await getDataSource();
         this.devlogRepository = this.database.getRepository(DevlogEntryEntity);
         this.noteRepository = this.database.getRepository(DevlogNoteEntity);
+        this.documentRepository = this.database.getRepository(DevlogDocumentEntity);
         console.log(
           '[DevlogService] DataSource ready with entities:',
           this.database.entityMetadatas.length,
@@ -146,7 +149,7 @@ export class DevlogService {
     return existingInstance.service;
   }
 
-  async get(id: DevlogId, includeNotes = true): Promise<DevlogEntry | null> {
+  async get(id: DevlogId, includeNotes = true, includeDocuments = false): Promise<DevlogEntry | null> {
     await this.ensureInitialized();
 
     // Validate devlog ID
@@ -166,6 +169,11 @@ export class DevlogService {
     // Load notes if requested
     if (includeNotes) {
       devlogEntry.notes = await this.getNotes(id);
+    }
+
+    // Load documents if requested
+    if (includeDocuments) {
+      devlogEntry.documents = await this.getDocuments(id);
     }
 
     return devlogEntry;
@@ -203,6 +211,35 @@ export class DevlogService {
       category: entity.category,
       content: entity.content,
     }));
+  }
+
+  /**
+   * Get documents for a specific devlog entry
+   */
+  async getDocuments(
+    devlogId: DevlogId,
+    limit?: number,
+  ): Promise<import('../types/index.js').DevlogDocument[]> {
+    await this.ensureInitialized();
+
+    // Validate devlog ID
+    const idValidation = DevlogValidator.validateDevlogId(devlogId);
+    if (!idValidation.success) {
+      throw new Error(`Invalid devlog ID: ${idValidation.errors.join(', ')}`);
+    }
+
+    const queryBuilder = this.documentRepository
+      .createQueryBuilder('document')
+      .where('document.devlogId = :devlogId', { devlogId: idValidation.data })
+      .orderBy('document.uploadedAt', 'DESC');
+
+    if (limit && limit > 0) {
+      queryBuilder.limit(limit);
+    }
+
+    const documentEntities = await queryBuilder.getMany();
+
+    return documentEntities.map((entity) => entity.toDevlogDocument());
   }
 
   /**
