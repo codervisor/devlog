@@ -2,9 +2,13 @@
  * Prisma Client Configuration
  *
  * Replaces TypeORM configuration with Prisma for better Next.js integration
+ * 
+ * NOTE: This configuration requires Prisma Client to be generated first:
+ * Run `npx prisma generate` after setting up the database connection
  */
 
-import { PrismaClient } from '@prisma/client';
+// TODO: Uncomment after Prisma client generation
+// import { PrismaClient } from '@prisma/client';
 import { loadRootEnv } from './env-loader.js';
 
 loadRootEnv();
@@ -22,7 +26,8 @@ export interface PrismaConfig {
  * Global Prisma Client instance with singleton pattern
  * Prevents multiple instances in development hot reloading
  */
-let prisma: PrismaClient | null = null;
+// TODO: Uncomment after Prisma client generation
+// let prisma: PrismaClient | null = null;
 
 /**
  * Parse database configuration from environment variables
@@ -89,8 +94,13 @@ export function parsePrismaConfig(): PrismaConfig {
 /**
  * Get or create Prisma Client instance
  * Uses singleton pattern to prevent multiple instances
+ * 
+ * TODO: Uncomment after Prisma client generation
  */
-export function getPrismaClient(): PrismaClient {
+export function getPrismaClient(): any {
+  throw new Error('getPrismaClient: Requires Prisma client generation - run `npx prisma generate`');
+  
+  /* TODO: Uncomment after Prisma client generation
   if (prisma) {
     return prisma;
   }
@@ -120,6 +130,7 @@ export function getPrismaClient(): PrismaClient {
   process.on('beforeExit', cleanup);
 
   return prisma;
+  */
 }
 
 /**
@@ -127,10 +138,13 @@ export function getPrismaClient(): PrismaClient {
  * Useful for tests and cleanup
  */
 export async function disconnectPrisma(): Promise<void> {
+  // TODO: Uncomment after Prisma client generation
+  /* 
   if (prisma) {
     await prisma.$disconnect();
     prisma = null;
   }
+  */
 }
 
 /**
@@ -138,9 +152,15 @@ export async function disconnectPrisma(): Promise<void> {
  */
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
+    // TODO: Uncomment after Prisma client generation
+    /*
     const client = getPrismaClient();
     await client.$queryRaw`SELECT 1`;
     return true;
+    */
+    
+    // Placeholder for now
+    return false;
   } catch (error) {
     console.error('[Prisma] Database connection failed:', error);
     return false;

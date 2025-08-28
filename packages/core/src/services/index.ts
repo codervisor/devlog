@@ -1,5 +1,6 @@
 export { DevlogService } from './devlog-service.js';
 export { ProjectService } from './project-service.js';
+export { PrismaProjectService } from './prisma-project-service.js';
 export { DocumentService } from './document-service.js';
 export { LLMService, createLLMServiceFromEnv, getLLMService } from './llm-service.js';
 export type { LLMServiceConfig } from './llm-service.js';

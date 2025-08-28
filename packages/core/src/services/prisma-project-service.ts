@@ -3,20 +3,27 @@
  *
  * Migrated from TypeORM to Prisma for better Next.js integration
  * Manages projects using Prisma Client with improved type safety
+ * 
+ * NOTE: This service requires Prisma Client to be generated first:
+ * Run `npx prisma generate` after setting up the database connection
  */
 
-import type { PrismaClient } from '@prisma/client';
+// TODO: Uncomment after Prisma client generation
+// import type { PrismaClient } from '@prisma/client';
+// import { getPrismaClient } from '../utils/prisma-config.js';
+
 import type { Project } from '../types/project.js';
-import { getPrismaClient } from '../utils/prisma-config.js';
 import { ProjectValidator } from '../validation/project-schemas.js';
 
 export class PrismaProjectService {
   private static instance: PrismaProjectService | null = null;
-  private prisma: PrismaClient;
+  // TODO: Uncomment after Prisma client generation  
+  // private prisma: PrismaClient;
   private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.prisma = getPrismaClient();
+    // TODO: Uncomment after Prisma client generation
+    // this.prisma = getPrismaClient();
   }
 
   static getInstance(): PrismaProjectService {
@@ -41,8 +48,8 @@ export class PrismaProjectService {
 
   private async _initialize(): Promise<void> {
     try {
-      // Test connection with a simple query
-      await this.prisma.$queryRaw`SELECT 1`;
+      // TODO: Uncomment after Prisma client generation
+      // await this.prisma.$queryRaw`SELECT 1`;
       console.log('[PrismaProjectService] Database connection established');
     } catch (error) {
       console.error('[PrismaProjectService] Failed to connect to database:', error);
@@ -56,6 +63,10 @@ export class PrismaProjectService {
   async list(): Promise<Project[]> {
     await this.initialize();
 
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
+    
+    /* TODO: Uncomment after Prisma client generation
     const projects = await this.prisma.project.findMany({
       orderBy: {
         lastAccessedAt: 'desc',
@@ -63,6 +74,7 @@ export class PrismaProjectService {
     });
 
     return projects.map(this.entityToProject);
+    */
   }
 
   /**
@@ -70,7 +82,11 @@ export class PrismaProjectService {
    */
   async get(id: number): Promise<Project | null> {
     await this.initialize();
+    
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
 
+    /* TODO: Uncomment after Prisma client generation
     const project = await this.prisma.project.findUnique({
       where: { id },
     });
@@ -86,6 +102,7 @@ export class PrismaProjectService {
     });
 
     return this.entityToProject(project);
+    */
   }
 
   /**
@@ -93,7 +110,11 @@ export class PrismaProjectService {
    */
   async getByName(name: string): Promise<Project | null> {
     await this.initialize();
+    
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
 
+    /* TODO: Uncomment after Prisma client generation
     // Prisma doesn't have case-insensitive search by default for all databases
     // Using mode: 'insensitive' for PostgreSQL, fallback to exact match for others
     let project;
@@ -124,6 +145,7 @@ export class PrismaProjectService {
     });
 
     return this.entityToProject(project);
+    */
   }
 
   /**
@@ -135,11 +157,15 @@ export class PrismaProjectService {
     await this.initialize();
 
     // Validate input
-    const validation = ProjectValidator.validate(projectData);
+    const validation = ProjectValidator.validateCreateRequest(projectData);
     if (!validation.success) {
-      throw new Error(`Invalid project data: ${validation.error.issues.map(i => i.message).join(', ')}`);
+      throw new Error(`Invalid project data: ${validation.errors.join(', ')}`);
     }
 
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
+
+    /* TODO: Uncomment after Prisma client generation
     const project = await this.prisma.project.create({
       data: {
         name: projectData.name,
@@ -149,6 +175,7 @@ export class PrismaProjectService {
     });
 
     return this.entityToProject(project);
+    */
   }
 
   /**
@@ -157,6 +184,10 @@ export class PrismaProjectService {
   async update(id: number, updates: Partial<Project>): Promise<Project> {
     await this.initialize();
 
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
+
+    /* TODO: Uncomment after Prisma client generation
     const existingProject = await this.prisma.project.findUnique({
       where: { id },
     });
@@ -167,12 +198,12 @@ export class PrismaProjectService {
 
     // Validate updates
     if (updates.name !== undefined || updates.description !== undefined) {
-      const validation = ProjectValidator.validate({
+      const validation = ProjectValidator.validateCreate({
         name: updates.name ?? existingProject.name,
         description: updates.description ?? existingProject.description,
       });
       if (!validation.success) {
-        throw new Error(`Invalid project data: ${validation.error.issues.map(i => i.message).join(', ')}`);
+        throw new Error(`Invalid project data: ${validation.error.issues.map((i: any) => i.message).join(', ')}`);
       }
     }
 
@@ -189,6 +220,7 @@ export class PrismaProjectService {
     });
 
     return this.entityToProject(project);
+    */
   }
 
   /**
@@ -197,6 +229,10 @@ export class PrismaProjectService {
   async delete(id: number): Promise<void> {
     await this.initialize();
 
+    // TODO: Implement with Prisma after client generation
+    throw new Error('PrismaProjectService: Requires Prisma client generation - run `npx prisma generate`');
+
+    /* TODO: Uncomment after Prisma client generation
     const existingProject = await this.prisma.project.findUnique({
       where: { id },
     });
@@ -209,6 +245,7 @@ export class PrismaProjectService {
     await this.prisma.project.delete({
       where: { id },
     });
+    */
   }
 
   /**

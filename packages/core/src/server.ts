@@ -9,3 +9,6 @@ export * from './entities/index.js';
 
 // TypeORM configuration utilities  
 export * from './utils/typeorm-config.js';
+
+// Prisma configuration utilities (for migration)
+export * from './utils/prisma-config.js';
