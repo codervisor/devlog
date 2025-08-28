@@ -65,6 +65,7 @@
     "@ai-sdk/anthropic": "^1.0.0",
     "@ai-sdk/google": "^1.0.0",
     "@ai-sdk/openai": "^1.0.0",
+    "@prisma/client": "6.15.0",
     "ai": "^4.0.0",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.0.0",
