@@ -7,29 +7,43 @@ const nextConfig = {
   // Enable standalone output for Docker
   output: process.env.NEXT_BUILD_MODE === 'standalone' ? 'standalone' : undefined,
   experimental: {
+    // Minimal serverComponentsExternalPackages after Prisma migration
+    // Only authentication dependencies need to be server-side only
     serverComponentsExternalPackages: [
-      // Keep TypeORM and database drivers server-side only
-      'typeorm',
-      'pg',
-      'mysql2',
-      'better-sqlite3',
-      'reflect-metadata',
-      // Keep authentication dependencies server-side only
       'bcrypt',
       'jsonwebtoken',
     ],
   },
   webpack: (config, { isServer }) => {
-    // Suppress TypeORM warnings for both client and server builds
+    // Much simpler webpack configuration after Prisma migration
+    if (!isServer) {
+      // Fix Monaco Editor issues for client-side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+        module: false,
+        process: false,
+      };
+
+      // Only exclude authentication modules from client bundle
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'bcrypt': false,
+        'jsonwebtoken': false,
+        '@mapbox/node-pre-gyp': false,
+        'node-pre-gyp': false,
+        'mock-aws-s3': false,
+        'aws-sdk': false,
+        'nock': false,
+      };
+    }
+
+    // Minimal ignore warnings after Prisma migration  
     config.ignoreWarnings = [
       /Critical dependency: the request of a dependency is an expression/,
-      /Module not found: Can't resolve 'react-native-sqlite-storage'/,
-      /Module not found: Can't resolve '@sap\/hana-client/,
-      /Module not found: Can't resolve 'mysql'/,
-      /Module not found.*typeorm.*react-native/,
-      /Module not found.*typeorm.*mysql/,
-      /Module not found.*typeorm.*hana/,
-      // Bcrypt and authentication related warnings
+      // Authentication related warnings only
       /Module not found: Can't resolve 'mock-aws-s3'/,
       /Module not found: Can't resolve 'aws-sdk'/,
       /Module not found: Can't resolve 'nock'/,
@@ -37,7 +51,7 @@ const nextConfig = {
 
     // Handle the workspace packages properly
     if (isServer) {
-      // Ensure these packages are treated as externals for server-side
+      // Minimal externals after Prisma migration
       config.externals = config.externals || [];
       config.externals.push(
         'bcrypt',
@@ -48,54 +62,6 @@ const nextConfig = {
         'aws-sdk',
         'nock'
       );
-    }
-
-    // Fix Monaco Editor issues for client-side
-    if (!isServer) {
-      // Additional fallbacks for browser compatibility
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        path: false,
-        crypto: false,
-        module: false,
-        process: false,
-      };
-
-      // Exclude TypeORM and database-related modules from client bundle
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        // Prevent TypeORM from being bundled on client-side
-        typeorm: false,
-        pg: false,
-        mysql2: false,
-        mysql: false,
-        'better-sqlite3': false,
-        'reflect-metadata': false,
-        // Exclude authentication modules from client bundle
-        'bcrypt': false,
-        'jsonwebtoken': false,
-        '@mapbox/node-pre-gyp': false,
-        'node-pre-gyp': false,
-        'mock-aws-s3': false,
-        'aws-sdk': false,
-        'nock': false,
-        // Exclude problematic TypeORM drivers
-        'react-native-sqlite-storage': false,
-        '@sap/hana-client': false,
-        '@sap/hana-client/extension/Stream': false,
-        // Additional TypeORM dependencies that shouldn't be in client bundle
-        'app-root-path': false,
-        dotenv: false,
-      };
-
-      // Add ignore patterns for critical dependency warnings
-      config.module = config.module || {};
-      config.module.unknownContextCritical = false;
-      config.module.exprContextCritical = false;
-
-      // Ensure proper handling of dynamic imports
-      config.output.globalObject = 'globalThis';
     }
 
     return config;
