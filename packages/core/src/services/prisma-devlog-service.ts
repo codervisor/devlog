@@ -29,9 +29,13 @@ import type {
   TimeSeriesDataPoint,
   TimeSeriesRequest,
   TimeSeriesStats,
+  DevlogStatus,
+  DevlogType,
+  DevlogPriority,
 } from '../types/index.js';
 import { DevlogValidator } from '../validation/devlog-schemas.js';
 import { generateDevlogKey } from '../utils/key-generator.js';
+import type { PrismaClient, DevlogEntry as PrismaDevlogEntry } from '@prisma/client';
 
 interface DevlogServiceInstance {
   service: PrismaDevlogService;
@@ -42,7 +46,7 @@ export class PrismaDevlogService {
   private static instances: Map<number, DevlogServiceInstance> = new Map();
   private static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
   
-  private prisma: any = null;
+  private prisma: PrismaClient | null = null;
   private initPromise: Promise<void> | null = null;
   private fallbackMode = true;
   private prismaImportPromise: Promise<void> | null = null;
@@ -55,7 +59,7 @@ export class PrismaDevlogService {
 
   private async initializePrismaClient(): Promise<void> {
     try {
-      // Try to import Prisma client - will fail if not generated
+      // Try to import Prisma client - should work now that it's generated
       const prismaModule = await import('@prisma/client');
       const configModule = await import('../utils/prisma-config.js');
       
@@ -146,35 +150,31 @@ export class PrismaDevlogService {
    */
   private async ensurePgTrgmExtension(): Promise<void> {
     try {
-      // TODO: Uncomment after Prisma client generation
       // Check if we're using PostgreSQL
-      // const dbUrl = process.env.DATABASE_URL;
-      // if (!dbUrl?.includes('postgresql')) {
-      //   this.pgTrgmAvailable = false;
-      //   return;
-      // }
+      const dbUrl = process.env.DATABASE_URL;
+      if (!dbUrl?.includes('postgresql')) {
+        this.pgTrgmAvailable = false;
+        return;
+      }
 
       // Check for pg_trgm extension
-      // const result = await this.prisma.$queryRaw<Array<{ installed: boolean }>>`
-      //   SELECT EXISTS(
-      //     SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'
-      //   ) as installed;
-      // `;
+      const result = await this.prisma!.$queryRaw<Array<{ installed: boolean }>>`
+        SELECT EXISTS(
+          SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'
+        ) as installed;
+      `;
       
-      // this.pgTrgmAvailable = result[0]?.installed || false;
+      this.pgTrgmAvailable = result[0]?.installed || false;
       
       // Try to create extension if not available (requires superuser)
-      // if (!this.pgTrgmAvailable) {
-      //   try {
-      //     await this.prisma.$executeRaw`CREATE EXTENSION IF NOT EXISTS pg_trgm;`;
-      //     this.pgTrgmAvailable = true;
-      //   } catch (error) {
-      //     console.warn('[PrismaDevlogService] pg_trgm extension not available:', error);
-      //   }
-      // }
-      
-      // For now, assume extension is available (will be implemented after client generation)
-      this.pgTrgmAvailable = true;
+      if (!this.pgTrgmAvailable) {
+        try {
+          await this.prisma!.$executeRaw`CREATE EXTENSION IF NOT EXISTS pg_trgm;`;
+          this.pgTrgmAvailable = true;
+        } catch (error) {
+          console.warn('[PrismaDevlogService] pg_trgm extension not available:', error);
+        }
+      }
     } catch (error) {
       console.warn('[PrismaDevlogService] Could not check pg_trgm extension:', error);
       this.pgTrgmAvailable = false;
@@ -203,39 +203,29 @@ export class PrismaDevlogService {
       // Generate unique key if not provided
       const key = entry.key || generateDevlogKey(entry.title, entry.type, entry.description);
       
-      // TODO: Uncomment after Prisma client generation
-      // const created = await this.prisma.devlogEntry.create({
-      //   data: {
-      //     key,
-      //     title: validatedEntry.data.title,
-      //     type: validatedEntry.data.type,
-      //     description: validatedEntry.data.description,
-      //     status: validatedEntry.data.status,
-      //     priority: validatedEntry.data.priority,
-      //     assignee: validatedEntry.data.assignee,
-      //     projectId: validatedEntry.data.projectId || this.projectId!,
-      //     businessContext: validatedEntry.data.businessContext,
-      //     technicalContext: validatedEntry.data.technicalContext,
-      //     tags: entry.context?.tags ? JSON.stringify(entry.context.tags) : null,
-      //     files: entry.context?.files ? JSON.stringify(entry.context.files) : null,
-      //     dependencies: entry.context?.dependencies ? JSON.stringify(entry.context.dependencies) : null,
-      //   },
-      //   include: {
-      //     notes: true,
-      //     documents: true,
-      //   },
-      // });
+      const created = await this.prisma!.devlogEntry.create({
+        data: {
+          key,
+          title: validatedEntry.data.title,
+          type: validatedEntry.data.type,
+          description: validatedEntry.data.description,
+          status: validatedEntry.data.status,
+          priority: validatedEntry.data.priority,
+          assignee: validatedEntry.data.assignee,
+          projectId: validatedEntry.data.projectId || this.projectId!,
+          businessContext: validatedEntry.data.businessContext,
+          technicalContext: validatedEntry.data.technicalContext,
+          tags: entry.acceptanceCriteria ? JSON.stringify(entry.acceptanceCriteria) : null,
+          files: null, // Will be handled separately through documents
+          dependencies: null, // Will be handled separately through dependencies table
+        },
+        include: {
+          notes: true,
+          documents: true,
+        },
+      });
 
-      // return this.mapPrismaToDevlogEntry(created);
-      
-      // Temporary mock return for development
-      return {
-        ...validatedEntry.data,
-        id: Math.floor(Math.random() * 10000), // Mock ID
-        key,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      return this.mapPrismaToDevlogEntry(created);
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to create devlog entry:', error);
       throw new Error(`Failed to create devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -249,20 +239,16 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
-      // const entry = await this.prisma.devlogEntry.findUnique({
-      //   where: { id: Number(id) },
-      //   include: {
-      //     notes: true,
-      //     documents: true,
-      //     project: true,
-      //   },
-      // });
+      const entry = await this.prisma!.devlogEntry.findUnique({
+        where: { id: Number(id) },
+        include: {
+          notes: true,
+          documents: true,
+          project: true,
+        },
+      });
 
-      // return entry ? this.mapPrismaToDevlogEntry(entry) : null;
-      
-      // Temporary mock return for development
-      return null;
+      return entry ? this.mapPrismaToDevlogEntry(entry) : null;
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get devlog entry:', error);
       throw new Error(`Failed to get devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -276,20 +262,16 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
-      // const entry = await this.prisma.devlogEntry.findUnique({
-      //   where: { key },
-      //   include: {
-      //     notes: true,
-      //     documents: true,
-      //     project: true,
-      //   },
-      // });
+      const entry = await this.prisma!.devlogEntry.findUnique({
+        where: { key },
+        include: {
+          notes: true,
+          documents: true,
+          project: true,
+        },
+      });
 
-      // return entry ? this.mapPrismaToDevlogEntry(entry) : null;
-      
-      // Temporary mock return for development
-      return null;
+      return entry ? this.mapPrismaToDevlogEntry(entry) : null;
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get devlog entry by key:', error);
       throw new Error(`Failed to get devlog entry by key: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -303,54 +285,37 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
       // Prepare update data
-      // const updateData: any = {
-      //   updatedAt: new Date(),
-      // };
+      const updateData: any = {
+        updatedAt: new Date(),
+      };
 
       // Map fields to Prisma schema
-      // if (updates.title !== undefined) updateData.title = updates.title;
-      // if (updates.type !== undefined) updateData.type = updates.type;
-      // if (updates.description !== undefined) updateData.description = updates.description;
-      // if (updates.status !== undefined) updateData.status = updates.status;
-      // if (updates.priority !== undefined) updateData.priority = updates.priority;
-      // if (updates.assignee !== undefined) updateData.assignee = updates.assignee;
-      // if (updates.closedAt !== undefined) updateData.closedAt = updates.closedAt;
-      // if (updates.archived !== undefined) updateData.archived = updates.archived;
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.type !== undefined) updateData.type = updates.type;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.status !== undefined) updateData.status = updates.status;
+      if (updates.priority !== undefined) updateData.priority = updates.priority;
+      if (updates.assignee !== undefined) updateData.assignee = updates.assignee;
+      if (updates.closedAt !== undefined) updateData.closedAt = updates.closedAt ? new Date(updates.closedAt) : null;
+      if (updates.archived !== undefined) updateData.archived = updates.archived;
 
       // Handle context updates
-      // if (updates.context) {
-      //   if (updates.context.business !== undefined) updateData.businessContext = updates.context.business;
-      //   if (updates.context.technical !== undefined) updateData.technicalContext = updates.context.technical;
-      //   if (updates.context.tags !== undefined) updateData.tags = JSON.stringify(updates.context.tags);
-      //   if (updates.context.files !== undefined) updateData.files = JSON.stringify(updates.context.files);
-      //   if (updates.context.dependencies !== undefined) updateData.dependencies = JSON.stringify(updates.context.dependencies);
-      // }
+      if (updates.businessContext !== undefined) updateData.businessContext = updates.businessContext;
+      if (updates.technicalContext !== undefined) updateData.technicalContext = updates.technicalContext;
+      if (updates.acceptanceCriteria !== undefined) updateData.tags = JSON.stringify(updates.acceptanceCriteria);
 
-      // const updated = await this.prisma.devlogEntry.update({
-      //   where: { id: Number(id) },
-      //   data: updateData,
-      //   include: {
-      //     notes: true,
-      //     documents: true,
-      //     project: true,
-      //   },
-      // });
+      const updated = await this.prisma!.devlogEntry.update({
+        where: { id: Number(id) },
+        data: updateData,
+        include: {
+          notes: true,
+          documents: true,
+          project: true,
+        },
+      });
 
-      // return this.mapPrismaToDevlogEntry(updated);
-      
-      // Temporary mock return for development
-      const existing = await this.get(id);
-      if (!existing) {
-        throw new Error('Devlog entry not found');
-      }
-      
-      return {
-        ...existing,
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
+      return this.mapPrismaToDevlogEntry(updated);
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to update devlog entry:', error);
       throw new Error(`Failed to update devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -364,13 +329,9 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
-      // await this.prisma.devlogEntry.delete({
-      //   where: { id: Number(id) },
-      // });
-      
-      // Temporary mock for development
-      console.log('[PrismaDevlogService] Mock delete devlog entry:', id);
+      await this.prisma!.devlogEntry.delete({
+        where: { id: Number(id) },
+      });
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to delete devlog entry:', error);
       throw new Error(`Failed to delete devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -384,72 +345,60 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
       // Build where clause
-      // const where: any = {};
+      const where: any = {};
       
       // Add project filter
-      // if (this.projectId) {
-      //   where.projectId = this.projectId;
-      // }
+      if (this.projectId) {
+        where.projectId = this.projectId;
+      }
 
       // Add filters
-      // if (filter?.status) where.status = { in: filter.status };
-      // if (filter?.type) where.type = { in: filter.type };
-      // if (filter?.priority) where.priority = { in: filter.priority };
-      // if (filter?.assignee) where.assignee = filter.assignee;
-      // if (filter?.archived !== undefined) where.archived = filter.archived;
+      if (filter?.status) where.status = { in: filter.status };
+      if (filter?.type) where.type = { in: filter.type };
+      if (filter?.priority) where.priority = { in: filter.priority };
+      if (filter?.assignee) where.assignee = filter.assignee;
+      if (filter?.archived !== undefined) where.archived = filter.archived;
       
       // Date range filters
-      // if (filter?.createdAfter) where.createdAt = { gte: filter.createdAfter };
-      // if (filter?.createdBefore) {
-      //   where.createdAt = { ...where.createdAt, lte: filter.createdBefore };
-      // }
+      if (filter?.fromDate) where.createdAt = { gte: new Date(filter.fromDate) };
+      if (filter?.toDate) {
+        where.createdAt = { ...where.createdAt, lte: new Date(filter.toDate) };
+      }
 
       // Build order by
-      // const orderBy: any = {};
-      // if (sort?.sortBy && sort?.sortOrder) {
-      //   orderBy[sort.sortBy] = sort.sortOrder;
-      // } else {
-      //   orderBy.updatedAt = 'desc'; // Default sort
-      // }
+      const orderBy: any = {};
+      if (sort?.sortBy && sort?.sortOrder) {
+        orderBy[sort.sortBy] = sort.sortOrder;
+      } else {
+        orderBy.updatedAt = 'desc'; // Default sort
+      }
 
       // Execute queries
-      // const [entries, total] = await Promise.all([
-      //   this.prisma.devlogEntry.findMany({
-      //     where,
-      //     orderBy,
-      //     take: pagination?.limit || 20,
-      //     skip: pagination?.offset || 0,
-      //     include: {
-      //       notes: true,
-      //       documents: true,
-      //       project: true,
-      //     },
-      //   }),
-      //   this.prisma.devlogEntry.count({ where }),
-      // ]);
+      const [entries, total] = await Promise.all([
+        this.prisma!.devlogEntry.findMany({
+          where,
+          orderBy,
+          take: pagination?.limit || 20,
+          skip: pagination?.offset || 0,
+          include: {
+            notes: true,
+            documents: true,
+            project: true,
+          },
+        }),
+        this.prisma!.devlogEntry.count({ where }),
+      ]);
 
-      // const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
+      const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
       
-      // return {
-      //   items: mappedEntries,
-      //   pagination: {
-      //     page: Math.floor((pagination?.offset || 0) / (pagination?.limit || 20)) + 1,
-      //     limit: pagination?.limit || 20,
-      //     total,
-      //     totalPages: Math.ceil(total / (pagination?.limit || 20)),
-      //   },
-      // };
-      
-      // Temporary mock return for development
       return {
-        items: [],
+        items: mappedEntries,
         pagination: {
           page: Math.floor((pagination?.offset || 0) / (pagination?.limit || 20)) + 1,
           limit: pagination?.limit || 20,
-          total: 0,
-          totalPages: 0,
+          total,
+          totalPages: Math.ceil(total / (pagination?.limit || 20)),
         },
       };
     } catch (error) {
@@ -470,85 +419,73 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
       // Build search conditions
-      // const where: any = {};
+      const where: any = {};
       
       // Add project filter
-      // if (this.projectId) {
-      //   where.projectId = this.projectId;
-      // }
+      if (this.projectId) {
+        where.projectId = this.projectId;
+      }
 
       // Add basic filters first
-      // if (filter?.status) where.status = { in: filter.status };
-      // if (filter?.type) where.type = { in: filter.type };
-      // if (filter?.priority) where.priority = { in: filter.priority };
-      // if (filter?.assignee) where.assignee = filter.assignee;
-      // if (filter?.archived !== undefined) where.archived = filter.archived;
+      if (filter?.status) where.status = { in: filter.status };
+      if (filter?.type) where.type = { in: filter.type };
+      if (filter?.priority) where.priority = { in: filter.priority };
+      if (filter?.assignee) where.assignee = filter.assignee;
+      if (filter?.archived !== undefined) where.archived = filter.archived;
 
       // Handle text search
-      // if (query) {
-      //   if (this.pgTrgmAvailable) {
-      //     // Use PostgreSQL trigram similarity for better search
-      //     where.OR = [
-      //       { title: { contains: query, mode: 'insensitive' } },
-      //       { description: { contains: query, mode: 'insensitive' } },
-      //       { businessContext: { contains: query, mode: 'insensitive' } },
-      //       { technicalContext: { contains: query, mode: 'insensitive' } },
-      //     ];
-      //   } else {
-      //     // Fallback to simple text search
-      //     where.OR = [
-      //       { title: { contains: query, mode: 'insensitive' } },
-      //       { description: { contains: query, mode: 'insensitive' } },
-      //     ];
-      //   }
-      // }
+      if (query) {
+        if (this.pgTrgmAvailable) {
+          // Use PostgreSQL trigram similarity for better search
+          where.OR = [
+            { title: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+            { businessContext: { contains: query, mode: 'insensitive' } },
+            { technicalContext: { contains: query, mode: 'insensitive' } },
+          ];
+        } else {
+          // Fallback to simple text search
+          where.OR = [
+            { title: { contains: query, mode: 'insensitive' } },
+            { description: { contains: query, mode: 'insensitive' } },
+          ];
+        }
+      }
 
       // Build order by with search relevance
-      // const orderBy: any = [];
-      // if (sortOptions?.sortBy && sortOptions?.sortOrder) {
-      //   orderBy.push({ [sortOptions.sortBy]: sortOptions.sortOrder });
-      // } else {
-      //   orderBy.push({ updatedAt: 'desc' });
-      // }
+      const orderBy: any = [];
+      if (sortOptions?.sortBy && sortOptions?.sortOrder) {
+        orderBy.push({ [sortOptions.sortBy]: sortOptions.sortOrder });
+      } else {
+        orderBy.push({ updatedAt: 'desc' });
+      }
 
       // Execute search
-      // const [entries, total] = await Promise.all([
-      //   this.prisma.devlogEntry.findMany({
-      //     where,
-      //     orderBy,
-      //     take: pagination?.limit || 20,
-      //     skip: ((pagination?.page || 1) - 1) * (pagination?.limit || 20),
-      //     include: {
-      //       notes: true,
-      //       documents: true,
-      //       project: true,
-      //     },
-      //   }),
-      //   this.prisma.devlogEntry.count({ where }),
-      // ]);
+      const [entries, total] = await Promise.all([
+        this.prisma!.devlogEntry.findMany({
+          where,
+          orderBy,
+          take: pagination?.limit || 20,
+          skip: ((pagination?.page || 1) - 1) * (pagination?.limit || 20),
+          include: {
+            notes: true,
+            documents: true,
+            project: true,
+          },
+        }),
+        this.prisma!.devlogEntry.count({ where }),
+      ]);
 
-      // const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
+      const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
       
-      // return {
-      //   items: mappedEntries,
-      //   pagination: {
-      //     page: pagination?.page || 1,
-      //     limit: pagination?.limit || 20,
-      //     total,
-      //     totalPages: Math.ceil(total / (pagination?.limit || 20)),
-      //   },
-      // };
-      
-      // Temporary mock return for development
       return {
-        items: [],
+        items: mappedEntries,
         pagination: {
           page: pagination?.page || 1,
           limit: pagination?.limit || 20,
-          total: 0,
-          totalPages: 0,
+          total,
+          totalPages: Math.ceil(total / (pagination?.limit || 20)),
         },
       };
     } catch (error) {
@@ -564,83 +501,60 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
       // Build where clause
-      // const where: any = {};
-      // if (this.projectId) where.projectId = this.projectId;
-      // if (filter?.status) where.status = { in: filter.status };
-      // if (filter?.type) where.type = { in: filter.type };
-      // if (filter?.priority) where.priority = { in: filter.priority };
-      // if (filter?.assignee) where.assignee = filter.assignee;
-      // if (filter?.archived !== undefined) where.archived = filter.archived;
+      const where: any = {};
+      if (this.projectId) where.projectId = this.projectId;
+      if (filter?.status) where.status = { in: filter.status };
+      if (filter?.type) where.type = { in: filter.type };
+      if (filter?.priority) where.priority = { in: filter.priority };
+      if (filter?.assignee) where.assignee = filter.assignee;
+      if (filter?.archived !== undefined) where.archived = filter.archived;
 
       // Get aggregated statistics
-      // const [
-      //   total,
-      //   statusCounts,
-      //   typeCounts,
-      //   priorityCounts,
-      //   assigneeCounts,
-      // ] = await Promise.all([
-      //   this.prisma.devlogEntry.count({ where }),
-      //   this.prisma.devlogEntry.groupBy({
-      //     by: ['status'],
-      //     where,
-      //     _count: { status: true },
-      //   }),
-      //   this.prisma.devlogEntry.groupBy({
-      //     by: ['type'],
-      //     where,
-      //     _count: { type: true },
-      //   }),
-      //   this.prisma.devlogEntry.groupBy({
-      //     by: ['priority'],
-      //     where,
-      //     _count: { priority: true },
-      //   }),
-      //   this.prisma.devlogEntry.groupBy({
-      //     by: ['assignee'],
-      //     where: { ...where, assignee: { not: null } },
-      //     _count: { assignee: true },
-      //   }),
-      // ]);
+      const [
+        total,
+        statusCounts,
+        typeCounts,
+        priorityCounts,
+      ] = await Promise.all([
+        this.prisma!.devlogEntry.count({ where }),
+        this.prisma!.devlogEntry.groupBy({
+          by: ['status'],
+          where,
+          _count: { status: true },
+        }),
+        this.prisma!.devlogEntry.groupBy({
+          by: ['type'],
+          where,
+          _count: { type: true },
+        }),
+        this.prisma!.devlogEntry.groupBy({
+          by: ['priority'],
+          where,
+          _count: { priority: true },
+        }),
+      ]);
 
-      // return {
-      //   total,
-      //   byStatus: Object.fromEntries(statusCounts.map(s => [s.status, s._count.status])),
-      //   byType: Object.fromEntries(typeCounts.map(t => [t.type, t._count.type])),
-      //   byPriority: Object.fromEntries(priorityCounts.map(p => [p.priority, p._count.priority])),
-      //   byAssignee: Object.fromEntries(assigneeCounts.map(a => [a.assignee!, a._count.assignee])),
-      // };
+      // Calculate open/closed counts
+      const openStatuses = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
+      const closedStatuses = ['done', 'cancelled'];
       
-      // Temporary mock return for development
+      const openCount = statusCounts
+        .filter(s => openStatuses.includes(s.status))
+        .reduce((sum, s) => sum + s._count.status, 0);
+      
+      const closedCount = statusCounts
+        .filter(s => closedStatuses.includes(s.status))
+        .reduce((sum, s) => sum + s._count.status, 0);
+
       return {
-        totalEntries: 0,
-        openEntries: 0,
-        closedEntries: 0,
-        byStatus: {
-          'new': 0,
-          'in-progress': 0,
-          'blocked': 0,
-          'in-review': 0,
-          'testing': 0,
-          'done': 0,
-          'cancelled': 0,
-        },
-        byType: {
-          'feature': 0,
-          'bugfix': 0,
-          'task': 0,
-          'refactor': 0,
-          'docs': 0,
-        },
-        byPriority: {
-          'low': 0,
-          'medium': 0,
-          'high': 0,
-          'critical': 0,
-        },
-        averageCompletionTime: undefined,
+        totalEntries: total,
+        openEntries: openCount,
+        closedEntries: closedCount,
+        byStatus: Object.fromEntries(statusCounts.map(s => [s.status, s._count.status])) as Record<DevlogStatus, number>,
+        byType: Object.fromEntries(typeCounts.map(t => [t.type, t._count.type])) as Record<DevlogType, number>,
+        byPriority: Object.fromEntries(priorityCounts.map(p => [p.priority, p._count.priority])) as Record<DevlogPriority, number>,
+        averageCompletionTime: undefined, // TODO: Calculate based on createdAt and closedAt
       };
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get stats:', error);
@@ -679,19 +593,15 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      // TODO: Uncomment after Prisma client generation
-      // await this.prisma.devlogNote.create({
-      //   data: {
-      //     id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      //     devlogId: Number(devlogId),
-      //     timestamp: new Date(),
-      //     category: note.category as any,
-      //     content: note.content,
-      //   },
-      // });
-      
-      // Temporary mock for development
-      console.log('[PrismaDevlogService] Mock add note to devlog:', devlogId, note);
+      await this.prisma!.devlogNote.create({
+        data: {
+          id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          devlogId: Number(devlogId),
+          timestamp: new Date(),
+          category: note.category,
+          content: note.content,
+        },
+      });
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to add note:', error);
       throw new Error(`Failed to add note: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -703,8 +613,7 @@ export class PrismaDevlogService {
    */
   async dispose(): Promise<void> {
     try {
-      // TODO: Uncomment after Prisma client generation
-      // await this.prisma.$disconnect();
+      await this.prisma?.$disconnect();
       
       // Remove from instances
       if (this.projectId !== undefined) {
@@ -717,44 +626,45 @@ export class PrismaDevlogService {
 
   /**
    * Map Prisma entity to DevlogEntry type
-   * TODO: Implement after Prisma client generation
    */
-  // private mapPrismaToDevlogEntry(prismaEntry: any): DevlogEntry {
-  //   return {
-  //     id: prismaEntry.id,
-  //     key: prismaEntry.key,
-  //     title: prismaEntry.title,
-  //     type: prismaEntry.type,
-  //     description: prismaEntry.description,
-  //     status: prismaEntry.status,
-  //     priority: prismaEntry.priority,
-  //     createdAt: prismaEntry.createdAt,
-  //     updatedAt: prismaEntry.updatedAt,
-  //     closedAt: prismaEntry.closedAt,
-  //     archived: prismaEntry.archived,
-  //     assignee: prismaEntry.assignee,
-  //     projectId: prismaEntry.projectId,
-  //     context: {
-  //       business: prismaEntry.businessContext,
-  //       technical: prismaEntry.technicalContext,
-  //       tags: prismaEntry.tags ? JSON.parse(prismaEntry.tags) : [],
-  //       files: prismaEntry.files ? JSON.parse(prismaEntry.files) : [],
-  //       dependencies: prismaEntry.dependencies ? JSON.parse(prismaEntry.dependencies) : [],
-  //     },
-  //     notes: prismaEntry.notes?.map((note: any) => ({
-  //       id: note.id,
-  //       timestamp: note.timestamp,
-  //       category: note.category,
-  //       content: note.content,
-  //     })) || [],
-  //     documents: prismaEntry.documents?.map((doc: any) => ({
-  //       id: doc.id,
-  //       title: doc.title,
-  //       content: doc.content,
-  //       contentType: doc.contentType,
-  //       createdAt: doc.createdAt,
-  //       updatedAt: doc.updatedAt,
-  //     })) || [],
-  //   };
-  // }
+  private mapPrismaToDevlogEntry(prismaEntry: PrismaDevlogEntry & {
+    notes?: Array<{ id: string; timestamp: Date; category: string; content: string }>;
+    documents?: Array<{ id: string; title: string; content: string; contentType: string; createdAt: Date; updatedAt: Date }>;
+  }): DevlogEntry {
+    return {
+      id: prismaEntry.id,
+      key: prismaEntry.key,
+      title: prismaEntry.title,
+      type: prismaEntry.type as DevlogType,
+      description: prismaEntry.description,
+      status: prismaEntry.status as DevlogStatus,
+      priority: prismaEntry.priority as DevlogPriority,
+      createdAt: prismaEntry.createdAt.toISOString(),
+      updatedAt: prismaEntry.updatedAt.toISOString(),
+      closedAt: prismaEntry.closedAt?.toISOString() || null,
+      archived: prismaEntry.archived,
+      assignee: prismaEntry.assignee,
+      projectId: prismaEntry.projectId,
+      acceptanceCriteria: prismaEntry.tags ? JSON.parse(prismaEntry.tags) : undefined,
+      businessContext: prismaEntry.businessContext,
+      technicalContext: prismaEntry.technicalContext,
+      notes: prismaEntry.notes?.map((note) => ({
+        id: note.id,
+        timestamp: note.timestamp.toISOString(),
+        category: note.category as any,
+        content: note.content,
+      })) || [],
+      documents: prismaEntry.documents?.map((doc) => ({
+        id: doc.id,
+        devlogId: prismaEntry.id,
+        filename: doc.title,
+        originalName: doc.title,
+        mimeType: doc.contentType,
+        size: 0, // Will need to calculate this
+        type: 'text' as any, // Will need to determine from contentType
+        content: doc.content,
+        uploadedAt: doc.createdAt.toISOString(),
+      })) || [],
+    };
+  }
 }

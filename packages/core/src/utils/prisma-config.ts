@@ -1,14 +1,16 @@
 /**
  * Prisma Client Configuration
  *
- * Replaces TypeORM configuration with Prisma for better Next.js integration
+ * Simple configuration that uses DATABASE_URL as the single source of truth
+ * for database connections. Supports PostgreSQL, MySQL, and SQLite.
  * 
- * NOTE: This configuration requires Prisma Client to be generated first:
- * Run `npx prisma generate` after setting up the database connection
+ * Examples:
+ * - PostgreSQL: DATABASE_URL="postgresql://user:password@localhost:5432/devlog"
+ * - MySQL: DATABASE_URL="mysql://user:password@localhost:3306/devlog"
+ * - SQLite: DATABASE_URL="file:./devlog.db"
  */
 
-// TODO: Uncomment after Prisma client generation
-// import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { loadRootEnv } from './env-loader.js';
 
 loadRootEnv();
@@ -26,46 +28,18 @@ export interface PrismaConfig {
  * Global Prisma Client instance with singleton pattern
  * Prevents multiple instances in development hot reloading
  */
-// TODO: Uncomment after Prisma client generation
-// let prisma: PrismaClient | null = null;
+let prisma: PrismaClient | null = null;
 
 /**
  * Parse database configuration from environment variables
- * Returns the appropriate DATABASE_URL for Prisma
+ * Uses only DATABASE_URL as the single source of truth
  */
 export function parsePrismaConfig(): PrismaConfig {
-  // For Vercel, prefer direct connection URLs that bypass connection pooling
-  // to avoid SASL authentication issues
-  let databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = process.env.DATABASE_URL;
   
   if (!databaseUrl) {
-    // Fall back to TypeORM-style environment variables for backward compatibility
-    const postgresUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
-    const mysqlUrl = process.env.MYSQL_URL;
-    const sqliteUrl = process.env.SQLITE_URL;
-    const dbType = process.env.DEVLOG_STORAGE_TYPE?.toLowerCase();
-
-    if (dbType === 'postgres' && postgresUrl) {
-      databaseUrl = postgresUrl;
-    } else if (dbType === 'mysql' && mysqlUrl) {
-      databaseUrl = mysqlUrl;
-    } else if (dbType === 'sqlite') {
-      databaseUrl = sqliteUrl || 'file:./devlog.db';
-    } else if (postgresUrl) {
-      // Default to PostgreSQL if available
-      databaseUrl = postgresUrl;
-    } else if (mysqlUrl) {
-      // Fall back to MySQL
-      databaseUrl = mysqlUrl;
-    } else {
-      // Default to SQLite for local development
-      databaseUrl = 'file:./devlog.db';
-    }
-  }
-
-  if (!databaseUrl) {
     throw new Error(
-      'No database configuration found. Please set DATABASE_URL or configure POSTGRES_URL/MYSQL_URL/SQLITE_URL environment variables.'
+      'DATABASE_URL environment variable is required. Please set DATABASE_URL in your .env file.'
     );
   }
 
@@ -94,13 +68,8 @@ export function parsePrismaConfig(): PrismaConfig {
 /**
  * Get or create Prisma Client instance
  * Uses singleton pattern to prevent multiple instances
- * 
- * TODO: Uncomment after Prisma client generation
  */
-export function getPrismaClient(): any {
-  throw new Error('getPrismaClient: Requires Prisma client generation - run `npx prisma generate`');
-  
-  /* TODO: Uncomment after Prisma client generation
+export function getPrismaClient(): PrismaClient {
   if (prisma) {
     return prisma;
   }
@@ -130,7 +99,6 @@ export function getPrismaClient(): any {
   process.on('beforeExit', cleanup);
 
   return prisma;
-  */
 }
 
 /**
@@ -138,13 +106,10 @@ export function getPrismaClient(): any {
  * Useful for tests and cleanup
  */
 export async function disconnectPrisma(): Promise<void> {
-  // TODO: Uncomment after Prisma client generation
-  /* 
   if (prisma) {
     await prisma.$disconnect();
     prisma = null;
   }
-  */
 }
 
 /**
@@ -152,15 +117,9 @@ export async function disconnectPrisma(): Promise<void> {
  */
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    // TODO: Uncomment after Prisma client generation
-    /*
     const client = getPrismaClient();
     await client.$queryRaw`SELECT 1`;
     return true;
-    */
-    
-    // Placeholder for now
-    return false;
   } catch (error) {
     console.error('[Prisma] Database connection failed:', error);
     return false;
@@ -169,9 +128,14 @@ export async function checkDatabaseConnection(): Promise<boolean> {
 
 /**
  * Get database URL for the current environment
- * Useful for migrations and debugging
+ * Returns the DATABASE_URL environment variable
  */
 export function getDatabaseUrl(): string {
-  const config = parsePrismaConfig();
-  return config.databaseUrl;
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+  
+  return databaseUrl;
 }
