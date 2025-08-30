@@ -16,10 +16,6 @@
  * Run `npx prisma generate` after setting up the database connection
  */
 
-// TODO: Uncomment after Prisma client generation
-// import type { PrismaClient, User as PrismaUser, UserProvider as PrismaUserProvider } from '@prisma/client';
-// import { getPrismaClient } from '../utils/prisma-config.js';
-
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from 'crypto';
@@ -45,9 +41,10 @@ export class PrismaAuthService {
   private static instances: Map<string, AuthServiceInstance> = new Map();
   private static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
   
-  // TODO: Uncomment after Prisma client generation
-  // private prisma: PrismaClient;
+  private prisma: any = null;
   private initPromise: Promise<void> | null = null;
+  private fallbackMode = true;
+  private prismaImportPromise: Promise<void> | null = null;
 
   // Configuration
   private readonly JWT_SECRET: string;
@@ -56,13 +53,31 @@ export class PrismaAuthService {
   private readonly BCRYPT_ROUNDS = 12;
 
   private constructor(databaseUrl?: string) {
-    // TODO: Uncomment after Prisma client generation
-    // this.prisma = getPrismaClient();
-    
     this.JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-development';
     
     if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET environment variable is required in production');
+    }
+
+    // Initialize Prisma imports lazily
+    this.prismaImportPromise = this.initializePrismaClient();
+  }
+
+  private async initializePrismaClient(): Promise<void> {
+    try {
+      // Try to import Prisma client - will fail if not generated
+      const prismaModule = await import('@prisma/client');
+      const configModule = await import('../utils/prisma-config.js');
+      
+      if (prismaModule.PrismaClient && configModule.getPrismaClient) {
+        this.prisma = configModule.getPrismaClient();
+        this.fallbackMode = false;
+        console.log('[PrismaAuthService] Prisma client initialized successfully');
+      }
+    } catch (error) {
+      // Prisma client not available - service will operate in fallback mode
+      console.warn('[PrismaAuthService] Prisma client not available, operating in fallback mode:', error.message);
+      this.fallbackMode = true;
     }
   }
 
@@ -109,15 +124,24 @@ export class PrismaAuthService {
    * Internal initialization method
    */
   private async _initialize(): Promise<void> {
+    // Wait for Prisma client initialization
+    if (this.prismaImportPromise) {
+      await this.prismaImportPromise;
+    }
+
     try {
-      // TODO: Uncomment after Prisma client generation
-      // await this.prisma.$connect();
-      
-      console.log('[PrismaAuthService] Authentication service initialized');
+      if (!this.fallbackMode && this.prisma) {
+        await this.prisma.$connect();
+        console.log('[PrismaAuthService] Authentication service initialized with database connection');
+      } else {
+        console.log('[PrismaAuthService] Authentication service initialized in fallback mode');
+      }
     } catch (error) {
       console.error('[PrismaAuthService] Failed to initialize:', error);
       this.initPromise = null;
-      throw error;
+      if (!this.fallbackMode) {
+        throw error;
+      }
     }
   }
 
@@ -127,47 +151,10 @@ export class PrismaAuthService {
   async register(registration: UserRegistration): Promise<AuthResponse> {
     await this.initialize();
 
-    try {
-      // Check if user already exists
-      // TODO: Uncomment after Prisma client generation
-      // const existingUser = await this.prisma.user.findUnique({
-      //   where: { email: registration.email },
-      // });
-
-      // if (existingUser) {
-      //   throw new Error('User with this email already exists');
-      // }
-
-      // Hash password
-      const passwordHash = await bcrypt.hash(registration.password, this.BCRYPT_ROUNDS);
-
-      // Create user
-      // TODO: Uncomment after Prisma client generation
-      // const user = await this.prisma.user.create({
-      //   data: {
-      //     email: registration.email,
-      //     name: registration.name,
-      //     passwordHash,
-      //     isEmailVerified: false,
-      //   },
-      // });
-
-      // Generate email verification token if required
-      // let emailVerificationToken: string | undefined;
-      // if (registration.requireEmailVerification) {
-      //   emailVerificationToken = await this.generateEmailVerificationToken(user.id);
-      // }
-
-      // Generate auth tokens
-      // const tokens = await this.generateTokens(user);
-
-      // return {
-      //   user: this.mapPrismaToUser(user),
-      //   tokens,
-      //   emailVerificationToken,
-      // };
+    if (this.fallbackMode) {
+      // Fallback mock implementation
+      console.warn('[PrismaAuthService] register() called in fallback mode - returning mock response');
       
-      // Temporary mock response for development
       const mockUser: User = {
         id: Math.floor(Math.random() * 10000),
         email: registration.email,
@@ -189,6 +176,45 @@ export class PrismaAuthService {
         user: mockUser,
         tokens: mockTokens,
       };
+    }
+
+    try {
+      // Check if user already exists
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: registration.email },
+      });
+
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(registration.password, this.BCRYPT_ROUNDS);
+
+      // Create user
+      const user = await this.prisma.user.create({
+        data: {
+          email: registration.email,
+          name: registration.name,
+          passwordHash,
+          isEmailVerified: false,
+        },
+      });
+
+      // Generate email verification token if required
+      let emailVerificationToken: string | undefined;
+      if (registration.requireEmailVerification) {
+        emailVerificationToken = await this.generateEmailVerificationToken(user.id);
+      }
+
+      // Generate auth tokens
+      const tokens = await this.generateTokens(user);
+
+      return {
+        user: this.mapPrismaToUser(user),
+        tokens,
+        emailVerificationToken,
+      };
     } catch (error) {
       console.error('[PrismaAuthService] Registration failed:', error);
       throw new Error(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -201,38 +227,10 @@ export class PrismaAuthService {
   async login(credentials: UserLogin): Promise<AuthResponse> {
     await this.initialize();
 
-    try {
-      // Find user by email
-      // TODO: Uncomment after Prisma client generation
-      // const user = await this.prisma.user.findUnique({
-      //   where: { email: credentials.email },
-      // });
-
-      // if (!user) {
-      //   throw new Error('Invalid email or password');
-      // }
-
-      // Verify password
-      // const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
-      // if (!isPasswordValid) {
-      //   throw new Error('Invalid email or password');
-      // }
-
-      // Update last login time
-      // await this.prisma.user.update({
-      //   where: { id: user.id },
-      //   data: { lastLoginAt: new Date() },
-      // });
-
-      // Generate auth tokens
-      // const tokens = await this.generateTokens(user);
-
-      // return {
-      //   user: this.mapPrismaToUser(user),
-      //   tokens,
-      // };
+    if (this.fallbackMode) {
+      // Fallback mock implementation
+      console.warn('[PrismaAuthService] login() called in fallback mode - returning mock response');
       
-      // Temporary mock response for development
       const mockUser: User = {
         id: 1,
         email: credentials.email,
@@ -253,6 +251,37 @@ export class PrismaAuthService {
       return {
         user: mockUser,
         tokens: mockTokens,
+      };
+    }
+
+    try {
+      // Find user by email
+      const user = await this.prisma.user.findUnique({
+        where: { email: credentials.email },
+      });
+
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+      if (!isPasswordValid) {
+        throw new Error('Invalid email or password');
+      }
+
+      // Update last login time
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+
+      // Generate auth tokens
+      const tokens = await this.generateTokens(user);
+
+      return {
+        user: this.mapPrismaToUser(user),
+        tokens,
       };
     } catch (error) {
       console.error('[PrismaAuthService] Login failed:', error);

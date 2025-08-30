@@ -14,10 +14,6 @@
  * Run `npx prisma generate` after setting up the database connection
  */
 
-// TODO: Uncomment after Prisma client generation
-// import type { PrismaClient, DevlogEntry as PrismaDevlogEntry, DevlogNote as PrismaDevlogNote, DevlogDocument as PrismaDevlogDocument } from '@prisma/client';
-// import { getPrismaClient } from '../utils/prisma-config.js';
-
 import type {
   DevlogEntry,
   DevlogFilter,
@@ -46,14 +42,33 @@ export class PrismaDevlogService {
   private static instances: Map<number, DevlogServiceInstance> = new Map();
   private static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
   
-  // TODO: Uncomment after Prisma client generation
-  // private prisma: PrismaClient;
-  private pgTrgmAvailable: boolean = false;
+  private prisma: any = null;
   private initPromise: Promise<void> | null = null;
+  private fallbackMode = true;
+  private prismaImportPromise: Promise<void> | null = null;
+  private pgTrgmAvailable: boolean = false;
 
   private constructor(private projectId?: number) {
-    // TODO: Uncomment after Prisma client generation
-    // this.prisma = getPrismaClient();
+    // Initialize Prisma imports lazily
+    this.prismaImportPromise = this.initializePrismaClient();
+  }
+
+  private async initializePrismaClient(): Promise<void> {
+    try {
+      // Try to import Prisma client - will fail if not generated
+      const prismaModule = await import('@prisma/client');
+      const configModule = await import('../utils/prisma-config.js');
+      
+      if (prismaModule.PrismaClient && configModule.getPrismaClient) {
+        this.prisma = configModule.getPrismaClient();
+        this.fallbackMode = false;
+        console.log('[PrismaDevlogService] Prisma client initialized successfully');
+      }
+    } catch (error) {
+      // Prisma client not available - service will operate in fallback mode
+      console.warn('[PrismaDevlogService] Prisma client not available, operating in fallback mode:', error.message);
+      this.fallbackMode = true;
+    }
   }
 
   /**
@@ -100,19 +115,29 @@ export class PrismaDevlogService {
    * Internal initialization method
    */
   private async _initialize(): Promise<void> {
+    // Wait for Prisma client initialization
+    if (this.prismaImportPromise) {
+      await this.prismaImportPromise;
+    }
+
     try {
-      // TODO: Uncomment after Prisma client generation
-      // Check database connectivity
-      // await this.prisma.$connect();
-      
-      // Check for PostgreSQL extensions (similar to TypeORM version)
-      await this.ensurePgTrgmExtension();
-      
-      console.log('[PrismaDevlogService] Service initialized for project:', this.projectId);
+      if (!this.fallbackMode && this.prisma) {
+        // Check database connectivity
+        await this.prisma.$connect();
+        
+        // Check for PostgreSQL extensions (similar to TypeORM version)
+        await this.ensurePgTrgmExtension();
+        
+        console.log('[PrismaDevlogService] Service initialized for project:', this.projectId);
+      } else {
+        console.log('[PrismaDevlogService] Service initialized in fallback mode for project:', this.projectId);
+      }
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to initialize:', error);
       this.initPromise = null;
-      throw error;
+      if (!this.fallbackMode) {
+        throw error;
+      }
     }
   }
 
