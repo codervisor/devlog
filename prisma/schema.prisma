@@ -1,6 +1,3 @@
-// Prisma schema file
-// This is the main schema for the devlog project migrated from TypeORM
-
 generator client {
   provider = "prisma-client-js"
 }
