@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     const validatedData = registrationSchema.parse(body);
 
     // Dynamic import to keep server-only
-    const { AuthService } = await import('@codervisor/devlog-core/auth');
-    const authService = AuthService.getInstance();
+    const { ServiceFactory } = await import('@codervisor/devlog-core/auth');
+    const authService = ServiceFactory.getAuthService();
     const result = await authService.register(validatedData);
 
     // TODO: Send email verification email with result.emailToken

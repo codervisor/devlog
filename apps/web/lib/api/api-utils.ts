@@ -106,8 +106,8 @@ export class ServiceHelper {
    * Get project by name and ensure it exists
    */
   static async getProjectByNameOrFail(projectName: string) {
-    const { ProjectService } = await import('@codervisor/devlog-core/server');
-    const projectService = ProjectService.getInstance();
+    const { ServiceFactory } = await import('@codervisor/devlog-core/server');
+    const projectService = ServiceFactory.getProjectService();
     const project = await projectService.getByName(projectName);
 
     if (!project) {
@@ -121,8 +121,8 @@ export class ServiceHelper {
    * Get devlog service for a project
    */
   static async getDevlogService(projectId: number) {
-    const { DevlogService } = await import('@codervisor/devlog-core/server');
-    return DevlogService.getInstance(projectId);
+    const { ServiceFactory } = await import('@codervisor/devlog-core/server');
+    return ServiceFactory.getDevlogService(projectId);
   }
 
   /**

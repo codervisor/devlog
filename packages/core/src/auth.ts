@@ -8,6 +8,9 @@ export { SSOService } from './services/sso-service.js';
 // Prisma-based auth services (new)
 export { PrismaAuthService } from './services/prisma-auth-service.js';
 
+// Migration utilities for gradual TypeORM to Prisma transition
+export { ServiceFactory } from './utils/service-migration.js';
+
 // Auth-related entities and types
 export * from './entities/user.entity.js';
 export * from './types/auth.js';
