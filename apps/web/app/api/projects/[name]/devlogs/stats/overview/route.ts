@@ -30,7 +30,7 @@ export const GET = withErrorHandling(
     const project = projectResult.data.project;
 
     // Get devlog service and stats
-    const devlogService = await ServiceHelper.getDevlogService(project.id);
+    const devlogService = await ServiceHelper.getPrismaDevlogService(project.id);
     const stats = await devlogService.getStats();
 
     return createSuccessResponse(stats);

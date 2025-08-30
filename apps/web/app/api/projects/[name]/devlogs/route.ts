@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
 
     // Create project-aware devlog service using Prisma
     const devlogService = PrismaDevlogService.getInstance(project.id);
-    await devlogService.initialize();
+    await devlogService.ensureInitialized();
 
     const queryData = queryValidation.data;
     const filter: any = {};
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
 
     // Create project-aware devlog service using Prisma
     const devlogService = PrismaDevlogService.getInstance(project.id);
-    await devlogService.initialize();
+    await devlogService.ensureInitialized();
 
     // Add required fields and get next ID
     const now = new Date().toISOString();
@@ -185,7 +185,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
 
     // Create project-aware devlog service using Prisma
     const devlogService = PrismaDevlogService.getInstance(project.id);
-    await devlogService.initialize();
+    await devlogService.ensureInitialized();
 
     // Track successful and failed deletions
     const results = {
