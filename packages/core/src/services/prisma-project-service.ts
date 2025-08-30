@@ -239,12 +239,12 @@ export class PrismaProjectService {
 
     // Validate updates
     if (updates.name !== undefined || updates.description !== undefined) {
-      const validation = ProjectValidator.validateCreate({
+      const validation = ProjectValidator.validateCreateRequest({
         name: updates.name ?? existingProject.name,
         description: updates.description ?? existingProject.description,
       });
       if (!validation.success) {
-        throw new Error(`Invalid project data: ${validation.error.issues.map((i: any) => i.message).join(', ')}`);
+        throw new Error(`Invalid project data: ${validation.errors.map((i: any) => i.message).join(', ')}`);
       }
     }
 
