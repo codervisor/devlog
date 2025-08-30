@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const validatedData = verifyEmailSchema.parse(body);
 
     // Dynamic import to keep server-only
-    const { PrismaAuthService } = await import('@codervisor/devlog-core/auth');
+    const { PrismaAuthService } = await import('@codervisor/devlog-core/server');
     const authService = PrismaAuthService.getInstance();
     const user = await authService.verifyEmail(validatedData.token);
 

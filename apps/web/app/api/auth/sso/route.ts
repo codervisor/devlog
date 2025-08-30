@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const { provider, returnUrl } = authorizationSchema.parse(body);
 
     // Dynamic import to keep server-only
-    const { SSOService } = await import('@codervisor/devlog-core/auth');
+    const { SSOService } = await import('@codervisor/devlog-core/server');
     const ssoService = SSOService.getInstance();
 
     // Generate state for CSRF protection
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     // Dynamic import to keep server-only
-    const { SSOService } = await import('@codervisor/devlog-core/auth');
+    const { SSOService } = await import('@codervisor/devlog-core/server');
     const ssoService = SSOService.getInstance();
 
     // Get available providers

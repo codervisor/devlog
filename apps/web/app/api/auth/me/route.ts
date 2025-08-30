@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Dynamic import to keep server-only
-    const { PrismaAuthService } = await import('@codervisor/devlog-core/auth');
+    const { PrismaAuthService } = await import('@codervisor/devlog-core/server');
     const authService = PrismaAuthService.getInstance();
     await authService.initialize();
     

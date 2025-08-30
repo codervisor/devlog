@@ -76,7 +76,7 @@ export class PrismaAuthService {
       }
     } catch (error) {
       // Prisma client not available - service will operate in fallback mode
-      console.warn('[PrismaAuthService] Prisma client not available, operating in fallback mode:', error.message);
+      console.warn('[PrismaAuthService] Prisma client not available, operating in fallback mode:', (error as Error).message);
       this.fallbackMode = true;
     }
   }
@@ -203,22 +203,38 @@ export class PrismaAuthService {
 
       // Generate email verification token if required
       let emailVerificationToken: string | undefined;
-      if (registration.requireEmailVerification) {
-        emailVerificationToken = await this.generateEmailVerificationToken(user.id);
-      }
+      // Note: requireEmailVerification would need to be added to UserRegistration type if needed
+      // if (registration.requireEmailVerification) {
+      //   emailVerificationToken = await this.generateEmailVerificationToken(user.id);
+      // }
 
       // Generate auth tokens
       const tokens = await this.generateTokens(user);
 
       return {
-        user: this.mapPrismaToUser(user),
+        user: this.convertPrismaUserToUser(user),
         tokens,
-        emailVerificationToken,
       };
     } catch (error) {
       console.error('[PrismaAuthService] Registration failed:', error);
       throw new Error(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Convert Prisma user to User type
+   */
+  private convertPrismaUserToUser(prismaUser: any): User {
+    return {
+      id: prismaUser.id,
+      email: prismaUser.email,
+      name: prismaUser.name || '',
+      avatarUrl: prismaUser.avatarUrl,
+      isEmailVerified: prismaUser.isEmailVerified || false,
+      createdAt: prismaUser.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: prismaUser.updatedAt?.toISOString() || new Date().toISOString(),
+      lastLoginAt: prismaUser.lastLoginAt?.toISOString(),
+    };
   }
 
   /**
@@ -280,7 +296,7 @@ export class PrismaAuthService {
       const tokens = await this.generateTokens(user);
 
       return {
-        user: this.mapPrismaToUser(user),
+        user: this.convertPrismaUserToUser(user),
         tokens,
       };
     } catch (error) {

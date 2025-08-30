@@ -36,7 +36,7 @@ export class PrismaProjectService {
       }
     } catch (error) {
       // Prisma client not available - service will operate in fallback mode
-      console.warn('[PrismaProjectService] Prisma client not available, operating in fallback mode:', error.message);
+      console.warn('[PrismaProjectService] Prisma client not available, operating in fallback mode:', (error as Error).message);
       this.fallbackMode = true;
     }
   }

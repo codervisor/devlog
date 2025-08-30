@@ -13,7 +13,7 @@ datasource db {
 // Project management
 model Project {
   id             Int      @id @default(autoincrement())
-  name           String   @unique @db.VarChar(255)
+  name           String   @unique
   description    String?  @db.Text
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   lastAccessedAt DateTime @default(now()) @map("last_accessed_at") @db.Timestamptz
@@ -27,8 +27,8 @@ model Project {
 // Main devlog entries
 model DevlogEntry {
   id                Int         @id @default(autoincrement())
-  key               String      @unique @map("key_field") @db.VarChar(255)
-  title             String      @db.VarChar(500)
+  key               String      @unique @map("key_field")
+  title             String     
   type              DevlogType  @default(task)
   description       String      @db.Text
   status            DevlogStatus @default(new)
@@ -37,7 +37,7 @@ model DevlogEntry {
   updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz
   closedAt          DateTime?   @map("closed_at") @db.Timestamptz
   archived          Boolean     @default(false)
-  assignee          String?     @db.VarChar(255)
+  assignee          String?    
   projectId         Int         @map("project_id")
 
   // Flattened DevlogContext fields
@@ -66,7 +66,7 @@ model DevlogEntry {
 
 // Devlog notes - separate table for better relational modeling
 model DevlogNote {
-  id        String            @id @db.VarChar(255)
+  id        String            @id
   devlogId  Int               @map("devlog_id")
   timestamp DateTime          @db.Timestamptz
   category  DevlogNoteCategory
@@ -83,11 +83,11 @@ model DevlogNote {
 
 // Devlog dependencies for hierarchical work management
 model DevlogDependency {
-  id              String              @id @db.VarChar(255)
+  id              String              @id
   devlogId        Int                 @map("devlog_id")
   type            DevlogDependencyType
   description     String              @db.Text
-  externalId      String?             @map("external_id") @db.VarChar(255)
+  externalId      String?             @map("external_id")
   targetDevlogId  Int?                @map("target_devlog_id")
 
   // Relations
@@ -102,11 +102,11 @@ model DevlogDependency {
 
 // Devlog documents
 model DevlogDocument {
-  id          String   @id @db.VarChar(255)
+  id          String   @id
   devlogId    Int      @map("devlog_id")
-  title       String   @db.VarChar(500)
+  title       String  
   content     String   @db.Text
-  contentType String   @map("content_type") @db.VarChar(100)
+  contentType String   @map("content_type")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -121,10 +121,10 @@ model DevlogDocument {
 // User management and authentication
 model User {
   id              Int       @id @default(autoincrement())
-  email           String    @unique @db.VarChar(255)
-  name            String?   @db.VarChar(255)
-  avatarUrl       String?   @map("avatar_url") @db.VarChar(255)
-  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  email           String    @unique
+  name            String?  
+  avatarUrl       String?   @map("avatar_url")
+  passwordHash    String    @map("password_hash")
   isEmailVerified Boolean   @default(false) @map("is_email_verified")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
@@ -142,11 +142,11 @@ model User {
 model UserProvider {
   id         Int    @id @default(autoincrement())
   userId     Int    @map("user_id")
-  provider   String @db.VarChar(50)
-  providerId String @map("provider_id") @db.VarChar(255)
-  email      String @db.VarChar(255)
-  name       String @db.VarChar(255)
-  avatarUrl  String @map("avatar_url") @db.VarChar(500)
+  provider   String
+  providerId String @map("provider_id")
+  email      String
+  name       String
+  avatarUrl  String @map("avatar_url")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -160,7 +160,7 @@ model UserProvider {
 model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  token     String   @unique @db.VarChar(255)
+  token     String   @unique
   expiresAt DateTime @map("expires_at") @db.Timestamptz
   used      Boolean  @default(false)
 
@@ -175,7 +175,7 @@ model EmailVerificationToken {
 model PasswordResetToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  token     String   @unique @db.VarChar(255)
+  token     String   @unique
   expiresAt DateTime @map("expires_at") @db.Timestamptz
   used      Boolean  @default(false)
 
@@ -188,17 +188,17 @@ model PasswordResetToken {
 
 // Chat sessions
 model ChatSession {
-  id            String     @id @db.VarChar(255)
-  agent         AgentType  @db.VarChar(100)
-  timestamp     String     @db.VarChar(255) // ISO string
-  workspace     String?    @db.VarChar(500)
-  workspacePath String?    @map("workspace_path") @db.VarChar(1000)
-  title         String?    @db.VarChar(500)
-  status        ChatStatus @default(imported) @db.VarChar(50)
+  id            String     @id
+  agent         AgentType
+  timestamp     String // ISO string
+  workspace     String?
+  workspacePath String?    @map("workspace_path")
+  title         String?
+  status        ChatStatus @default(imported)
   messageCount  Int        @default(0) @map("message_count")
   duration      Int?
   metadata      Json       @default("{}")
-  updatedAt     String     @map("updated_at") @db.VarChar(255) // ISO string
+  updatedAt     String     @map("updated_at") // ISO string
   archived      Boolean    @default(false)
 
   // Relations
@@ -215,11 +215,11 @@ model ChatSession {
 
 // Chat messages
 model ChatMessage {
-  id            String  @id @db.VarChar(255)
-  sessionId     String  @map("session_id") @db.VarChar(255)
-  role          ChatRole @db.VarChar(20)
+  id            String  @id
+  sessionId     String  @map("session_id")
+  role          ChatRole
   content       String  @db.Text
-  timestamp     String  @db.VarChar(255) // ISO string
+  timestamp     String // ISO string
   sequence      Int
   metadata      Json    @default("{}")
   searchContent String? @map("search_content") @db.Text
@@ -236,11 +236,11 @@ model ChatMessage {
 
 // Chat-devlog links
 model ChatDevlogLink {
-  id         String   @id @db.VarChar(255)
-  sessionId  String   @map("session_id") @db.VarChar(255)
+  id         String   @id
+  sessionId  String   @map("session_id")
   devlogId   Int      @map("devlog_id")
   timestamp  DateTime @db.Timestamptz
-  linkReason String   @map("link_reason") @db.VarChar(500)
+  linkReason String   @map("link_reason")
 
   // Relations
   session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
