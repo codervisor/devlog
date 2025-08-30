@@ -29,9 +29,7 @@ services:
     container_name: devlog-web
     environment:
       - NODE_ENV=production
-      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/devlog
-      - DEVLOG_STORAGE_TYPE=postgres
-      - POSTGRES_SSL=false
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/devlog
       - NEXT_TELEMETRY_DISABLED=1
       - PORT=3000
     ports:

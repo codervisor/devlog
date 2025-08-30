@@ -13,3 +13,6 @@ export type { LLMServiceConfig } from './llm-service.js';
 
 // SSO Service
 export { SSOService } from './sso-service.js';
+
+// Document Service
+export { PrismaDocumentService as DocumentService } from './prisma-document-service.js';
