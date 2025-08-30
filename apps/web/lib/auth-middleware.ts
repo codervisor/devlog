@@ -27,9 +27,9 @@ export async function withAuth<T>(
 
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-      // Import AuthService dynamically to avoid initialization issues
-      const { AuthService } = await import('@codervisor/devlog-core/auth');
-      const authService = AuthService.getInstance();
+      // Import PrismaAuthService dynamically to avoid initialization issues
+      const { PrismaAuthService } = await import('@codervisor/devlog-core/auth');
+      const authService = PrismaAuthService.getInstance();
       
       const user = await authService.verifyToken(token);
       
@@ -59,8 +59,8 @@ export async function withOptionalAuth<T>(
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
         
-        const { AuthService } = await import('@codervisor/devlog-core/auth');
-        const authService = AuthService.getInstance();
+        const { PrismaAuthService } = await import('@codervisor/devlog-core/auth');
+        const authService = PrismaAuthService.getInstance();
         
         try {
           const user = await authService.verifyToken(token);

@@ -106,8 +106,9 @@ export class ServiceHelper {
    * Get project by name and ensure it exists
    */
   static async getProjectByNameOrFail(projectName: string) {
-    const { ProjectService } = await import('@codervisor/devlog-core/server');
-    const projectService = ProjectService.getInstance();
+    const { PrismaProjectService } = await import('@codervisor/devlog-core/server');
+    const projectService = PrismaProjectService.getInstance();
+    await projectService.ensureInitialized();
     const project = await projectService.getByName(projectName);
 
     if (!project) {
@@ -120,16 +121,18 @@ export class ServiceHelper {
   /**
    * Get devlog service for a project
    */
-  static async getDevlogService(projectId: number) {
-    const { DevlogService } = await import('@codervisor/devlog-core/server');
-    return DevlogService.getInstance(projectId);
+  static async getPrismaDevlogService(projectId: number) {
+    const { PrismaDevlogService } = await import('@codervisor/devlog-core/server');
+    const service = PrismaDevlogService.getInstance(projectId);
+    await service.ensureInitialized();
+    return service;
   }
 
   /**
    * Get devlog entry and ensure it exists
    */
   static async getDevlogOrFail(projectId: number, devlogId: number) {
-    const devlogService = await this.getDevlogService(projectId);
+    const devlogService = await this.getPrismaDevlogService(projectId);
 
     const entry = await devlogService.get(devlogId);
     if (!entry) {

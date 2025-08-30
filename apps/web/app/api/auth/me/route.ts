@@ -16,10 +16,11 @@ export async function GET(req: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Dynamic import to keep server-only
-    const { AuthService } = await import('@codervisor/devlog-core/auth');
-    const authService = AuthService.getInstance();
+    const { PrismaAuthService } = await import('@codervisor/devlog-core/auth');
+    const authService = PrismaAuthService.getInstance();
+    await authService.initialize();
     
-    const user = await authService.verifyToken(token);
+    const user = await authService.validateToken(token);
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProjectService } from '@codervisor/devlog-core/server';
+import { PrismaProjectService } from '@codervisor/devlog-core/server';
 import { generateSlugFromName } from '@codervisor/devlog-core';
 import { ProjectNotFound } from '@/components/custom/project/project-not-found';
 import { redirect } from 'next/navigation';
@@ -18,7 +18,7 @@ interface ProjectLayoutProps {
 export default async function ProjectLayout({ children, params }: ProjectLayoutProps) {
   const projectName = params.name;
   try {
-    const projectService = ProjectService.getInstance();
+    const projectService = PrismaProjectService.getInstance();
 
     const project = await projectService.getByName(projectName);
 

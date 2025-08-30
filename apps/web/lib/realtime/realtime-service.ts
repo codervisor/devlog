@@ -85,7 +85,7 @@ export class RealtimeService {
    */
   async connect(): Promise<void> {
     if (!this.initialized) {
-      await this.initialize();
+      await this.ensureInitialized();
     } else if (this.provider) {
       await this.provider.connect();
     }
