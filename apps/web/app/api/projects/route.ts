@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { ServiceFactory } from '@codervisor/devlog-core/server';
+import { PrismaProjectService } from '@codervisor/devlog-core/server';
 import { ApiValidator, CreateProjectBodySchema, WebToServiceProjectCreateSchema } from '@/schemas';
 import { ApiErrors, createSimpleCollectionResponse, createSuccessResponse } from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 // GET /api/projects - List all projects
 export async function GET(request: NextRequest) {
   try {
-    const projectService = ServiceFactory.getProjectService();
+    const projectService = PrismaProjectService.getInstance();
+    await projectService.initialize();
 
     const projects = await projectService.list();
 
@@ -37,7 +38,8 @@ export async function POST(request: NextRequest) {
       WebToServiceProjectCreateSchema,
     );
 
-    const projectService = ServiceFactory.getProjectService();
+    const projectService = PrismaProjectService.getInstance();
+    await projectService.initialize();
 
     // Create project (service layer will perform business logic validation)
     const createdProject = await projectService.create(serviceData);

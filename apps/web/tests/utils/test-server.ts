@@ -5,12 +5,9 @@
  * Uses mock servers to avoid complex server startup in tests.
  */
 
-import type { DataSource } from 'typeorm';
-
 export interface TestServerEnvironment {
   port: number;
   baseUrl: string;
-  database?: DataSource;
   cleanup: () => Promise<void>;
 }
 

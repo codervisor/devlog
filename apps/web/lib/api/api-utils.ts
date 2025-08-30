@@ -106,8 +106,9 @@ export class ServiceHelper {
    * Get project by name and ensure it exists
    */
   static async getProjectByNameOrFail(projectName: string) {
-    const { ServiceFactory } = await import('@codervisor/devlog-core/server');
-    const projectService = ServiceFactory.getProjectService();
+    const { PrismaProjectService } = await import('@codervisor/devlog-core/server');
+    const projectService = PrismaProjectService.getInstance();
+    await projectService.initialize();
     const project = await projectService.getByName(projectName);
 
     if (!project) {
@@ -121,8 +122,10 @@ export class ServiceHelper {
    * Get devlog service for a project
    */
   static async getDevlogService(projectId: number) {
-    const { ServiceFactory } = await import('@codervisor/devlog-core/server');
-    return ServiceFactory.getDevlogService(projectId);
+    const { PrismaDevlogService } = await import('@codervisor/devlog-core/server');
+    const service = PrismaDevlogService.getInstance(projectId);
+    await service.initialize();
+    return service;
   }
 
   /**

@@ -1,12 +1,9 @@
 /**
  * Test Environment Setup
  *
- * Sets up the environment for testing before any entity imports happen.
- * This must be imported first in test files to ensure SQLite compatibility.
+ * Sets up the environment for testing Prisma-based services.
  */
 
-// Set SQLite mode before any entity modules are loaded
-process.env.DEVLOG_STORAGE_TYPE = 'sqlite';
-
-// Re-export everything from test-database for convenience
-export * from './test-database.js';
+// Set test environment
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'file:./test.db';

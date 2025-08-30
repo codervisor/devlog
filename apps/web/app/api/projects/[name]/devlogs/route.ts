@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { PaginationMeta, SortOptions } from '@codervisor/devlog-core';
-import { ServiceFactory } from '@codervisor/devlog-core/server';
+import { PrismaProjectService, PrismaDevlogService } from '@codervisor/devlog-core/server';
 import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema, BatchDeleteDevlogsBodySchema } from '@/schemas';
 import {
   ApiErrors,
@@ -41,8 +41,9 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service using ServiceFactory
-    const devlogService = ServiceFactory.getDevlogService(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.initialize();
 
     const queryData = queryValidation.data;
     const filter: any = {};
@@ -118,8 +119,9 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service using ServiceFactory
-    const devlogService = ServiceFactory.getDevlogService(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.initialize();
 
     // Add required fields and get next ID
     const now = new Date().toISOString();
@@ -181,8 +183,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service using ServiceFactory
-    const devlogService = ServiceFactory.getDevlogService(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.initialize();
 
     // Track successful and failed deletions
     const results = {
