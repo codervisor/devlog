@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server';
 import { PaginationMeta, SortOptions } from '@codervisor/devlog-core';
 import { PrismaProjectService, PrismaDevlogService } from '@codervisor/devlog-core/server';
-import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema, BatchDeleteDevlogsBodySchema } from '@/schemas';
+import {
+  ApiValidator,
+  CreateDevlogBodySchema,
+  DevlogListQuerySchema,
+  BatchDeleteDevlogsBodySchema,
+} from '@/schemas';
 import {
   ApiErrors,
   createCollectionResponse,
@@ -139,7 +144,7 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
     await devlogService.save(entry);
 
     // Retrieve the actual saved entry to ensure we have the correct ID
-    const savedEntry = await devlogService.get(nextId, false); // Don't include notes for performance
+    const savedEntry = await devlogService.get(nextId);
 
     if (!savedEntry) {
       throw new Error('Failed to retrieve saved devlog entry');
@@ -168,7 +173,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
     const { projectName } = paramResult.data;
 
     // Validate request body
-    const bodyValidation = await ApiValidator.validateJsonBody(request, BatchDeleteDevlogsBodySchema);
+    const bodyValidation = await ApiValidator.validateJsonBody(
+      request,
+      BatchDeleteDevlogsBodySchema,
+    );
     if (!bodyValidation.success) {
       return bodyValidation.response;
     }
@@ -215,12 +223,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
         {
           status: 200,
           sseEventType: RealtimeEventType.DEVLOG_DELETED,
-        }
+        },
       );
     } else if (results.deleted.length === 0) {
       // All deletions failed
-      return ApiErrors.badRequest('Failed to delete any devlogs', { 
-        failures: results.failed 
+      return ApiErrors.badRequest('Failed to delete any devlogs', {
+        failures: results.failed,
       });
     } else {
       // Partial success
@@ -234,7 +242,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
         {
           status: 207, // Multi-status for partial success
           sseEventType: RealtimeEventType.DEVLOG_DELETED,
-        }
+        },
       );
     }
   } catch (error) {

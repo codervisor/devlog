@@ -36,43 +36,19 @@ import type {
 import { DevlogValidator } from '../validation/devlog-schemas.js';
 import { generateDevlogKey } from '../utils/key-generator.js';
 import type { PrismaClient, DevlogEntry as PrismaDevlogEntry } from '@prisma/client';
+import { PrismaServiceBase } from './prisma-service-base.js';
 
 interface DevlogServiceInstance {
   service: PrismaDevlogService;
   createdAt: number;
 }
 
-export class PrismaDevlogService {
+export class PrismaDevlogService extends PrismaServiceBase {
   private static instances: Map<number, DevlogServiceInstance> = new Map();
-  private static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
-  
-  private prisma: PrismaClient | null = null;
-  private initPromise: Promise<void> | null = null;
-  private fallbackMode = true;
-  private prismaImportPromise: Promise<void> | null = null;
   private pgTrgmAvailable: boolean = false;
 
   private constructor(private projectId?: number) {
-    // Initialize Prisma imports lazily
-    this.prismaImportPromise = this.initializePrismaClient();
-  }
-
-  private async initializePrismaClient(): Promise<void> {
-    try {
-      // Try to import Prisma client - should work now that it's generated
-      const prismaModule = await import('@prisma/client');
-      const configModule = await import('../utils/prisma-config.js');
-      
-      if (prismaModule.PrismaClient && configModule.getPrismaClient) {
-        this.prisma = configModule.getPrismaClient();
-        this.fallbackMode = false;
-        console.log('[PrismaDevlogService] Prisma client initialized successfully');
-      }
-    } catch (error) {
-      // Prisma client not available - service will operate in fallback mode
-      console.warn('[PrismaDevlogService] Prisma client not available, operating in fallback mode:', (error as Error).message);
-      this.fallbackMode = true;
-    }
+    super();
   }
 
   /**
@@ -81,67 +57,33 @@ export class PrismaDevlogService {
    */
   static getInstance(projectId?: number): PrismaDevlogService {
     const id = projectId || 0;
-    const now = Date.now();
     
-    // Clean up expired instances
-    for (const [key, instance] of this.instances.entries()) {
-      if (now - instance.createdAt > this.TTL_MS) {
-        this.instances.delete(key);
-      }
-    }
-
-    let instance = this.instances.get(id);
-    if (!instance) {
-      instance = {
-        service: new PrismaDevlogService(projectId),
-        createdAt: now,
-      };
-      this.instances.set(id, instance);
-    }
-
-    return instance.service;
+    return this.getOrCreateInstance(this.instances, id, () => new PrismaDevlogService(projectId));
   }
 
   /**
-   * Initialize the service
-   * Unlike TypeORM, Prisma doesn't require explicit database initialization
+   * Hook called when Prisma client is successfully connected
    */
-  async ensureInitialized(): Promise<void> {
-    if (this.initPromise) {
-      return this.initPromise;
-    }
-
-    this.initPromise = this._initialize();
-    return this.initPromise;
+  protected async onPrismaConnected(): Promise<void> {
+    // Check for PostgreSQL extensions (similar to TypeORM version)
+    await this.ensurePgTrgmExtension();
+    console.log('[PrismaDevlogService] Service initialized for project:', this.projectId);
   }
 
   /**
-   * Internal initialization method
+   * Hook called when service is running in fallback mode
    */
-  private async _initialize(): Promise<void> {
-    // Wait for Prisma client initialization
-    if (this.prismaImportPromise) {
-      await this.prismaImportPromise;
-    }
+  protected async onFallbackMode(): Promise<void> {
+    console.log('[PrismaDevlogService] Service initialized in fallback mode for project:', this.projectId);
+  }
 
-    try {
-      if (!this.fallbackMode && this.prisma) {
-        // Check database connectivity
-        await this.prisma.$connect();
-        
-        // Check for PostgreSQL extensions (similar to TypeORM version)
-        await this.ensurePgTrgmExtension();
-        
-        console.log('[PrismaDevlogService] Service initialized for project:', this.projectId);
-      } else {
-        console.log('[PrismaDevlogService] Service initialized in fallback mode for project:', this.projectId);
-      }
-    } catch (error) {
-      console.error('[PrismaDevlogService] Failed to initialize:', error);
-      this.initPromise = null;
-      if (!this.fallbackMode) {
-        throw error;
-      }
+  /**
+   * Hook called during disposal for cleanup
+   */
+  protected async onDispose(): Promise<void> {
+    // Remove from instances
+    if (this.projectId !== undefined) {
+      PrismaDevlogService.instances.delete(this.projectId);
     }
   }
 
@@ -158,7 +100,7 @@ export class PrismaDevlogService {
       }
 
       // Check for pg_trgm extension
-      const result = await this.prisma!.$queryRaw<Array<{ installed: boolean }>>`
+      const result = await this.prismaClient!.$queryRaw<Array<{ installed: boolean }>>`
         SELECT EXISTS(
           SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'
         ) as installed;
@@ -169,7 +111,7 @@ export class PrismaDevlogService {
       // Try to create extension if not available (requires superuser)
       if (!this.pgTrgmAvailable) {
         try {
-          await this.prisma!.$executeRaw`CREATE EXTENSION IF NOT EXISTS pg_trgm;`;
+          await this.prismaClient!.$executeRaw`CREATE EXTENSION IF NOT EXISTS pg_trgm;`;
           this.pgTrgmAvailable = true;
         } catch (error) {
           console.warn('[PrismaDevlogService] pg_trgm extension not available:', error);
@@ -203,7 +145,7 @@ export class PrismaDevlogService {
       // Generate unique key if not provided
       const key = entry.key || generateDevlogKey(entry.title, entry.type, entry.description);
       
-      const created = await this.prisma!.devlogEntry.create({
+      const created = await this.prismaClient!.devlogEntry.create({
         data: {
           key,
           title: validatedEntry.data.title,
@@ -239,7 +181,7 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      const entry = await this.prisma!.devlogEntry.findUnique({
+      const entry = await this.prismaClient!.devlogEntry.findUnique({
         where: { id: Number(id) },
         include: {
           notes: true,
@@ -262,7 +204,7 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      const entry = await this.prisma!.devlogEntry.findUnique({
+      const entry = await this.prismaClient!.devlogEntry.findUnique({
         where: { key },
         include: {
           notes: true,
@@ -305,7 +247,7 @@ export class PrismaDevlogService {
       if (updates.technicalContext !== undefined) updateData.technicalContext = updates.technicalContext;
       if (updates.acceptanceCriteria !== undefined) updateData.tags = JSON.stringify(updates.acceptanceCriteria);
 
-      const updated = await this.prisma!.devlogEntry.update({
+      const updated = await this.prismaClient!.devlogEntry.update({
         where: { id: Number(id) },
         data: updateData,
         include: {
@@ -329,7 +271,7 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      await this.prisma!.devlogEntry.delete({
+      await this.prismaClient!.devlogEntry.delete({
         where: { id: Number(id) },
       });
     } catch (error) {
@@ -376,7 +318,7 @@ export class PrismaDevlogService {
 
       // Execute queries
       const [entries, total] = await Promise.all([
-        this.prisma!.devlogEntry.findMany({
+        this.prismaClient!.devlogEntry.findMany({
           where,
           orderBy,
           take: pagination?.limit || 20,
@@ -387,7 +329,7 @@ export class PrismaDevlogService {
             project: true,
           },
         }),
-        this.prisma!.devlogEntry.count({ where }),
+        this.prismaClient!.devlogEntry.count({ where }),
       ]);
 
       const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
@@ -463,7 +405,7 @@ export class PrismaDevlogService {
 
       // Execute search
       const [entries, total] = await Promise.all([
-        this.prisma!.devlogEntry.findMany({
+        this.prismaClient!.devlogEntry.findMany({
           where,
           orderBy,
           take: pagination?.limit || 20,
@@ -474,7 +416,7 @@ export class PrismaDevlogService {
             project: true,
           },
         }),
-        this.prisma!.devlogEntry.count({ where }),
+        this.prismaClient!.devlogEntry.count({ where }),
       ]);
 
       const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
@@ -517,18 +459,18 @@ export class PrismaDevlogService {
         typeCounts,
         priorityCounts,
       ] = await Promise.all([
-        this.prisma!.devlogEntry.count({ where }),
-        this.prisma!.devlogEntry.groupBy({
+        this.prismaClient!.devlogEntry.count({ where }),
+        this.prismaClient!.devlogEntry.groupBy({
           by: ['status'],
           where,
           _count: { status: true },
         }),
-        this.prisma!.devlogEntry.groupBy({
+        this.prismaClient!.devlogEntry.groupBy({
           by: ['type'],
           where,
           _count: { type: true },
         }),
-        this.prisma!.devlogEntry.groupBy({
+        this.prismaClient!.devlogEntry.groupBy({
           by: ['priority'],
           where,
           _count: { priority: true },
@@ -593,7 +535,7 @@ export class PrismaDevlogService {
     await this.ensureInitialized();
 
     try {
-      await this.prisma!.devlogNote.create({
+      await this.prismaClient!.devlogNote.create({
         data: {
           id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           devlogId: Number(devlogId),
@@ -605,22 +547,6 @@ export class PrismaDevlogService {
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to add note:', error);
       throw new Error(`Failed to add note: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Dispose of the service and clean up resources
-   */
-  async dispose(): Promise<void> {
-    try {
-      await this.prisma?.$disconnect();
-      
-      // Remove from instances
-      if (this.projectId !== undefined) {
-        PrismaDevlogService.instances.delete(this.projectId);
-      }
-    } catch (error) {
-      console.error('[PrismaDevlogService] Error during disposal:', error);
     }
   }
 

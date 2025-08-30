@@ -3,82 +3,53 @@
  *
  * Migrated from TypeORM to Prisma for better Next.js integration
  * Manages projects using Prisma Client with improved type safety
- * 
- * NOTE: This service requires Prisma Client to be generated first:
- * Run `npx prisma generate` after setting up the database connection
  */
 
 import type { Project } from '../types/project.js';
 import { ProjectValidator } from '../validation/project-schemas.js';
+import { PrismaServiceBase } from './prisma-service-base.js';
 
-export class PrismaProjectService {
-  private static instance: PrismaProjectService | null = null;
-  private prisma: any = null;
-  private initPromise: Promise<void> | null = null;
-  private fallbackMode = true;
-  private prismaImportPromise: Promise<void> | null = null;
+interface ProjectServiceInstance {
+  service: PrismaProjectService;
+  createdAt: number;
+}
 
-  constructor() {
-    // Initialize Prisma imports lazily
-    this.prismaImportPromise = this.initializePrismaClient();
-  }
+export class PrismaProjectService extends PrismaServiceBase {
+  private static instances: Map<string, ProjectServiceInstance> = new Map();
 
-  private async initializePrismaClient(): Promise<void> {
-    try {
-      // Try to import Prisma client - will fail if not generated
-      const prismaModule = await import('@prisma/client');
-      const configModule = await import('../utils/prisma-config.js');
-      
-      if (prismaModule.PrismaClient && configModule.getPrismaClient) {
-        this.prisma = configModule.getPrismaClient();
-        this.fallbackMode = false;
-        console.log('[PrismaProjectService] Prisma client initialized successfully');
-      }
-    } catch (error) {
-      // Prisma client not available - service will operate in fallback mode
-      console.warn('[PrismaProjectService] Prisma client not available, operating in fallback mode:', (error as Error).message);
-      this.fallbackMode = true;
-    }
+  private constructor() {
+    super();
   }
 
   static getInstance(): PrismaProjectService {
-    if (!PrismaProjectService.instance) {
-      PrismaProjectService.instance = new PrismaProjectService();
-    }
-    return PrismaProjectService.instance;
+    const key = 'default';
+    
+    return this.getOrCreateInstance(this.instances, key, () => new PrismaProjectService());
   }
 
   /**
-   * Initialize the service (mainly for API compatibility with TypeORM version)
-   * Prisma Client doesn't require explicit initialization like TypeORM DataSource
+   * Hook called when Prisma client is successfully connected
    */
-  async initialize(): Promise<void> {
-    if (this.initPromise) {
-      return this.initPromise;
-    }
-
-    this.initPromise = this._initialize();
-    return this.initPromise;
+  protected async onPrismaConnected(): Promise<void> {
+    console.log('[PrismaProjectService] Service initialized with database connection');
   }
 
-  private async _initialize(): Promise<void> {
-    // Wait for Prisma client initialization
-    if (this.prismaImportPromise) {
-      await this.prismaImportPromise;
-    }
+  /**
+   * Hook called when service is running in fallback mode
+   */
+  protected async onFallbackMode(): Promise<void> {
+    console.log('[PrismaProjectService] Service initialized in fallback mode');
+  }
 
-    try {
-      if (!this.fallbackMode && this.prisma) {
-        await this.prisma.$queryRaw`SELECT 1`;
-        console.log('[PrismaProjectService] Database connection established');
-      } else {
-        console.log('[PrismaProjectService] Initialized in fallback mode - Prisma client not available');
-      }
-    } catch (error) {
-      console.error('[PrismaProjectService] Failed to connect to database:', error);
-      // In fallback mode, don't throw errors
-      if (!this.fallbackMode) {
-        throw error;
+  /**
+   * Hook called during disposal for cleanup
+   */
+  protected async onDispose(): Promise<void> {
+    // Remove from instances map
+    for (const [key, instance] of PrismaProjectService.instances.entries()) {
+      if (instance.service === this) {
+        PrismaProjectService.instances.delete(key);
+        break;
       }
     }
   }
@@ -87,15 +58,15 @@ export class PrismaProjectService {
    * List all projects ordered by last accessed time
    */
   async list(): Promise<Project[]> {
-    await this.initialize();
+    await this.ensureInitialized();
 
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       // Return empty list when Prisma client is not available
       console.warn('[PrismaProjectService] list() called in fallback mode - returning empty array');
       return [];
     }
 
-    const projects = await this.prisma.project.findMany({
+    const projects = await this.prismaClient!.project.findMany({
       orderBy: {
         lastAccessedAt: 'desc',
       },
@@ -108,14 +79,14 @@ export class PrismaProjectService {
    * Get project by ID
    */
   async get(id: number): Promise<Project | null> {
-    await this.initialize();
+    await this.ensureInitialized();
     
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] get() called in fallback mode - returning null');
       return null;
     }
 
-    const project = await this.prisma.project.findUnique({
+    const project = await this.prismaClient!.project.findUnique({
       where: { id },
     });
 
@@ -124,7 +95,7 @@ export class PrismaProjectService {
     }
 
     // Update last accessed time
-    await this.prisma.project.update({
+    await this.prismaClient!.project.update({
       where: { id },
       data: { lastAccessedAt: new Date() },
     });
@@ -136,9 +107,9 @@ export class PrismaProjectService {
    * Get project by name (case-insensitive)
    */
   async getByName(name: string): Promise<Project | null> {
-    await this.initialize();
+    await this.ensureInitialized();
     
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] getByName() called in fallback mode - returning null');
       return null;
     }
@@ -147,7 +118,7 @@ export class PrismaProjectService {
     // Using mode: 'insensitive' for PostgreSQL, fallback to exact match for others
     let project;
     try {
-      project = await this.prisma.project.findFirst({
+      project = await this.prismaClient!.project.findFirst({
         where: {
           name: {
             equals: name,
@@ -157,7 +128,7 @@ export class PrismaProjectService {
       });
     } catch (error) {
       // Fallback for databases that don't support case-insensitive mode
-      project = await this.prisma.project.findFirst({
+      project = await this.prismaClient!.project.findFirst({
         where: { name },
       });
     }
@@ -167,7 +138,7 @@ export class PrismaProjectService {
     }
 
     // Update last accessed time
-    await this.prisma.project.update({
+    await this.prismaClient!.project.update({
       where: { id: project.id },
       data: { lastAccessedAt: new Date() },
     });
@@ -181,7 +152,7 @@ export class PrismaProjectService {
   async create(
     projectData: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>
   ): Promise<Project> {
-    await this.initialize();
+    await this.ensureInitialized();
 
     // Validate input
     const validation = ProjectValidator.validateCreateRequest(projectData);
@@ -189,7 +160,7 @@ export class PrismaProjectService {
       throw new Error(`Invalid project data: ${validation.errors.join(', ')}`);
     }
 
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       // Return a mock project in fallback mode
       console.warn('[PrismaProjectService] create() called in fallback mode - returning mock project');
       return {
@@ -201,7 +172,7 @@ export class PrismaProjectService {
       };
     }
 
-    const project = await this.prisma.project.create({
+    const project = await this.prismaClient!.project.create({
       data: {
         name: projectData.name,
         description: projectData.description,
@@ -216,9 +187,9 @@ export class PrismaProjectService {
    * Update an existing project
    */
   async update(id: number, updates: Partial<Project>): Promise<Project> {
-    await this.initialize();
+    await this.ensureInitialized();
 
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] update() called in fallback mode - returning mock project');
       return {
         id,
@@ -229,7 +200,7 @@ export class PrismaProjectService {
       };
     }
 
-    const existingProject = await this.prisma.project.findUnique({
+    const existingProject = await this.prismaClient!.project.findUnique({
       where: { id },
     });
 
@@ -244,7 +215,7 @@ export class PrismaProjectService {
         description: updates.description ?? existingProject.description,
       });
       if (!validation.success) {
-        throw new Error(`Invalid project data: ${validation.errors.map((i: any) => i.message).join(', ')}`);
+        throw new Error(`Invalid project data: ${validation.errors.join(', ')}`);
       }
     }
 
@@ -255,7 +226,7 @@ export class PrismaProjectService {
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.description !== undefined) updateData.description = updates.description;
 
-    const project = await this.prisma.project.update({
+    const project = await this.prismaClient!.project.update({
       where: { id },
       data: updateData,
     });
@@ -267,14 +238,14 @@ export class PrismaProjectService {
    * Delete a project and all associated data
    */
   async delete(id: number): Promise<void> {
-    await this.initialize();
+    await this.ensureInitialized();
 
-    if (this.fallbackMode) {
+    if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] delete() called in fallback mode - operation ignored');
       return;
     }
 
-    const existingProject = await this.prisma.project.findUnique({
+    const existingProject = await this.prismaClient!.project.findUnique({
       where: { id },
     });
 
@@ -283,7 +254,7 @@ export class PrismaProjectService {
     }
 
     // Prisma handles cascading deletes automatically based on schema relationships
-    await this.prisma.project.delete({
+    await this.prismaClient!.project.delete({
       where: { id },
     });
   }
@@ -292,8 +263,7 @@ export class PrismaProjectService {
    * Dispose of resources
    */
   async dispose(): Promise<void> {
-    // Prisma Client handles connection cleanup automatically
-    // This method is kept for API compatibility with TypeORM version
+    await super.dispose();
   }
 
   /**

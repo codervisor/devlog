@@ -1,3 +1,6 @@
+// Base classes
+export { PrismaServiceBase } from './prisma-service-base.js';
+
 // Prisma-based services
 export { PrismaProjectService } from './prisma-project-service.js';
 export { PrismaDevlogService } from './prisma-devlog-service.js';
