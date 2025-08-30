@@ -107,10 +107,10 @@ export async function PUT(
       updatedEntry.closedAt = null;
     }
 
-    await devlogService.save(updatedEntry);
+    const result = await devlogService.update(devlogId, updatedEntry);
 
     // Transform and return updated entry
-    return createSuccessResponse(updatedEntry, { sseEventType: RealtimeEventType.DEVLOG_UPDATED });
+    return createSuccessResponse(result, { sseEventType: RealtimeEventType.DEVLOG_UPDATED });
   } catch (error) {
     console.error('Error updating devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to update devlog';

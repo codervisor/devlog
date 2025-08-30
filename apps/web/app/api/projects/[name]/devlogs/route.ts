@@ -128,30 +128,17 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
     const devlogService = PrismaDevlogService.getInstance(project.id);
     await devlogService.ensureInitialized();
 
-    // Add required fields and get next ID
-    const now = new Date().toISOString();
-    const nextId = await devlogService.getNextId();
-
+    // Prepare entry for creation
     const entry = {
       ...bodyValidation.data,
-      id: nextId,
-      createdAt: now,
-      updatedAt: now,
       projectId: project.id, // Ensure project context
     };
 
-    // Save the entry
-    await devlogService.save(entry);
+    // Create the entry
+    const result = await devlogService.create(entry);
 
-    // Retrieve the actual saved entry to ensure we have the correct ID
-    const savedEntry = await devlogService.get(nextId);
-
-    if (!savedEntry) {
-      throw new Error('Failed to retrieve saved devlog entry');
-    }
-
-    // Transform and return the actual saved devlog
-    return createSuccessResponse(savedEntry, {
+    // Transform and return the created devlog
+    return createSuccessResponse(result, {
       status: 201,
       sseEventType: RealtimeEventType.DEVLOG_CREATED,
     });

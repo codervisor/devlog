@@ -76,17 +76,17 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
     if (queryData.fromDate) filter.fromDate = queryData.fromDate;
     if (queryData.toDate) filter.toDate = queryData.toDate;
 
-    // Perform the enhanced search using PrismaDevlogService
-    const result = await devlogService.searchWithRelevance(searchQuery, filter);
+    // Perform the search using PrismaDevlogService
+    const result = await devlogService.search(searchQuery, filter);
 
     // Transform the response to match the expected interface
     const response: SearchResponse = {
-      query: result.searchMeta.query,
+      query: searchQuery,
       results: result.items.map((item) => ({
-        entry: item.entry,
-        relevance: item.relevance,
-        matchedFields: item.matchedFields,
-        highlights: item.highlights,
+        entry: item,
+        relevance: 1.0, // Default relevance since we don't have relevance scoring yet
+        matchedFields: ['title', 'description'], // Default matched fields
+        highlights: undefined,
       })),
       pagination: {
         ...result.pagination,
@@ -94,9 +94,9 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
         totalPages: result.pagination.totalPages ?? 0,
       },
       searchMeta: {
-        searchTime: result.searchMeta.searchTime,
-        totalMatches: result.searchMeta.totalMatches,
-        appliedFilters: result.searchMeta.appliedFilters,
+        searchTime: 0, // Default search time since we don't track it yet
+        totalMatches: result.pagination.total ?? 0,
+        appliedFilters: filter,
       },
     };
 

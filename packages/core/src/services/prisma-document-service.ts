@@ -110,27 +110,24 @@ export class PrismaDocumentService extends PrismaServiceBase {
       const documentType = this.determineDocumentType(file.mimeType, file.originalName);
       const textContent = this.extractTextContent(file.content, documentType);
 
-      // Store both text content and metadata as JSON in the content field
-      const documentContent = JSON.stringify({
-        originalName: file.originalName,
-        mimeType: file.mimeType,
-        size: file.size,
-        type: documentType,
-        uploadedBy,
-        metadata: metadata || {},
-        textContent: textContent || '',
-        binaryContent: Buffer.isBuffer(file.content) 
-          ? file.content.toString('base64')
-          : Buffer.from(file.content, 'utf-8').toString('base64')
-      });
+      // Prepare binary content
+      const binaryContent = Buffer.isBuffer(file.content) 
+        ? file.content
+        : Buffer.from(file.content, 'utf-8');
 
       const document = await this.prismaClient!.devlogDocument.create({
         data: {
           id: documentId,
           devlogId: Number(devlogId),
-          title: file.originalName,
-          content: documentContent,
-          contentType: file.mimeType,
+          filename: documentId,
+          originalName: file.originalName,
+          mimeType: file.mimeType,
+          size: file.size,
+          type: documentType,
+          textContent: textContent || null,
+          binaryContent: binaryContent,
+          metadata: metadata || {},
+          uploadedBy: uploadedBy || null,
         },
       });
 
@@ -202,24 +199,10 @@ export class PrismaDocumentService extends PrismaServiceBase {
     try {
       const document = await this.prismaClient!.devlogDocument.findUnique({
         where: { id: documentId },
-        select: { content: true },
+        select: { binaryContent: true },
       });
 
-      if (!document?.content) {
-        return null;
-      }
-
-      try {
-        const parsedContent = JSON.parse(document.content);
-        if (parsedContent.binaryContent) {
-          return Buffer.from(parsedContent.binaryContent, 'base64');
-        }
-      } catch {
-        // If content is not JSON, treat as plain text
-        return Buffer.from(document.content, 'utf-8');
-      }
-
-      return null;
+      return document?.binaryContent ? Buffer.from(document.binaryContent) : null;
     } catch (error) {
       console.error('[DocumentService] Failed to get document content:', error);
       throw new Error(`Failed to get document content: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -249,13 +232,14 @@ export class PrismaDocumentService extends PrismaServiceBase {
     try {
       const where: any = {
         OR: [
-          { title: { contains: query, mode: 'insensitive' } },
-          { content: { contains: query, mode: 'insensitive' } },
+          { originalName: { contains: query, mode: 'insensitive' } },
+          { textContent: { contains: query, mode: 'insensitive' } },
         ],
       };
 
       if (options?.devlogId) where.devlogId = Number(options.devlogId);
-      if (options?.mimeType) where.contentType = { contains: options.mimeType };
+      if (options?.type) where.type = options.type;
+      if (options?.mimeType) where.mimeType = { contains: options.mimeType };
 
       const [documents, total] = await Promise.all([
         this.prismaClient!.devlogDocument.findMany({
@@ -309,19 +293,13 @@ export class PrismaDocumentService extends PrismaServiceBase {
         throw new Error('Document not found');
       }
 
-      // Parse existing content and update metadata
-      let parsedContent;
-      try {
-        parsedContent = JSON.parse(existingDoc.content);
-      } catch {
-        parsedContent = { metadata: {} };
-      }
-
-      parsedContent.metadata = { ...parsedContent.metadata, ...metadata };
+      // Merge with existing metadata
+      const existingMetadata = existingDoc.metadata as Record<string, any> || {};
+      const updatedMetadata = { ...existingMetadata, ...metadata };
 
       const document = await this.prismaClient!.devlogDocument.update({
         where: { id: documentId },
-        data: { content: JSON.stringify(parsedContent) },
+        data: { metadata: updatedMetadata },
       });
 
       return this.mapPrismaToDocument(document);
@@ -395,7 +373,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
     try {
       const documents = await this.prismaClient!.devlogDocument.findMany({
         where: { devlogId: Number(devlogId) },
-        select: { content: true, contentType: true },
+        select: { size: true, type: true },
       });
 
       const totalDocuments = documents.length;
@@ -403,20 +381,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       const typeBreakdown: Record<string, number> = {};
 
       documents.forEach(doc => {
-        try {
-          const parsedContent = JSON.parse(doc.content);
-          if (parsedContent.size) {
-            totalSize += parsedContent.size;
-          }
-          if (parsedContent.type) {
-            typeBreakdown[parsedContent.type] = (typeBreakdown[parsedContent.type] || 0) + 1;
-          }
-        } catch {
-          // If content is not JSON, estimate size and use contentType
-          totalSize += doc.content.length;
-          const documentType = this.determineDocumentType(doc.contentType, '');
-          typeBreakdown[documentType] = (typeBreakdown[documentType] || 0) + 1;
-        }
+        totalSize += doc.size;
+        const documentType = doc.type as DocumentType;
+        typeBreakdown[documentType] = (typeBreakdown[documentType] || 0) + 1;
       });
 
       return {
@@ -497,34 +464,18 @@ export class PrismaDocumentService extends PrismaServiceBase {
    * Map Prisma document entity to domain type
    */
   private mapPrismaToDocument(prismaDoc: any): DevlogDocument {
-    // Try to parse the content as JSON to extract structured data
-    let parsedContent: any = {};
-    try {
-      parsedContent = JSON.parse(prismaDoc.content);
-    } catch {
-      // If content is not JSON, treat as plain text content
-      parsedContent = {
-        textContent: prismaDoc.content,
-        originalName: prismaDoc.title,
-        mimeType: prismaDoc.contentType,
-        type: this.determineDocumentType(prismaDoc.contentType, prismaDoc.title),
-        size: prismaDoc.content.length,
-        metadata: {},
-      };
-    }
-
     return {
       id: prismaDoc.id,
       devlogId: prismaDoc.devlogId,
-      filename: prismaDoc.id, // Use ID as filename since we don't store it separately
-      originalName: parsedContent.originalName || prismaDoc.title,
-      mimeType: parsedContent.mimeType || prismaDoc.contentType,
-      size: parsedContent.size || prismaDoc.content.length,
-      type: parsedContent.type || this.determineDocumentType(prismaDoc.contentType, prismaDoc.title),
-      content: parsedContent.textContent || undefined,
-      metadata: parsedContent.metadata || {},
+      filename: prismaDoc.filename,
+      originalName: prismaDoc.originalName,
+      mimeType: prismaDoc.mimeType,
+      size: prismaDoc.size,
+      type: prismaDoc.type as DocumentType,
+      content: prismaDoc.textContent || undefined,
+      metadata: prismaDoc.metadata as Record<string, any> || {},
       uploadedAt: prismaDoc.createdAt?.toISOString() || new Date().toISOString(),
-      uploadedBy: parsedContent.uploadedBy || undefined,
+      uploadedBy: prismaDoc.uploadedBy || undefined,
     };
   }
 

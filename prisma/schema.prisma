@@ -99,19 +99,27 @@ model DevlogDependency {
 
 // Devlog documents
 model DevlogDocument {
-  id          String   @id
-  devlogId    Int      @map("devlog_id")
-  title       String  
-  content     String   @db.Text
-  contentType String   @map("content_type")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id            String   @id
+  devlogId      Int      @map("devlog_id")
+  filename      String   // Internal filename/identifier
+  originalName  String   @map("original_name") // Original filename from upload
+  mimeType      String   @map("mime_type")
+  size          Int      // Size in bytes
+  type          String   // DocumentType as string (text, markdown, image, pdf, etc.)
+  textContent   String?  @map("text_content") @db.Text // Extracted text content for searchable documents
+  binaryContent Bytes?   @map("binary_content") // Binary content for files
+  metadata      Json     @default("{}") // Additional file metadata
+  uploadedBy    String?  @map("uploaded_by") // User who uploaded the document
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   devlogEntry DevlogEntry @relation(fields: [devlogId], references: [id], onDelete: Cascade)
 
   @@index([devlogId])
-  @@index([contentType])
+  @@index([mimeType])
+  @@index([type])
+  @@index([originalName])
   @@map("devlog_documents")
 }
 

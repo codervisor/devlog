@@ -283,7 +283,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
   /**
    * List devlog entries with filtering and pagination
    */
-  async list(filter?: DevlogFilter, sort?: SortOptions, pagination?: { limit?: number; offset?: number }): Promise<PaginatedResult<DevlogEntry>> {
+  async list(filter?: DevlogFilter, pagination?: { limit?: number; offset?: number }, sort?: SortOptions): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     try {
@@ -555,7 +555,19 @@ export class PrismaDevlogService extends PrismaServiceBase {
    */
   private mapPrismaToDevlogEntry(prismaEntry: PrismaDevlogEntry & {
     notes?: Array<{ id: string; timestamp: Date; category: string; content: string }>;
-    documents?: Array<{ id: string; title: string; content: string; contentType: string; createdAt: Date; updatedAt: Date }>;
+    documents?: Array<{ 
+      id: string; 
+      filename: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+      type: string;
+      textContent: string | null;
+      metadata: any;
+      uploadedBy: string | null;
+      createdAt: Date; 
+      updatedAt: Date;
+    }>;
   }): DevlogEntry {
     return {
       id: prismaEntry.id,
@@ -583,13 +595,15 @@ export class PrismaDevlogService extends PrismaServiceBase {
       documents: prismaEntry.documents?.map((doc) => ({
         id: doc.id,
         devlogId: prismaEntry.id,
-        filename: doc.title,
-        originalName: doc.title,
-        mimeType: doc.contentType,
-        size: 0, // Will need to calculate this
-        type: 'text' as any, // Will need to determine from contentType
-        content: doc.content,
+        filename: doc.filename,
+        originalName: doc.originalName,
+        mimeType: doc.mimeType,
+        size: doc.size,
+        type: doc.type as any,
+        content: doc.textContent || undefined,
+        metadata: doc.metadata || {},
         uploadedAt: doc.createdAt.toISOString(),
+        uploadedBy: doc.uploadedBy || undefined,
       })) || [],
     };
   }
