@@ -15,3 +15,6 @@ export * from './project-schemas.js';
 
 // Document operation schemas
 export * from './document-schemas.js';
+
+// Agent observability operation schemas
+export * from './agent-schemas.js';
