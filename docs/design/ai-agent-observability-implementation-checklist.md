@@ -4,6 +4,67 @@
 
 This document provides a detailed, actionable checklist for implementing the AI Agent Observability features described in the [design document](./ai-agent-observability-design.md).
 
+**Architecture Decision**: TypeScript + Go Hybrid (finalized)
+- **TypeScript**: Web UI, MCP Server, API Gateway
+- **Go**: Client-side collector, Event processing, Real-time streaming, Analytics
+- See [Performance Analysis](./ai-agent-observability-performance-analysis.md) for detailed rationale
+
+## Phase 0: Go Collector Setup (Week 0 - Parallel Track)
+
+**Note**: This can be developed in parallel with Phase 1 TypeScript work.
+
+### Go Collector Development
+
+- [ ] **Project Setup**
+  - [ ] Create `packages/collector-go/` directory
+  - [ ] Initialize Go module: `go mod init github.com/codervisor/devlog/collector`
+  - [ ] Set up Go project structure (cmd/, internal/, pkg/)
+  - [ ] Configure cross-compilation (darwin, linux, windows)
+  - [ ] Set up GitHub Actions for building binaries
+
+- [ ] **Core Collector Implementation**
+  - [ ] Implement log file watcher (fsnotify)
+  - [ ] Create agent-specific log parsers (adapters pattern)
+    - [ ] GitHub Copilot adapter
+    - [ ] Claude Code adapter
+    - [ ] Cursor adapter
+    - [ ] Generic adapter (fallback)
+  - [ ] Implement local SQLite buffer for offline support
+  - [ ] Add event batching logic (100 events or 5s interval)
+  - [ ] Implement HTTP/gRPC client for backend communication
+  - [ ] Add retry logic with exponential backoff
+  - [ ] Implement graceful shutdown
+
+- [ ] **Configuration & Discovery**
+  - [ ] Auto-detect agent log locations by OS
+  - [ ] Load configuration from `~/.devlog/collector.json`
+  - [ ] Support environment variables for config
+  - [ ] Implement agent log discovery heuristics
+  - [ ] Add config validation
+
+- [ ] **Distribution & Installation**
+  - [ ] Create npm package wrapper (`@codervisor/devlog-collector`)
+  - [ ] Bundle platform-specific binaries in npm package
+  - [ ] Create install script (post-install hook)
+  - [ ] Add auto-start on system boot scripts
+    - [ ] macOS: launchd plist
+    - [ ] Linux: systemd service
+    - [ ] Windows: Windows Service
+  - [ ] Create uninstall script
+
+- [ ] **Testing**
+  - [ ] Unit tests for log parsers
+  - [ ] Integration tests with mock backend
+  - [ ] Test cross-platform compilation
+  - [ ] Test offline buffering and recovery
+  - [ ] Load testing (simulate high-volume logs)
+
+- [ ] **Documentation**
+  - [ ] Go collector architecture documentation
+  - [ ] Build and development guide
+  - [ ] Adapter development guide (for new agents)
+  - [ ] Troubleshooting guide
+
 ## Phase 1: Foundation (Weeks 1-4)
 
 ### Week 1: Core Data Models & Schema
