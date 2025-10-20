@@ -1668,6 +1668,431 @@ When performance becomes a bottleneck, extract high-throughput components to Go:
 
 ---
 
+## Appendix D: TypeScript + Go vs TypeScript + Rust - Architecture Comparison
+
+This section provides a detailed comparison of the two hybrid architectures for the AI Agent Observability system, focusing on API layer performance, development considerations, and operational aspects.
+
+### Architecture Overview Comparison
+
+#### TypeScript + Go Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TypeScript Layer                         │
+│  • Next.js Web UI (React)                                   │
+│  • MCP Server (native SDK)                                  │
+│  • API Gateway (Express/Fastify)                            │
+│  • Auth & Session Management                                │
+└─────────────────┬───────────────────────────────────────────┘
+                  │ REST/gRPC (internal)
+┌─────────────────▼───────────────────────────────────────────┐
+│                      Go Services                            │
+│  • Event Processing Service (50K+ events/sec)               │
+│  • Real-time Streaming Engine (WebSocket)                   │
+│  • Analytics Engine (aggregations, metrics)                 │
+│  • Pattern Detection Service                                │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────────────────────┐
+│              PostgreSQL + TimescaleDB                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### TypeScript + Rust Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TypeScript Layer                         │
+│  • Next.js Web UI (React)                                   │
+│  • MCP Server (native SDK)                                  │
+│  • API Gateway (Express/Fastify)                            │
+│  • Auth & Session Management                                │
+└─────────────────┬───────────────────────────────────────────┘
+                  │ REST/gRPC (internal)
+┌─────────────────▼───────────────────────────────────────────┐
+│                     Rust Services                           │
+│  • Event Processing Core (100K+ events/sec)                 │
+│  • Local Collector Binary (distributed)                     │
+│  • Real-time Streaming Engine                               │
+│  • CPU-intensive Analytics                                  │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────────────────────┐
+│              PostgreSQL + TimescaleDB                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### API Layer Performance Comparison
+
+| Aspect | TypeScript + Go | TypeScript + Rust |
+|--------|----------------|-------------------|
+| **API Gateway Latency** | 5-20ms | 5-20ms |
+| **Internal Communication** | gRPC (2-5ms) or HTTP (5-15ms) | gRPC (2-5ms) or HTTP (5-15ms) |
+| **Service-to-Service Throughput** | 50K+ req/sec | 50K+ req/sec |
+| **Total E2E Latency (P95)** | 20-50ms | 15-40ms |
+| **Total E2E Latency (P99)** | 50-100ms | 30-80ms |
+| **API Connection Handling** | 10K+ concurrent | 10K+ concurrent |
+
+**Key Insight**: API layer performance is similar for both approaches because TypeScript handles the thin API gateway layer identically. The backend language primarily affects the processing layer, not the API routing.
+
+### Performance Optimization Strategies
+
+#### TypeScript API Layer (Same for Both)
+
+**1. Keep the Gateway Thin**
+```typescript
+// API Gateway handles only routing and orchestration
+app.post('/api/events', async (req, res) => {
+  // 1. Auth (5ms)
+  const user = await authenticate(req);
+  
+  // 2. Validation (1ms)
+  const events = validateEventBatch(req.body);
+  
+  // 3. Forward to backend (2-5ms gRPC)
+  const result = await eventProcessingService.processBatch(events);
+  
+  // 4. Return response (1ms)
+  res.json(result);
+});
+
+// Total API latency: 9-12ms + backend processing time
+```
+
+**2. Connection Pooling & Caching**
+```typescript
+// Reuse connections to backend services
+const goServiceClient = new GrpcClient({
+  poolSize: 50,
+  keepAlive: true,
+  timeout: 5000
+});
+
+// Cache frequently accessed data
+const cache = new RedisCache({
+  ttl: 300, // 5 minutes
+  maxKeys: 10000
+});
+```
+
+**3. Async Request Handling**
+```typescript
+// Non-blocking I/O for high concurrency
+app.post('/api/events/bulk', async (req, res) => {
+  // Return immediately, process async
+  const taskId = await queueBulkOperation(req.body);
+  res.json({ taskId, status: 'processing' });
+  
+  // Backend processes asynchronously
+  processInBackground(taskId);
+});
+```
+
+#### Go Backend Optimizations
+
+**Fast Service Communication:**
+```go
+// gRPC server in Go - highly efficient
+func (s *EventService) ProcessBatch(ctx context.Context, req *pb.BatchRequest) (*pb.BatchResponse, error) {
+    // Parallel processing with goroutines
+    results := make(chan *pb.EventResult, len(req.Events))
+    
+    for _, event := range req.Events {
+        go func(e *pb.Event) {
+            results <- s.processEvent(e)
+        }(event)
+    }
+    
+    // Collect results (completes in ~2-5ms for batch of 1000)
+    return collectResults(results, len(req.Events))
+}
+```
+
+**Benefits:**
+- Simple concurrency with goroutines
+- Fast gRPC implementation
+- Efficient memory usage
+- Quick iteration on backend logic
+
+#### Rust Backend Optimizations
+
+**Ultra-High-Performance Processing:**
+```rust
+// Rust service with zero-copy optimization
+pub async fn process_batch(batch: BatchRequest) -> Result<BatchResponse> {
+    // Zero-copy deserialization where possible
+    let events: Vec<Event> = batch.events
+        .into_iter()
+        .map(|e| parse_event_zerocopy(e))
+        .collect();
+    
+    // Parallel processing with tokio
+    let results = stream::iter(events)
+        .map(|event| async move { process_event(event).await })
+        .buffer_unordered(100) // Process 100 concurrent
+        .collect::<Vec<_>>()
+        .await;
+    
+    // Completes in ~1-3ms for batch of 1000
+    Ok(BatchResponse { results })
+}
+```
+
+**Benefits:**
+- Maximum single-threaded performance
+- No GC pauses (predictable latency)
+- Smallest memory footprint
+- Best for CPU-intensive operations
+
+### Communication Protocol Comparison
+
+| Protocol | TS+Go Latency | TS+Rust Latency | Throughput | Use Case |
+|----------|--------------|-----------------|------------|----------|
+| **gRPC** | 2-5ms | 2-5ms | 50K+ req/sec | Internal services (recommended) |
+| **HTTP/JSON** | 5-15ms | 5-15ms | 20K+ req/sec | External APIs, debugging |
+| **MessageQueue** | 10-50ms | 10-50ms | 100K+ msg/sec | Async operations, buffering |
+| **WebSocket** | 1-5ms | 1-5ms | 10K+ connections | Real-time streaming |
+
+**Recommendation**: Use gRPC for internal TS↔Go/Rust communication:
+- Type-safe with protobuf definitions
+- 2-5x faster than REST
+- Native streaming support
+- Works well with both Go and Rust
+
+### Development Velocity & Iteration Speed
+
+| Aspect | TypeScript + Go | TypeScript + Rust |
+|--------|----------------|-------------------|
+| **Initial Backend Setup** | 2-3 weeks | 4-6 weeks |
+| **Feature Addition** | Fast (Go is simple) | Slow (Rust is complex) |
+| **Bug Fixes** | Fast | Slower (borrow checker) |
+| **Refactoring** | Fast | Slower but safer |
+| **API Changes** | Easy (both languages) | Easy (both languages) |
+| **Team Onboarding** | 1-2 weeks | 4-8 weeks |
+
+**Key Difference**: Go's simplicity makes iteration faster, while Rust's complexity slows development but catches more bugs at compile time.
+
+### Operational Considerations
+
+#### TypeScript + Go
+
+**Deployment:**
+```yaml
+# Docker deployment - simple
+services:
+  api-gateway:
+    image: node:20-alpine
+    command: node dist/server.js
+    
+  event-processor:
+    image: golang:1.22-alpine
+    command: ./event-processor
+    # Single binary, no dependencies
+```
+
+**Monitoring:**
+```go
+// Go has excellent built-in profiling
+import _ "net/http/pprof"
+
+// Enable profiling endpoint
+go func() {
+    http.ListenAndServe("localhost:6060", nil)
+}()
+
+// Access at http://localhost:6060/debug/pprof/
+```
+
+**Benefits:**
+- ✅ Fast build times (Go compiles in seconds)
+- ✅ Small container images (~20-50MB)
+- ✅ Easy debugging with pprof
+- ✅ Straightforward deployment
+
+#### TypeScript + Rust
+
+**Deployment:**
+```yaml
+# Docker deployment - requires more setup
+services:
+  api-gateway:
+    image: node:20-alpine
+    command: node dist/server.js
+    
+  event-processor:
+    image: rust:1.75-alpine
+    command: ./event-processor
+    # Single binary, smallest size (~5-15MB)
+```
+
+**Monitoring:**
+```rust
+// Rust requires external profiling tools
+use tracing_subscriber;
+
+// Set up structured logging
+tracing_subscriber::fmt()
+    .with_max_level(tracing::Level::INFO)
+    .init();
+
+// Use external tools like perf, valgrind, or dtrace
+```
+
+**Benefits:**
+- ✅ Smallest binary size (5-15MB)
+- ✅ Maximum performance
+- ✅ No runtime dependencies
+- ⚠️ Slower build times (minutes)
+- ⚠️ More complex debugging
+
+### Resource Usage at Scale
+
+**Scenario: 50,000 events/sec sustained load**
+
+| Metric | TypeScript + Go | TypeScript + Rust |
+|--------|----------------|-------------------|
+| **API Gateway** | 2 instances × 150MB = 300MB | 2 instances × 150MB = 300MB |
+| **Backend Services** | 2 instances × 100MB = 200MB | 1 instance × 50MB = 50MB |
+| **Total Memory** | ~500MB | ~350MB |
+| **CPU Usage** | ~2-3 cores | ~1-2 cores |
+| **Monthly Cost** | ~$500 | ~$425 |
+
+**Savings**: Rust saves ~$75/month (~15%) in infrastructure costs, but this is marginal compared to development costs.
+
+### When to Choose Each Approach
+
+#### Choose TypeScript + Go When:
+
+1. **Development velocity is priority**
+   - Need to ship features quickly
+   - Team doesn't have Rust expertise
+   - Requirements change frequently
+
+2. **Moderate to high performance needed**
+   - 10K-100K events/sec is sufficient
+   - API latency < 50ms is acceptable
+
+3. **Team considerations**
+   - Easier to hire Go developers
+   - Faster onboarding for new team members
+   - Simpler codebase to maintain
+
+4. **Operational simplicity**
+   - Fast builds and deployments
+   - Easy debugging and profiling
+   - Lower operational complexity
+
+**Example Use Cases:**
+- Standard observability platform (most customers)
+- SaaS product with reasonable scale
+- Internal tools with high development iteration
+
+#### Choose TypeScript + Rust When:
+
+1. **Maximum performance required**
+   - Need 100K+ events/sec per instance
+   - Sub-10ms latency critical
+   - Running on resource-constrained environments
+
+2. **Distributed local collectors**
+   - Binary runs on user machines
+   - Minimal footprint essential (~5-10MB)
+   - Cross-platform distribution needed
+
+3. **Stable, performance-critical components**
+   - Core processing logic is well-defined
+   - Infrequent changes expected
+   - Correctness and safety paramount
+
+4. **Team has Rust expertise**
+   - Team already knows Rust well
+   - Can handle 2-3x longer development time
+   - Values compile-time safety guarantees
+
+**Example Use Cases:**
+- Edge collectors on developer machines
+- Ultra-high-performance event ingestion
+- CPU-intensive analytics workloads
+- When competing on performance benchmarks
+
+### Hybrid Approach: Best of Both
+
+**Recommendation for Maximum Flexibility:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              TypeScript Layer (All Scenarios)               │
+│  • Web UI, MCP Server, API Gateway                          │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+    ┌─────────────┴──────────────┐
+    │                            │
+┌───▼────────────────┐   ┌──────▼─────────────────┐
+│   Go Services      │   │  Rust Services         │
+│  • Event processor │   │  • Local collector     │
+│  • API backend     │   │  • CPU-intensive       │
+│  • Analytics       │   │    analytics           │
+│  • Streaming       │   │  • Pattern detection   │
+└────────────────────┘   └────────────────────────┘
+```
+
+**Strategy:**
+1. **Start with TypeScript + Go** (Months 1-6)
+   - Build full platform in TS+Go
+   - Achieve 50K+ events/sec easily
+   - Fast iteration and feature development
+
+2. **Add Rust selectively** (Month 6+)
+   - Extract ultra-hot paths to Rust
+   - Build local collector in Rust
+   - Keep Go services for backend APIs
+
+3. **Maintain flexibility**
+   - Use gRPC for service communication
+   - Services are independent and swappable
+   - Can migrate specific components as needed
+
+### Decision Matrix Summary
+
+| Criterion | TS + Go | TS + Rust | Winner |
+|-----------|---------|-----------|--------|
+| **API Layer Performance** | Excellent | Excellent | Tie |
+| **Backend Performance** | Very Good (50-120K e/s) | Excellent (100-200K e/s) | Rust |
+| **Development Speed** | Fast | Slow | Go |
+| **Time to Market** | 3-4 months | 5-7 months | Go |
+| **Resource Efficiency** | Good | Excellent | Rust |
+| **Operational Simplicity** | Simple | Moderate | Go |
+| **Team Scalability** | Easy to hire | Hard to hire | Go |
+| **Maintenance Burden** | Low | Moderate | Go |
+| **Total Cost (6 months)** | $335K | $390K | Go |
+| **Infrastructure Cost** | $500/month | $425/month | Rust |
+
+### Final Recommendation
+
+**For AI Agent Observability System:**
+
+**Phase 1-3 (Months 1-12): TypeScript + Go**
+- Build entire platform with TS+Go
+- Achieve all performance targets (50K+ events/sec)
+- Fast iteration and feature development
+- Validate product-market fit
+
+**Phase 4+ (Year 2): Add Rust Selectively** (Optional)
+- Build Rust local collector if distributing to user machines
+- Extract specific ultra-hot paths if needed
+- Keep Go for maintainability of main backend
+
+**Rationale:**
+- Go gets you 90% of Rust's performance at 50% of the development cost
+- API layer performance is identical (TypeScript gateway in both)
+- Faster time to market with Go
+- Can always add Rust later for specific components
+- Most observability platforms succeed with Go (Datadog, Grafana, etc.)
+
+The **TypeScript + Go** architecture is the optimal choice for this project, with the option to introduce Rust for specific performance-critical components later if needed.
+
+---
+
 **Document Version**: 1.0  
 **Last Updated**: 2025-01-20  
 **Author**: AI Agent Performance Analysis Team  
