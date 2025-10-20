@@ -4,6 +4,11 @@
 
 This quick reference provides a high-level summary of the AI Agent Observability features being added to the devlog project. For detailed information, see the [full design document](./ai-agent-observability-design.md).
 
+**Architecture**: TypeScript + Go Hybrid
+- **TypeScript**: Web UI, MCP Server, API Gateway, Business Logic
+- **Go**: Client collector (~10-20MB binary), Event processing (50-120K events/sec), Streaming, Analytics
+- See [Performance Analysis](./ai-agent-observability-performance-analysis.md) for rationale
+
 ## Core Concepts
 
 ### What is AI Agent Observability?

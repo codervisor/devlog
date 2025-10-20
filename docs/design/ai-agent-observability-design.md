@@ -56,37 +56,58 @@ AI coding agents are becoming ubiquitous in software development, but organizati
 
 ## Architecture Overview
 
+**Architecture Decision**: **TypeScript + Go Hybrid** (finalized based on [performance analysis](./ai-agent-observability-performance-analysis.md))
+
+**Rationale**:
+- **TypeScript**: Fast MVP development, MCP ecosystem, web UI (2 months to market)
+- **Go**: High-performance backend services (50-120K events/sec), efficient resource usage
+- **Benefits**: Best of both worlds - rapid iteration + production scalability
+- **Cost**: $335K (6 months) vs $278K (TS-only) - delivers 5-10x better performance
+
 ### High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     AI Coding Agents                            │
-│  (Copilot, Claude, Cursor, Gemini, Cline, Aider, etc.)        │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         │ MCP Protocol / Agent SDKs
-                         │
-┌────────────────────────▼────────────────────────────────────────┐
-│              Agent Activity Collection Layer                     │
-│  • Event capture • Log aggregation • Real-time streaming       │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
+│                Developer Machine (Client)                        │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ AI Coding Agents (Copilot, Claude, Cursor, etc.)          │ │
+│  └────────────────────┬───────────────────────────────────────┘ │
+│                       │ Logs                                     │
+│  ┌────────────────────▼───────────────────────────────────────┐ │
+│  │ Go Collector (~10-20MB binary)                             │ │
+│  │  • Log watcher • Event parser • Local buffer (SQLite)     │ │
+│  │  • Batching (100 events/5s) • Offline support             │ │
+│  └────────────────────┬───────────────────────────────────────┘ │
+└───────────────────────┼─────────────────────────────────────────┘
+                        │ HTTP/gRPC
+                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                 Processing & Analysis Engine                     │
-│  • Event parsing • Metric calculation • Pattern detection       │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Storage & Indexing                            │
-│  • Time-series events • Metrics aggregation • Full-text search │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│               Visualization & Analytics Layer                    │
-│  • Dashboards • Timeline views • Reports • Alerts              │
+│                TypeScript API Gateway Layer                      │
+│  • Next.js API routes • MCP Server • Auth & session mgmt       │
+│  • API orchestration (thin layer: 5-20ms latency)              │
+└────────────┬───────────────────────────┬────────────────────────┘
+             │ gRPC/REST                 │ gRPC/REST
+┌────────────▼────────────┐   ┌──────────▼──────────────────────┐
+│  Go Event Processor     │   │  TypeScript Services            │
+│  • 50-120K events/sec   │   │  • User management              │
+│  • Adapter registry     │   │  • Project management           │
+│  • Transformation       │   │  • Devlog CRUD                  │
+│  • Batching & buffering │   │  • Business logic               │
+└────────────┬────────────┘   └──────────┬──────────────────────┘
+             │                           │
+┌────────────▼───────────────────────────▼────────────────────────┐
+│  Go Real-time Stream Engine                                     │
+│  • WebSocket server • Event broadcasting • Session monitoring   │
+└────────────┬────────────────────────────────────────────────────┘
+             │
+┌────────────▼────────────────────────────────────────────────────┐
+│  Go Analytics Engine                                            │
+│  • Metrics aggregation • Pattern detection • Quality analysis  │
+└────────────┬────────────────────────────────────────────────────┘
+             │
+┌────────────▼────────────────────────────────────────────────────┐
+│              PostgreSQL + TimescaleDB                           │
+│  • agent_events (hypertable) • agent_sessions • Aggregations   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -94,26 +115,56 @@ AI coding agents are becoming ubiquitous in software development, but organizati
 
 ```
 packages/
-├── core/                          # Enhanced core with agent observability
+├── collector-go/                  # NEW: Go client-side collector
+│   ├── cmd/collector/            # Main collector binary
+│   ├── internal/
+│   │   ├── adapters/             # Agent-specific log parsers
+│   │   ├── buffer/               # SQLite offline buffer
+│   │   ├── config/               # Configuration management
+│   │   └── watcher/              # File system watcher
+│   └── pkg/client/               # Backend HTTP/gRPC client
+│
+├── services-go/                   # NEW: Go backend services
+│   ├── event-processor/          # Event processing service (50-120K/sec)
+│   ├── stream-engine/            # Real-time WebSocket streaming
+│   ├── analytics-engine/         # Metrics aggregation & pattern detection
+│   └── shared/                   # Shared Go libraries & utilities
+│
+├── core/                          # Enhanced core with agent observability (TypeScript)
 │   ├── agent-events/              # NEW: Agent event types and schemas
 │   ├── agent-collection/          # NEW: Event collection and ingestion
 │   ├── agent-analytics/           # NEW: Metrics and analysis engine
 │   └── services/                  # Existing services + new agent services
 │
-├── mcp/                           # MCP server with observability tools
+├── mcp/                           # MCP server with observability tools (TypeScript)
 │   ├── tools/                     # Existing + new agent monitoring tools
-│   └── collectors/                # NEW: Event collectors for different agents
+│   └── collectors/                # NEW: Collector control tools
 │
-├── ai/                            # AI analysis for agent behavior
+├── ai/                            # AI analysis for agent behavior (TypeScript)
 │   ├── pattern-detection/         # NEW: Identify patterns in agent behavior
 │   ├── quality-analysis/          # NEW: Code quality assessment
 │   └── recommendation-engine/     # NEW: Suggest improvements
 │
-└── web/                           # Enhanced UI for observability
+└── web/                           # Enhanced UI for observability (TypeScript/Next.js)
     ├── dashboards/                # NEW: Agent activity dashboards
     ├── timelines/                 # NEW: Visual agent action timelines
     ├── analytics/                 # NEW: Performance and quality analytics
     └── reports/                   # NEW: Custom reporting interface
+```
+
+### Technology Stack Summary
+
+| Component | Language | Rationale |
+|-----------|----------|-----------|
+| **Client Collector** | Go | Small binary (~10-20MB), cross-platform, efficient |
+| **Event Processing** | Go | High throughput (50-120K events/sec), low latency |
+| **Real-time Streaming** | Go | Efficient WebSocket handling, 50K+ connections |
+| **Analytics Engine** | Go | Fast aggregations, pattern detection performance |
+| **API Gateway** | TypeScript | MCP integration, rapid development, Next.js |
+| **Business Logic** | TypeScript | Fast iteration, existing codebase integration |
+| **Web UI** | TypeScript/Next.js | React ecosystem, server components |
+| **Database** | PostgreSQL + TimescaleDB | Time-series optimization, mature ecosystem |
+
 ```
 
 ## Core Features
