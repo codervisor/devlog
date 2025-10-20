@@ -73,7 +73,11 @@ AI Agent Observability provides complete visibility into AI coding agent activit
 ┌─────────────────────┐
 │   AI Agents         │ (Copilot, Claude, Cursor, etc.)
 └──────────┬──────────┘
-           │ MCP / SDKs
+           │ Different log formats
+┌──────────▼──────────┐
+│  Agent Adapters     │ (Normalize to standard schema)
+└──────────┬──────────┘
+           │ Standard events
 ┌──────────▼──────────┐
 │  Event Collection   │ (Real-time capture)
 └──────────┬──────────┘
@@ -90,6 +94,24 @@ AI Agent Observability provides complete visibility into AI coding agent activit
 │ Web UI & Dashboards │ (React, Next.js)
 └─────────────────────┘
 ```
+
+## Handling Different Agent Log Formats
+
+**Challenge**: Each AI tool has its own log format  
+**Solution**: Agent Adapter Pattern
+
+Each agent gets a dedicated adapter that translates its native log format into our standardized event schema:
+
+- **Copilot Adapter**: Handles GitHub Copilot's JSON logs
+- **Claude Adapter**: Handles Claude Code's event format
+- **Cursor Adapter**: Handles Cursor's log structure
+- **Generic Adapter**: Fallback for unknown formats
+
+Benefits:
+- Easy to add new agents
+- Isolated, maintainable code
+- Version handling per agent
+- Community contributions welcome
 
 ## Event Types
 

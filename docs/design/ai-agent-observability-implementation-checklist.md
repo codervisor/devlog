@@ -95,12 +95,29 @@ This document provides a detailed, actionable checklist for implementing the AI 
   - [ ] Write tool documentation
   - [ ] Add integration tests
 
-- [ ] **Event Collector for GitHub Copilot**
-  - [ ] Create `packages/mcp/src/collectors/copilot-collector.ts`
-  - [ ] Implement log file monitoring
-  - [ ] Implement event parsing
-  - [ ] Map Copilot events to standard schema
-  - [ ] Test with real Copilot sessions
+- [ ] **Agent Adapter Pattern Infrastructure**
+  - [ ] Create `packages/core/src/adapters/agent-adapter.ts` (base interface)
+  - [ ] Create `packages/core/src/adapters/adapter-registry.ts`
+  - [ ] Implement adapter detection logic
+  - [ ] Add adapter testing utilities
+  - [ ] Write adapter development guide
+
+- [ ] **GitHub Copilot Adapter**
+  - [ ] Create `packages/core/src/adapters/copilot-adapter.ts`
+  - [ ] Study Copilot log format (JSON structure, fields)
+  - [ ] Implement `parseEvent()` with Copilot-specific parsing
+  - [ ] Implement `canHandle()` for Copilot log detection
+  - [ ] Map Copilot actions to standard event types
+  - [ ] Write unit tests with real Copilot log samples
+  - [ ] Test with live Copilot sessions
+
+- [ ] **Claude Code Adapter**
+  - [ ] Create `packages/core/src/adapters/claude-adapter.ts`
+  - [ ] Study Claude Code log format
+  - [ ] Implement parsing for Claude-specific fields
+  - [ ] Map Claude event types to standard schema
+  - [ ] Write unit tests with Claude log samples
+  - [ ] Test with live Claude Code sessions
 
 - [ ] **Basic Event Viewer UI**
   - [ ] Create `apps/web/src/app/projects/[name]/agent-events/page.tsx`
@@ -316,6 +333,13 @@ This document provides a detailed, actionable checklist for implementing the AI 
 
 ### Week 12: Comparative Analysis & Reporting
 
+- [ ] **Additional Agent Adapters**
+  - [ ] Create Cursor adapter (`packages/core/src/adapters/cursor-adapter.ts`)
+  - [ ] Create Gemini CLI adapter (`packages/core/src/adapters/gemini-adapter.ts`)
+  - [ ] Create Cline adapter (`packages/core/src/adapters/cline-adapter.ts`)
+  - [ ] Add adapter version detection
+  - [ ] Update adapter registry with new adapters
+
 - [ ] **Agent Comparison**
   - [ ] Create `AgentComparison` component
   - [ ] Compare performance metrics
@@ -522,12 +546,17 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Elastic auto-scaling
 - [ ] Cold storage archival
 
-### Additional Agents
-- [ ] Windsurf integration
-- [ ] Continue.dev integration
-- [ ] Tabnine integration
-- [ ] Cody integration
-- [ ] Amazon Q integration
+### Additional Agents & Adapters
+- [ ] Aider adapter
+- [ ] Windsurf adapter
+- [ ] Continue.dev adapter
+- [ ] Tabnine adapter
+- [ ] Cody adapter
+- [ ] Amazon Q adapter
+- [ ] Generic log format adapter (for unknown agents)
+- [ ] Adapter versioning system (handle format changes)
+- [ ] Community adapter contribution guidelines
+- [ ] Adapter marketplace/registry
 
 ## Testing Checklist
 

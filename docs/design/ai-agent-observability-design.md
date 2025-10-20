@@ -213,6 +213,202 @@ class AgentEventCollectionService {
 }
 ```
 
+#### Handling Different Agent Log Formats
+
+**Challenge**: Each AI coding tool (GitHub Copilot, Cursor, Claude Code, etc.) produces logs in different formats with varying structures, fields, and semantics.
+
+**Solution: Agent Adapter Pattern**
+
+We implement a pluggable adapter pattern where each AI agent has a dedicated adapter that translates its native log format into our standardized `AgentEvent` schema:
+
+```typescript
+// Base adapter interface
+interface AgentAdapter {
+  agentId: string;
+  agentVersion: string;
+  
+  // Parse raw log entry to standard event
+  parseEvent(rawLog: any): AgentEvent | null;
+  
+  // Validate if this adapter can handle the log
+  canHandle(rawLog: any): boolean;
+  
+  // Extract session information
+  extractSessionInfo(rawLogs: any[]): SessionInfo;
+}
+
+// Example: GitHub Copilot Adapter
+class CopilotAdapter implements AgentAdapter {
+  agentId = 'github-copilot';
+  agentVersion = '1.x';
+  
+  parseEvent(rawLog: CopilotLogEntry): AgentEvent | null {
+    // Copilot-specific log format:
+    // { timestamp, action, file, completion, metadata }
+    
+    return {
+      id: generateEventId(rawLog),
+      timestamp: rawLog.timestamp,
+      type: this.mapActionToEventType(rawLog.action),
+      agentId: this.agentId,
+      agentVersion: this.agentVersion,
+      sessionId: this.extractSessionId(rawLog),
+      projectId: this.extractProjectId(rawLog),
+      context: {
+        filePath: rawLog.file,
+        workingDirectory: rawLog.metadata?.cwd,
+      },
+      data: {
+        completion: rawLog.completion,
+        accepted: rawLog.metadata?.accepted,
+      },
+      metrics: {
+        tokenCount: rawLog.metadata?.tokens,
+      },
+    };
+  }
+  
+  canHandle(rawLog: any): boolean {
+    return rawLog.source === 'copilot' || 
+           rawLog.agent === 'github-copilot';
+  }
+  
+  private mapActionToEventType(action: string): AgentEventType {
+    const mapping = {
+      'completion': 'llm_response',
+      'file_edit': 'file_write',
+      'command': 'command_execute',
+      // ... more mappings
+    };
+    return mapping[action] || 'user_interaction';
+  }
+}
+
+// Example: Claude Code Adapter
+class ClaudeAdapter implements AgentAdapter {
+  agentId = 'claude-code';
+  agentVersion = '1.x';
+  
+  parseEvent(rawLog: ClaudeLogEntry): AgentEvent | null {
+    // Claude-specific log format:
+    // { time, event_type, tool_use, content, metadata }
+    
+    return {
+      id: generateEventId(rawLog),
+      timestamp: rawLog.time,
+      type: this.mapEventType(rawLog.event_type),
+      agentId: this.agentId,
+      agentVersion: this.agentVersion,
+      sessionId: this.extractSessionId(rawLog),
+      projectId: this.extractProjectId(rawLog),
+      context: {
+        filePath: rawLog.tool_use?.path,
+        workingDirectory: rawLog.metadata?.working_dir,
+      },
+      data: {
+        toolName: rawLog.tool_use?.tool_name,
+        content: rawLog.content,
+      },
+      metrics: {
+        tokenCount: rawLog.metadata?.input_tokens + rawLog.metadata?.output_tokens,
+      },
+    };
+  }
+  
+  canHandle(rawLog: any): boolean {
+    return rawLog.provider === 'anthropic' || 
+           rawLog.model?.includes('claude');
+  }
+  
+  private mapEventType(eventType: string): AgentEventType {
+    const mapping = {
+      'tool_use': 'tool_invocation',
+      'text_generation': 'llm_response',
+      'file_operation': 'file_write',
+      // ... more mappings
+    };
+    return mapping[eventType] || 'user_interaction';
+  }
+}
+
+// Adapter Registry
+class AgentAdapterRegistry {
+  private adapters: Map<string, AgentAdapter> = new Map();
+  
+  register(adapter: AgentAdapter): void {
+    this.adapters.set(adapter.agentId, adapter);
+  }
+  
+  getAdapter(agentId: string): AgentAdapter | null {
+    return this.adapters.get(agentId) || null;
+  }
+  
+  detectAdapter(rawLog: any): AgentAdapter | null {
+    for (const adapter of this.adapters.values()) {
+      if (adapter.canHandle(rawLog)) {
+        return adapter;
+      }
+    }
+    return null;
+  }
+}
+
+// Usage in collection service
+class AgentEventCollectionService {
+  private adapterRegistry: AgentAdapterRegistry;
+  
+  async collectRawLog(rawLog: any): Promise<void> {
+    // Auto-detect which adapter to use
+    const adapter = this.adapterRegistry.detectAdapter(rawLog);
+    
+    if (!adapter) {
+      console.warn('No adapter found for log:', rawLog);
+      return;
+    }
+    
+    // Parse to standard format
+    const event = adapter.parseEvent(rawLog);
+    
+    if (event) {
+      await this.collectEvent(event);
+    }
+  }
+}
+```
+
+**Adapter Implementation Strategy**:
+
+1. **Phase 1 Adapters** (Weeks 1-4):
+   - GitHub Copilot adapter
+   - Claude Code adapter
+   - Generic MCP adapter (fallback)
+
+2. **Phase 2 Adapters** (Weeks 5-8):
+   - Cursor adapter
+   - Gemini CLI adapter
+   - Cline adapter
+
+3. **Phase 3+ Adapters**:
+   - Aider adapter
+   - Community-contributed adapters
+   - Custom enterprise adapters
+
+**Benefits of Adapter Pattern**:
+- **Extensibility**: Easy to add new agents without changing core code
+- **Maintainability**: Each adapter is isolated and can evolve independently
+- **Testability**: Adapters can be unit tested with sample logs
+- **Flexibility**: Adapters can handle version differences and format variations
+- **Community**: Open for community contributions of new adapters
+
+**Adapter Development Guide**:
+Each adapter implementation should:
+1. Study the agent's log format (JSON, plain text, structured logs)
+2. Identify key fields and their semantics
+3. Map agent-specific event types to standard `AgentEventType`
+4. Handle missing or optional fields gracefully
+5. Preserve agent-specific metadata in the `data` field
+6. Include comprehensive unit tests with real log samples
+
 #### 1.2 Agent Session Management
 **Objective**: Track complete agent working sessions with full context
 

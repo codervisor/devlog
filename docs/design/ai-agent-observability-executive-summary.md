@@ -98,6 +98,7 @@ Value: Meet regulatory requirements, reduce risk
 
 ### Collection Layer
 - Universal event schema for all AI agents
+- **Agent Adapter Pattern**: Pluggable adapters normalize different log formats
 - Real-time event capture (>10k events/sec)
 - Multiple collection methods (MCP, logs, APIs)
 - Automatic context enrichment
