@@ -64,6 +64,25 @@ The core feature set transforming devlog into an AI coding agent observability p
 
 ---
 
+### 🚀 [Performance Analysis](./ai-agent-observability-performance-analysis.md) ⭐ NEW
+**Purpose**: Comprehensive performance evaluation and language alternatives  
+**Audience**: Architects, technical leads, decision makers  
+**Content**:
+- Performance requirements analysis (10K+ events/sec)
+- TypeScript/Node.js evaluation (strengths & weaknesses)
+- Alternative language deep-dives (Go, C#, Rust)
+- Detailed benchmarks and comparisons
+- Architecture recommendations (Hybrid TypeScript + Go)
+- Migration strategies and implementation roadmap
+- Cost analysis (infrastructure + development)
+- Decision matrix and risk mitigation
+
+**Read this if**: You're evaluating technology choices or planning for scale
+
+**Quick Summary**: [Performance Summary](./ai-agent-observability-performance-summary.md) (TL;DR version)
+
+---
+
 ## Other Design Documents
 
 ### [AI Evaluation System Design](./ai-evaluation-system-design.md)
@@ -85,6 +104,8 @@ UI/UX design system and component specifications.
 | Full Design | ✅ Complete | 2025-01-15 | 100% |
 | Quick Reference | ✅ Complete | 2025-01-15 | 100% |
 | Implementation Checklist | ✅ Complete | 2025-01-15 | 100% |
+| **Performance Analysis** | ✅ **Complete** | **2025-01-20** | **100%** |
+| **Performance Summary** | ✅ **Complete** | **2025-01-20** | **100%** |
 | AI Evaluation Design | ✅ Complete | Earlier | 100% |
 | Visual Design System | ✅ Complete | Earlier | 100% |
 
@@ -92,8 +113,15 @@ UI/UX design system and component specifications.
 
 ### For Decision Makers
 1. Start with [Executive Summary](./ai-agent-observability-executive-summary.md)
-2. Review specific sections of interest in [Full Design](./ai-agent-observability-design.md)
-3. Check [Implementation Checklist](./ai-agent-observability-implementation-checklist.md) for timeline
+2. Review [Performance Summary](./ai-agent-observability-performance-summary.md) for technology choices
+3. Review specific sections of interest in [Full Design](./ai-agent-observability-design.md)
+4. Check [Implementation Checklist](./ai-agent-observability-implementation-checklist.md) for timeline
+
+### For Architects & Technical Leads
+1. Read [Performance Analysis](./ai-agent-observability-performance-analysis.md) for comprehensive evaluation
+2. Review [Full Design](./ai-agent-observability-design.md) for technical architecture
+3. Use [Performance Summary](./ai-agent-observability-performance-summary.md) for quick reference
+4. Plan implementation with [Implementation Checklist](./ai-agent-observability-implementation-checklist.md)
 
 ### For Product Managers
 1. Read [Full Design](./ai-agent-observability-design.md) for complete feature specifications
@@ -140,4 +168,4 @@ UI/UX design system and component specifications.
 ---
 
 **Maintained by**: DevLog Core Team  
-**Last Updated**: 2025-01-15
+**Last Updated**: 2025-01-20
