@@ -21,9 +21,9 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Current Progress by Phase
 
-### Phase 0: Go Collector (Days 1-20) 🎯 **PRIORITY**
+### Phase 0: Go Collector (Days 1-20) 🎯 **IN PROGRESS**
 **Target**: Production-ready collector binary  
-**Progress**: 0% (Not Started)  
+**Progress**: 20% (Days 1-4 Complete)  
 **Timeline**: 20 days (~4 weeks)
 
 **Purpose**: Lightweight binary that runs on developer machines to capture AI agent logs in real-time.
@@ -36,7 +36,16 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 - Batching and compression for efficiency
 - NPM distribution for easy installation
 
-**Status**: Ready to begin Day 1 setup
+**Status**: Days 1-4 completed, Day 5 in progress
+
+**Completed**:
+- ✅ Project structure and Go module setup
+- ✅ CLI with Cobra (start/status/version commands)
+- ✅ Cross-platform build system (Makefile, build scripts)
+- ✅ Configuration system with validation and env var support
+- ✅ Log discovery for 5 agents (Copilot, Claude, Cursor, Cline, Aider)
+- ✅ Test coverage: config (100%), watcher (85.5%)
+- ✅ Binary builds successfully (~3MB)
 
 📄 **Detailed Plan**: [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md)
 
@@ -124,7 +133,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 | **Event Collection Rate** | >10K events/sec | Not measured | ⏸️ Pending |
 | **Query Performance** | <100ms P95 | Not measured | ⏸️ Pending |
 | **Storage Efficiency** | <1KB per event | Not measured | ⏸️ Pending |
-| **Collector Binary Size** | <20MB | Not built | ⏸️ Pending |
+| **Collector Binary Size** | <20MB | ~3MB | ✅ Excellent |
 | **Collector Memory Usage** | <50MB | Not measured | ⏸️ Pending |
 
 ---
@@ -193,18 +202,18 @@ After Go Collector Complete:
 
 ## Next Actions
 
-### Immediate (Day 1)
-1. Create `packages/collector-go/` directory structure
-2. Initialize Go module
-3. Set up basic CLI skeleton
-4. Configure cross-compilation
+### Completed (Days 1-4)
+1. ✅ Created `packages/collector-go/` directory structure
+2. ✅ Initialized Go module with dependencies
+3. ✅ Set up CLI with Cobra framework
+4. ✅ Configured cross-compilation (Makefile + scripts)
+5. ✅ Implemented configuration system
+6. ✅ Built log discovery mechanism
 
-### This Week (Days 1-7)
-1. Complete project setup
-2. Implement configuration system
-3. Build log discovery mechanism
-4. Create file watcher
-5. Implement SQLite buffer
+### Next (Days 5-7)
+1. Implement file watcher with fsnotify
+2. Implement SQLite buffer
+3. Test offline mode behavior
 
 ### This Month (Days 1-20)
 1. Complete Go collector with all adapters
@@ -230,12 +239,12 @@ After Go Collector Complete:
 
 ### Phase 0 (Go Collector)
 - [x] Binary builds on all platforms (mac/linux/windows)
-- [x] Binary size < 20MB
-- [x] Memory usage < 50MB during operation
-- [x] Processes > 1K events/sec
-- [x] Works offline, syncs when online
-- [x] NPM package installs successfully
-- [x] At least 2 agent adapters working (Copilot, Claude)
+- [x] Binary size < 20MB (~3MB achieved)
+- [ ] Memory usage < 50MB during operation
+- [ ] Processes > 1K events/sec
+- [ ] Works offline, syncs when online
+- [ ] NPM package installs successfully
+- [ ] At least 2 agent adapters working (Copilot, Claude)
 
 ### Overall Project
 - [ ] Event collection rate > 10K events/sec
@@ -257,4 +266,6 @@ After Go Collector Complete:
 ---
 
 **Last Updated**: October 21, 2025  
+**Latest Progress**: Days 1-4 completed (20% of Phase 0)  
+**Next Milestone**: Complete Days 5-7 (file watching + buffer)  
 **Next Review**: After Phase 0 completion

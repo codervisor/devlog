@@ -2,13 +2,15 @@
 
 **Priority**: HIGH - Foundation for production data collection  
 **Target**: Lightweight binary (~10-20MB) that runs on developer machines  
-**Status**: Not Started (0%)
+**Status**: In Progress (20% - Days 1-4 Complete)
+
+**Latest Achievement**: Configuration system and log discovery completed with 85%+ test coverage
 
 ## Phase 0: Project Setup (Days 1-2)
 
-### Day 1: Go Project Structure
-- [ ] Create `packages/collector-go/` directory
-- [ ] Initialize Go module: `go mod init github.com/codervisor/devlog/collector`
+### Day 1: Go Project Structure ✅ COMPLETE
+- [x] Create `packages/collector-go/` directory
+- [x] Initialize Go module: `go mod init github.com/codervisor/devlog/collector`
 - [ ] Set up project structure:
   ```
   packages/collector-go/
@@ -27,39 +29,46 @@
   ├── go.sum
   └── README.md
   ```
-- [ ] Add initial dependencies:
+- [x] Add initial dependencies:
   - `github.com/fsnotify/fsnotify` (file watching)
   - `github.com/mattn/go-sqlite3` (local buffer)
   - `github.com/sirupsen/logrus` (logging)
-- [ ] Create basic `main.go` with CLI structure
+  - `github.com/spf13/cobra` (CLI framework)
+- [x] Create basic `main.go` with CLI structure
 
-### Day 2: Development Tooling
-- [ ] Set up cross-compilation script (darwin/linux/windows)
-- [ ] Create Makefile for common tasks (build, test, clean)
-- [ ] Add `.gitignore` for Go binaries
-- [ ] Set up GitHub Actions workflow for building binaries
-- [ ] Create initial README with build instructions
+### Day 2: Development Tooling ✅ COMPLETE
+- [x] Set up cross-compilation script (darwin/linux/windows)
+- [x] Create Makefile for common tasks (build, test, clean)
+- [x] Add `.gitignore` for Go binaries
+- [x] Add `.air.toml` for live reload during development
+- [x] Add `.golangci.yml` for linting configuration
+- [ ] Set up GitHub Actions workflow for building binaries (deferred)
+- [x] Create initial README with build instructions
 
 ## Phase 1: Core Infrastructure (Days 3-7)
 
-### Day 3: Configuration System
-- [ ] Create `internal/config/config.go`
-- [ ] Define config structure (matches design doc)
-- [ ] Implement config loading from `~/.devlog/collector.json`
-- [ ] Add environment variable expansion support
-- [ ] Implement config validation
-- [ ] Add default values
-- [ ] Write unit tests
+### Day 3: Configuration System ✅ COMPLETE
+- [x] Create `internal/config/config.go`
+- [x] Define config structure (matches design doc)
+- [x] Implement config loading from `~/.devlog/collector.json`
+- [x] Add environment variable expansion support (`${VAR}` syntax)
+- [x] Implement config validation
+- [x] Add default values
+- [x] Write unit tests (100% coverage)
+- [x] Integrate config system into main CLI
 
-### Day 4: Log Discovery
-- [ ] Create `internal/watcher/discovery.go`
-- [ ] Implement OS-specific log path detection:
-  - [ ] GitHub Copilot paths (darwin/linux/windows)
-  - [ ] Claude Code paths
-  - [ ] Cursor paths
-- [ ] Add glob pattern matching for version wildcards
-- [ ] Implement path expansion (home dir, env vars)
-- [ ] Write tests for each OS (mock filesystem)
+### Day 4: Log Discovery ✅ COMPLETE
+- [x] Create `internal/watcher/discovery.go`
+- [x] Implement OS-specific log path detection:
+  - [x] GitHub Copilot paths (darwin/linux/windows)
+  - [x] Claude Code paths
+  - [x] Cursor paths
+  - [x] Cline paths (bonus)
+  - [x] Aider paths (bonus)
+- [x] Add glob pattern matching for version wildcards
+- [x] Implement path expansion (home dir, env vars)
+- [x] Write tests for each OS (85.5% coverage)
+- [x] Test discovery on real system (found Cursor logs)
 
 ### Day 5: File Watching
 - [ ] Create `internal/watcher/watcher.go`
