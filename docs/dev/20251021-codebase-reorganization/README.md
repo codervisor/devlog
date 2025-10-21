@@ -16,6 +16,7 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 |----------|---------|--------|
 | **[REORGANIZATION_PLAN.md](./REORGANIZATION_PLAN.md)** | Comprehensive 4-week reorganization plan | ✅ Complete |
 | **[QUICK_WINS.md](./QUICK_WINS.md)** | Immediate actionable improvements (6-8 hours) | ✅ **IMPLEMENTED** |
+| **[PHASE_2_PLAN.md](./PHASE_2_PLAN.md)** | Detailed Phase 2 implementation plan | 📋 **NEW** - Ready for implementation |
 | **[TERMINOLOGY_REBRAND.md](./TERMINOLOGY_REBRAND.md)** | WorkItem terminology migration guide | ✅ Complete |
 
 ## 🎯 Goals
@@ -65,10 +66,16 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 
 ### Phase 2: Code Structure (Week 2) - **Next Phase**
 - Create `agent-observability/` and `project-management/` folders in core (✅ structure created)
-- Move actual service files to new folder structure
+- Move actual service files to new folder structure - **See [PHASE_2_PLAN.md](./PHASE_2_PLAN.md)**
 - Consolidate service layer (rename devlog-service → work-item-service)
 - ✅ Add `type WorkItem = DevlogEntry` alias for backward compatibility
 - Update import paths and exports
+
+**Phase 2 Planning Complete**: A detailed implementation plan has been created in [PHASE_2_PLAN.md](./PHASE_2_PLAN.md) including:
+- Step-by-step migration strategy
+- Risk assessment and mitigation
+- Validation checklist
+- Backward compatibility approach
 
 ### Phase 3: UI/UX (Week 3)
 - Build agent dashboard as default landing page
