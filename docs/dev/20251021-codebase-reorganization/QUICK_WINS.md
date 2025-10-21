@@ -2,6 +2,51 @@
 
 **Goal**: Start reorganization with high-impact, low-risk changes that immediately improve code clarity.
 
+## 🎯 Priority 0: Terminology Rebrand (30 minutes)
+
+Rename "devlog entry" to "work item" for better clarity and industry alignment.
+
+### Why "Work Item"?
+- ✅ Industry standard (Azure DevOps, GitHub Projects)
+- ✅ Immediately understandable to developers
+- ✅ Versatile - works for features, bugs, tasks, refactors
+- ✅ Aligns with AI observability: "agents help complete work items"
+
+### Quick Implementation
+
+**1. Add Type Alias** (5 minutes)
+
+**File**: `packages/core/src/types/core.ts`
+
+Add at the top:
+```typescript
+/**
+ * Work Item - Industry-standard terminology for trackable work
+ * @deprecated Use WorkItem instead of DevlogEntry in new code
+ */
+export type WorkItem = DevlogEntry;
+```
+
+**2. Update Package Exports** (5 minutes)
+
+**File**: `packages/core/src/types/index.ts`
+
+Add export:
+```typescript
+export type { WorkItem } from './core.js';
+```
+
+**3. Document the Change** (20 minutes)
+
+Add to README files and documentation:
+- "Track **work items** (features, bugs, tasks) alongside agent activities"
+- "Organize **work items** by project"
+- "See which **work items** AI agents are working on"
+
+See [TERMINOLOGY_REBRAND.md](./TERMINOLOGY_REBRAND.md) for detailed migration plan.
+
+---
+
 ## 🎯 Priority 1: Documentation Updates (1-2 hours)
 
 These changes immediately clarify the project vision without breaking any code.
@@ -29,7 +74,8 @@ These changes immediately clarify the project vision without breaking any code.
 mcp_agent_start_session({
   agentId: "github-copilot",
   projectId: 1,
-  objective: "Implement user authentication"
+  objective: "Implement user authentication",
+  workItemId: 123  // Optional: link to work item
 });
 
 // During work - events logged automatically by collector
@@ -44,6 +90,23 @@ mcp_agent_log_event({
 mcp_agent_end_session({
   outcome: "success",
   summary: "Implemented JWT-based auth with tests"
+});
+```
+
+### When Managing Work Items (Optional)
+```
+// Create a work item to organize work
+mcp_work_item_create({
+  title: "Implement user authentication",
+  type: "feature",
+  description: "Add JWT-based authentication system"
+});
+
+// Update progress
+mcp_work_item_update({
+  id: 123,
+  status: "in-progress",
+  note: "Completed login endpoint"
 });
 ```
 ```
@@ -172,9 +235,9 @@ Create `packages/core/src/project-management/index.ts`:
 
 // Re-export from existing locations
 export * from '../services/project-service.js';
-export * from '../services/devlog-service.js';
+export * from '../services/devlog-service.js';  // TODO: rename to work-item-service
 export * from '../types/project.js';
-export * from '../types/devlog.js';
+export * from '../types/core.js';  // Includes WorkItem type alias
 
 // TODO: Move actual files here in next phase
 ```
@@ -247,8 +310,18 @@ export const agentObservabilityTools = [
 
 export const projectManagementTools = [
   {
-    name: 'mcp_devlog_create',
-    description: '[PROJECT MANAGEMENT] Create a new devlog entry for work tracking...',
+    name: 'mcp_work_item_create',
+    description: '[PROJECT MANAGEMENT] Create a new work item (feature, bug, task) for tracking...',
+    // ...
+  },
+  {
+    name: 'mcp_work_item_update',
+    description: '[PROJECT MANAGEMENT] Update a work item with progress, status changes...',
+    // ...
+  },
+  {
+    name: 'mcp_work_item_list',
+    description: '[PROJECT MANAGEMENT] List and search work items with filters...',
     // ...
   },
   // ... more project tools
@@ -284,12 +357,12 @@ PRIMARY FEATURES - Agent Observability:
 • Code quality assessment for AI-generated code
 
 SUPPORTING FEATURES - Project Management:
-• Optional work item tracking (devlog entries)
+• Optional work item tracking (features, bugs, tasks)
 • Project organization and context management
 • Documentation and note-taking
 
 Use agent_* tools for observability features.
-Use devlog_* and project_* tools for project management.
+Use work_item_* and project_* tools for project management.
 `,
   },
   // ...
@@ -318,7 +391,7 @@ Core services and types for the AI Coding Agent Observability Platform.
 
 ### 📊 Project Management (Supporting)
 - **Project Organization**: Organize sessions by project
-- **Work Tracking**: Optional devlog entry system
+- **Work Item Tracking**: Optional system for tracking features, bugs, tasks
 - **Document Management**: Attach files and notes
 
 ## Usage
@@ -343,7 +416,8 @@ await AgentEventService.getInstance().logEvent({
 
 ### Project Management
 ```typescript
-import { ProjectService, DevlogService } from '@codervisor/devlog-core/server';
+import { ProjectService, WorkItem } from '@codervisor/devlog-core/server';
+// Note: WorkItem is an alias for DevlogEntry for backward compatibility
 
 // Manage projects
 const project = await ProjectService.getInstance().create({
@@ -363,6 +437,8 @@ const project = await ProjectService.getInstance().create({
 After completing quick wins:
 
 - [ ] All README files emphasize agent observability as primary feature
+- [ ] "Work item" terminology used instead of "devlog entry"
+- [ ] WorkItem type alias exported from core package
 - [ ] Code comments clearly distinguish primary vs. secondary features  
 - [ ] New folder structure exists (even if files not moved yet)
 - [ ] MCP tools are categorized by feature domain
@@ -382,7 +458,13 @@ After quick wins are complete:
 
 ## 📝 Estimated Time
 
-- **Total**: 6-8 hours of focused work
+- **Total**: 6.5-8.5 hours of focused work
+  - Priority 0 (Terminology): 30 minutes
+  - Priority 1 (Documentation): 2-3 hours
+  - Priority 2 (Code Comments): 1 hour
+  - Priority 3 (File Organization): 2-3 hours
+  - Priority 4 (MCP Tools): 1 hour
+  - Priority 5 (READMEs): 1 hour
 - **Can be done incrementally**: Yes, each priority is independent
 - **Breaking changes**: None
 - **Risk level**: Very low

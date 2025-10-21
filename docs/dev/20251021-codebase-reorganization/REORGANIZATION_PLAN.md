@@ -33,13 +33,20 @@ As we pivot to the AI agent observability value proposition, our codebase needs 
 ### Phase 1: Terminology & Concept Cleanup (Week 1)
 **Goal**: Update documentation and core concepts to reflect AI agent observability focus
 
-#### 1.1 Update Primary Documentation
+#### 1.1 Terminology Rebrand: "Devlog Entry" → "Work Item"
+- [ ] **Update all documentation** - Replace "devlog entry" with "work item"
+- [ ] **Update UI labels** - Navigation, buttons, headers use "Work Item"
+- [ ] **Add type aliases** - `type WorkItem = DevlogEntry` for gradual migration
+- [ ] **API documentation** - Introduce "work item" terminology
+- [ ] **Keep backward compatibility** - Support both terms during transition
+
+#### 1.2 Update Primary Documentation
 - [ ] **README.md** - Rewrite to emphasize AI agent observability as primary value
 - [ ] **AGENTS.md** - Update guidelines to focus on observability features
 - [ ] **Package READMEs** - Align all package docs with new vision
 
-#### 1.2 Clarify Product Positioning
-- [ ] Position "devlog entries" as **optional project management feature**
+#### 1.3 Clarify Product Positioning
+- [ ] Position "work items" as **optional project management feature**
 - [ ] Make "agent sessions" and "agent events" the **primary concepts**
 - [ ] Update all user-facing terminology consistently
 
@@ -89,7 +96,7 @@ packages/
 │   │   │   ├── analytics/        # Metrics calculation
 │   │   │   └── collectors/       # Collector config management
 │   │   ├── project-management/    # Renamed from scattered locations
-│   │   │   ├── devlog-entries/   # Devlog CRUD (legacy)
+│   │   │   ├── work-items/       # Work item CRUD (renamed from devlog-entries)
 │   │   │   ├── projects/         # Project management
 │   │   │   └── documents/        # Document management
 │   │   ├── services/              # Clean service layer
@@ -152,7 +159,7 @@ collector-management-service.ts     // Collector control
 
 // Project Management Services (SECONDARY)
 project-service.ts                  // Project CRUD
-devlog-service.ts                   // Devlog entry CRUD (legacy)
+work-item-service.ts                // Work item CRUD (renamed from devlog-service)
 document-service.ts                 // Document management
 
 // Infrastructure Services
@@ -184,14 +191,14 @@ apps/web/
 ├── app/
 │   ├── api/
 │   │   ├── agent-observability/   # Agent API routes (PRIMARY)
-│   │   └── project-management/    # Project/devlog API (SECONDARY)
+│   │   └── project-management/    # Project/work-item API (SECONDARY)
 │   ├── dashboard/                 # NEW: Main agent dashboard
 │   ├── sessions/                  # NEW: Agent sessions view
 │   ├── analytics/                 # NEW: Analytics & reporting
 │   ├── settings/
 │   │   └── collectors/            # NEW: Collector management
 │   └── projects/                  # Project management (moved)
-│       └── [id]/devlogs/          # Devlog entries (nested)
+│       └── [id]/work-items/       # Work items (renamed from devlogs)
 │
 └── components/
     ├── agent-observability/       # NEW: Agent components (PRIMARY)
@@ -224,7 +231,7 @@ Projects                            # SECONDARY - Supporting feature
   └── [Project Name]
       ├── Overview
       ├── Agent Sessions           # Agent view for project
-      └── Devlog Entries           # Work tracking (optional)
+      └── Work Items               # Work tracking (renamed, optional)
 
 Settings
   ├── Collectors                   # NEW: Manage collectors
@@ -250,7 +257,7 @@ Settings
 
 # Project Management APIs (SECONDARY)
 /projects                          # Project CRUD
-/projects/:id/devlogs              # Devlog entries
+/projects/:id/work-items           # Work items (renamed from devlogs)
 /projects/:id/documents            # Documents
 /projects/:id/agent-sessions       # Project-scoped agent sessions
 
@@ -278,11 +285,11 @@ mcp_collector_status
 mcp_collector_configure
 
 // Project Management Tools (SECONDARY - existing tools)
-mcp_devlog_create
-mcp_devlog_update
-mcp_devlog_get
-mcp_devlog_list
-mcp_devlog_find_related
+mcp_work_item_create          # Renamed from mcp_devlog_create
+mcp_work_item_update          # Renamed from mcp_devlog_update
+mcp_work_item_get             # Renamed from mcp_devlog_get
+mcp_work_item_list            # Renamed from mcp_devlog_list
+mcp_work_item_find_related    # Renamed from mcp_devlog_find_related
 mcp_project_set_current
 mcp_project_list
 ```
@@ -290,8 +297,10 @@ mcp_project_list
 ## 📋 Implementation Checklist
 
 ### Week 1: Documentation & Terminology
+- [ ] **Rebrand "devlog entry" to "work item"** across all documentation
+- [ ] Add `type WorkItem = DevlogEntry` alias in core package
 - [ ] Update root README.md with AI agent observability focus
-- [ ] Update AGENTS.md guidelines
+- [ ] Update AGENTS.md guidelines (include work item terminology)
 - [ ] Reorganize docs/ folder structure
 - [ ] Update package READMEs (core, mcp, ai, web)
 - [ ] Create new user guides for agent observability features
@@ -300,18 +309,20 @@ mcp_project_list
 ### Week 2: Code Structure
 - [ ] Create new folder structure in packages/core/src/
 - [ ] Move agent-related code to agent-observability/
-- [ ] Move devlog code to project-management/
-- [ ] Consolidate service layer
+- [ ] Move work item code to project-management/work-items/
+- [ ] Consolidate service layer (rename devlog-service to work-item-service)
 - [ ] Update all imports
 - [ ] Update tsconfig paths if needed
 - [ ] Run tests and fix breaking changes
+- [ ] Keep backward compatibility for DevlogEntry type
 
 ### Week 3: UI/UX
 - [ ] Create new app/dashboard/ as default landing
 - [ ] Build agent-observability components
-- [ ] Move devlog pages to nested project structure
-- [ ] Update navigation
-- [ ] Update routing
+- [ ] Rename "Devlog" to "Work Items" in all UI labels
+- [ ] Move work item pages to nested project structure
+- [ ] Update navigation (Projects → Work Items)
+- [ ] Update routing (/devlogs → /work-items)
 - [ ] Test all user flows
 
 ### Week 4: API & Integration
@@ -327,7 +338,8 @@ mcp_project_list
 ### User Experience
 - [ ] First-time users immediately understand this is an AI agent observability tool
 - [ ] Agent sessions and events are the primary UI focus
-- [ ] Devlog entries are clearly secondary/optional features
+- [ ] Work items are clearly secondary/optional features (not "devlog entries")
+- [ ] Terminology is intuitive ("work item" not "devlog entry")
 - [ ] Navigation is intuitive and reflects feature priority
 
 ### Developer Experience
@@ -346,8 +358,10 @@ mcp_project_list
 
 ### Backward Compatibility
 - **API Routes**: Maintain old routes with deprecation warnings for 2 versions
-- **Database Schema**: No breaking changes (already supports both models)
-- **MCP Tools**: Keep all existing tools, mark legacy ones with [LEGACY] prefix
+  - `/devlogs` → `/work-items` (both supported)
+- **Types**: Export both `DevlogEntry` and `WorkItem` (alias)
+- **Database Schema**: No breaking changes (table names stay same internally)
+- **MCP Tools**: Support both naming conventions (devlog_* and work_item_*)
 - **Documentation**: Keep old docs in `/docs/archive/` for reference
 
 ### Communication
@@ -359,10 +373,12 @@ mcp_project_list
 ## 📝 Notes
 
 ### Key Decisions
-1. **Preserve devlog entry functionality** - Don't remove, just deprioritize
-2. **Hybrid architecture confirmed** - TypeScript for web/API, Go for collectors/processing
-3. **Database schema already aligned** - No migrations needed
-4. **Focus on developer experience** - Make code structure match product vision
+1. **Rebrand "devlog entry" to "work item"** - More intuitive for users
+2. **Preserve functionality** - Don't remove features, just rename and deprioritize
+3. **Hybrid architecture confirmed** - TypeScript for web/API, Go for collectors/processing
+4. **Database schema already aligned** - No migrations needed
+5. **Gradual migration** - Support both terms during transition
+6. **Focus on developer experience** - Make code structure match product vision
 
 ### Open Questions
 - [ ] Do we rename the repository from "devlog" to something else?

@@ -20,13 +20,14 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 
 ### Primary Goals
 1. **Clarify Vision**: Make it immediately obvious this is an AI agent observability platform
-2. **Clean Code**: Organize code to match product architecture (agent observability > project management)
-3. **Improve DX**: Better developer experience with logical structure
-4. **Prepare for Scale**: Set foundation for Go integration and hybrid architecture
+2. **Rebrand Terminology**: Replace "devlog entry" with "work item" (more intuitive)
+3. **Clean Code**: Organize code to match product architecture (agent observability > project management)
+4. **Improve DX**: Better developer experience with logical structure
+5. **Prepare for Scale**: Set foundation for Go integration and hybrid architecture
 
 ### Non-Goals
-- ❌ Remove existing devlog entry functionality (preserve as secondary feature)
-- ❌ Break existing APIs (maintain backward compatibility)
+- ❌ Remove existing functionality (preserve as secondary feature)
+- ❌ Break existing APIs (maintain backward compatibility via aliases)
 - ❌ Rewrite working code (focus on organization, not refactoring)
 
 ## 📊 Current State
@@ -38,7 +39,8 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 - Working MCP server infrastructure
 
 ### What's Messy ❌
-- Mixed terminology ("devlog entry" vs "agent session" confusion)
+- Confusing terminology ("devlog entry" is not intuitive)
+- Mixed priorities ("devlog entry" vs "agent session" confusion)
 - Code scattered across packages without clear feature domains
 - Documentation emphasizes work tracking over observability
 - No clear folder structure for agent observability features
@@ -46,23 +48,27 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 ## 🗺️ Reorganization Overview
 
 ### Phase 1: Documentation & Terminology (Week 1)
+- **Rebrand "devlog entry" → "work item"** for clarity
 - Update READMEs to lead with agent observability
 - Reorganize docs/ folder with clear feature hierarchy
 - Create user guides for agent monitoring
 
 ### Phase 2: Code Structure (Week 2)  
 - Create `agent-observability/` and `project-management/` folders in core
-- Consolidate service layer with clear naming
+- Consolidate service layer (rename devlog-service → work-item-service)
+- Add `type WorkItem = DevlogEntry` alias for backward compatibility
 - Update import paths and exports
 
 ### Phase 3: UI/UX (Week 3)
 - Build agent dashboard as default landing page
 - Reorganize web app structure (dashboard > sessions > analytics)
-- Move devlog pages to nested project structure
+- Update all labels: "Work Items" instead of "Devlog Entries"
+- Move work item pages to nested project structure
 
 ### Phase 4: API & Integration (Week 4)
-- Reorganize API routes by feature domain
-- Group MCP tools (agent_* vs devlog_* tools)
+- Reorganize API routes by feature domain (/work-items not /devlogs)
+- Rename MCP tools (work_item_* instead of devlog_*)
+- Keep backward compatibility with aliases
 - Create comprehensive API documentation
 
 ## 🚀 Getting Started
@@ -80,10 +86,11 @@ After quick wins, proceed with full reorganization plan.
 ## 📈 Success Metrics
 
 - [ ] First-time visitors understand this is an AI agent observability tool
+- [ ] Terminology is intuitive ("work item" not "devlog entry")
 - [ ] Code organization matches mental model (agent features > project features)
 - [ ] Developer onboarding time reduced by 50%
 - [ ] All tests pass after reorganization
-- [ ] No breaking changes to public APIs
+- [ ] No breaking changes to public APIs (backward compatibility maintained)
 
 ## 🔗 Related Documents
 
@@ -94,15 +101,17 @@ After quick wins, proceed with full reorganization plan.
 ## 📝 Notes
 
 ### Key Decisions
-1. **Preserve backward compatibility** - Don't break existing users
-2. **Gradual migration** - Phase by phase, validate each step
-3. **Documentation first** - Update docs before moving code
-4. **Low-risk start** - Begin with quick wins to build confidence
+1. **Rebrand to "work item"** - More intuitive than "devlog entry"
+2. **Preserve backward compatibility** - Support both terms during transition
+3. **Gradual migration** - Phase by phase, validate each step
+4. **Documentation first** - Update docs before moving code
+5. **Low-risk start** - Begin with quick wins to build confidence
 
 ### Open Questions
-- [ ] Repository rename from "devlog" to something else?
+- [ ] Repository rename from "devlog" to something else? (Keep "devlog" as brand)
 - [ ] API versioning strategy during reorganization?
-- [ ] Timeline for deprecating legacy terminology completely?
+- [ ] Timeline for deprecating "devlog entry" terminology completely?
+- [ ] When to rename database tables (devlog_entries → work_items)?
 - [ ] Should we create a "classic" branch for pre-reorganization code?
 
 ---

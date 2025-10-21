@@ -34,20 +34,25 @@ I've created a comprehensive reorganization plan to help you clean up the codeba
 - Comprehensive design documentation
 
 **⚠️ Clarity Issues:**
-- Mixed terminology creates confusion about product focus
-- Documentation emphasizes "devlog work tracking" over "agent observability"
+- Confusing terminology: "devlog entry" is not intuitive (→ rebrand to "work item")
+- Mixed priorities in documentation (work tracking vs. agent observability)
 - Code not organized by feature domains
 - READMEs don't reflect the new vision
 
 ### The Good News
 
-Most of your "mess" is just **organizational, not technical debt**. You don't need to rewrite code - just reorganize and rebrand to match your new vision.
+Most of your "mess" is just **organizational, not technical debt**. You don't need to rewrite code - just reorganize, rebrand terminology, and restructure to match your new vision.
 
 ## 🚀 Recommended Approach
 
 ### Start with Quick Wins (This Week)
 
 Focus on the high-impact, low-risk changes from [QUICK_WINS.md](./docs/dev/20251021-codebase-reorganization/QUICK_WINS.md):
+
+**Priority 0: Terminology Rebrand (30 minutes)**
+- Add `type WorkItem = DevlogEntry` alias
+- Update documentation to use "work item" instead of "devlog entry"
+- Make terminology industry-standard and intuitive
 
 **Day 1-2: Documentation (2-3 hours)**
 - Update root README.md to lead with AI agent observability
@@ -69,22 +74,25 @@ Focus on the high-impact, low-risk changes from [QUICK_WINS.md](./docs/dev/20251
 ### Then Proceed with Full Reorganization (Next 3 Weeks)
 
 Follow the [4-week plan](./docs/dev/20251021-codebase-reorganization/REORGANIZATION_PLAN.md):
-- **Week 2**: Move code to new structure
-- **Week 3**: Reorganize UI/UX  
-- **Week 4**: Finalize APIs and integrations
+- **Week 1**: Documentation & terminology rebrand (work item)
+- **Week 2**: Move code to new structure  
+- **Week 3**: Reorganize UI/UX (rename labels, update navigation)
+- **Week 4**: Finalize APIs and integrations (support both naming conventions)
 
 ## 📋 Immediate Next Actions
 
 ### 1. Review the Plans
+- [ ] Read [TERMINOLOGY_REBRAND.md](./docs/dev/20251021-codebase-reorganization/TERMINOLOGY_REBRAND.md) (5 minutes) - Why "work item"
 - [ ] Read [QUICK_WINS.md](./docs/dev/20251021-codebase-reorganization/QUICK_WINS.md) (10 minutes)
 - [ ] Skim [REORGANIZATION_PLAN.md](./docs/dev/20251021-codebase-reorganization/REORGANIZATION_PLAN.md) (20 minutes)
 - [ ] Decide if you agree with the approach
 
 ### 2. Start Quick Wins
 Pick one and start:
-- **Option A**: Update README.md (1 hour, highest impact)
-- **Option B**: Add service documentation (1 hour, improves code navigation)
-- **Option C**: Create folder structure (1 hour, sets foundation)
+- **Option A**: Add WorkItem type alias (5 minutes, enables gradual migration)
+- **Option B**: Update README.md (1 hour, highest impact)
+- **Option C**: Add service documentation (1 hour, improves code navigation)
+- **Option D**: Create folder structure (1 hour, sets foundation)
 
 ### 3. Track Progress
 Use the checklists in each document to track your progress.
@@ -95,6 +103,7 @@ Use the checklists in each document to track your progress.
 ```
 devlog (work tracking tool)
   └── with some agent observability features
+      └── "devlog entries" (confusing name)
 ```
 
 ### Target State
@@ -108,7 +117,8 @@ AI Agent Observability Platform
   │
   └── Project management (SECONDARY - Supporting)
       ├── Project organization
-      └── Optional devlog entries
+      └── Optional work items (features, bugs, tasks)
+          └── Renamed from "devlog entries"
 ```
 
 ## 💡 Key Insights
@@ -116,7 +126,7 @@ AI Agent Observability Platform
 ### 1. You Don't Need a Big Rewrite
 Your technical architecture is sound. You mainly need to:
 - **Reorganize** code into logical feature domains
-- **Rebrand** documentation to emphasize agent observability
+- **Rebrand** terminology ("work item" not "devlog entry")
 - **Restructure** UI to make agent features primary
 
 ### 2. Your Database Schema is Already Ready
@@ -124,7 +134,7 @@ The Prisma schema already has:
 - `agent_events` table with proper indexes
 - `agent_sessions` table
 - Relationships to projects
-- No migrations needed!
+- No migrations needed! (table names can stay internal)
 
 ### 3. Services Exist, Just Need Organization
 You have:
@@ -132,7 +142,7 @@ You have:
 - `AgentSessionService` ✅
 - `ProjectService` ✅
 
-Just need to organize them clearly as "agent observability" (primary) vs "project management" (secondary).
+Just need to organize them clearly as "agent observability" (primary) vs "project management" (secondary), and rename devlog-service → work-item-service.
 
 ### 4. The Go Collector is Your Next Big Win
 After reorganization, focus on completing the Go collector (already 20% done). That's where the real value unlock happens.
@@ -155,7 +165,7 @@ packages/core/src/
 │   ├── sessions/
 │   └── analytics/
 ├── project-management/      📁 SECONDARY
-│   ├── devlog-entries/
+│   ├── work-items/          (renamed from devlog-entries)
 │   └── projects/
 └── services/                🔧 CONSOLIDATED
 ```
@@ -163,17 +173,17 @@ packages/core/src/
 ## ❓ Questions to Consider
 
 1. **Repository Rename?**
-   - Current: `devlog` (implies work tracking)
-   - Consider: `agent-observatory`, `ai-agent-insights`, or keep `devlog` as brand name
+   - Current: `devlog` (brand name)
+   - Decision: **Keep "devlog" as brand**, just clarify what items inside are called ("work items")
 
 2. **How Aggressive on Deprecation?**
-   - Conservative: Keep everything, just reorganize
+   - Conservative: Keep everything, just add aliases ✅ **Recommended**
    - Moderate: Mark old APIs as deprecated
    - Aggressive: Remove unused code
 
 3. **Timeline Constraints?**
    - Can you dedicate 4 weeks to this?
-   - Or prefer slower, incremental approach?
+   - Or prefer slower, incremental approach? ✅ **Recommended - start with quick wins**
 
 ## 🎓 Learning from This
 
