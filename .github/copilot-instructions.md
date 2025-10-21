@@ -24,13 +24,6 @@
 - **Validating**: Use `pnpm validate`
 - **Testing**: Use `pnpm test`
 
-### Task Tracking
-- **Always start by checking**: Search related devlogs before starting ANY new work
-- **Must create devlogs**: For features, refactoring, or multistep work (>30min)
-- **Required progress updates**: Add notes after successful builds, major changes, or blockers
-- **Always complete**: Document learnings and close devlogs when work is finished
-- **Required details**: Include necessary information in devlogs for comprehensive context
-
 ## 🎯 Essential Patterns
 
 - **Architecture**: Singleton services with `initialize()` and `dispose()`
@@ -43,3 +36,11 @@
 1. Is there a recommended approach? → Use it
 2. Does it maintain type safety? → Non-negotiable
 3. Is it the simplest solution? → Occam's razor test
+
+## 📋 Development Tracking SOP
+
+### Feature Documentation (docs/dev/)
+- **When to create**: Starting significant features requiring design/planning
+- **Folder naming**: `docs/dev/YYYYMMDD-feature-name/` (use date when design begins)
+- **Required docs**: At minimum, one primary design document
+- **Status tracking**: Mark status clearly (Design, In Progress, Complete, Paused)
