@@ -1,104 +1,175 @@
 # @codervisor/devlog-core
 
-Core functionality for the devlog system. This package provides the main `DevlogManager` class that handles creation,
-updating, querying, and management of development logs.
+Core services and types for the **AI Coding Agent Observability Platform**.
 
-## Features
+This package provides the foundational services for monitoring, analyzing, and optimizing AI coding agent activities. It also includes optional project management features for organizing agent sessions and development work.
 
-- **CRUD Operations**: Create, read, update, and delete devlog entries
-- **Multiple Storage Backends**: SQLite, PostgreSQL, MySQL, and Enterprise integrations
-- **Rich Context**: Support for business context, technical context, and AI-enhanced metadata
-- **Filtering & Search**: Query devlogs by status, type, priority, tags, and text search
-- **Notes & Progress Tracking**: Add timestamped notes to track progress
-- **AI Context Management**: Special handling for AI assistant context and insights
-- **LLM Service**: Integrated Large Language Model support for AI-powered features
-- **Decision Tracking**: Record important decisions with rationale
-- **Statistics**: Get overview statistics of your devlog entries
-- **Status Workflow**: Comprehensive status system for tracking work progression
+## 🎯 Features
 
-## Devlog Status System
+### 🔍 Agent Observability (Primary)
 
-Devlog entries use a well-defined status system to track work progression:
+**Event Collection & Storage:**
+- Capture all AI agent activities (file operations, LLM requests, commands)
+- High-performance event ingestion with TimescaleDB
+- Complete, immutable audit trail of agent behavior
+- Efficient time-series queries and filtering
 
-**Open Statuses (Active Work):**
+**Session Management:**
+- Track complete agent working sessions from start to finish
+- Link events into analyzable workflows
+- Record session objectives and outcomes
+- Calculate session-level performance metrics
 
-- `new` - Work ready to start
-- `in-progress` - Actively being developed
-- `blocked` - Temporarily stopped due to dependencies
-- `in-review` - Awaiting review/approval
-- `testing` - Being validated through testing
+**Analytics Engine:**
+- Aggregate metrics across events and sessions
+- Performance analysis (speed, efficiency, token usage)
+- Pattern detection for success and failure modes
+- Quality assessment of AI-generated code
 
-**Closed Statuses (Completed Work):**
+### 📊 Project Management (Supporting)
 
-- `done` - Successfully completed
-- `cancelled` - Abandoned/deprioritized
+**Optional features for organizing agent sessions:**
+- Project organization for multi-codebase teams
+- Work item tracking (features, bugs, tasks)
+- Document attachments and note-taking
+- Status workflows and progress tracking
 
-**Typical Workflow:** `new` → `in-progress` → `in-review` → `testing` → `done`
+**Note:** "Work item" is the preferred terminology (industry standard). "Devlog entry" is legacy but still fully supported.
 
-📖 **[View Complete Status Workflow Guide](../../docs/reference/devlog-status-workflow.md)**
-
-## Installation
+## 📦 Installation
 
 ```bash
 pnpm add @codervisor/devlog-core
 ```
 
-## Usage
+## 🚀 Usage
+
+### Agent Observability
 
 ```typescript
-import { DevlogManager } from '@codervisor/devlog-core';
+import { AgentEventService, AgentSessionService } from '@codervisor/devlog-core/server';
 
-// Initialize the manager
-const devlog = new DevlogManager({
-  workspaceRoot: '/path/to/your/project',
-  // devlogDir: '/custom/path/.devlog' // optional custom directory
+// Start tracking an agent session
+const sessionService = AgentSessionService.getInstance(projectId);
+await sessionService.initialize();
+
+const session = await sessionService.create({
+  agentId: 'github-copilot',
+  projectId: 1,
+  objective: 'Implement user authentication',
+  workItemId: 42  // Optional: link to work item
 });
 
-// Create a new devlog entry
-const entry = await devlog.createDevlog({
-  title: 'Implement user authentication',
+// Log agent events
+const eventService = AgentEventService.getInstance(projectId);
+await eventService.initialize();
+
+await eventService.logEvent({
+  type: 'file_write',
+  agentId: 'github-copilot',
+  agentVersion: '1.0.0',
+  sessionId: session.id,
+  projectId: 1,
+  context: {
+    workingDirectory: '/app',
+    filePath: 'src/auth/login.ts',
+    branch: 'feature/auth'
+  },
+  data: {
+    content: '// Implementation...',
+    linesAdded: 45
+  },
+  metrics: {
+    duration: 1500,
+    tokenCount: 1200
+  }
+});
+
+// End the session
+await sessionService.end(session.id, {
+  outcome: 'success',
+  summary: 'JWT authentication implemented with tests'
+});
+
+// Query and analyze
+const events = await eventService.queryEvents({
+  sessionId: session.id,
+  eventType: 'file_write'
+});
+
+const stats = await eventService.getEventStats({
+  sessionId: session.id
+});
+```
+
+### Project Management (Optional)
+
+```typescript
+import { PrismaProjectService, PrismaDevlogService, WorkItem } from '@codervisor/devlog-core/server';
+
+// Create a project
+const projectService = PrismaProjectService.getInstance();
+await projectService.initialize();
+
+const project = await projectService.create({
+  name: 'my-app',
+  description: 'Main application',
+  repositoryUrl: 'https://github.com/org/repo'
+});
+
+// Create a work item (optional - for organizing agent sessions)
+const workItemService = PrismaDevlogService.getInstance(project.id);
+await workItemService.initialize();
+
+const item: WorkItem = await workItemService.create({
+  title: 'Implement authentication',
   type: 'feature',
-  description: 'Add JWT-based authentication system',
+  description: 'Add JWT-based authentication',
+  status: 'new',
   priority: 'high',
-  businessContext: 'Users need secure login to access protected feature',
-  technicalContext: 'Using JWT tokens with refresh mechanism',
-  acceptanceCriteria: [
-    'Users can register with email/password',
-    'Users can login and receive JWT token',
-    'Protected routes require valid token',
-  ],
+  projectId: project.id
 });
 
-// Update the devlog
-await devlog.updateDevlog({
-  id: entry.id,
-  status: 'in-progress',
-  progress: 'Completed user registration endpoint',
+// Update work item status
+await workItemService.update(item.id!, {
+  status: 'in-progress'
 });
 
-// Add a note
-await devlog.addNote(entry.id, {
+// Add progress note
+await workItemService.addNote(item.id!, {
   category: 'progress',
-  content: 'Fixed validation issues with email format',
+  content: 'Completed login endpoint implementation'
 });
+```
 
-// List all devlog
-const allDevlogs = await devlog.listDevlogs();
+## 🏗️ Architecture
 
-// Filter devlog
-const inProgressTasks = await devlog.listDevlogs({
-  status: ['in-progress'],
-  type: ['feature', 'bugfix'],
-});
+### Module Organization
 
-// Search devlog
-const authDevlogs = await devlog.searchDevlogs('authentication');
+The package is organized into two main feature domains:
 
-// Get active context for AI assistants
-const activeContext = await devlog.getActiveContext(5);
+#### `agent-observability/` - PRIMARY FEATURE
+- `AgentEventService` - Event collection and querying
+- `AgentSessionService` - Session lifecycle management
+- Agent observability types and interfaces
 
-// Complete a devlog
-await devlog.completeDevlog(entry.id, 'Authentication system implemented and tested');
+#### `project-management/` - SUPPORTING FEATURE
+- `PrismaProjectService` - Project organization
+- `PrismaDevlogService` - Work item tracking (legacy: "devlog entries")
+- `PrismaDocumentService` - Document attachments
+- Project and work item types
+
+### Import Patterns
+
+```typescript
+// Recommended: Import from organized modules
+import { AgentEventService, AgentSessionService } from '@codervisor/devlog-core/server';
+
+// Legacy: Direct imports still work
+import { AgentEventService } from '@codervisor/devlog-core';
+
+// Types (client-safe)
+import type { AgentEvent, WorkItem } from '@codervisor/devlog-core';
 ```
 
 ## LLM Service

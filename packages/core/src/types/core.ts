@@ -221,6 +221,33 @@ export interface DevlogEntry {
   documents?: DevlogDocument[];
 }
 
+/**
+ * Work Item - Industry-standard terminology for trackable work
+ * 
+ * This is an alias for DevlogEntry to support migration to more intuitive terminology.
+ * "Work item" is widely recognized in the industry (used by Azure DevOps, GitHub Projects)
+ * and clearly communicates the purpose: tracking units of work like features, bugs, and tasks.
+ * 
+ * **Migration Strategy:**
+ * - New code should prefer using `WorkItem` over `DevlogEntry`
+ * - Both types are fully interchangeable and backward compatible
+ * - The internal implementation and database tables remain unchanged
+ * 
+ * @example
+ * ```typescript
+ * // New code - preferred
+ * const item: WorkItem = {
+ *   title: "Implement user authentication",
+ *   type: "feature",
+ *   // ...
+ * };
+ * 
+ * // Legacy code - still supported
+ * const entry: DevlogEntry = item; // Fully compatible
+ * ```
+ */
+export type WorkItem = DevlogEntry;
+
 export interface Dependency {
   id: string;
   type: 'blocks' | 'blocked-by' | 'related-to' | 'parent-of' | 'child-of';

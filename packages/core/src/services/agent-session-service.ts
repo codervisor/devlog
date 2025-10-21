@@ -1,8 +1,47 @@
 /**
  * Agent Session Service
  * 
- * Manages AI agent session lifecycle, tracking, and analytics.
- * Implements session management for AI Agent Observability.
+ * **PRIMARY SERVICE - Core agent observability functionality**
+ * 
+ * Manages AI agent session lifecycle including creation, updates, completion,
+ * and querying. Sessions group related events into complete, analyzable workflows,
+ * enabling teams to understand agent behavior in context.
+ * 
+ * **Key Responsibilities:**
+ * - Session lifecycle: Create, update, and complete agent sessions
+ * - Context management: Track session objectives and outcomes
+ * - Metrics aggregation: Calculate session-level performance metrics
+ * - Analytics: Provide insights into session patterns and success rates
+ * 
+ * **Session Workflow:**
+ * 1. Start session: Create with objective and context
+ * 2. Log events: Related events reference the session ID
+ * 3. End session: Mark complete with outcome and summary
+ * 4. Analyze: Query metrics and patterns across sessions
+ * 
+ * @module services/agent-session-service
+ * @category Agent Observability
+ * @see {@link AgentEventService} for event management
+ * 
+ * @example
+ * ```typescript
+ * const service = AgentSessionService.getInstance(projectId);
+ * await service.initialize();
+ * 
+ * // Start a session
+ * const session = await service.create({
+ *   agentId: 'github-copilot',
+ *   projectId: 1,
+ *   objective: 'Implement authentication',
+ *   workItemId: 42  // Optional
+ * });
+ * 
+ * // End the session
+ * await service.end(session.id, {
+ *   outcome: 'success',
+ *   summary: 'JWT auth implemented with tests'
+ * });
+ * ```
  */
 
 import { PrismaServiceBase } from './prisma-service-base.js';

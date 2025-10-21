@@ -21,21 +21,34 @@ const server = new Server(
   {
     name: 'devlog-mcp',
     version: '1.0.0',
-    description: `Devlog Management Server - AI-native work item tracking system
+    description: `AI Coding Agent Observability Platform - MCP Server
 
-TERMINOLOGY & CONTEXT:
-• "Devlog" = Work item, task, ticket, issue, or entry - a unit of work with rich context
-• Devlog entries represent trackable work with AI-enhanced metadata and context
-• Types: task, feature, bugfix, refactor, docs
-• Statuses: new, in-progress, blocked, in-review, testing, done, cancelled  
-• Priorities: low, medium, high, critical
+PRIMARY FEATURES - Agent Observability:
+• Real-time monitoring of AI coding agent activities
+• Session tracking with complete workflow visibility
+• Performance metrics and quality analytics
+• Event logging for debugging and compliance
+• Supported agents: GitHub Copilot, Claude, Cursor, Gemini CLI, Cline, Aider, and more
 
-FEATURES:
-• Create, read, update, and manage devlog entries
-• Rich context tracking (business context, technical context, notes)
-• AI-friendly progress tracking and status workflows
-• Project-based organization with multi-project support
-• Duplicate detection and relationship management
+Use agent_* tools for monitoring AI assistants:
+• agent_start_session - Begin tracking an agent session
+• agent_log_event - Record agent activities
+• agent_query_events - Search and filter events
+• agent_get_session_stats - Performance metrics
+
+SUPPORTING FEATURES - Project Management:
+• Optional work item tracking (features, bugs, tasks)
+• Project organization for multi-codebase teams
+• Document attachments and note-taking
+• Status workflows and progress tracking
+
+Work item tools (optional organization):
+• create_devlog - Create a work item
+• update_devlog - Update status and progress
+• list_devlogs - Browse work items
+
+Note: "devlog" is legacy terminology. Think of these as "work items" that optionally
+organize agent sessions by planned development tasks.
 `,
   },
   {
