@@ -31,3 +31,6 @@ export * from './auth.js';
 
 // LLM (Large Language Model) types and interfaces
 export * from './llm.js';
+
+// AI Agent Observability types and interfaces
+export * from './agent.js';

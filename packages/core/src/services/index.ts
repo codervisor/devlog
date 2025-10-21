@@ -16,3 +16,7 @@ export { SSOService } from './sso-service.js';
 
 // Document Service
 export { PrismaDocumentService as DocumentService } from './prisma-document-service.js';
+
+// AI Agent Observability services
+export { AgentEventService } from './agent-event-service.js';
+export { AgentSessionService } from './agent-session-service.js';

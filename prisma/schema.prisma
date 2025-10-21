@@ -17,35 +17,37 @@ model Project {
 
   // Relations
   devlogEntries DevlogEntry[]
+  agentSessions AgentSession[]
+  agentEvents   AgentEvent[]
 
   @@map("devlog_projects")
 }
 
 // Main devlog entries
 model DevlogEntry {
-  id                Int         @id @default(autoincrement())
-  key               String      @unique @map("key_field")
-  title             String     
-  type              String      @default("task") // DevlogType as string
-  description       String      @db.Text
-  status            String      @default("new") // DevlogStatus as string
-  priority          String      @default("medium") // DevlogPriority as string
-  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz
-  closedAt          DateTime?   @map("closed_at") @db.Timestamptz
-  archived          Boolean     @default(false)
-  assignee          String?    
-  projectId         Int         @map("project_id")
+  id          Int       @id @default(autoincrement())
+  key         String    @unique @map("key_field")
+  title       String
+  type        String    @default("task") // DevlogType as string
+  description String    @db.Text
+  status      String    @default("new") // DevlogStatus as string
+  priority    String    @default("medium") // DevlogPriority as string
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  closedAt    DateTime? @map("closed_at") @db.Timestamptz
+  archived    Boolean   @default(false)
+  assignee    String?
+  projectId   Int       @map("project_id")
 
   // Flattened DevlogContext fields
-  businessContext   String?     @map("business_context") @db.Text
-  technicalContext  String?     @map("technical_context") @db.Text
-  tags              String?     @db.Text // JSON array as text
-  files             String?     @db.Text // JSON array as text
-  dependencies      String?     @db.Text // JSON array as text
+  businessContext  String? @map("business_context") @db.Text
+  technicalContext String? @map("technical_context") @db.Text
+  tags             String? @db.Text // JSON array as text
+  files            String? @db.Text // JSON array as text
+  dependencies     String? @db.Text // JSON array as text
 
   // Relations
-  project           Project     @relation(fields: [projectId], references: [id])
+  project           Project            @relation(fields: [projectId], references: [id])
   notes             DevlogNote[]
   dependencies_from DevlogDependency[] @relation("DevlogDependencySource")
   dependencies_to   DevlogDependency[] @relation("DevlogDependencyTarget")
@@ -63,11 +65,11 @@ model DevlogEntry {
 
 // Devlog notes - separate table for better relational modeling
 model DevlogNote {
-  id        String            @id
-  devlogId  Int               @map("devlog_id")
-  timestamp DateTime          @db.Timestamptz
-  category  String            // DevlogNoteCategory as string
-  content   String            @db.Text
+  id        String   @id
+  devlogId  Int      @map("devlog_id")
+  timestamp DateTime @db.Timestamptz
+  category  String // DevlogNoteCategory as string
+  content   String   @db.Text
 
   // Relations
   devlogEntry DevlogEntry @relation(fields: [devlogId], references: [id], onDelete: Cascade)
@@ -80,15 +82,15 @@ model DevlogNote {
 
 // Devlog dependencies for hierarchical work management
 model DevlogDependency {
-  id              String              @id
-  devlogId        Int                 @map("devlog_id")
-  type            String              // DevlogDependencyType as string
-  description     String              @db.Text
-  externalId      String?             @map("external_id")
-  targetDevlogId  Int?                @map("target_devlog_id")
+  id             String  @id
+  devlogId       Int     @map("devlog_id")
+  type           String // DevlogDependencyType as string
+  description    String  @db.Text
+  externalId     String? @map("external_id")
+  targetDevlogId Int?    @map("target_devlog_id")
 
   // Relations
-  devlogEntry       DevlogEntry @relation("DevlogDependencySource", fields: [devlogId], references: [id], onDelete: Cascade)
+  devlogEntry       DevlogEntry  @relation("DevlogDependencySource", fields: [devlogId], references: [id], onDelete: Cascade)
   targetDevlogEntry DevlogEntry? @relation("DevlogDependencyTarget", fields: [targetDevlogId], references: [id], onDelete: SetNull)
 
   @@index([devlogId])
@@ -101,11 +103,11 @@ model DevlogDependency {
 model DevlogDocument {
   id            String   @id
   devlogId      Int      @map("devlog_id")
-  filename      String   // Internal filename/identifier
+  filename      String // Internal filename/identifier
   originalName  String   @map("original_name") // Original filename from upload
   mimeType      String   @map("mime_type")
-  size          Int      // Size in bytes
-  type          String   // DocumentType as string (text, markdown, image, pdf, etc.)
+  size          Int // Size in bytes
+  type          String // DocumentType as string (text, markdown, image, pdf, etc.)
   textContent   String?  @map("text_content") @db.Text // Extracted text content for searchable documents
   binaryContent Bytes?   @map("binary_content") // Binary content for files
   metadata      Json     @default("{}") // Additional file metadata
@@ -127,7 +129,7 @@ model DevlogDocument {
 model User {
   id              Int       @id @default(autoincrement())
   email           String    @unique
-  name            String?  
+  name            String?
   avatarUrl       String?   @map("avatar_url")
   passwordHash    String    @map("password_hash")
   isEmailVerified Boolean   @default(false) @map("is_email_verified")
@@ -136,9 +138,9 @@ model User {
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
 
   // Relations
-  providers                   UserProvider[]
-  emailVerificationTokens     EmailVerificationToken[]
-  passwordResetTokens         PasswordResetToken[]
+  providers               UserProvider[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
 
   @@map("devlog_users")
 }
@@ -193,21 +195,21 @@ model PasswordResetToken {
 
 // Chat sessions
 model ChatSession {
-  id            String     @id
-  agent         String     // AgentType as string
+  id            String  @id
+  agent         String // AgentType as string
   timestamp     String // ISO string
   workspace     String?
-  workspacePath String?    @map("workspace_path")
+  workspacePath String? @map("workspace_path")
   title         String?
-  status        String     @default("imported") // ChatStatus as string
-  messageCount  Int        @default(0) @map("message_count")
+  status        String  @default("imported") // ChatStatus as string
+  messageCount  Int     @default(0) @map("message_count")
   duration      Int?
-  metadata      Json       @default("{}")
-  updatedAt     String     @map("updated_at") // ISO string
-  archived      Boolean    @default(false)
+  metadata      Json    @default("{}")
+  updatedAt     String  @map("updated_at") // ISO string
+  archived      Boolean @default(false)
 
   // Relations
-  messages  ChatMessage[]
+  messages    ChatMessage[]
   devlogLinks ChatDevlogLink[]
 
   @@index([agent])
@@ -222,7 +224,7 @@ model ChatSession {
 model ChatMessage {
   id            String  @id
   sessionId     String  @map("session_id")
-  role          String  // ChatRole as string
+  role          String // ChatRole as string
   content       String  @db.Text
   timestamp     String // ISO string
   sequence      Int
@@ -255,6 +257,81 @@ model ChatDevlogLink {
   @@index([devlogId])
   @@index([timestamp])
   @@map("chat_devlog_links")
+}
+
+// AI Agent Observability Models
+
+// Agent events - Time-series event storage for AI agent activities
+model AgentEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  timestamp    DateTime @db.Timestamptz
+  eventType    String   @map("event_type") // AgentEventType as string
+  agentId      String   @map("agent_id") // AgentType as string
+  agentVersion String   @map("agent_version")
+  sessionId    String   @map("session_id") @db.Uuid
+  projectId    Int      @map("project_id")
+
+  // Context (JSON)
+  context Json @default("{}")
+
+  // Event-specific data (JSON)
+  data Json @default("{}")
+
+  // Metrics (JSON)
+  metrics Json?
+
+  // Relationships
+  parentEventId   String?  @map("parent_event_id") @db.Uuid
+  relatedEventIds String[] @map("related_event_ids")
+
+  // Metadata
+  tags     String[]
+  severity String? // EventSeverity as string
+
+  // Relations
+  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([timestamp(sort: Desc)])
+  @@index([sessionId])
+  @@index([agentId])
+  @@index([eventType])
+  @@index([projectId])
+  @@index([tags])
+  @@index([severity])
+  @@map("agent_events")
+}
+
+// Agent sessions - Complete agent working sessions
+model AgentSession {
+  id           String    @id @default(uuid()) @db.Uuid
+  agentId      String    @map("agent_id") // AgentType as string
+  agentVersion String    @map("agent_version")
+  projectId    Int       @map("project_id")
+  startTime    DateTime  @map("start_time") @db.Timestamptz
+  endTime      DateTime? @map("end_time") @db.Timestamptz
+  duration     Int? // Duration in seconds
+
+  // Context (JSON)
+  context Json @default("{}")
+
+  // Metrics (JSON)
+  metrics Json @default("{}")
+
+  // Outcome
+  outcome      String? // SessionOutcome as string
+  qualityScore Decimal? @map("quality_score") @db.Decimal(5, 2) // 0-100
+
+  // Relations
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events  AgentEvent[]
+
+  @@index([startTime(sort: Desc)])
+  @@index([agentId])
+  @@index([projectId])
+  @@index([outcome])
+  @@index([qualityScore])
+  @@map("agent_sessions")
 }
 
 // Note: Enums are now handled as strings for flexibility
