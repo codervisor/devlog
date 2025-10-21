@@ -9,9 +9,11 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - **Go**: Client-side collector, Event processing, Real-time streaming, Analytics
 - See [Performance Analysis](./ai-agent-observability-performance-analysis.md) for detailed rationale
 
-## Phase 0: Go Collector Setup (Week 0 - Parallel Track)
+## Phase 0: Go Collector Setup (Days 1-20) 🎯 **PRIORITY - IN PROGRESS**
 
-**Note**: This can be developed in parallel with Phase 1 TypeScript work.
+**See**: [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md) for detailed day-by-day plan
+
+**Note**: This is now the main development focus.
 
 ### Go Collector Development
 
@@ -65,64 +67,64 @@ This document provides a detailed, actionable checklist for implementing the AI 
   - [ ] Adapter development guide (for new agents)
   - [ ] Troubleshooting guide
 
-## Phase 1: Foundation (Weeks 1-4)
+## Phase 1: Foundation (Weeks 1-4) ⏳ **IN PROGRESS (~70% complete)**
 
-### Week 1: Core Data Models & Schema
+### Week 1: Core Data Models & Schema ✅ **COMPLETE**
 
-- [ ] **Database Schema Design**
-  - [ ] Create `agent_events` table with TimescaleDB hypertable
-  - [ ] Create `agent_sessions` table
-  - [ ] Create indexes for performance
-  - [ ] Set up continuous aggregates for metrics
-  - [ ] Create retention policies
-  - [ ] Write migration scripts
+- [x] **Database Schema Design**
+  - [x] Create `agent_events` table with TimescaleDB hypertable
+  - [x] Create `agent_sessions` table
+  - [x] Create indexes for performance
+  - [x] Set up continuous aggregates for metrics
+  - [x] Create retention policies
+  - [x] Write migration scripts
 
-- [ ] **TypeScript Type Definitions**
-  - [ ] Define `AgentEvent` interface
-  - [ ] Define `AgentSession` interface
-  - [ ] Define `AgentEventType` enum
-  - [ ] Define `SessionOutcome` type
-  - [ ] Define `EventFilter` interface
-  - [ ] Define `SessionFilter` interface
-  - [ ] Export all types from `packages/core/src/types/agent.ts`
+- [x] **TypeScript Type Definitions**
+  - [x] Define `AgentEvent` interface
+  - [x] Define `AgentSession` interface
+  - [x] Define `AgentEventType` enum
+  - [x] Define `SessionOutcome` type
+  - [x] Define `EventFilter` interface
+  - [x] Define `SessionFilter` interface
+  - [x] Export all types from `packages/core/src/types/agent.ts`
 
-- [ ] **Prisma Schema Updates**
-  - [ ] Add `AgentEvent` model to schema.prisma
-  - [ ] Add `AgentSession` model to schema.prisma
-  - [ ] Add relationships to existing models (Project, DevlogEntry)
-  - [ ] Generate Prisma client
-  - [ ] Run migrations
+- [x] **Prisma Schema Updates**
+  - [x] Add `AgentEvent` model to schema.prisma
+  - [x] Add `AgentSession` model to schema.prisma
+  - [x] Add relationships to existing models (Project, DevlogEntry)
+  - [x] Generate Prisma client
+  - [x] Run migrations
 
-### Week 2: Event Collection System
+### Week 2: Event Collection System ✅ **COMPLETE**
 
-- [ ] **AgentEventService**
-  - [ ] Create `packages/core/src/services/agent-event-service.ts`
-  - [ ] Implement `collectEvent(event)` method
-  - [ ] Implement `collectEventBatch(events)` method
-  - [ ] Implement `getEvents(filter)` method
-  - [ ] Implement `getEventById(id)` method
-  - [ ] Implement `getEventsBySession(sessionId)` method
-  - [ ] Implement event validation
-  - [ ] Add error handling and retries
-  - [ ] Write unit tests
+- [x] **AgentEventService**
+  - [x] Create `packages/core/src/services/agent-event-service.ts`
+  - [x] Implement `collectEvent(event)` method
+  - [x] Implement `collectEventBatch(events)` method
+  - [x] Implement `getEvents(filter)` method
+  - [x] Implement `getEventById(id)` method
+  - [x] Implement `getEventsBySession(sessionId)` method
+  - [x] Implement event validation
+  - [x] Add error handling and retries
+  - [x] Write unit tests
 
-- [ ] **AgentSessionService**
-  - [ ] Create `packages/core/src/services/agent-session-service.ts`
-  - [ ] Implement `startSession(data)` method
-  - [ ] Implement `endSession(sessionId, outcome)` method
-  - [ ] Implement `updateSession(sessionId, updates)` method
-  - [ ] Implement `getSession(sessionId)` method
-  - [ ] Implement `listSessions(filter)` method
-  - [ ] Implement `getActiveSessions()` method
-  - [ ] Write unit tests
+- [x] **AgentSessionService**
+  - [x] Create `packages/core/src/services/agent-session-service.ts`
+  - [x] Implement `startSession(data)` method
+  - [x] Implement `endSession(sessionId, outcome)` method
+  - [x] Implement `updateSession(sessionId, updates)` method
+  - [x] Implement `getSession(sessionId)` method
+  - [x] Implement `listSessions(filter)` method
+  - [x] Implement `getActiveSessions()` method
+  - [x] Write unit tests
 
-- [ ] **Event Context Enrichment**
-  - [ ] Implement Git context capture (branch, commit)
-  - [ ] Implement file context capture
-  - [ ] Implement project context capture
-  - [ ] Add automatic tagging system
+- [x] **Event Context Enrichment**
+  - [x] Implement Git context capture (branch, commit)
+  - [x] Implement file context capture
+  - [x] Implement project context capture
+  - [x] Add automatic tagging system
 
-### Week 3: Storage & Performance
+### Week 3: Storage & Performance ⚠️ **NOT STARTED**
 
 - [ ] **Storage Optimization**
   - [ ] Configure TimescaleDB compression
@@ -144,15 +146,15 @@ This document provides a detailed, actionable checklist for implementing the AI 
   - [ ] Add metrics collection (Prometheus-compatible)
   - [ ] Set up error tracking
 
-### Week 4: MCP Integration & Basic UI
+### Week 4: MCP Integration & Basic UI ⏳ **PARTIALLY COMPLETE (~60%)**
 
-- [ ] **MCP Tools**
-  - [ ] Create `packages/mcp/src/tools/agent-observability-tools.ts`
-  - [ ] Implement `mcp_agent_start_session` tool
-  - [ ] Implement `mcp_agent_end_session` tool
-  - [ ] Implement `mcp_agent_log_event` tool
-  - [ ] Implement `mcp_agent_query_events` tool
-  - [ ] Add tool validation and error handling
+- [x] **MCP Tools**
+  - [x] Create `packages/mcp/src/tools/agent-tools.ts`
+  - [x] Implement `agent_start_session` tool
+  - [x] Implement `agent_end_session` tool
+  - [x] Implement `agent_log_event` tool
+  - [x] Implement `agent_query_events` tool
+  - [x] Add tool validation and error handling
   - [ ] Write tool documentation
   - [ ] Add integration tests
 
@@ -180,13 +182,14 @@ This document provides a detailed, actionable checklist for implementing the AI 
   - [ ] Write unit tests with Claude log samples
   - [ ] Test with live Claude Code sessions
 
-- [ ] **Basic Event Viewer UI**
-  - [ ] Create `apps/web/src/app/projects/[name]/agent-events/page.tsx`
-  - [ ] Create `EventList` component
-  - [ ] Create `EventDetails` component
+- [x] **Basic Event Viewer UI**
+  - [x] Create `apps/web/app/projects/[name]/agent-sessions/page.tsx`
+  - [x] Create `SessionList` component
+  - [x] Create `SessionCard` component
+  - [x] Create `ActiveSessionsPanel` component
   - [ ] Add basic filtering (by type, time range)
   - [ ] Add pagination
-  - [ ] Style with existing design system
+  - [x] Style with existing design system
 
 - [ ] **Phase 1 Documentation**
   - [ ] API documentation for services
