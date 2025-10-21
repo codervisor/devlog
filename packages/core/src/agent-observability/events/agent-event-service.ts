@@ -46,7 +46,7 @@
  * ```
  */
 
-import { PrismaServiceBase } from './prisma-service-base.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 import type {
   AgentEvent,
   CreateAgentEventInput,
@@ -56,7 +56,7 @@ import type {
   AgentEventType,
   EventSeverity,
   ObservabilityAgentType,
-} from '../types/index.js';
+} from '../../types/index.js';
 import type { PrismaClient, AgentEvent as PrismaAgentEvent } from '@prisma/client';
 
 /**

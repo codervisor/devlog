@@ -23,9 +23,9 @@
  * @category Project Management
  */
 
-import type { Project } from '../types/project.js';
-import { ProjectValidator } from '../validation/project-schemas.js';
-import { PrismaServiceBase } from './prisma-service-base.js';
+import type { Project } from '../../types/project.js';
+import { ProjectValidator } from '../../validation/project-schemas.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 
 interface ProjectServiceInstance {
   service: PrismaProjectService;

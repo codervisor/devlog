@@ -58,12 +58,12 @@
 // ============================================================================
 
 /**
- * Re-export project management services from their current locations
- * TODO: Move actual files to project-management/ directory in next phase
+ * Re-export project management services from their organized locations
  */
-export { PrismaProjectService } from '../services/prisma-project-service.js';
-export { PrismaDevlogService } from '../services/prisma-devlog-service.js';
-export { PrismaDocumentService } from '../services/prisma-document-service.js';
+export { PrismaProjectService } from './projects/index.js';
+export { PrismaDevlogService } from './work-items/index.js';
+export { PrismaDocumentService } from './documents/index.js';
+export { PrismaChatService } from './chat/index.js';
 
 // ============================================================================
 // Types - Project Management Data Structures

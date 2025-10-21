@@ -44,7 +44,7 @@
  * ```
  */
 
-import { PrismaServiceBase } from './prisma-service-base.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 import type {
   AgentSession,
   CreateAgentSessionInput,
@@ -53,7 +53,7 @@ import type {
   SessionStats,
   SessionOutcome,
   ObservabilityAgentType,
-} from '../types/index.js';
+} from '../../types/index.js';
 import type { PrismaClient, AgentSession as PrismaAgentSession } from '@prisma/client';
 
 /**

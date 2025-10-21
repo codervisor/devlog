@@ -59,11 +59,11 @@ import type {
   DevlogStatus,
   DevlogType,
   DevlogPriority,
-} from '../types/index.js';
-import { DevlogValidator } from '../validation/devlog-schemas.js';
-import { generateDevlogKey } from '../utils/key-generator.js';
+} from '../../types/index.js';
+import { DevlogValidator } from '../../validation/devlog-schemas.js';
+import { generateDevlogKey } from '../../utils/key-generator.js';
 import type { PrismaClient, DevlogEntry as PrismaDevlogEntry } from '@prisma/client';
-import { PrismaServiceBase } from './prisma-service-base.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 
 interface DevlogServiceInstance {
   service: PrismaDevlogService;

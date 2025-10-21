@@ -19,8 +19,8 @@ import type {
   DevlogId,
   ChatStatus,
   AgentType,
-} from '../types/index.js';
-import { PrismaServiceBase } from './prisma-service-base.js';
+} from '../../types/index.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 
 interface ChatServiceInstance {
   service: PrismaChatService;

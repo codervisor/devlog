@@ -45,11 +45,10 @@
 // ============================================================================
 
 /**
- * Re-export agent services from their current locations
- * TODO: Move actual files to agent-observability/ directory in next phase
+ * Re-export agent services from their organized locations
  */
-export { AgentEventService } from '../services/agent-event-service.js';
-export { AgentSessionService } from '../services/agent-session-service.js';
+export { AgentEventService } from './events/index.js';
+export { AgentSessionService } from './sessions/index.js';
 
 // ============================================================================
 // Types - Agent Observability Data Structures
