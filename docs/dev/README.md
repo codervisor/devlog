@@ -8,9 +8,29 @@ Each feature gets its own folder with the format: `YYYYMMDD-feature-name/`
 
 The date represents when the feature design was started or last significantly updated.
 
-## Current Features
+## Active Features
 
-Each feature folder contains its own documentation. Browse the dated folders to see available features and their design documents.
+### 🔧 Codebase Reorganization (October 2025)
+**Status**: 📋 Planning  
+**Folder**: [20251021-codebase-reorganization/](./20251021-codebase-reorganization/)
+
+Comprehensive plan to reorganize the codebase to reflect the AI agent observability focus. Includes 4-week plan and quick wins guide.
+
+### 🔍 AI Agent Observability (January 2025)
+**Status**: 🚧 In Progress (Phase 0 - Go Collector)  
+**Folder**: [20250115-ai-agent-observability/](./20250115-ai-agent-observability/)
+
+Transform devlog into an AI coding agent observability platform. Currently implementing the Go collector (Days 1-4 complete, 20% done).
+
+### 📊 AI Evaluation System (October 2025)
+**Status**: 📅 Planned  
+**Folder**: [20251021-ai-evaluation-system/](./20251021-ai-evaluation-system/)
+
+Quantitative evaluation system for AI coding agents using TSR/HEI/OQS metrics. Design complete, implementation pending.
+
+---
+
+Each feature folder contains its own documentation. Browse the dated folders to see full details.
 
 ### Recommended Document Structure
 
