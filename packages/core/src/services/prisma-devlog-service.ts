@@ -1,8 +1,30 @@
 /**
- * Prisma-based DevlogService
+ * Prisma-based DevlogService (Work Item Service)
  *
- * Migrated from TypeORM to Prisma for better Next.js integration
- * Manages devlog entries using Prisma Client with improved type safety
+ * **SUPPORTING SERVICE - Optional work item tracking**
+ *
+ * Manages "work items" (also known as "devlog entries") for organizing and
+ * tracking development work. This is an optional feature that complements
+ * the primary agent observability functionality.
+ * 
+ * **Work Items vs Devlog Entries:**
+ * - Both terms refer to the same entity (backward compatible)
+ * - "Work item" is the preferred terminology (industry standard)
+ * - Types: features, bugs, tasks, refactors, docs
+ * 
+ * **Key Responsibilities:**
+ * - CRUD operations for work items
+ * - Status workflow management
+ * - Notes and document management
+ * - Statistics and analytics
+ * - Advanced search and filtering
+ * 
+ * **Relationship to Agent Observability:**
+ * Work items provide optional structure for organizing agent sessions.
+ * Sessions can reference a workItemId to link AI work to planned tasks.
+ *
+ * Migrated from TypeORM to Prisma for better Next.js integration.
+ * Manages devlog entries using Prisma Client with improved type safety.
  * 
  * This service provides comprehensive devlog management functionality:
  * - CRUD operations for devlog entries
@@ -12,6 +34,11 @@
  * 
  * NOTE: This service requires Prisma Client to be generated first:
  * Run `npx prisma generate` after setting up the database connection
+ * 
+ * @module services/prisma-devlog-service
+ * @category Project Management
+ * @see {@link WorkItem} type alias for new code
+ * @see {@link DevlogEntry} legacy type (still supported)
  */
 
 import type {

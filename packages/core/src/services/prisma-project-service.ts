@@ -1,8 +1,26 @@
 /**
  * Prisma-based Project Service
+ * 
+ * **SUPPORTING SERVICE - Project management functionality**
  *
- * Migrated from TypeORM to Prisma for better Next.js integration
- * Manages projects using Prisma Client with improved type safety
+ * Manages project metadata and organization. Projects provide context for
+ * agent sessions and optional work items, enabling multi-project isolation
+ * and organization of observability data.
+ * 
+ * **Key Responsibilities:**
+ * - Project CRUD: Create, read, update, delete projects
+ * - Project isolation: Separate data for different codebases/teams
+ * - Context management: Track project-level settings and metadata
+ * 
+ * **Relationship to Agent Observability:**
+ * Projects are containers for agent sessions. Each session belongs to a project,
+ * enabling teams to organize observability data by codebase or product.
+ * 
+ * Migrated from TypeORM to Prisma for better Next.js integration.
+ * Manages projects using Prisma Client with improved type safety.
+ * 
+ * @module services/prisma-project-service
+ * @category Project Management
  */
 
 import type { Project } from '../types/project.js';

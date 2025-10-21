@@ -1,8 +1,49 @@
 /**
  * Agent Event Service
  * 
- * Manages AI agent event collection, storage, and querying.
- * Implements the core event collection system for AI Agent Observability.
+ * **PRIMARY SERVICE - Core agent observability functionality**
+ * 
+ * Manages the lifecycle of AI agent events including creation, querying,
+ * and aggregation for analytics. This service handles high-volume event
+ * ingestion and efficient time-series queries.
+ * 
+ * **Key Responsibilities:**
+ * - Event ingestion: Capture and store agent activity events
+ * - Query operations: Retrieve events with filtering and pagination
+ * - Analytics: Aggregate metrics for performance analysis
+ * - Timeline reconstruction: Build complete activity timelines
+ * 
+ * **Performance Characteristics:**
+ * - Optimized for write-heavy workloads (event ingestion)
+ * - Uses PostgreSQL with TimescaleDB for time-series data
+ * - Supports efficient time-range and filter queries
+ * - Implements TTL-based instance management for resource efficiency
+ * 
+ * @module services/agent-event-service
+ * @category Agent Observability
+ * @see {@link AgentSessionService} for session management
+ * 
+ * @example
+ * ```typescript
+ * const service = AgentEventService.getInstance(projectId);
+ * await service.initialize();
+ * 
+ * // Log an event
+ * const event = await service.logEvent({
+ *   type: 'file_write',
+ *   agentId: 'github-copilot',
+ *   sessionId: 'session-123',
+ *   projectId: 1,
+ *   context: { workingDirectory: '/app', filePath: 'src/main.ts' },
+ *   data: { content: '...' }
+ * });
+ * 
+ * // Query events
+ * const events = await service.queryEvents({
+ *   sessionId: 'session-123',
+ *   eventType: 'file_write'
+ * });
+ * ```
  */
 
 import { PrismaServiceBase } from './prisma-service-base.js';
