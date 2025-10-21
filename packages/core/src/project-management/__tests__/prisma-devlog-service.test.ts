@@ -6,11 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PrismaDevlogService } from '../prisma-devlog-service.js';
+import { PrismaDevlogService } from '../work-items/prisma-devlog-service.js';
 import type { DevlogEntry, DevlogFilter, SearchOptions } from '../../types/index.js';
 
 // Mock the Prisma client until it's available
-vi.mock('../utils/prisma-config.js', () => ({
+vi.mock('../../utils/prisma-config.js', () => ({
   getPrismaClient: vi.fn(() => ({
     $connect: vi.fn(),
     $disconnect: vi.fn(),

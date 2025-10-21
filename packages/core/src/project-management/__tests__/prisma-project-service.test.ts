@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PrismaProjectService } from '../prisma-project-service.js';
+import { PrismaProjectService } from '../projects/prisma-project-service.js';
 import type { Project } from '../../types/project.js';
 
 // Mock Prisma Client
