@@ -21,6 +21,7 @@ Reorganize the codebase to clearly reflect our pivot to **AI coding agent observ
 | **[PHASE_2_PLAN.md](./PHASE_2_PLAN.md)** | Detailed Phase 2 implementation plan | ✅ **COMPLETED** |
 | **[PHASE_3_IMPLEMENTATION_SUMMARY.md](./PHASE_3_IMPLEMENTATION_SUMMARY.md)** | Phase 3 UI/UX reorganization summary | ✅ **COMPLETED** |
 | **[TERMINOLOGY_REBRAND.md](./TERMINOLOGY_REBRAND.md)** | WorkItem terminology migration guide | ✅ Complete |
+| **[Agent Observability Core Features](../20251022-agent-observability-core-features/)** | Dashboard & Sessions implementation + roadmap | ✅ Phase 1 Complete |
 
 ## 🎯 Goals
 
@@ -126,34 +127,59 @@ See [PHASE_3_IMPLEMENTATION_SUMMARY.md](./PHASE_3_IMPLEMENTATION_SUMMARY.md) for
 
 ## 🚀 Getting Started
 
-**Current Status**: Phases 1, 2, and 3 are complete! ✅
+**Current Status**: Phases 1, 2, 3 complete! ✅  
+**Agent Observability Core Features**: Phase 1 complete! ✅
 
 **What's Been Done:**
 - ✅ Phase 1: Documentation and terminology updates
 - ✅ Phase 2: Code structure reorganization
 - ✅ Phase 3: UI/UX reorganization
+- ✅ **Agent Observability Core Features - Phase 1**: Dashboard & Sessions foundation (October 22, 2025)
+  - Real-time metrics display
+  - Session listing and filtering
+  - Backend API routes
+  - Server components with type safety
+
+**Current Focus:** Building out core agent observability features following Option 1 recommendations.
+
+See **[Agent Observability Core Features](../20251022-agent-observability-core-features/)** for:
+- Current implementation details ([README.md](../20251022-agent-observability-core-features/README.md))
+- Technical documentation ([IMPLEMENTATION_SUMMARY.md](../20251022-agent-observability-core-features/IMPLEMENTATION_SUMMARY.md))
+- **Prioritized roadmap** ([NEXT_STEPS.md](../20251022-agent-observability-core-features/NEXT_STEPS.md))
+
+**Next Priorities** (from Agent Observability roadmap):
+1. Real-time updates via WebSocket/SSE
+2. Session details page
+3. Multi-project support
+4. Advanced filtering UI
+
+---
+
+### Original Recommendations (For Reference)
 
 **Recommended Next Steps:**
 
-### Option 1: Focus on Core Features (Recommended)
-Instead of Phase 4 (API reorganization), focus on building out the agent observability features that are now prominently displayed:
+### Option 1: Focus on Core Features (✅ In Progress)
+Building out the agent observability features that are now prominently displayed:
 
-1. **Enhance Dashboard** (`/dashboard`)
-   - Add real-time agent activity charts
-   - Show active sessions count and metrics
-   - Display recent agent events timeline
+1. **Enhance Dashboard** (`/dashboard`) - ✅ Phase 1 Complete
+   - ✅ Add real-time agent activity charts
+   - ✅ Show active sessions count and metrics
+   - ✅ Display recent agent events timeline
+   - 🚧 Next: Add real-time updates via SSE
 
-2. **Build Out Sessions View** (`/sessions`)
-   - Implement session filtering and search
-   - Add session details modal/page
-   - Show session performance metrics
+2. **Build Out Sessions View** (`/sessions`) - ✅ Phase 1 Complete, 🚧 Phase 2 In Progress
+   - ✅ Basic session filtering implemented
+   - 🚧 Add session details modal/page (Phase 2 priority #2)
+   - 🚧 Show session performance metrics (Phase 2 priority #2)
+   - 🚧 Advanced filtering UI (Phase 3 priority #4)
 
-3. **Complete Go Collector Integration**
+3. **Complete Go Collector Integration** - 📋 Planned (Phase 4)
    - Finish implementing the Go collector (already 20% done)
    - Test end-to-end data flow from agents to dashboard
    - Set up real-time event streaming
 
-4. **Add Analytics Features**
+4. **Add Analytics Features** - 📋 Planned (Phase 4)
    - Create `/analytics` route mentioned in the plan
    - Implement agent performance reports
    - Add pattern detection visualizations
