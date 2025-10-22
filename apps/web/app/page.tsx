@@ -4,6 +4,6 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  // Redirect to the projects page as the main entry point
-  redirect('/projects');
+  // Redirect to the dashboard as the main entry point (agent observability)
+  redirect('/dashboard');
 }
