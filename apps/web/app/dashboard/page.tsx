@@ -6,7 +6,7 @@
 
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardStats, RecentActivity, ActiveSessions } from '@/components/agent-observability/dashboard';
+import { DashboardStatsWrapper, RecentActivity, ActiveSessions } from '@/components/agent-observability/dashboard';
 
 export default function DashboardPage() {
   return (
@@ -21,9 +21,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats with Live Updates */}
       <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-        <DashboardStats />
+        <DashboardStatsWrapper />
       </Suspense>
 
       {/* Recent Activity */}
