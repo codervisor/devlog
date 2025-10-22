@@ -1,0 +1,80 @@
+/**
+ * API endpoint for dashboard statistics
+ * 
+ * Provides aggregated metrics for the main dashboard:
+ * - Active sessions count
+ * - Total events today
+ * - Average session duration
+ * - Events per minute rate
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { AgentSessionService, AgentEventService } from '@codervisor/devlog-core/server';
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get all projects (for now, using projectId 1 as default)
+    // TODO: Query across all user's projects
+    const projectId = 1;
+
+    const sessionService = AgentSessionService.getInstance(projectId);
+    const eventService = AgentEventService.getInstance(projectId);
+    
+    await Promise.all([
+      sessionService.initialize(),
+      eventService.initialize()
+    ]);
+
+    // Get active sessions
+    const activeSessions = await sessionService.getActiveSessions();
+    
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get events from today
+    const todayEvents = await eventService.getEvents({
+      projectId,
+      startTime: today,
+      endTime: tomorrow,
+    });
+
+    // Calculate events per minute (based on last hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentEvents = await eventService.getEvents({
+      projectId,
+      startTime: oneHourAgo,
+    });
+    const eventsPerMinute = recentEvents.length > 0 
+      ? (recentEvents.length / 60).toFixed(2)
+      : '0';
+
+    // Get session stats for average duration
+    const sessionStats = await sessionService.getSessionStats({
+      projectId,
+      startTimeFrom: today,
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        activeSessions: activeSessions.length,
+        totalEventsToday: todayEvents.length,
+        averageDuration: sessionStats.averageDuration || 0,
+        eventsPerMinute: parseFloat(eventsPerMinute),
+        lastUpdated: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch dashboard statistics',
+      },
+      { status: 500 }
+    );
+  }
+}
