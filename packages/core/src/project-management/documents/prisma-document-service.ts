@@ -12,8 +12,8 @@
  * - File retrieval and deletion
  */
 
-import type { DevlogDocument, DocumentType, DevlogId } from '../types/index.js';
-import { PrismaServiceBase } from './prisma-service-base.js';
+import type { DevlogDocument, DocumentType, DevlogId } from '../../types/index.js';
+import { PrismaServiceBase } from '../../services/prisma-service-base.js';
 
 interface DocumentServiceInstance {
   service: PrismaDocumentService;

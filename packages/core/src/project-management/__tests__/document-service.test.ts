@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DocumentService } from '../document-service.js';
+import { PrismaDocumentService as DocumentService } from '../documents/prisma-document-service.js';
 import type { DevlogDocument } from '../../types/index.js';
 
 // Mock data for testing
