@@ -217,10 +217,10 @@ export function Dashboard({
           </div>
         </div>
 
-        {/* Recent Devlogs Section */}
+        {/* Recent Work Items Section */}
         <Card className="flex-1 flex flex-col">
           <CardHeader className="section-header">
-            <CardTitle>Recent Devlogs</CardTitle>
+            <CardTitle>Recent Work Items</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto">
@@ -250,7 +250,7 @@ export function Dashboard({
               ) : recentDevlogs?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="text-muted-foreground mb-2 text-2xl">📝</div>
-                  <p className="text-sm text-muted-foreground">No devlogs found</p>
+                  <p className="text-sm text-muted-foreground">No work items found</p>
                 </div>
               ) : (
                 <div className="space-y-0">

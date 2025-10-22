@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useProjectName } from '@/components/provider/project-provider';
 import { useDevlogId } from '@/components/provider/devlog-provider';
-import { DevlogDetails } from '@/components/feature/devlog/devlog-details';
+import { DevlogDetails } from '@/components/project-management/devlog/devlog-details';
 
 export function DevlogDetailsPage() {
   const projectName = useProjectName();

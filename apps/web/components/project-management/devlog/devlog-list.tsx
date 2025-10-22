@@ -248,7 +248,7 @@ export function DevlogList({
     <div className="relative h-full px-6">
       {/* Header with search, filters, and actions - Sticky */}
       <div className="sticky top-0 z-20 bg-background border-b h-16 flex items-center justify-between">
-        <div className="font-semibold leading-none tracking-tight">Devlogs</div>
+        <div className="font-semibold leading-none tracking-tight">Work Items</div>
         <div className="flex items-center space-x-2">
           {/* Batch Operations */}
           {selectedRowKeys.length > 0 && (
@@ -356,10 +356,10 @@ export function DevlogList({
         </div>
       </div>
 
-      {/* Devlogs Table */}
+      {/* Work Items Table */}
       {!loading && devlogs.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">No devlogs found</p>
+          <p className="text-muted-foreground mb-4">No work items found</p>
         </div>
       ) : (
         <div
@@ -517,9 +517,9 @@ export function DevlogList({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Batch Update Devlogs</DialogTitle>
+            <DialogTitle>Batch Update Work Items</DialogTitle>
             <DialogDescription>
-              Update {selectedRowKeys.length} selected devlog(s). Leave fields empty to keep current
+              Update {selectedRowKeys.length} selected work item(s). Leave fields empty to keep current
               values.
             </DialogDescription>
           </DialogHeader>
@@ -604,7 +604,7 @@ export function DevlogList({
             >
               Cancel
             </Button>
-            <Button onClick={handleBatchUpdate}>Update {selectedRowKeys.length} Devlog(s)</Button>
+            <Button onClick={handleBatchUpdate}>Update {selectedRowKeys.length} Work Item(s)</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -613,9 +613,9 @@ export function DevlogList({
       <AlertDialog open={deleteConfirmVisible} onOpenChange={setDeleteConfirmVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Devlogs</AlertDialogTitle>
+            <AlertDialogTitle>Delete Selected Work Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedRowKeys.length} selected devlog(s)? This
+              Are you sure you want to delete {selectedRowKeys.length} selected work item(s)? This
               action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -628,7 +628,7 @@ export function DevlogList({
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete {selectedRowKeys.length} Devlog(s)
+              Delete {selectedRowKeys.length} Work Item(s)
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

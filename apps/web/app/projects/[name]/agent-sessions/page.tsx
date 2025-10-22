@@ -5,8 +5,8 @@
  */
 
 import { Suspense } from 'react';
-import { SessionList } from '@/components/feature/agent-sessions/session-list';
-import { ActiveSessionsPanel } from '@/components/feature/agent-sessions/active-sessions-panel';
+import { SessionList } from '@/components/agent-observability/agent-sessions/session-list';
+import { ActiveSessionsPanel } from '@/components/agent-observability/agent-sessions/active-sessions-panel';
 
 export default function AgentSessionsPage({ params }: { params: { name: string } }) {
   return (
