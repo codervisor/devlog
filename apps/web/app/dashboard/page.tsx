@@ -6,12 +6,17 @@
 
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardStats, RecentActivity, ActiveSessions } from '@/components/agent-observability/dashboard';
+import { DashboardStatsWrapper, RecentActivity, ActiveSessions } from '@/components/agent-observability/dashboard';
+import { ProjectSelector } from '@/components/agent-observability/project-selector';
 
-export default function DashboardPage() {
+interface DashboardPageProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+export default function DashboardPage({ searchParams }: DashboardPageProps) {
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
+      {/* Header with Project Selector */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agent Activity Dashboard</h1>
@@ -19,21 +24,22 @@ export default function DashboardPage() {
             Monitor AI coding agents in real-time across all your projects
           </p>
         </div>
+        <ProjectSelector />
       </div>
 
-      {/* Overview Stats */}
+      {/* Overview Stats with Live Updates */}
       <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-        <DashboardStats />
+        <DashboardStatsWrapper searchParams={searchParams} />
       </Suspense>
 
       {/* Recent Activity */}
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <RecentActivity />
+        <RecentActivity searchParams={searchParams} />
       </Suspense>
 
       {/* Active Sessions */}
       <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-        <ActiveSessions />
+        <ActiveSessions searchParams={searchParams} />
       </Suspense>
     </div>
   );

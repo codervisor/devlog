@@ -16,10 +16,21 @@ interface AgentSession {
   outcome?: string;
 }
 
-async function fetchActiveSessions(): Promise<AgentSession[]> {
+interface ActiveSessionsProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+async function fetchActiveSessions(projectId?: string): Promise<AgentSession[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3200';
-    const response = await fetch(`${baseUrl}/api/sessions?status=active`, {
+    const url = new URL(`${baseUrl}/api/sessions`);
+    url.searchParams.set('status', 'active');
+    
+    if (projectId) {
+      url.searchParams.set('projectId', projectId);
+    }
+    
+    const response = await fetch(url.toString(), {
       cache: 'no-store',
     });
 
@@ -47,8 +58,9 @@ function formatDuration(startTime: string): string {
   return `${diffHours}h ${diffMins % 60}m`;
 }
 
-export async function ActiveSessions() {
-  const sessions = await fetchActiveSessions();
+export async function ActiveSessions({ searchParams }: ActiveSessionsProps) {
+  const projectId = searchParams?.projectId as string | undefined;
+  const sessions = await fetchActiveSessions(projectId);
 
   if (sessions.length === 0) {
     return (

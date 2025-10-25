@@ -16,10 +16,21 @@ interface AgentEvent {
   context?: Record<string, any>;
 }
 
-async function fetchRecentActivity(): Promise<AgentEvent[]> {
+interface RecentActivityProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+async function fetchRecentActivity(projectId?: string): Promise<AgentEvent[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3200';
-    const response = await fetch(`${baseUrl}/api/dashboard/activity?limit=10`, {
+    const url = new URL(`${baseUrl}/api/dashboard/activity`);
+    url.searchParams.set('limit', '10');
+    
+    if (projectId) {
+      url.searchParams.set('projectId', projectId);
+    }
+    
+    const response = await fetch(url.toString(), {
       cache: 'no-store',
     });
 
@@ -61,8 +72,9 @@ function getEventColor(eventType: string): string {
   return colors[eventType] || 'bg-gray-500';
 }
 
-export async function RecentActivity() {
-  const events = await fetchRecentActivity();
+export async function RecentActivity({ searchParams }: RecentActivityProps) {
+  const projectId = searchParams?.projectId as string | undefined;
+  const events = await fetchRecentActivity(projectId);
 
   if (events.length === 0) {
     return (
