@@ -18,14 +18,19 @@ interface AgentSession {
   summary?: string;
 }
 
-async function fetchSessions(status?: string): Promise<AgentSession[]> {
+async function fetchSessions(status?: string, projectId?: string): Promise<AgentSession[]> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3200';
-    const url = status 
-      ? `${baseUrl}/api/sessions?status=${status}`
-      : `${baseUrl}/api/sessions`;
+    const url = new URL(`${baseUrl}/api/sessions`);
     
-    const response = await fetch(url, {
+    if (status) {
+      url.searchParams.set('status', status);
+    }
+    if (projectId) {
+      url.searchParams.set('projectId', projectId);
+    }
+    
+    const response = await fetch(url.toString(), {
       cache: 'no-store',
     });
 
@@ -85,10 +90,12 @@ function getOutcomeBadge(outcome?: string) {
 interface SessionsListProps {
   status?: string;
   title: string;
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export async function SessionsList({ status, title }: SessionsListProps) {
-  const sessions = await fetchSessions(status);
+export async function SessionsList({ status, title, searchParams }: SessionsListProps) {
+  const projectId = searchParams?.projectId as string | undefined;
+  const sessions = await fetchSessions(status, projectId);
 
   if (sessions.length === 0) {
     return (

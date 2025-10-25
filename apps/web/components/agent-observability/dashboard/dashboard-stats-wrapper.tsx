@@ -13,11 +13,22 @@ interface DashboardStats {
   eventsPerMinute: number;
 }
 
-async function fetchDashboardStats(): Promise<DashboardStats | null> {
+interface DashboardStatsWrapperProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+async function fetchDashboardStats(projectId?: string): Promise<DashboardStats | null> {
   try {
     // Use absolute URL for server-side fetch
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3200';
-    const response = await fetch(`${baseUrl}/api/dashboard/stats`, {
+    const url = new URL(`${baseUrl}/api/dashboard/stats`);
+    
+    // Add projectId if provided
+    if (projectId) {
+      url.searchParams.set('projectId', projectId);
+    }
+    
+    const response = await fetch(url.toString(), {
       cache: 'no-store', // Always fetch fresh data
     });
 
@@ -34,8 +45,9 @@ async function fetchDashboardStats(): Promise<DashboardStats | null> {
   }
 }
 
-export async function DashboardStatsWrapper() {
-  const stats = await fetchDashboardStats();
+export async function DashboardStatsWrapper({ searchParams }: DashboardStatsWrapperProps) {
+  const projectId = searchParams?.projectId as string | undefined;
+  const stats = await fetchDashboardStats(projectId);
 
   // Fallback to zero values if fetch fails
   const initialStats = stats || {

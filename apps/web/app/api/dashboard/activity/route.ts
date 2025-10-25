@@ -12,18 +12,21 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '20');
     
-    // Get all projects (for now, using projectId 1 as default)
-    // TODO: Query across all user's projects
-    const projectId = 1;
+    // Support optional projectId parameter
+    const projectIdParam = searchParams.get('projectId');
+    const projectId = projectIdParam ? parseInt(projectIdParam) : undefined;
 
     const eventService = AgentEventService.getInstance(projectId);
     await eventService.initialize();
 
+    // Build event filter
+    const eventFilter: any = { limit };
+    if (projectId !== undefined) {
+      eventFilter.projectId = projectId;
+    }
+
     // Get recent events
-    const events = await eventService.getEvents({
-      projectId,
-      limit,
-    });
+    const events = await eventService.getEvents(eventFilter);
 
     return NextResponse.json({
       success: true,

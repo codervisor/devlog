@@ -20,15 +20,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Get all projects (for now, using projectId 1 as default)
-    // TODO: Query across all user's projects
-    const projectId = 1;
+    // Support optional projectId parameter
+    const projectIdParam = searchParams.get('projectId');
+    const projectId = projectIdParam ? parseInt(projectIdParam) : undefined;
 
     const sessionService = AgentSessionService.getInstance(projectId);
     await sessionService.initialize();
 
     // Build filter
-    const filter: any = { projectId, limit, offset };
+    const filter: any = { limit, offset };
+    if (projectId !== undefined) {
+      filter.projectId = projectId;
+    }
     if (agentId) filter.agentId = agentId;
     if (outcome) filter.outcome = outcome;
     if (startTimeFrom) filter.startTimeFrom = new Date(startTimeFrom);

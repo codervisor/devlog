@@ -13,9 +13,12 @@ import { AgentSessionService, AgentEventService } from '@codervisor/devlog-core/
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all projects (for now, using projectId 1 as default)
-    // TODO: Query across all user's projects
-    const projectId = 1;
+    const searchParams = request.nextUrl.searchParams;
+    
+    // Support optional projectId parameter
+    // If not provided, query across all projects (pass undefined)
+    const projectIdParam = searchParams.get('projectId');
+    const projectId = projectIdParam ? parseInt(projectIdParam) : undefined;
 
     const sessionService = AgentSessionService.getInstance(projectId);
     const eventService = AgentEventService.getInstance(projectId);
@@ -34,28 +37,41 @@ export async function GET(request: NextRequest) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get events from today
-    const todayEvents = await eventService.getEvents({
-      projectId,
+    // Build event filter
+    const eventFilter: any = {
       startTime: today,
       endTime: tomorrow,
-    });
+    };
+    if (projectId !== undefined) {
+      eventFilter.projectId = projectId;
+    }
+
+    // Get events from today
+    const todayEvents = await eventService.getEvents(eventFilter);
 
     // Calculate events per minute (based on last hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const recentEvents = await eventService.getEvents({
-      projectId,
+    const recentFilter: any = {
       startTime: oneHourAgo,
-    });
+    };
+    if (projectId !== undefined) {
+      recentFilter.projectId = projectId;
+    }
+    const recentEvents = await eventService.getEvents(recentFilter);
     const eventsPerMinute = recentEvents.length > 0 
       ? (recentEvents.length / 60).toFixed(2)
       : '0';
 
-    // Get session stats for average duration
-    const sessionStats = await sessionService.getSessionStats({
-      projectId,
+    // Build session stats filter
+    const statsFilter: any = {
       startTimeFrom: today,
-    });
+    };
+    if (projectId !== undefined) {
+      statsFilter.projectId = projectId;
+    }
+
+    // Get session stats for average duration
+    const sessionStats = await sessionService.getSessionStats(statsFilter);
 
     return NextResponse.json({
       success: true,
