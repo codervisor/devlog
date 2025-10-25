@@ -24,10 +24,10 @@ export function ProjectSelector({ className }: ProjectSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>(
-    searchParams.get('projectId') || 'all'
-  );
   const [loading, setLoading] = useState(true);
+  
+  // Get selected project from URL, memoize to prevent infinite loops
+  const selectedProject = searchParams.get('projectId') || 'all';
 
   useEffect(() => {
     async function fetchProjects() {
@@ -50,8 +50,6 @@ export function ProjectSelector({ className }: ProjectSelectorProps) {
   }, []);
 
   const handleProjectChange = (value: string) => {
-    setSelectedProject(value);
-
     // Update URL with the new project filter
     const current = new URLSearchParams(Array.from(searchParams.entries()));
     
