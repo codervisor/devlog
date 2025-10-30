@@ -63,8 +63,8 @@ This roadmap tracks the remaining work to complete the AI Agent Observability Pl
 - ⚠️ Will be addressed in Phase 4 (Polish & Stabilization)
 
 ### 🎯 Upcoming
-- Phase 4: Polish & stabilization (UI enhancements, performance, testing)
-- Phase 5: Go collector implementation
+- **Phase 4: Go Collector Implementation (HIGH PRIORITY)** - Core event collection infrastructure
+- Phase 5: UI Polish & stabilization (UI enhancements, performance, testing)
 - Phase 6: Analytics & insights
 - Phase 7: Enterprise features
 
@@ -89,11 +89,13 @@ Based on the [Codebase Reorganization Plan](../20251021-codebase-reorganization/
 **Status**: ✅ Complete  
 **Achievement**: All UI text updated to "Work Item" terminology, agent observability emphasized
 
-### Phase 4: Polish & Stabilization - 2 weeks
-**Goal**: Production-ready UI, performance optimization, comprehensive testing
+### Phase 4: Go Collector Implementation - 2-3 weeks ⚡ **HIGH PRIORITY**
+**Goal**: Production-ready event collector - the core infrastructure for agent observability
 
-### Phase 5: Go Collector - 3 weeks
-**Goal**: High-performance event collector for production scale
+**Why Priority**: Without the collector, the platform cannot capture real agent activity. This is the foundational piece that enables all other features. Currently only ~20% implemented.
+
+### Phase 5: UI Polish & Stabilization - 2 weeks
+**Goal**: Production-ready UI, performance optimization, comprehensive testing
 
 ### Phase 6: Analytics & Insights - 4 weeks
 **Goal**: AI-powered analysis, pattern recognition, quality scoring
@@ -265,6 +267,326 @@ docker compose up      # Services start
 
 ---
 
+## 📅 Phase 4: Go Collector Implementation (Weeks 1-3) - 🎯 HIGH PRIORITY
+
+**Timeline**: October 30 - November 20, 2025 (3 weeks)  
+**Priority**: ⚡ **CRITICAL** - Core infrastructure for agent observability  
+**Current Status**: ~20% complete (foundation only - config, types, discovery)  
+**Missing**: All core functionality (adapters, watcher, client, buffer)
+
+**Rationale**: The collector is the **foundational piece** that enables the entire platform. Without it, we cannot capture real agent activity from Copilot, Cursor, Claude, etc. The backend API and dashboard are ready, but there's no data flowing through yet.
+
+### Current Implementation Status
+
+**✅ What Exists** (~250 lines):
+- Configuration system (JSON, env vars, validation)
+- Type definitions (AgentEvent, EventMetrics, SessionInfo)
+- Log discovery (finds Copilot/Claude/Cursor log locations)
+- CLI framework (cobra commands: start, stop, status)
+- Basic tests (all passing)
+
+**❌ What's Missing** (~1,700 lines needed):
+- Agent adapters (parse log formats)
+- File system watcher (monitor for changes)
+- HTTP client (send events to backend)
+- SQLite buffer (offline support)
+- Event processing pipeline
+- Main integration loop
+
+### Week 1: Core Collector Components (Oct 30 - Nov 6)
+
+#### Day 1-2: Agent Adapters Implementation
+- [ ] Create `internal/adapters/copilot_adapter.go`
+  - Parse GitHub Copilot JSON log format
+  - Extract completion requests, responses, token usage
+  - Map to standardized AgentEvent format
+- [ ] Create `internal/adapters/cursor_adapter.go`
+  - Parse Cursor log format
+  - Extract file operations and AI interactions
+- [ ] Create `internal/adapters/claude_adapter.go`
+  - Parse Claude Desktop log format
+  - Extract conversations and file operations
+- [ ] Create adapter registry and factory pattern
+- [ ] Add comprehensive tests for each adapter
+
+**Test data**: Use real Copilot logs found at `~/.config/Code/logs/*/exthost/GitHub.copilot/`
+
+**Files to create**:
+```
+packages/collector-go/internal/adapters/
+├── adapter.go           # Interface definition
+├── copilot_adapter.go   # Copilot implementation
+├── cursor_adapter.go    # Cursor implementation
+├── claude_adapter.go    # Claude implementation
+├── registry.go          # Adapter factory
+└── *_test.go           # Tests for each
+```
+
+**Acceptance Criteria**:
+- Parse real Copilot log files successfully
+- Extract completion events with context (file, line, tokens)
+- Handle malformed log entries gracefully
+- Tests cover common and edge cases
+
+#### Day 3: File System Watcher
+- [ ] Implement `internal/watcher/watcher.go`
+  - Watch log directories recursively
+  - Detect file create, modify events
+  - Handle log rotation
+  - Debounce rapid changes
+- [ ] Integrate with discovery system (already exists)
+- [ ] Add event queue for processing
+- [ ] Implement graceful shutdown
+- [ ] Add comprehensive tests
+
+**Tech stack**: Use `github.com/fsnotify/fsnotify`
+
+**Files to create**:
+```
+packages/collector-go/internal/watcher/
+├── watcher.go           # File system watcher
+├── watcher_test.go      # Tests
+└── queue.go            # Event queue
+```
+
+**Acceptance Criteria**:
+- Detect new log entries within 100ms
+- Handle multiple simultaneous file changes
+- Gracefully handle file deletion/rotation
+- No memory leaks during extended operation
+
+#### Day 4: HTTP Client Implementation
+- [ ] Create `internal/client/client.go`
+  - HTTP client for backend API
+  - POST events to `/api/agent/events`
+  - Batch events (configurable size)
+  - Retry with exponential backoff
+  - Circuit breaker pattern
+- [ ] Add authentication (API key header)
+- [ ] Add request/response logging
+- [ ] Implement connection pooling
+- [ ] Add comprehensive tests with mock server
+
+**Files to create**:
+```
+packages/collector-go/internal/client/
+├── client.go            # HTTP client
+├── client_test.go       # Tests
+├── batch.go            # Batching logic
+└── retry.go            # Retry mechanism
+```
+
+**Acceptance Criteria**:
+- Successfully send batches to backend
+- Handle network failures gracefully
+- Respect rate limits
+- Tests cover success and failure cases
+
+#### Day 5: SQLite Buffer for Offline Support
+- [ ] Create `internal/buffer/buffer.go`
+  - SQLite-based event queue
+  - Store events when backend unavailable
+  - Retry failed sends automatically
+  - Limit buffer size (FIFO eviction)
+- [ ] Add buffer statistics (size, age)
+- [ ] Implement buffer cleanup
+- [ ] Add migration support for schema changes
+- [ ] Add comprehensive tests
+
+**Files to create**:
+```
+packages/collector-go/internal/buffer/
+├── buffer.go            # SQLite buffer
+├── buffer_test.go       # Tests
+├── schema.sql          # Database schema
+└── migrations.go       # Schema migrations
+```
+
+**Acceptance Criteria**:
+- Events persist across collector restarts
+- Buffer handles 10,000+ events
+- Automatic retry when backend comes back online
+- Cleanup old events when buffer full
+
+### Week 2: Integration & Testing (Nov 6 - Nov 13)
+
+#### Day 1-2: Main Integration Loop
+- [ ] Wire all components together in `cmd/collector/main.go`
+  - Initialize config, adapters, watcher, client, buffer
+  - Start processing pipeline
+  - Handle signals (SIGTERM, SIGINT)
+  - Implement graceful shutdown
+- [ ] Add health check endpoint (HTTP server)
+- [ ] Add metrics endpoint (Prometheus format)
+- [ ] Implement status command (check running collector)
+- [ ] Add structured logging throughout
+
+**Processing flow**:
+```
+File Change → Watcher → Adapter → Buffer → Client → Backend
+                ↓         ↓         ↓        ↓
+              Queue    Parse    Store    Batch    Send
+```
+
+**Acceptance Criteria**:
+- Collector starts without errors
+- Events flow from logs to backend
+- Graceful shutdown preserves buffered events
+- Health check reports accurate status
+
+#### Day 3: End-to-End Testing
+- [ ] Create integration test with real log files
+- [ ] Test with sample Copilot logs (from script)
+- [ ] Test offline/online transitions
+- [ ] Test log rotation handling
+- [ ] Test high-volume scenarios (1000+ events/min)
+- [ ] Test error recovery and retry logic
+- [ ] Verify events in backend dashboard
+
+**Test scenarios**:
+1. Fresh start → capture events → verify in backend
+2. Backend down → buffer events → backend up → flush buffer
+3. Log rotation → continue capturing
+4. High volume → no events dropped
+5. Malformed logs → skip gracefully
+
+**Acceptance Criteria**:
+- All test scenarios pass
+- Events appear in dashboard
+- No data loss in normal operation
+- Performance meets targets (see metrics below)
+
+#### Day 4: Performance Testing & Optimization
+- [ ] Benchmark event parsing speed
+- [ ] Benchmark batch sending performance
+- [ ] Profile CPU and memory usage
+- [ ] Optimize hot paths
+- [ ] Add memory pooling if needed
+- [ ] Test with 10,000+ events
+- [ ] Document performance characteristics
+
+**Performance targets**:
+- Parse 5,000+ events/second
+- CPU usage < 5% during normal operation
+- Memory usage < 50MB
+- Batch latency < 5 seconds (configurable)
+- Buffer I/O < 100ms per operation
+
+#### Day 5: Documentation & Polish
+- [ ] Update README with implementation status
+- [ ] Add architecture diagram
+- [ ] Document configuration options
+- [ ] Create troubleshooting guide
+- [ ] Add example configurations
+- [ ] Document supported log formats
+- [ ] Add performance tuning guide
+- [ ] Create development guide
+
+### Week 3: Deployment & Packaging (Nov 13 - Nov 20)
+
+#### Day 1-2: Cross-Platform Build
+- [ ] Set up cross-compilation (Linux, macOS, Windows)
+- [ ] Create build script (`build.sh`)
+- [ ] Add version information to binary
+- [ ] Create minimal Docker image
+- [ ] Test binaries on each platform
+- [ ] Add checksums for releases
+
+**Build targets**:
+```
+linux/amd64
+linux/arm64
+darwin/amd64
+darwin/arm64
+windows/amd64
+```
+
+#### Day 3: Installation & Service Setup
+- [ ] Create installation script
+  - Download appropriate binary
+  - Install to system path
+  - Create config directory
+  - Set up service (systemd/launchd)
+- [ ] Create systemd service file (Linux)
+- [ ] Create launchd plist (macOS)
+- [ ] Create Windows service wrapper
+- [ ] Add uninstall script
+- [ ] Test installation on clean systems
+
+**Service files**:
+```
+packages/collector-go/install/
+├── install.sh           # Installation script
+├── devlog-collector.service  # systemd
+├── com.devlog.collector.plist # launchd
+└── uninstall.sh        # Cleanup script
+```
+
+#### Day 4: Monitoring & Observability
+- [ ] Implement Prometheus metrics
+  - Events processed counter
+  - Events buffered gauge
+  - API request duration histogram
+  - Error counters by type
+- [ ] Add structured JSON logging
+- [ ] Create example Grafana dashboard
+- [ ] Document monitoring setup
+- [ ] Add health check details
+- [ ] Create alert templates
+
+**Metrics to expose**:
+```
+devlog_events_processed_total
+devlog_events_buffered
+devlog_events_dropped_total
+devlog_api_requests_total
+devlog_api_request_duration_seconds
+devlog_buffer_size_bytes
+```
+
+#### Day 5: Release & Documentation
+- [ ] Create release checklist
+- [ ] Tag version 1.0.0
+- [ ] Build release binaries
+- [ ] Create GitHub release with binaries
+- [ ] Update main documentation
+- [ ] Create quick start guide
+- [ ] Add video/GIF demonstrations
+- [ ] Announce to users
+
+**Deliverables**:
+- Standalone binaries for all platforms
+- Docker image on registry
+- Installation scripts
+- Systemd/launchd service files
+- Comprehensive documentation
+- Grafana dashboard template
+
+### Success Metrics
+
+**Functionality**:
+- ✅ Parse Copilot, Cursor, Claude logs successfully
+- ✅ Events flow from logs to backend without loss
+- ✅ Offline buffering works (tested by stopping backend)
+- ✅ Graceful shutdown preserves all queued events
+- ✅ Service auto-starts on system boot
+
+**Performance**:
+- ✅ Event ingestion: 5,000+ events/second
+- ✅ CPU usage < 5% during normal operation
+- ✅ Memory usage < 50MB
+- ✅ Batch latency < 5 seconds
+- ✅ 99.9% uptime in production
+
+**Deployment**:
+- ✅ One-command installation on Linux/macOS
+- ✅ Runs as system service automatically
+- ✅ Health check endpoint responds < 10ms
+- ✅ Prometheus metrics endpoint working
+- ✅ Easy uninstall with cleanup
+
+---
+
 ## 📅 Phase 3: UI/UX Reorganization - ✅ COMPLETE
 
 **Timeline**: October 30, 2025 (Completed same day)  
@@ -329,13 +651,13 @@ apps/web/app/projects/[name]/devlogs/[id]/devlog-details-page.tsx
 
 ---
 
-## 📅 Phase 4: Polish & Stabilization (Weeks 4-5) - 🎯 READY TO START
+## 📅 Phase 5: UI Polish & Stabilization (Weeks 4-5)
 
-**Timeline**: October 30 - November 13, 2025 (2 weeks)  
-**Priority**: HIGH - User-facing clarity  
-**Reference**: [REORGANIZATION_PLAN.md Phase 3](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md)
+**Timeline**: November 20 - December 4, 2025 (2 weeks)  
+**Priority**: MEDIUM - User experience enhancements  
+**Note**: Moved from Phase 4 to allow collector implementation to take priority
 
-**Goal**: Update all user-facing text, navigation, and labels to reflect agent observability focus and work item terminology.
+**Goal**: Polish UI, optimize performance, expand testing coverage.
 
 ### Day 1-2: Navigation & Labels Update
 
@@ -442,7 +764,7 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 **Timeline**: November 20 - December 4, 2025  
 **Priority**: HIGH - Production readiness
 
-### Week 4: UI/UX Polish
+### Week 1: UI/UX Polish (Nov 20-27)
 
 #### Session Details Page Enhancements
 - [ ] Add event filtering by type (file_write, llm_request, etc.)
@@ -474,7 +796,7 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 
 **Expected Impact**: Better session management, easier analysis
 
-### Week 5: Performance & Testing (Nov 27 - Dec 4)
+### Week 2: Performance & Testing (Nov 27 - Dec 4)
 
 #### Performance Optimization
 - [ ] Implement virtual scrolling for large event lists
@@ -512,83 +834,6 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 - [ ] Add error reporting service integration
 
 **Expected Impact**: Robust, production-grade application
-
----
-
-## 📅 Phase 5: Go Collector Implementation (Weeks 6-8)
-
-**Timeline**: December 4 - December 25, 2025  
-**Priority**: MEDIUM - Performance enabler for scale
-
-### Week 6: Core Collector Implementation (Dec 4-11)
-
-#### File System Watcher
-- [ ] Implement recursive file watching
-- [ ] Add ignore patterns (.git, node_modules, etc.)
-- [ ] Detect file create, modify, delete events
-- [ ] Calculate file diffs efficiently
-- [ ] Add event debouncing (avoid spam)
-- [ ] Implement event batching for performance
-
-**Tech stack**: fsnotify, go-git for diffs
-
-#### Event Processing Pipeline
-- [ ] Design event queue system
-- [ ] Implement event enrichment (metadata, context)
-- [ ] Add event filtering and routing
-- [ ] Implement buffering and batch sending
-- [ ] Add circuit breaker for failed sends
-- [ ] Implement event persistence for offline mode
-
-**Expected throughput**: 10,000+ events/second
-
-### Week 7: Integration & LLM Detection (Dec 11-18)
-
-#### API Integration
-- [ ] Implement HTTP client for core API
-- [ ] Add authentication token management
-- [ ] Implement retry with exponential backoff
-- [ ] Add connection pooling
-- [ ] Implement health check endpoint
-- [ ] Add metrics collection (Prometheus format)
-
-#### LLM Request Detection
-- [ ] Parse common AI assistant logs (Copilot, Claude)
-- [ ] Detect LLM API calls (OpenAI, Anthropic, etc.)
-- [ ] Extract prompt and response when possible
-- [ ] Calculate token usage from logs
-- [ ] Add plugin system for new AI assistants
-- [ ] Implement privacy filtering (PII removal)
-
-**Supported assistants**:
-- GitHub Copilot (agent mode)
-- Cursor
-- Cline
-- Aider
-
-### Week 8: Deployment & Monitoring (Dec 18-25)
-
-#### Packaging & Distribution
-- [ ] Create installation script (Linux, macOS, Windows)
-- [ ] Add systemd service file (Linux)
-- [ ] Add launchd plist (macOS)
-- [ ] Create Docker container
-- [ ] Add auto-update mechanism
-- [ ] Create uninstall script
-
-#### Monitoring & Observability
-- [ ] Add structured logging (JSON)
-- [ ] Implement metrics endpoint
-- [ ] Add health check endpoint
-- [ ] Create Grafana dashboard
-- [ ] Add alerting for failures
-- [ ] Document troubleshooting guide
-
-**Deliverables**:
-- Standalone binary for major platforms
-- Docker image on registry
-- Comprehensive documentation
-- Example configurations
 
 ---
 
@@ -778,14 +1023,80 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 - ✅ User testing: 90%+ understand "work item" terminology
 - ✅ No accessibility regressions
 
-### Phase 4 (Polish & Stabilization)
+### Phase 4 (Go Collector) - ⚡ HIGH PRIORITY
+- ✅ Parse Copilot, Cursor, Claude logs successfully
+- ✅ Event ingestion: 5,000+ events/second
+- ✅ CPU usage < 5% during normal operation
+- ✅ Memory usage < 50MB
+- ✅ Events appear in dashboard within 5 seconds
+- ✅ Offline buffering handles 10,000+ events
+- ✅ Successfully deployed on 10+ test machines
+- ✅ 99.9% uptime during testing
+- ✅ Zero data loss in normal operation
+
+### Phase 5 (UI Polish & Stabilization)
 - ✅ Page load time < 2s (Time to Interactive)
 - ✅ Event timeline renders 1000 events in < 500ms
 - ✅ API response times < 200ms p95
 - ✅ Web package test coverage >60%
 - ✅ Zero critical bugs in production
 
-### Phase 5 (Go Collector)
+### Phase 6 (Analytics)
+- ✅ 90% pattern detection accuracy
+- ✅ Quality scores correlate with manual review
+- ✅ Recommendations accepted >50% of time
+- ✅ Users report 20%+ productivity improvement
+- ✅ Insights generated within 1 minute of session end
+
+### Phase 7 (Enterprise)
+- ✅ 5+ enterprise customers
+- ✅ Team features used by >80% of teams
+- ✅ Integrations used by >60% of users
+- ✅ Compliance certification achieved
+- ✅ NPS score > 50
+
+---
+
+## 🎯 Critical Path
+
+The **Go Collector (Phase 4)** is now on the critical path:
+
+```
+Phase 1-3 (Complete) → Phase 4: Go Collector → Phase 5: UI Polish → Phase 6-7
+                           ↓
+                    ENABLES ALL FEATURES
+                    (data collection)
+```
+
+Without the collector:
+- ❌ No real agent data flowing
+- ❌ Dashboard shows empty/test data only  
+- ❌ Cannot validate analytics features
+- ❌ Cannot demonstrate value to users
+
+With the collector:
+- ✅ Real-time agent activity capture
+- ✅ Production-ready data pipeline
+- ✅ Foundation for all analytics
+- ✅ Immediate user value
+
+---
+
+## 🚀 Quick Win: Collector MVP
+
+**Target**: 1 week to working prototype
+- Day 1-2: Copilot adapter only
+- Day 3: Basic watcher + client
+- Day 4: Integration + testing
+- Day 5: Deploy and validate with real usage
+
+This gets us to 60% functionality fast, then polish in weeks 2-3.
+
+---
+
+## 📊 Old Success Metrics (Analytics & Enterprise)
+
+### Phase 5 (Go Collector - OLD PRIORITY)
 - ✅ Event ingestion: 10,000+ events/second
 - ✅ CPU usage < 5% during normal operation
 - ✅ Memory usage < 50MB
@@ -859,7 +1170,15 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 
 ## 📝 Decision Log
 
-### October 30, 2025 - Phase 3 Complete
+### October 30, 2025 - Phase 4 Reprioritized as Go Collector
+- **Decision**: Moved Go Collector from Phase 5 to Phase 4 (HIGH PRIORITY)
+- **Rationale**: Collector is the foundational infrastructure - without it, no real agent data flows to the platform
+- **Current Status**: Only ~20% implemented (config, types, discovery), need ~1,700 more lines for core functionality
+- **Impact**: Enables immediate user value, real-time data collection, validates entire platform architecture
+- **Timeline**: 3 weeks to production-ready collector vs. UI polish which can wait
+- **Key insight**: Backend API and dashboard exist but have no data source yet
+
+### October 30, 2025 - Testing Infrastructure Created
 - **Decision**: Completed Phase 3 UI/UX reorganization in single day
 - **Rationale**: UI updates straightforward, component aliases simple, build validation quick
 - **Achievement**: All user-facing text uses "Work Item", component export aliases added for backward compatibility
