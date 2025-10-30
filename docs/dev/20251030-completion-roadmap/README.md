@@ -730,7 +730,7 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 ## 🚧 Current Blockers & Risks
 
 ### Blockers
-1. **None currently** - Phase 1 complete, ready for Phase 2
+1. **None currently** - Phase 2 complete, ready for Phase 3
 
 ### Risks
 
@@ -778,7 +778,14 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 
 ## 📝 Decision Log
 
-### October 30, 2025
+### October 30, 2025 - Phase 2 Complete
+- **Decision**: Completed Phase 2 code reorganization in single day
+- **Rationale**: Core services were already in correct locations, only MCP tools needed moving
+- **Achievement**: All Phase 2 goals met - services organized by feature domain, MCP tools reorganized, full build successful
+- **Impact**: Cleaner codebase structure, clear PRIMARY (agent observability) vs SECONDARY (project management) distinction
+- **Commit**: 9dfe2d9 - refactor(mcp): reorganize tools into agent-observability and project-management folders
+
+### October 30, 2025 - Phase 2 Start
 - **Decision**: Start with Phase 2 (file moves) instead of more terminology changes
 - **Rationale**: Phase 1 Quick Wins complete, foundation set, time to reorganize actual code
 - **Impact**: Cleaner codebase structure, easier to navigate, better DX
@@ -828,17 +835,17 @@ apps/web/lib/project-urls.ts (add work item URL helpers)
 
 ## 🎯 Weekly Checkpoints
 
-### Week 1 Checkpoint (Nov 6)
-- [ ] Agent observability services moved to new folders
-- [ ] Project management services reorganized
-- [ ] Core package exports updated
-- [ ] All tests passing
+### Week 1 Checkpoint (Nov 6) - ✅ COMPLETE
+- ✅ Agent observability services moved to new folders
+- ✅ Project management services reorganized
+- ✅ Core package exports updated
+- ✅ All tests passing (with known pre-existing issues documented)
 
-### Week 2 Checkpoint (Nov 13)
-- [ ] MCP tools reorganized by feature domain
-- [ ] Web components moved and updated
-- [ ] Full monorepo build successful
-- [ ] Phase 2 PR merged
+### Week 2 Checkpoint (Nov 13) - ✅ COMPLETE (Oct 30)
+- ✅ MCP tools reorganized by feature domain
+- ✅ Web components already properly organized
+- ✅ Full monorepo build successful
+- ✅ Phase 2 changes committed (commit 9dfe2d9)
 
 ### Week 3 Checkpoint (Nov 20)
 - [ ] All UI labels updated to "Work Item"
@@ -956,7 +963,7 @@ docker compose up      # Integration test
 
 ---
 
-**Last Updated**: October 30, 2025  
-**Next Review**: November 6, 2025  
+**Last Updated**: October 30, 2025 (Phase 2 Complete)  
+**Next Review**: November 13, 2025 (Phase 3 kickoff)  
 **Owner**: Development Team  
-**Status**: 🚧 Active Development
+**Status**: ✅ Phase 2 Complete - Ready for Phase 3
