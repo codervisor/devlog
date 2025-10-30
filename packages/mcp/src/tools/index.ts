@@ -1,8 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { devlogTools } from './devlog-tools.js';
-import { projectTools } from './project-tools.js';
-import { documentTools } from './document-tools.js';
-import { agentTools } from './agent-tools.js';
+import { agentTools } from './agent-observability/session-tools.js';
+import { 
+  devlogTools, 
+  projectTools, 
+  documentTools 
+} from './project-management/index.js';
 
 /**
  * MCP Tools - Organized by Feature Domain

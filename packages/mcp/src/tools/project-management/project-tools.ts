@@ -1,10 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from '../utils/schema-converter.js';
+import { zodToJsonSchema } from '../../utils/schema-converter.js';
 import {
   ListProjectsSchema,
   GetCurrentProjectSchema,
   SwitchProjectSchema,
-} from '../schemas/index.js';
+} from '../../schemas/index.js';
 
 // Project management tools for MCP server
 export const listProjectsTool: Tool = {

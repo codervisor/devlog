@@ -5,7 +5,7 @@
  */
 
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from '../utils/schema-converter.js';
+import { zodToJsonSchema } from '../../utils/schema-converter.js';
 import {
   StartAgentSessionSchema,
   EndAgentSessionSchema,
@@ -16,7 +16,7 @@ import {
   GetEventStatsSchema,
   GetSessionStatsSchema,
   GetActiveSessionsSchema,
-} from '../schemas/index.js';
+} from '../../schemas/index.js';
 
 /**
  * Agent observability tools for tracking AI coding agent activities

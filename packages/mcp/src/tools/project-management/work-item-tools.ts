@@ -1,5 +1,5 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from '../utils/schema-converter.js';
+import { zodToJsonSchema } from '../../utils/schema-converter.js';
 import {
   AddDevlogNoteSchema,
   CreateDevlogSchema,
@@ -7,7 +7,7 @@ import {
   GetDevlogSchema,
   ListDevlogSchema,
   UpdateDevlogSchema,
-} from '../schemas/index.js';
+} from '../../schemas/index.js';
 
 /**
  * Devlog tools with clear naming and AI-friendly design

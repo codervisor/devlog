@@ -1,12 +1,12 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { zodToJsonSchema } from '../utils/schema-converter.js';
+import { zodToJsonSchema } from '../../utils/schema-converter.js';
 import {
   UploadDocumentSchema,
   ListDocumentsSchema,
   GetDocumentSchema,
   DeleteDocumentSchema,
   SearchDocumentsSchema,
-} from '../schemas/index.js';
+} from '../../schemas/index.js';
 
 /**
  * Document tools for AI agents to manage files and attachments
