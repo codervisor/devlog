@@ -106,8 +106,8 @@ export function NavigationBreadcrumb() {
       // Navigate to the devlog detail page
       router.push(`/projects/${projectName}/devlogs/${devlogId}`);
     } catch (error) {
-      console.error('Error switching devlog:', error);
-      toast.error('Failed to switch devlog');
+      console.error('Error switching work item:', error);
+      toast.error('Failed to switch work item');
     }
   };
 
@@ -205,7 +205,7 @@ export function NavigationBreadcrumb() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search devlogs..."
+                placeholder="Search work items..."
                 value={devlogSearchText}
                 onChange={(e) => setDevlogSearchText(e.target.value)}
                 className="pl-8"
@@ -228,7 +228,7 @@ export function NavigationBreadcrumb() {
               {/* No Results */}
               {filteredDevlogs.length === 0 && (
                 <DropdownMenuItem disabled className="p-3 text-center text-muted-foreground">
-                  {devlogSearchText ? 'No devlog found' : 'No devlog available'}
+                  {devlogSearchText ? 'No work items found' : 'No work items available'}
                 </DropdownMenuItem>
               )}
 

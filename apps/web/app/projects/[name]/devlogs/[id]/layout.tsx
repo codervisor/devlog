@@ -42,7 +42,7 @@ export default async function DevlogLayout({ children, params }: DevlogLayoutPro
 
     return <DevlogProvider devlog={devlog}>{children}</DevlogProvider>;
   } catch (error) {
-    console.error('Error resolving devlog:', error);
+    console.error('Error resolving work item:', error);
     notFound();
   }
 }

@@ -122,7 +122,7 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Updating devlog...',
+      operation: 'Updating work item...',
     });
 
     try {
@@ -135,7 +135,7 @@ export function DevlogList({
       }
 
       await onBatchUpdate(selectedRowKeys, updates);
-      toast.success(`Successfully updated ${selectedRowKeys.length} devlog(s)`);
+      toast.success(`Successfully updated ${selectedRowKeys.length} work item(s)`);
       setSelectedRowKeys([]);
       setBatchOperationModal({ visible: false, type: 'update', title: '' });
       setBatchUpdateForm({
@@ -146,7 +146,7 @@ export function DevlogList({
       });
     } catch (error) {
       toast.error(
-        `Failed to update devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to update work items: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     } finally {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
@@ -160,7 +160,7 @@ export function DevlogList({
       visible: true,
       current: 0,
       total: selectedRowKeys.length,
-      operation: 'Deleting devlog...',
+      operation: 'Deleting work item...',
     });
 
     try {
@@ -172,12 +172,12 @@ export function DevlogList({
       }
 
       await onBatchDelete(selectedRowKeys);
-      toast.success(`Successfully deleted ${selectedRowKeys.length} devlog(s)`);
+      toast.success(`Successfully deleted ${selectedRowKeys.length} work item(s)`);
       setSelectedRowKeys([]);
       setBatchOperationModal({ visible: false, type: 'delete', title: '' });
     } catch (error) {
       toast.error(
-        `Failed to delete devlogs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to delete work items: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     } finally {
       setBatchOperationProgress({ visible: false, current: 0, total: 0, operation: '' });
@@ -287,7 +287,7 @@ export function DevlogList({
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search devlogs..."
+              placeholder="Search work items..."
               value={searchText}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-8 w-64"

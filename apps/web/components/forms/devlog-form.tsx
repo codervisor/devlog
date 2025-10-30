@@ -69,9 +69,9 @@ export function DevlogForm({
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>{isEditMode ? 'Edit Devlog' : 'Create New Devlog'}</CardTitle>
+        <CardTitle>{isEditMode ? 'Edit Work Item' : 'Create New Work Item'}</CardTitle>
         <CardDescription>
-          {isEditMode ? 'Update the development log entry' : 'Add a new development log entry'}
+          {isEditMode ? 'Update the work item details' : 'Add a new work item to track your progress'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -243,7 +243,7 @@ export function DevlogForm({
               </Button>
               <Button type="submit">
                 <Save className="mr-2 h-4 w-4" />
-                {isEditMode ? 'Update Devlog' : 'Create Devlog'}
+                {isEditMode ? 'Update Work Item' : 'Create Work Item'}
               </Button>
             </div>
           </form>

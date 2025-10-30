@@ -114,3 +114,12 @@ export function DevlogTypeTag({ type, className }: DevlogTypeTagProps) {
     </Badge>
   );
 }
+
+// Export aliases using WorkItem terminology (backward compatible)
+export type WorkItemStatusTagProps = DevlogStatusTagProps;
+export type WorkItemPriorityTagProps = DevlogPriorityTagProps;
+export type WorkItemTypeTagProps = DevlogTypeTagProps;
+
+export { DevlogStatusTag as WorkItemStatusTag };
+export { DevlogPriorityTag as WorkItemPriorityTag };
+export { DevlogTypeTag as WorkItemTypeTag };

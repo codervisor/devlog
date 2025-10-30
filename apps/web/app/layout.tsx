@@ -7,7 +7,7 @@ import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'Devlog - AI Agent Observability Platform',
-  description: 'Monitor and analyze AI coding agent activities in real-time',
+  description: 'Monitor, analyze, and improve AI coding agent performance. Track sessions, events, and work items in real-time.',
   icons: {
     icon: '/devlog-logo.svg',
   },
