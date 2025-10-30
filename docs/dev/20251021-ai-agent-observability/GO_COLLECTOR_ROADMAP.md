@@ -169,9 +169,47 @@
 - [ ] Test offline → online transition
 - [ ] Performance profiling
 
-## Phase 4: Distribution (Days 17-20)
+## Phase 4: Historical Log Collection (Days 17-20)
 
-### Day 17: Build System
+### Day 17: Backfill Architecture
+- [ ] Design backfill data structures
+- [ ] Add `BackfillManager` component
+- [ ] Define timestamp tracking mechanism
+- [ ] Implement deduplication logic (prevent re-processing)
+- [ ] Add log file parsing from arbitrary position
+- [ ] Design state persistence (last processed position)
+- [ ] Write architecture documentation
+
+### Day 18: Backfill Implementation
+- [ ] Create `internal/backfill/` package
+- [ ] Implement log file historical reading (from start/date)
+- [ ] Add date range filtering for events
+- [ ] Implement progress tracking and resumption
+- [ ] Add dry-run mode (preview without sending)
+- [ ] Handle log rotation during backfill
+- [ ] Write comprehensive tests
+
+### Day 19: Backfill CLI Integration
+- [ ] Add `backfill` subcommand to CLI
+- [ ] Add flags: `--agent`, `--from`, `--to`, `--dry-run`
+- [ ] Add `--backfill` flag to `start` command
+- [ ] Implement progress reporting
+- [ ] Add statistics output (events found, sent, skipped)
+- [ ] Test CLI with real historical logs
+- [ ] Document backfill command usage
+
+### Day 20: Backfill Testing & Validation
+- [ ] Test with Copilot historical logs
+- [ ] Test with Claude historical logs  
+- [ ] Test with Cursor historical logs
+- [ ] Verify deduplication works correctly
+- [ ] Test large backfill operations (>10K events)
+- [ ] Validate timestamp accuracy
+- [ ] Performance benchmarking
+
+## Phase 5: Distribution (Days 21-24)
+
+### Day 21: Build System
 - [ ] Create cross-compilation script
 - [ ] Build for all platforms:
   - darwin/amd64
@@ -245,6 +283,8 @@
 - [ ] Startup time < 1 second
 - [ ] Works offline, syncs when online
 - [ ] Handles log rotation gracefully
+- [ ] Historical log collection with deduplication
+- [ ] Backfill performance > 500 events/sec
 - [ ] Cross-platform compatibility verified
 - [ ] NPM package installable and functional
 
@@ -269,13 +309,14 @@
 
 ## Timeline Summary
 
-- **Days 1-2**: Setup (10%)
-- **Days 3-7**: Core Infrastructure (25%)
-- **Days 8-12**: Adapters (25%)
-- **Days 13-16**: Backend Communication (20%)
-- **Days 17-20**: Distribution (20%)
+- **Days 1-2**: Setup (8%)
+- **Days 3-7**: Core Infrastructure (20%)
+- **Days 8-12**: Adapters (20%)
+- **Days 13-16**: Backend Communication (17%)
+- **Days 17-20**: Historical Log Collection (17%)
+- **Days 21-24**: Distribution (18%)
 
-**Total: ~20 days (4 weeks)** for production-ready collector
+**Total: ~24 days (4.8 weeks)** for production-ready collector with backfill support
 
 ## Next Actions
 

@@ -61,6 +61,46 @@ devlog-collector start
 devlog-collector status
 ```
 
+## Current Limitations
+
+### Real-Time Monitoring Only
+
+The collector currently operates in **real-time mode only**. When started:
+- ✅ Discovers agent log file locations automatically
+- ✅ Watches files for future changes (using fsnotify)
+- ❌ Does NOT read existing historical log data
+
+This means:
+- Events are captured from the moment the collector starts
+- Historical agent activity before collector startup is not captured
+- If the collector is stopped, events during downtime are not recovered
+
+### Historical Log Collection (Planned)
+
+A backfill feature is planned for future releases to address these limitations:
+
+```bash
+# Proposed backfill command (not yet implemented)
+devlog-collector backfill [options]
+  --agent <name>        # Specific agent (copilot, claude, cursor)
+  --from <date>         # Start date for historical collection
+  --to <date>           # End date for historical collection  
+  --dry-run             # Preview what would be collected
+
+# Or as a startup flag
+devlog-collector start --backfill --backfill-days=7
+```
+
+**Use cases for historical collection:**
+- Initial setup with existing context from past sessions
+- Gap recovery after collector downtime or system restarts
+- Historical analysis of past AI agent activities
+- Timestamp tracking to avoid duplicate event processing
+
+**Tracking:** See [go-collector-design.md](../../docs/dev/20251021-ai-agent-observability/go-collector-design.md) for design details.
+
+**Status:** Not yet implemented (see roadmap)
+
 ## Configuration
 
 The collector looks for configuration at `~/.devlog/collector.json`.
