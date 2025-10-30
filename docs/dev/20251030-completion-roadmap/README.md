@@ -271,27 +271,26 @@ docker compose up      # Services start
 
 **Timeline**: October 30 - November 20, 2025 (3 weeks)  
 **Priority**: ⚡ **CRITICAL** - Core infrastructure for agent observability  
-**Current Status**: ~20% complete (foundation only - config, types, discovery)  
-**Missing**: All core functionality (adapters, watcher, client, buffer)
+**Current Status**: ~60% complete (Week 1 COMPLETE - all core components implemented)  
+**Completed**: Adapters, watcher, client, buffer, main integration
 
 **Rationale**: The collector is the **foundational piece** that enables the entire platform. Without it, we cannot capture real agent activity from Copilot, Cursor, Claude, etc. The backend API and dashboard are ready, but there's no data flowing through yet.
 
 ### Current Implementation Status
 
-**✅ What Exists** (~250 lines):
-- Configuration system (JSON, env vars, validation)
-- Type definitions (AgentEvent, EventMetrics, SessionInfo)
-- Log discovery (finds Copilot/Claude/Cursor log locations)
-- CLI framework (cobra commands: start, stop, status)
-- Basic tests (all passing)
+**✅ Week 1 Complete** (~1,200 lines implemented):
+- Agent adapters (Copilot parser with registry pattern)
+- File system watcher (fsnotify with debouncing)
+- HTTP client (batching, retries, circuit breaker)
+- SQLite buffer (offline support with FIFO)
+- Main integration (graceful shutdown)
+- Tests passing (68-81% coverage)
 
-**❌ What's Missing** (~1,700 lines needed):
-- Agent adapters (parse log formats)
-- File system watcher (monitor for changes)
-- HTTP client (send events to backend)
-- SQLite buffer (offline support)
-- Event processing pipeline
-- Main integration loop
+**❌ What's Remaining** (~500 lines):
+- Additional adapters (Claude, Cursor)
+- Integration tests (E2E with real logs)
+- Cross-platform builds and packaging
+- Documentation and deployment guides
 
 ### Week 1: Core Collector Components (Oct 30 - Nov 6)
 
