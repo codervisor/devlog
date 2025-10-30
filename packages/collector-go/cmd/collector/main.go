@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/codervisor/devlog/collector/internal/adapters"
+	"github.com/codervisor/devlog/collector/internal/backfill"
 	"github.com/codervisor/devlog/collector/internal/buffer"
 	"github.com/codervisor/devlog/collector/internal/client"
 	"github.com/codervisor/devlog/collector/internal/config"
@@ -258,6 +259,227 @@ var statusCmd = &cobra.Command{
 	},
 }
 
+var backfillCmd = &cobra.Command{
+	Use:   "backfill",
+	Short: "Process historical agent logs",
+	Long: `Backfill processes historical log files to import past agent activity.
+This is useful for capturing development history before the collector was installed.`,
+}
+
+var backfillRunCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Run backfill operation",
+	Long:  "Process historical logs for the specified agent and date range",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Load configuration
+		var err error
+		cfg, err = config.LoadConfig(configPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
+
+		// Parse flags
+		agentName, _ := cmd.Flags().GetString("agent")
+		fromDate, _ := cmd.Flags().GetString("from")
+		toDate, _ := cmd.Flags().GetString("to")
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		days, _ := cmd.Flags().GetInt("days")
+
+		// Parse dates
+		var from, to time.Time
+		if fromDate != "" {
+			from, err = time.Parse("2006-01-02", fromDate)
+			if err != nil {
+				return fmt.Errorf("invalid from date: %w", err)
+			}
+		} else if days > 0 {
+			from = time.Now().AddDate(0, 0, -days)
+		}
+
+		if toDate != "" {
+			to, err = time.Parse("2006-01-02", toDate)
+			if err != nil {
+				return fmt.Errorf("invalid to date: %w", err)
+			}
+		} else {
+			to = time.Now()
+		}
+
+		// Initialize components
+		registry := adapters.DefaultRegistry(cfg.ProjectID)
+
+		bufferConfig := buffer.Config{
+			DBPath:  cfg.Buffer.DBPath,
+			MaxSize: cfg.Buffer.MaxSize,
+			Logger:  log,
+		}
+		buf, err := buffer.NewBuffer(bufferConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create buffer: %w", err)
+		}
+		defer buf.Close()
+
+		batchInterval, _ := cfg.GetBatchInterval()
+		clientConfig := client.Config{
+			BaseURL:    cfg.BackendURL,
+			APIKey:     cfg.APIKey,
+			BatchSize:  cfg.Collection.BatchSize,
+			BatchDelay: batchInterval,
+			MaxRetries: cfg.Collection.MaxRetries,
+			Logger:     log,
+		}
+		apiClient := client.NewClient(clientConfig)
+		apiClient.Start()
+		defer apiClient.Stop()
+
+		// Create backfill manager
+		backfillConfig := backfill.Config{
+			Registry:    registry,
+			Buffer:      buf,
+			Client:      apiClient,
+			StateDBPath: cfg.Buffer.DBPath,
+			Logger:      log,
+		}
+		manager, err := backfill.NewBackfillManager(backfillConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create backfill manager: %w", err)
+		}
+		defer manager.Close()
+
+		// Determine log path
+		logPath := ""
+		if agentName != "" {
+			if agentCfg, exists := cfg.Agents[agentName]; exists {
+				logPath = agentCfg.LogPath
+			} else {
+				return fmt.Errorf("unknown agent: %s", agentName)
+			}
+		}
+
+		if logPath == "" {
+			return fmt.Errorf("no log path specified")
+		}
+
+		// Progress callback
+		startTime := time.Now()
+		progressFunc := func(p backfill.Progress) {
+			elapsed := time.Since(startTime)
+			eventsPerSec := float64(p.EventsProcessed) / elapsed.Seconds()
+
+			fmt.Printf("\rProgress: [%-20s] %.1f%% | Events: %d | Speed: %.1f/s",
+				progressBar(p.Percentage),
+				p.Percentage,
+				p.EventsProcessed,
+				eventsPerSec,
+			)
+		}
+
+		// Run backfill
+		ctx := context.Background()
+		bfConfig := backfill.BackfillConfig{
+			AgentName:  agentName,
+			LogPath:    logPath,
+			FromDate:   from,
+			ToDate:     to,
+			DryRun:     dryRun,
+			BatchSize:  100,
+			ProgressCB: progressFunc,
+		}
+
+		result, err := manager.Backfill(ctx, bfConfig)
+		if err != nil {
+			return fmt.Errorf("backfill failed: %w", err)
+		}
+
+		// Print summary
+		fmt.Println("\n\n✓ Backfill completed")
+		fmt.Printf("Duration: %s\n", result.Duration)
+		fmt.Printf("Events processed: %d\n", result.ProcessedEvents)
+		fmt.Printf("Events skipped: %d (duplicates)\n", result.SkippedEvents)
+		fmt.Printf("Errors: %d\n", result.ErrorEvents)
+		fmt.Printf("Throughput: %.1f events/sec\n", float64(result.ProcessedEvents)/result.Duration.Seconds())
+		fmt.Printf("Data processed: %.2f MB\n", float64(result.BytesProcessed)/(1024*1024))
+
+		return nil
+	},
+}
+
+var backfillStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check backfill status",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Load configuration
+		var err error
+		cfg, err = config.LoadConfig(configPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
+
+		// Create backfill manager
+		backfillConfig := backfill.Config{
+			StateDBPath: cfg.Buffer.DBPath,
+			Logger:      log,
+		}
+		manager, err := backfill.NewBackfillManager(backfillConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create backfill manager: %w", err)
+		}
+		defer manager.Close()
+
+		// Get agent name
+		agentName, _ := cmd.Flags().GetString("agent")
+		if agentName == "" {
+			agentName = "github-copilot" // Default
+		}
+
+		// Get status
+		states, err := manager.Status(agentName)
+		if err != nil {
+			return fmt.Errorf("failed to get status: %w", err)
+		}
+
+		if len(states) == 0 {
+			fmt.Printf("No backfill history for agent: %s\n", agentName)
+			return nil
+		}
+
+		// Print status
+		fmt.Printf("Backfill status for %s:\n\n", agentName)
+		for _, state := range states {
+			fmt.Printf("File: %s\n", state.LogFilePath)
+			fmt.Printf("  Status: %s\n", state.Status)
+			fmt.Printf("  Events processed: %d\n", state.TotalEventsProcessed)
+			fmt.Printf("  Byte offset: %d\n", state.LastByteOffset)
+			fmt.Printf("  Started: %s\n", state.StartedAt.Format(time.RFC3339))
+			if state.CompletedAt != nil {
+				fmt.Printf("  Completed: %s\n", state.CompletedAt.Format(time.RFC3339))
+			}
+			if state.ErrorMessage != "" {
+				fmt.Printf("  Error: %s\n", state.ErrorMessage)
+			}
+			fmt.Println()
+		}
+
+		return nil
+	},
+}
+
+func progressBar(percentage float64) string {
+	filled := int(percentage / 5) // 20 chars = 100%
+	if filled > 20 {
+		filled = 20
+	}
+	bar := ""
+	for i := 0; i < 20; i++ {
+		if i < filled {
+			bar += "█"
+		} else {
+			bar += "░"
+		}
+	}
+	return bar
+}
+
 func init() {
 	// Configure logging
 	log.SetFormatter(&logrus.TextFormatter{
@@ -269,6 +491,21 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(backfillCmd)
+
+	// Add backfill subcommands
+	backfillCmd.AddCommand(backfillRunCmd)
+	backfillCmd.AddCommand(backfillStatusCmd)
+
+	// Backfill run flags
+	backfillRunCmd.Flags().StringP("agent", "a", "github-copilot", "Agent name (copilot, claude, cursor)")
+	backfillRunCmd.Flags().StringP("from", "f", "", "Start date (YYYY-MM-DD)")
+	backfillRunCmd.Flags().StringP("to", "t", "", "End date (YYYY-MM-DD)")
+	backfillRunCmd.Flags().IntP("days", "d", 0, "Backfill last N days (alternative to from/to)")
+	backfillRunCmd.Flags().Bool("dry-run", false, "Preview without processing")
+
+	// Backfill status flags
+	backfillStatusCmd.Flags().StringP("agent", "a", "", "Agent name to check")
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c",
