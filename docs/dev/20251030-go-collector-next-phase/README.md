@@ -21,7 +21,7 @@ Complete the Go collector to MVP status by implementing:
 ### Phase 2 Completion: Additional Adapters
 
 #### Task 1: Claude Code Adapter
-**Priority**: HIGH  
+**Priority**: LOW  
 **Estimated Time**: 4-6 hours  
 **Status**: Paused (Waiting for real log samples)  
 **Assignee**: TBD
@@ -75,7 +75,7 @@ Complete the Go collector to MVP status by implementing:
 ---
 
 #### Task 2: Cursor Adapter
-**Priority**: MEDIUM  
+**Priority**: LOW  
 **Estimated Time**: 3-4 hours  
 **Status**: Paused (Waiting for real log samples)  
 **Assignee**: TBD  
