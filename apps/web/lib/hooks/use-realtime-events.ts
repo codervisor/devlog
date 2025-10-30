@@ -97,6 +97,18 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const listenersRef = useRef<Map<string, Set<(data: any) => void>>>(new Map());
   const reconnectAttemptsRef = useRef(0);
+  
+  // Store callbacks in refs to avoid recreating connect/disconnect functions
+  const onConnectedRef = useRef(onConnected);
+  const onDisconnectedRef = useRef(onDisconnected);
+  const onErrorRef = useRef(onError);
+  
+  // Update refs when callbacks change
+  useEffect(() => {
+    onConnectedRef.current = onConnected;
+    onDisconnectedRef.current = onDisconnected;
+    onErrorRef.current = onError;
+  }, [onConnected, onDisconnected, onError]);
 
   const connect = useCallback(() => {
     // Clean up existing connection
@@ -120,7 +132,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
         });
         
         reconnectAttemptsRef.current = 0;
-        onConnected?.();
+        onConnectedRef.current?.();
       });
 
       eventSource.onerror = (error) => {
@@ -133,7 +145,7 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
           error: errorObj,
         }));
         
-        onError?.(errorObj);
+        onErrorRef.current?.(errorObj);
         
         // Attempt to reconnect if enabled
         if (autoReconnect && reconnectAttemptsRef.current < maxReconnectAttempts) {
@@ -186,9 +198,9 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
         reconnectAttempts: reconnectAttemptsRef.current,
         error: errorObj,
       });
-      onError?.(errorObj);
+      onErrorRef.current?.(errorObj);
     }
-  }, [autoReconnect, maxReconnectAttempts, reconnectDelay, onConnected, onError]);
+  }, [autoReconnect, maxReconnectAttempts, reconnectDelay]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -208,8 +220,8 @@ export function useRealtimeEvents(options: UseRealtimeEventsOptions = {}) {
       error: null,
     });
 
-    onDisconnected?.();
-  }, [onDisconnected]);
+    onDisconnectedRef.current?.();
+  }, []);
 
   const subscribe = useCallback((eventType: string, callback: (data: any) => void) => {
     if (!listenersRef.current.has(eventType)) {
