@@ -12,19 +12,16 @@ import (
 var AgentLogLocations = map[string]map[string][]string{
 	"copilot": {
 		"darwin": {
-			"~/.vscode/extensions/github.copilot-*/logs",
-			"~/.vscode-insiders/extensions/github.copilot-*/logs",
-			"~/Library/Application Support/Code/logs/*/exthost",
+			"~/Library/Application Support/Code/User/workspaceStorage/*/chatSessions",
+			"~/Library/Application Support/Code - Insiders/User/workspaceStorage/*/chatSessions",
 		},
 		"linux": {
-			"~/.vscode/extensions/github.copilot-*/logs",
-			"~/.vscode-insiders/extensions/github.copilot-*/logs",
-			"~/.config/Code/logs/*/exthost",
+			"~/.config/Code/User/workspaceStorage/*/chatSessions",
+			"~/.config/Code - Insiders/User/workspaceStorage/*/chatSessions",
 		},
 		"windows": {
-			"%USERPROFILE%\\.vscode\\extensions\\github.copilot-*\\logs",
-			"%USERPROFILE%\\.vscode-insiders\\extensions\\github.copilot-*\\logs",
-			"%APPDATA%\\Code\\logs\\*\\exthost",
+			"%APPDATA%\\Code\\User\\workspaceStorage\\*\\chatSessions",
+			"%APPDATA%\\Code - Insiders\\User\\workspaceStorage\\*\\chatSessions",
 		},
 	},
 	"claude": {
@@ -192,7 +189,7 @@ func isLogFile(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
 
 	// Check common log file extensions
-	logExtensions := []string{".log", ".txt", ".jsonl", ".ndjson"}
+	logExtensions := []string{".log", ".txt", ".json", ".jsonl", ".ndjson"}
 	for _, logExt := range logExtensions {
 		if ext == logExt {
 			return true

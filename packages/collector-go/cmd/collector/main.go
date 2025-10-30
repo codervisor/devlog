@@ -25,6 +25,23 @@ var (
 	cfg        *config.Config
 )
 
+// agentNameMap maps config agent names to adapter agent names
+var agentNameMap = map[string]string{
+	"copilot": "github-copilot",
+	"claude":  "claude",
+	"cursor":  "cursor",
+	"cline":   "cline",
+	"aider":   "aider",
+}
+
+// mapAgentName converts config agent name to adapter agent name
+func mapAgentName(configName string) string {
+	if adapterName, ok := agentNameMap[configName]; ok {
+		return adapterName
+	}
+	return configName
+}
+
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -140,9 +157,10 @@ var startCmd = &cobra.Command{
 		}
 
 		for agentName, logs := range discovered {
-			adapterInstance, err := registry.Get(agentName)
+			adapterName := mapAgentName(agentName)
+			adapterInstance, err := registry.Get(adapterName)
 			if err != nil {
-				log.Warnf("No adapter for %s, skipping", agentName)
+				log.Warnf("No adapter for %s (mapped to %s), skipping", agentName, adapterName)
 				continue
 			}
 
@@ -360,6 +378,21 @@ var backfillRunCmd = &cobra.Command{
 			return fmt.Errorf("no log path specified")
 		}
 
+		// If log path is "auto", discover it
+		if logPath == "auto" {
+			log.Infof("Auto-discovering log path for %s...", agentName)
+			discovered, err := watcher.DiscoverAgentLogs(agentName)
+			if err != nil {
+				return fmt.Errorf("failed to discover logs for %s: %w", agentName, err)
+			}
+			if len(discovered) == 0 {
+				return fmt.Errorf("no logs found for agent %s", agentName)
+			}
+			// Use first discovered log path
+			logPath = discovered[0].Path
+			log.Infof("Using discovered log path: %s", logPath)
+		}
+
 		// Progress callback
 		startTime := time.Now()
 		progressFunc := func(p backfill.Progress) {
@@ -376,8 +409,9 @@ var backfillRunCmd = &cobra.Command{
 
 		// Run backfill
 		ctx := context.Background()
+		adapterName := mapAgentName(agentName)
 		bfConfig := backfill.BackfillConfig{
-			AgentName:  agentName,
+			AgentName:  adapterName,
 			LogPath:    logPath,
 			FromDate:   from,
 			ToDate:     to,
@@ -498,7 +532,7 @@ func init() {
 	backfillCmd.AddCommand(backfillStatusCmd)
 
 	// Backfill run flags
-	backfillRunCmd.Flags().StringP("agent", "a", "github-copilot", "Agent name (copilot, claude, cursor)")
+	backfillRunCmd.Flags().StringP("agent", "a", "copilot", "Agent name (copilot, claude, cursor)")
 	backfillRunCmd.Flags().StringP("from", "f", "", "Start date (YYYY-MM-DD)")
 	backfillRunCmd.Flags().StringP("to", "t", "", "End date (YYYY-MM-DD)")
 	backfillRunCmd.Flags().IntP("days", "d", 0, "Backfill last N days (alternative to from/to)")

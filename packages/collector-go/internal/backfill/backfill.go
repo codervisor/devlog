@@ -483,5 +483,5 @@ func (bm *BackfillManager) Close() error {
 // isLogFile checks if a file is a log file
 func isLogFile(path string) bool {
 	ext := filepath.Ext(path)
-	return ext == ".log" || ext == ".txt"
+	return ext == ".log" || ext == ".txt" || ext == ".json" || ext == ".jsonl" || ext == ".ndjson"
 }
