@@ -15,76 +15,132 @@ The Go Client Collector is a lightweight, cross-platform binary that runs on dev
 
 ### High-Level Design
 
-```
-Developer Machine
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  AI Agents                                                  │
-│  ├─ GitHub Copilot → ~/.vscode/extensions/.../logs         │
-│  ├─ Claude Code → ~/.claude/logs                           │
-│  ├─ Cursor → ~/Library/Application Support/Cursor/logs     │
-│  └─ Others                                                  │
-│                                                             │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │                                                    │    │
-│  │           Go Collector Process                     │    │
-│  │                                                    │    │
-│  │  ┌──────────────────────────────────────────┐     │    │
-│  │  │  Log Watcher (fsnotify)                  │     │    │
-│  │  │  • Watches agent log directories         │     │    │
-│  │  │  • Detects new/modified log files        │     │    │
-│  │  └────────────┬─────────────────────────────┘     │    │
-│  │               │                                    │    │
-│  │  ┌────────────▼─────────────────────────────┐     │    │
-│  │  │  Adapter Registry                         │     │    │
-│  │  │  • Auto-detects agent type               │     │    │
-│  │  │  • Routes to appropriate parser          │     │    │
-│  │  └────────────┬─────────────────────────────┘     │    │
-│  │               │                                    │    │
-│  │  ┌────────────▼─────────────────────────────┐     │    │
-│  │  │  Event Parser (Agent-Specific Adapters)  │     │    │
-│  │  │  • Parses agent-specific log format      │     │    │
-│  │  │  • Transforms to standard AgentEvent     │     │    │
-│  │  │  • Enriches with context                 │     │    │
-│  │  └────────────┬─────────────────────────────┘     │    │
-│  │               │                                    │    │
-│  │  ┌────────────▼─────────────────────────────┐     │    │
-│  │  │  Local Buffer (SQLite)                   │     │    │
-│  │  │  • Stores events temporarily             │     │    │
-│  │  │  • Enables offline operation             │     │    │
-│  │  │  • Deduplication                         │     │    │
-│  │  └────────────┬─────────────────────────────┘     │    │
-│  │               │                                    │    │
-│  │  ┌────────────▼─────────────────────────────┐     │    │
-│  │  │  Batch Manager                           │     │    │
-│  │  │  • Batches events (100 or 5s)            │     │    │
-│  │  │  • Compresses batches                    │     │    │
-│  │  │  • Manages send queue                    │     │    │
-│  │  └────────────┬─────────────────────────────┘     │    │
-│  │               │                                    │    │
-│  │  ┌────────────▼─────────────────────────────┐     │    │
-│  │  │  Backend Client (HTTP/gRPC)              │     │    │
-│  │  │  • Sends batches to backend              │     │    │
-│  │  │  • Retry with exponential backoff        │     │    │
-│  │  │  • Connection pooling                    │     │    │
-│  │  └──────────────────────────────────────────┘     │    │
-│  │                                                    │    │
-│  └────────────────────────────────────────────────────┘    │
-│                                                             │
-└─────────────────────────┬───────────────────────────────────┘
-                          │ HTTP/gRPC over TLS
-                          │
-┌─────────────────────────▼───────────────────────────────────┐
-│                                                             │
-│              Devlog Backend (Cloud)                         │
-│  • TypeScript API Gateway                                   │
-│  • Go Event Processor                                       │
-│  • PostgreSQL + TimescaleDB                                 │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Agents["AI Agents"]
+        direction LR
+        Copilot["Copilot"] ~~~ Claude["Claude"] ~~~ Cursor["Cursor"]
+    end
+    
+    subgraph Collector["Go Collector Process"]
+        Watcher["Watcher"] --> Registry["Adapter<br/>Registry"]
+        Registry --> Parser["Event<br/>Parser"]
+        Parser --> Buffer["SQLite<br/>Buffer"]
+        Buffer --> Batch["Batch<br/>Manager"]
+        Batch --> Client["HTTP<br/>Client"]
+    end
+    
+    Agents -.->|monitors| Watcher
+    Client -->|TLS| Backend["Backend<br/>(Cloud)"]
 ```
 
 ## Component Details
+
+### 0. CLI Design & Architecture
+
+**Single Entrypoint Philosophy**
+
+The collector follows a **single entrypoint design** where all functionality is accessed through one main command (`devlog-collector`) with subcommands. This design decision provides several benefits:
+
+**Benefits**:
+- **Simplicity**: Users only need to remember one command name
+- **Discoverability**: All features are organized under one namespace
+- **Consistency**: Uniform argument parsing and help system
+- **Maintainability**: Single codebase entry point reduces complexity
+- **Distribution**: Only one binary to install and update
+
+**CLI Structure**:
+
+```bash
+devlog-collector [global-flags] <command> [command-flags] [arguments]
+
+# Available commands:
+devlog-collector start      # Start the collector daemon
+devlog-collector stop       # Stop the running collector
+devlog-collector status     # Check collector status
+devlog-collector version    # Print version information
+devlog-collector config     # Manage configuration
+devlog-collector logs       # View collector logs
+```
+
+**Implementation** (using Cobra):
+
+```go
+// cmd/collector/main.go
+package main
+
+import (
+    "github.com/spf13/cobra"
+)
+
+var rootCmd = &cobra.Command{
+    Use:   "devlog-collector",
+    Short: "AI Agent Activity Collector for Devlog",
+    Long: `A lightweight collector that monitors AI agent logs in real-time
+and forwards events to the Devlog backend.
+
+Supports: GitHub Copilot, Claude Code, Cursor, and more.`,
+}
+
+var startCmd = &cobra.Command{
+    Use:   "start",
+    Short: "Start the collector daemon",
+    RunE:  runStart,
+}
+
+var statusCmd = &cobra.Command{
+    Use:   "status",
+    Short: "Check collector status",
+    RunE:  runStatus,
+}
+
+func init() {
+    rootCmd.AddCommand(startCmd)
+    rootCmd.AddCommand(statusCmd)
+    rootCmd.AddCommand(versionCmd)
+    // ... other commands
+}
+
+func main() {
+    if err := rootCmd.Execute(); err != nil {
+        os.Exit(1)
+    }
+}
+```
+
+**Design Principles**:
+1. **No separate binaries**: Avoid creating `devlog-start`, `devlog-stop`, etc.
+2. **Clear command hierarchy**: Group related functionality under subcommands
+3. **Consistent flags**: Global flags (like `--config`, `--verbose`) work for all commands
+4. **Progressive disclosure**: Basic commands simple, advanced features available via flags
+5. **Help everywhere**: Every command and flag has help text
+
+**Historical Context & Backfill**:
+
+The collector currently monitors logs in **real-time only**. When the collector starts:
+- It discovers log file locations
+- It watches files for future changes (via fsnotify)
+- It does NOT read existing historical logs
+
+**Future Enhancement**: Add historical log collection capability:
+
+```bash
+# Proposed backfill command
+devlog-collector backfill [options]
+  --agent <name>        # Specific agent (copilot, claude, etc.)
+  --from <date>         # Start date for historical collection
+  --to <date>           # End date for historical collection
+  --dry-run             # Preview what would be collected
+
+# Or as a flag on start
+devlog-collector start --backfill --backfill-days=7
+```
+
+This would enable:
+- Initial setup with existing context
+- Gap recovery after collector downtime
+- Historical analysis of past agent activity
+- Timestamp tracking to avoid duplicate processing
 
 ### 1. Configuration Management
 

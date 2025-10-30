@@ -175,27 +175,25 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Critical Path
 
-```
-Current Focus (Next 20 days):
-┌─────────────────────────────────────────────────────────────┐
-│  🎯 Phase 0: Go Collector Development                       │
-│                                                             │
-│  Days 1-2:   Project setup and tooling                     │
-│  Days 3-7:   Core infrastructure (config, watcher, buffer) │
-│  Days 8-12:  Adapter system (Copilot, Claude, Generic)     │
-│  Days 13-16: Backend communication and retry logic         │
-│  Days 17-20: Cross-platform distribution via NPM           │
-│                                                             │
-│  Output: Production-ready collector binary                 │
-└─────────────────────────────────────────────────────────────┘
-                           ↓
-After Go Collector Complete:
-┌─────────────────────────────────────────────────────────────┐
-│  Complete Phase 1 (finish Week 3-4 tasks)                   │
-│  → Phase 2: Visualization                                   │
-│  → Phase 3: Intelligence                                    │
-│  → Phase 4: Enterprise                                      │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Phase0["🎯 Phase 0: Go Collector Development (Days 1-20)"]
+        direction LR
+        D1["Days 1-2<br/>Project setup<br/>and tooling"]
+        D3["Days 3-7<br/>Core infrastructure<br/>(config, watcher, buffer)"]
+        D8["Days 8-12<br/>Adapter system<br/>(Copilot, Claude, Generic)"]
+        D13["Days 13-16<br/>Backend communication<br/>and retry logic"]
+        D17["Days 17-20<br/>Cross-platform<br/>distribution via NPM"]
+        
+        D1 --> D3 --> D8 --> D13 --> D17
+    end
+    
+    D17 --> Output["✅ Production-ready<br/>collector binary"]
+    
+    Output --> Phase1["Complete Phase 1<br/>(finish Week 3-4 tasks)"]
+    Phase1 --> Phase2["Phase 2:<br/>Visualization"]
+    Phase2 --> Phase3["Phase 3:<br/>Intelligence"]
+    Phase3 --> Phase4["Phase 4:<br/>Enterprise"]
 ```
 
 ---
