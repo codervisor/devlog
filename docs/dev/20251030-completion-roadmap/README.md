@@ -2,36 +2,54 @@
 
 **Date**: October 30, 2025  
 **Status**: 🚧 In Progress  
-**Current Phase**: Phase 3 Completion + Phase 4 Planning  
-**Progress**: ~60% Complete toward MVP
+**Current Phase**: Phase 2 - Code Structure Reorganization  
+**Progress**: ~65% Complete toward MVP  
+**Based on**: [Codebase Reorganization Plan](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md)
 
 ## 📋 Executive Summary
 
-This document tracks the remaining work to complete the AI Agent Observability Platform transformation. Based on the significant progress made through PRs #48-50, we're now in a strong position to finish the reorganization and move toward production-ready features.
+This roadmap tracks the remaining work to complete the AI Agent Observability Platform. We've successfully completed Phase 1 (Quick Wins - terminology and documentation), and are now ready to execute Phase 2 (code structure reorganization) followed by production polish.
 
-### Current State
+### ✅ Completed (Phase 1 - Quick Wins)
+- ✅ WorkItem type alias added (backward compatible)
+- ✅ Documentation updated to emphasize agent observability
+- ✅ MCP tools categorized and organized
+- ✅ Code comments and JSDoc added
+- ✅ Folder structure created with re-exports
 - ✅ Core agent observability services implemented
 - ✅ Real-time dashboard with SSE updates working
 - ✅ Multi-project support functional
-- ✅ Session tracking and event collection operational
-- ⚠️ Terminology inconsistency ("devlog" vs "work item")
-- ⚠️ Code organization partially complete
-- ⚠️ UI polish needed in several areas
 
-### Target State
-- Complete terminology rebrand throughout codebase
-- Polished, production-ready UI/UX
-- High-performance Go collector deployed
-- Advanced analytics and insights functional
-- Comprehensive documentation aligned with reality
+### 🚧 In Progress (Phase 2 - Code Reorganization)
+- ⚠️ Service files need to move to new folder structure
+- ⚠️ UI components need reorganization
+- ⚠️ Test files need to be relocated with code
+- ⚠️ Import paths need updating after moves
+
+### 🎯 Upcoming
+- Phase 3: UI/UX reorganization (rename labels, update navigation)
+- Phase 4: Polish & stabilization
+- Phase 5: Go collector implementation
+- Phase 6: Analytics & insights
+- Phase 7: Enterprise features
 
 ---
 
 ## 🎯 Phases Overview
 
-### Phase 3: Reorganization Completion (Current) - 2 weeks
-**Goal**: Finish codebase reorganization and terminology standardization  
-**Status**: 70% complete, needs final push
+Based on the [Codebase Reorganization Plan](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md):
+
+### ✅ Phase 1: Quick Wins (COMPLETE)
+**Duration**: 1 week (Oct 21-28)  
+**Status**: ✅ Complete  
+**Achievement**: Foundation set, terminology clarified, no breaking changes
+
+### Phase 2: Code Structure Reorganization (Current) - 2 weeks
+**Goal**: Move actual service files and components to new folder structure  
+**Status**: Starting - Ready to execute
+
+### Phase 3: UI/UX Reorganization - 1 week
+**Goal**: Update all user-facing labels and navigation to match new structure
 
 ### Phase 4: Polish & Stabilization - 2 weeks
 **Goal**: Production-ready UI, performance optimization, comprehensive testing
@@ -47,156 +65,282 @@ This document tracks the remaining work to complete the AI Agent Observability P
 
 ---
 
-## 📅 Phase 3: Reorganization Completion (Weeks 1-2)
+## 📅 Phase 2: Code Structure Reorganization (Weeks 1-2)
 
 **Timeline**: October 30 - November 13, 2025  
-**Priority**: HIGH - Foundation for all future work
+**Priority**: HIGH - Foundation for all future work  
+**Reference**: [REORGANIZATION_PLAN.md Phase 2](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md)
 
-### Week 1: Terminology Rebrand (Nov 30 - Nov 6)
+**Context**: Phase 1 (Quick Wins) completed - WorkItem type alias exists, documentation updated, folder structure created with re-exports. Now we move actual files into the new structure.
 
-#### Day 1-2: Type System Updates
-- [ ] Add `type WorkItem = DevlogEntry` alias to core types
-- [ ] Export WorkItem alongside DevlogEntry for gradual migration
-- [ ] Update all JSDoc comments to reference "work item"
-- [ ] Add deprecation notices to DevlogEntry (soft deprecation)
-- [ ] Update validation schemas to accept both terms
+### Week 1: Core Package Reorganization (Oct 30 - Nov 6)
 
-**Files to update**:
+#### Day 1-2: Move Agent Observability Services
+- [ ] Move `AgentEventService` → `packages/core/src/agent-observability/events/`
+- [ ] Move `AgentSessionService` → `packages/core/src/agent-observability/sessions/`
+- [ ] Move related types to `agent-observability/types/`
+- [ ] Update imports in all files that use these services
+- [ ] Update test files and move to new locations
+- [ ] Update index.ts exports in agent-observability folder
+
+**Files to move**:
 ```
-packages/core/src/types/core.ts
-packages/core/src/types/index.ts
-packages/core/src/validation/devlog-schemas.ts
-apps/web/schemas/devlog.ts
+packages/core/src/services/agent-event-service.ts
+  → packages/core/src/agent-observability/events/agent-event-service.ts
+
+packages/core/src/services/agent-session-service.ts
+  → packages/core/src/agent-observability/sessions/agent-session-service.ts
+
+packages/core/src/types/agent.ts
+  → packages/core/src/agent-observability/types/index.ts
 ```
 
 **Acceptance Criteria**:
-- All new code uses WorkItem type
-- DevlogEntry still works (backward compatibility)
-- TypeScript compiler happy with both terms
+- Services moved successfully
+- All imports updated (use find/replace carefully)
+- All tests passing in new locations
+- No breaking changes for external consumers
 
-#### Day 3-4: Service Layer Rename
-- [ ] Rename `PrismaDevlogService` → `PrismaWorkItemService`
-- [ ] Keep DevlogService as alias for backward compatibility
-- [ ] Update service exports in index files
-- [ ] Update MCP adapter to use new service names
-- [ ] Update all service method documentation
+#### Day 3-4: Move Project Management Services
+- [ ] Move `PrismaDevlogService` → `packages/core/src/project-management/work-items/`
+- [ ] Rename file to `prisma-work-item-service.ts` (keep PrismaDevlogService class name)
+- [ ] Move `ProjectService` → `packages/core/src/project-management/projects/`
+- [ ] Move `DocumentService` → `packages/core/src/project-management/documents/`
+- [ ] Update all imports
+- [ ] Move and update tests
 
-**Files to update**:
+**Files to move**:
 ```
 packages/core/src/project-management/work-items/prisma-devlog-service.ts
-packages/core/src/project-management/work-items/index.ts
-packages/core/src/project-management/index.ts
-packages/mcp/src/adapters/mcp-adapter.ts
+  → packages/core/src/project-management/work-items/prisma-work-item-service.ts
+
+packages/core/src/project-management/projects/prisma-project-service.ts
+  → (already in correct location, update imports only)
 ```
 
 **Acceptance Criteria**:
-- Services renamed, old names still work as aliases
-- All tests pass with new names
-- MCP tools use new terminology
+- Project management services consolidated
+- Clear separation from agent observability code
+- All tests passing
+- Import paths use new structure
 
-#### Day 5: UI Label Updates
-- [ ] Update all "Devlog" labels → "Work Item" in web app
-- [ ] Update navigation sidebar labels
-- [ ] Update breadcrumb text
-- [ ] Update page titles and headings
-- [ ] Update button labels and form fields
-- [ ] Update empty state messages
+#### Day 5: Update Core Package Exports & Validation
+- [ ] Update `packages/core/src/index.ts` to export from new locations
+- [ ] Remove old re-export shims from Phase 1
+- [ ] Update package.json exports map if needed
+- [ ] Run full test suite
+- [ ] Run build and verify no errors
+- [ ] Update core package README with new structure
+
+**Validation checklist**:
+```bash
+cd packages/core
+pnpm test              # All tests pass
+pnpm build             # Build succeeds
+pnpm lint              # No lint errors
+```
+
+**Acceptance Criteria**:
+- Clean exports from new structure
+- All consumers can still import correctly
+- Documentation reflects actual structure
+- Ready for Week 2
+
+### Week 2: MCP & Web Package Reorganization (Nov 6 - Nov 13)
+
+#### Day 1-2: Reorganize MCP Tools
+- [ ] Create `packages/mcp/src/tools/agent-observability/` folder
+- [ ] Move agent session tools to new folder
+- [ ] Move agent event tools to new folder
+- [ ] Create `packages/mcp/src/tools/project-management/` folder
+- [ ] Move work item tools (rename from devlog tools)
+- [ ] Move project tools
+- [ ] Update tool registration in main index
+
+**Files to reorganize**:
+```
+packages/mcp/src/tools/agent-tools.ts
+  → Split into:
+    packages/mcp/src/tools/agent-observability/session-tools.ts
+    packages/mcp/src/tools/agent-observability/event-tools.ts
+
+packages/mcp/src/tools/devlog-tools.ts
+  → packages/mcp/src/tools/project-management/work-item-tools.ts
+
+packages/mcp/src/tools/project-tools.ts
+  → packages/mcp/src/tools/project-management/project-tools.ts
+```
+
+**Acceptance Criteria**:
+- Tools organized by feature domain
+- Clear PRIMARY (agent) vs SECONDARY (project) distinction
+- MCP server still exports all tools correctly
+- Tool names unchanged (no breaking changes for AI agents)
+
+#### Day 3-4: Reorganize Web Components
+- [ ] Move dashboard components already in `agent-observability/dashboard/`
+- [ ] Move sessions components already in `agent-observability/sessions/`
+- [ ] Reorganize work item components:
+  - `components/project-management/devlog/` → `components/project-management/work-items/`
+- [ ] Update all component imports in pages
+- [ ] Update route handlers that import components
+- [ ] Test all pages render correctly
+
+**Files to reorganize**:
+```
+apps/web/components/project-management/devlog/
+  → apps/web/components/project-management/work-items/
+  (update component names and imports)
+```
+
+**Acceptance Criteria**:
+- Components organized by feature
+- Agent observability components clearly primary in UI structure
+- All pages load without errors
+- Navigation still works
+
+#### Day 5: Final Integration & PR
+- [ ] Update all package imports across the monorepo
+- [ ] Run full monorepo build: `pnpm build`
+- [ ] Run all tests: `pnpm test`
+- [ ] Run validation: `pnpm validate`
+- [ ] Test Docker compose stack starts correctly
+- [ ] Create comprehensive PR with migration notes
+- [ ] Document breaking changes (if any)
+- [ ] Get code review
+
+**Final validation checklist**:
+```bash
+pnpm install           # Clean install
+pnpm build             # All packages build
+pnpm test              # All tests pass
+pnpm validate          # All validation passes
+docker compose up      # Services start
+```
+
+**Acceptance Criteria**:
+- Zero build errors
+- All tests passing
+- No runtime errors
+- Documentation updated
+- Ready for Phase 3 (UI/UX updates)
+
+---
+
+## 📅 Phase 3: UI/UX Reorganization (Week 3)
+
+**Timeline**: November 13 - November 20, 2025  
+**Priority**: HIGH - User-facing clarity  
+**Reference**: [REORGANIZATION_PLAN.md Phase 3](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md)
+
+**Goal**: Update all user-facing text, navigation, and labels to reflect agent observability focus and work item terminology.
+
+### Day 1-2: Navigation & Labels Update
+
+#### Update Navigation Structure
+- [ ] Update navigation sidebar to prioritize agent observability
+  - Dashboard (agent observability) as first item
+  - Sessions list as second item
+  - Projects/Work Items as supporting features
+- [ ] Update breadcrumbs to use "Work Items" instead of "Devlogs"
+- [ ] Update page titles across the application
+- [ ] Update meta descriptions for SEO
 
 **Files to update**:
 ```
 apps/web/components/layout/navigation-sidebar.tsx
 apps/web/components/layout/navigation-breadcrumb.tsx
-apps/web/app/projects/[name]/devlogs/page.tsx
-apps/web/app/projects/[name]/devlogs/[id]/page.tsx
-apps/web/components/project-management/devlog/*.tsx
+apps/web/app/layout.tsx
+```
+
+#### Update Component Labels
+- [ ] Replace "Devlog" → "Work Item" in all button text
+- [ ] Update form field labels
+- [ ] Update table column headers
+- [ ] Update modal titles
+- [ ] Update toast/notification messages
+- [ ] Update empty state messages
+
+**Components to update**:
+```
+apps/web/components/project-management/work-items/*.tsx
+apps/web/components/forms/devlog-form.tsx → work-item-form.tsx
+apps/web/components/custom/devlog-tags.tsx → work-item-tags.tsx
 ```
 
 **Acceptance Criteria**:
-- No user-facing "Devlog" text remains (except branding)
-- All UI refers to "Work Items"
-- Navigation is clear and consistent
+- Zero instances of "Devlog" in user-facing text (except brand name)
+- Navigation clearly shows agent observability as primary feature
+- All labels consistent with work item terminology
 
-### Week 2: Code Organization (Nov 6 - Nov 13)
+### Day 3-4: Page Routes & Component Naming
 
-#### Day 1-2: Documentation Updates
-- [ ] Update root README.md with latest architecture
-- [ ] Update AGENTS.md with work item terminology
-- [ ] Update all package READMEs to reflect current state
-- [ ] Update CONTRIBUTING.md with new structure
-- [ ] Create migration guide for terminology change
-- [ ] Archive old design docs that are outdated
+#### Update Route Structure (Keep URLs for Backward Compatibility)
+- [ ] Keep `/projects/[name]/devlogs` URLs (don't break bookmarks)
+- [ ] Add route aliases: `/projects/[name]/work-items` → redirects to devlogs
+- [ ] Update page component file names internally
+- [ ] Update all internal route references
+- [ ] Add migration notice for users about new terminology
+
+**Route handling**:
+```typescript
+// apps/web/middleware.ts or app/projects/[name]/work-items/route.ts
+// Redirect new URLs to existing ones for backward compatibility
+if (pathname.includes('/work-items')) {
+  return NextResponse.redirect(pathname.replace('/work-items', '/devlogs'));
+}
+```
 
 **Files to update**:
 ```
-README.md
-AGENTS.md
-packages/core/README.md
-packages/mcp/README.md
-packages/ai/README.md
-apps/web/README.md
-CONTRIBUTING.md
+apps/web/app/projects/[name]/devlogs/* (update page titles, not paths)
+apps/web/lib/project-urls.ts (add work item URL helpers)
 ```
 
-**New files to create**:
-```
-docs/guides/TERMINOLOGY_MIGRATION.md
-docs/guides/ARCHITECTURE_OVERVIEW.md
-```
+#### Rename Components Internally
+- [ ] Rename `DevlogForm` → `WorkItemForm` (keep file for now)
+- [ ] Rename `DevlogTags` → `WorkItemTags`
+- [ ] Rename `DevlogList` → `WorkItemList`
+- [ ] Rename `DevlogDetails` → `WorkItemDetails`
+- [ ] Update all component imports
+- [ ] Add export aliases for backward compatibility
 
 **Acceptance Criteria**:
-- All docs reflect current codebase state
-- Clear migration path documented
-- Architecture diagrams updated
+- URLs remain stable (no broken links)
+- Internal component names use work item terminology
+- All imports updated
+- No runtime errors
 
-#### Day 3-4: Test Suite Updates
-- [ ] Update test descriptions to use "work item"
-- [ ] Add tests for WorkItem type alias compatibility
-- [ ] Add integration tests for terminology consistency
-- [ ] Update mock data generators to use new terminology
-- [ ] Ensure all tests pass with new names
+### Day 5: Documentation & Help Text
 
-**Files to update**:
-```
-packages/core/src/project-management/work-items/__tests__/*.ts
-packages/mcp/src/__tests__/*.ts
-apps/web/tests/**/*.ts
-```
+#### Update User-Facing Documentation
+- [ ] Update in-app help text and tooltips
+- [ ] Update onboarding flows
+- [ ] Update feature explanations
+- [ ] Add migration notice about terminology change
+- [ ] Update API documentation visible to users
+- [ ] Update any embedded guides or tutorials
 
-**Acceptance Criteria**:
-- All tests passing
-- Test coverage maintained or improved
-- Clear test descriptions using correct terminology
-
-#### Day 5: Final Cleanup & Validation
-- [ ] Run full validation suite (`pnpm validate`)
-- [ ] Fix any remaining lint errors
-- [ ] Update schema documentation
-- [ ] Run architecture validation scripts
-- [ ] Create PR for Phase 3 completion
-- [ ] Get code review and merge
-
-**Validation checklist**:
-```bash
-pnpm validate           # All checks pass
-pnpm test              # All tests pass
-pnpm build             # All packages build
-docker compose up      # Services start cleanly
-```
+#### Update Empty States & Placeholders
+- [ ] "No work items yet" instead of "No devlogs"
+- [ ] "Create your first work item" CTA updates
+- [ ] Search placeholder text updates
+- [ ] Filter dropdown labels
 
 **Acceptance Criteria**:
-- Zero lint errors
-- All builds green
-- Documentation synchronized
-- Ready for Phase 4
+- All help text uses correct terminology
+- Users understand the agent observability focus
+- Clear guidance on work items as optional feature
+- Migration notice visible but not intrusive
 
 ---
 
-## 📅 Phase 4: Polish & Stabilization (Weeks 3-4)
+## 📅 Phase 4: Polish & Stabilization (Weeks 4-5)
 
-**Timeline**: November 13 - November 27, 2025  
+**Timeline**: November 20 - December 4, 2025  
 **Priority**: HIGH - Production readiness
 
-### Week 3: UI/UX Polish
+### Week 4: UI/UX Polish
 
 #### Session Details Page Enhancements
 - [ ] Add event filtering by type (file_write, llm_request, etc.)
@@ -228,7 +372,7 @@ docker compose up      # Services start cleanly
 
 **Expected Impact**: Better session management, easier analysis
 
-### Week 4: Performance & Testing
+### Week 5: Performance & Testing (Nov 27 - Dec 4)
 
 #### Performance Optimization
 - [ ] Implement virtual scrolling for large event lists
@@ -269,12 +413,12 @@ docker compose up      # Services start cleanly
 
 ---
 
-## 📅 Phase 5: Go Collector Implementation (Weeks 5-7)
+## 📅 Phase 5: Go Collector Implementation (Weeks 6-8)
 
-**Timeline**: November 27 - December 18, 2025  
+**Timeline**: December 4 - December 25, 2025  
 **Priority**: MEDIUM - Performance enabler for scale
 
-### Week 5: Core Collector Implementation
+### Week 6: Core Collector Implementation (Dec 4-11)
 
 #### File System Watcher
 - [ ] Implement recursive file watching
@@ -296,7 +440,7 @@ docker compose up      # Services start cleanly
 
 **Expected throughput**: 10,000+ events/second
 
-### Week 6: Integration & LLM Detection
+### Week 7: Integration & LLM Detection (Dec 11-18)
 
 #### API Integration
 - [ ] Implement HTTP client for core API
@@ -320,7 +464,7 @@ docker compose up      # Services start cleanly
 - Cline
 - Aider
 
-### Week 7: Deployment & Monitoring
+### Week 8: Deployment & Monitoring (Dec 18-25)
 
 #### Packaging & Distribution
 - [ ] Create installation script (Linux, macOS, Windows)
@@ -346,12 +490,12 @@ docker compose up      # Services start cleanly
 
 ---
 
-## 📅 Phase 6: Analytics & Insights (Weeks 8-11)
+## 📅 Phase 6: Analytics & Insights (Weeks 9-12)
 
-**Timeline**: December 18, 2025 - January 15, 2026  
+**Timeline**: December 25, 2025 - January 22, 2026  
 **Priority**: MEDIUM - Value differentiation
 
-### Week 8: Pattern Recognition Engine
+### Week 9: Pattern Recognition Engine (Dec 25 - Jan 1)
 
 #### Data Analysis Infrastructure
 - [ ] Implement time-series analysis for event patterns
@@ -376,7 +520,7 @@ docker compose up      # Services start cleanly
 - "High token usage on simple tasks" → optimization
 - "Successful refactoring patterns" → replicate
 
-### Week 9: Code Quality Analysis
+### Week 10: Code Quality Analysis (Jan 1-8)
 
 #### Static Analysis Integration
 - [ ] Integrate ESLint/Prettier for JS/TS
@@ -405,7 +549,7 @@ docker compose up      # Services start cleanly
 - Clear breakdown by dimension
 - Actionable improvement suggestions
 
-### Week 10: Agent Performance Analytics
+### Week 11: Agent Performance Analytics (Jan 8-15)
 
 #### Metrics Collection
 - [ ] Calculate agent efficiency (time to completion)
@@ -428,7 +572,7 @@ docker compose up      # Services start cleanly
 - Performance reports
 - Agent selection recommendations
 
-### Week 11: Recommendation Engine
+### Week 12: Recommendation Engine (Jan 15-22)
 
 #### Smart Suggestions
 - [ ] Implement prompt optimization suggestions
@@ -450,12 +594,12 @@ docker compose up      # Services start cleanly
 
 ---
 
-## 📅 Phase 7: Enterprise Features (Weeks 12-17)
+## 📅 Phase 7: Enterprise Features (Weeks 13-18)
 
-**Timeline**: January 15 - February 26, 2026  
+**Timeline**: January 22 - March 5, 2026  
 **Priority**: LOW - Enterprise market expansion
 
-### Week 12-13: Team Collaboration
+### Week 13-14: Team Collaboration (Jan 22 - Feb 5)
 
 #### User Management
 - [ ] Implement role-based access control (RBAC)
@@ -473,7 +617,7 @@ docker compose up      # Services start cleanly
 - [ ] Add team analytics dashboard
 - [ ] Create team performance reports
 
-### Week 14-15: Integration Ecosystem
+### Week 15-16: Integration Ecosystem (Feb 5-19)
 
 #### Core Integrations
 - [ ] GitHub integration (commits, PRs, issues)
@@ -491,7 +635,7 @@ docker compose up      # Services start cleanly
 - [ ] API documentation (OpenAPI/Swagger)
 - [ ] SDK for common languages
 
-### Week 16-17: Policy & Compliance
+### Week 17-18: Policy & Compliance (Feb 19 - Mar 5)
 
 #### Policy Enforcement
 - [ ] Define policy schema (rules, actions)
@@ -518,11 +662,25 @@ docker compose up      # Services start cleanly
 
 ## 📊 Success Metrics
 
-### Phase 3-4 (Foundation)
-- ✅ Zero terminology inconsistencies in user-facing text
-- ✅ All tests passing (>80% coverage core packages)
-- ✅ Documentation 100% accurate
-- ✅ Page load time < 2s
+### Phase 2 (Code Reorganization)
+- ✅ All services in correct folder structure
+- ✅ Zero breaking changes for external consumers
+- ✅ All tests passing (maintain >80% coverage)
+- ✅ Build time unchanged or improved
+- ✅ Clear separation: agent observability vs project management
+
+### Phase 3 (UI/UX Updates)
+- ✅ Zero user-facing "Devlog" text (except brand)
+- ✅ Navigation emphasizes agent observability
+- ✅ URLs remain backward compatible
+- ✅ User testing: 90%+ understand "work item" terminology
+- ✅ No accessibility regressions
+
+### Phase 4 (Polish & Stabilization)
+- ✅ Page load time < 2s (Time to Interactive)
+- ✅ Event timeline renders 1000 events in < 500ms
+- ✅ API response times < 200ms p95
+- ✅ Web package test coverage >60%
 - ✅ Zero critical bugs in production
 
 ### Phase 5 (Go Collector)
@@ -551,29 +709,68 @@ docker compose up      # Services start cleanly
 ## 🚧 Current Blockers & Risks
 
 ### Blockers
-1. **None currently** - Clear path forward
+1. **None currently** - Phase 1 complete, ready for Phase 2
 
 ### Risks
-1. **Performance at Scale** - Need to validate event ingestion at 10k+/sec
-   - Mitigation: Early load testing, Go collector priority
+
+1. **Import Path Changes After File Moves** - High
+   - **Impact**: Breaking changes for consumers during Phase 2
+   - **Mitigation**: 
+     - Use find/replace carefully with exact paths
+     - Keep re-exports for backward compatibility
+     - Test thoroughly after each move
+     - Consider using `git mv` to preserve history
    
-2. **Quality Analysis Accuracy** - ML models may have low initial accuracy
-   - Mitigation: Start with rule-based, iterate with user feedback
-   
-3. **Integration Complexity** - Third-party APIs may be unstable
-   - Mitigation: Comprehensive error handling, graceful degradation
-   
-4. **Privacy Concerns** - Capturing code may raise security issues
-   - Mitigation: Local-first architecture, encryption, PII filtering
+2. **Component Rename Cascade** - Medium
+   - **Impact**: Many files need updates when renaming components
+   - **Mitigation**: 
+     - Use IDE refactoring tools (F2 in VS Code)
+     - Update one component at a time
+     - Keep aliases during transition
+     - Comprehensive testing after each rename
+
+3. **URL Changes Breaking Bookmarks** - Medium
+   - **Impact**: Users' saved links stop working
+   - **Mitigation**: 
+     - Keep existing URLs, add redirects for new ones
+     - Add deprecation notices
+     - Document migration path
+     - Gradual transition over multiple releases
+
+4. **Performance Regression During Reorganization** - Low
+   - **Impact**: Slower builds or runtime after moves
+   - **Mitigation**: 
+     - Benchmark before/after each phase
+     - Monitor bundle sizes
+     - Keep imports efficient (no circular dependencies)
+     - Use code splitting appropriately
+
+5. **Test Suite Breakage** - Medium
+   - **Impact**: Tests fail after file moves
+   - **Mitigation**: 
+     - Move tests with their implementation files
+     - Update test imports immediately
+     - Run tests frequently during work
+     - Fix failures before moving to next file
 
 ---
 
 ## 📝 Decision Log
 
 ### October 30, 2025
+- **Decision**: Start with Phase 2 (file moves) instead of more terminology changes
+- **Rationale**: Phase 1 Quick Wins complete, foundation set, time to reorganize actual code
+- **Impact**: Cleaner codebase structure, easier to navigate, better DX
+
+### October 21, 2025 (Phase 1 Complete)
+- **Decision**: Complete Quick Wins before major file moves
+- **Rationale**: Low-risk improvements first, set foundation, validate approach
+- **Impact**: Terminology clarified, folder structure created, ready for file moves
+
+### October 21, 2025
 - **Decision**: Keep "devlog" as brand name, use "work item" for entries
 - **Rationale**: Brand recognition vs. clarity - compromise solution
-- **Impact**: Backward compatibility maintained, gradual migration
+- **Impact**: Backward compatibility maintained, gradual migration possible
 
 ### October 22, 2025 (PR #50)
 - **Decision**: Implement real-time updates via SSE, not WebSockets
@@ -589,77 +786,143 @@ docker compose up      # Services start cleanly
 
 ## 📚 Related Documentation
 
-### Current Phase
-- [CODEBASE_REORGANIZATION_SUMMARY.md](../../../CODEBASE_REORGANIZATION_SUMMARY.md) - Context
-- [20251021-codebase-reorganization/](../20251021-codebase-reorganization/) - Detailed plans
-- [20251022-agent-observability-core-features/](../20251022-agent-observability-core-features/) - Implementation
+### Reorganization Plans
+- **[CODEBASE_REORGANIZATION_SUMMARY.md](../../../CODEBASE_REORGANIZATION_SUMMARY.md)** - Executive summary
+- **[REORGANIZATION_PLAN.md](../20251021-codebase-reorganization/REORGANIZATION_PLAN.md)** - Detailed 4-week plan
+- **[QUICK_WINS.md](../20251021-codebase-reorganization/QUICK_WINS.md)** - ✅ Completed Phase 1
+- **[TERMINOLOGY_REBRAND.md](../20251021-codebase-reorganization/TERMINOLOGY_REBRAND.md)** - Why "work item"
+
+### Implementation Docs
+- **[20251022-agent-observability-core-features/](../20251022-agent-observability-core-features/)** - Core features implementation
 
 ### Design Docs
-- [ai-agent-observability-design.md](../20251021-ai-agent-observability/ai-agent-observability-design.md)
-- [go-collector-design.md](../20251021-ai-agent-observability/go-collector-design.md)
+- **[ai-agent-observability-design.md](../20251021-ai-agent-observability/ai-agent-observability-design.md)** - Overall design
+- **[go-collector-design.md](../20251021-ai-agent-observability/go-collector-design.md)** - Collector architecture
 
-### Guides
-- [AGENTS.md](../../../AGENTS.md) - AI agent guidelines
-- [CONTRIBUTING.md](../../../CONTRIBUTING.md) - Contributing guide
+### Guidelines
+- **[AGENTS.md](../../../AGENTS.md)** - AI agent development guidelines
+- **[CONTRIBUTING.md](../../../CONTRIBUTING.md)** - Contributing guide
 
 ---
 
 ## 🎯 Weekly Checkpoints
 
 ### Week 1 Checkpoint (Nov 6)
-- [ ] Type system updates complete
-- [ ] Service layer renamed
-- [ ] UI labels updated
+- [ ] Agent observability services moved to new folders
+- [ ] Project management services reorganized
+- [ ] Core package exports updated
 - [ ] All tests passing
 
 ### Week 2 Checkpoint (Nov 13)
-- [ ] Documentation synchronized
-- [ ] Tests updated
-- [ ] Phase 3 PR merged
-- [ ] Ready for Phase 4
+- [ ] MCP tools reorganized by feature domain
+- [ ] Web components moved and updated
+- [ ] Full monorepo build successful
+- [ ] Phase 2 PR merged
 
 ### Week 3 Checkpoint (Nov 20)
-- [ ] Session details enhanced
-- [ ] Dashboard improved
-- [ ] Sessions list polished
+- [ ] All UI labels updated to "Work Item"
+- [ ] Navigation prioritizes agent observability
+- [ ] Routes backward compatible
+- [ ] Phase 3 PR merged
 
 ### Week 4 Checkpoint (Nov 27)
+- [ ] Session details page enhanced
+- [ ] Dashboard polished
+- [ ] Sessions list improved
+- [ ] UI/UX polish complete
+
+### Week 5 Checkpoint (Dec 4)
 - [ ] Performance optimized
 - [ ] Test coverage >60% web
 - [ ] Error handling robust
-- [ ] Phase 4 complete
+- [ ] Phase 4 complete, production-ready
 
 ---
 
 ## 🚀 Getting Started
 
-### For Developers
+### For Developers Working on Phase 2
 
-1. **Review current state**:
+1. **Prepare your environment**:
    ```bash
    git checkout develop
    git pull origin develop
    pnpm install
    pnpm build
+   pnpm test  # Ensure everything works before starting
    ```
 
-2. **Pick a task from Week 1**:
-   - Start with Day 1-2 (Type System Updates)
-   - Create feature branch: `feature/terminology-rebrand-types`
-   - Work through checklist items
-   - Run tests frequently: `pnpm test`
+2. **Create feature branch**:
+   ```bash
+   git checkout -b feature/phase2-code-reorganization
+   ```
 
-3. **Submit PR when task complete**:
-   - Reference this document in PR description
-   - Link to specific checklist item
+3. **Start with Day 1 tasks**:
+   - Move `AgentEventService` to `agent-observability/events/`
+   - Use `git mv` to preserve history:
+     ```bash
+     git mv packages/core/src/services/agent-event-service.ts \
+            packages/core/src/agent-observability/events/agent-event-service.ts
+     ```
+   - Update imports immediately
+   - Run tests: `pnpm test`
+
+4. **Test frequently**:
+   ```bash
+   # After each file move
+   cd packages/core
+   pnpm build
+   pnpm test
+   
+   # After Day 1-2 complete
+   cd ../..
+   pnpm build  # Full monorepo
+   pnpm test   # All tests
+   ```
+
+5. **Commit incrementally**:
+   ```bash
+   git add .
+   git commit -m "refactor(core): move AgentEventService to agent-observability folder"
+   ```
+
+6. **Submit PR at end of week**:
+   - Reference this roadmap in PR description
+   - Link to specific day/task completed
+   - Include migration notes
    - Request review
 
 ### For Project Managers
 
-1. **Track progress weekly** using checkpoints above
-2. **Review blockers** every Monday standup
-3. **Validate acceptance criteria** before marking complete
-4. **Update timeline** if risks materialize
+1. **Track progress** using weekly checkpoints above
+2. **Monitor blockers** - update "Blockers & Risks" section
+3. **Validate acceptance criteria** before marking tasks complete
+4. **Update timeline** if risks materialize or priorities change
+5. **Communicate changes** to stakeholders weekly
+
+### Testing Strategy
+
+**During Development**:
+```bash
+# Quick validation after each change
+pnpm build             # Just the package you're working on
+pnpm test              # Unit tests
+
+# Before committing
+pnpm validate          # Lint + type check
+pnpm test              # All tests
+
+# Before PR
+pnpm build             # Full monorepo
+pnpm test              # All packages
+docker compose up      # Integration test
+```
+
+**After PR Merge**:
+- CI/CD runs full validation
+- Deploy to staging environment
+- Manual smoke testing
+- Monitor error rates
 
 ---
 
