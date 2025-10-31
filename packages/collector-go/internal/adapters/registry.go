@@ -85,7 +85,8 @@ func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache,
 	// Register Claude adapter with hierarchy support
 	registry.Register(NewClaudeAdapter(projectID, hierarchyCache, log))
 
-	// TODO: Register Cursor adapter when implemented
+	// Register Cursor adapter with hierarchy support
+	registry.Register(NewCursorAdapter(projectID, hierarchyCache, log))
 
 	return registry
 }
