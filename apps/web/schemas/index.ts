@@ -11,6 +11,7 @@ export * from './devlog';
 export * from './validation';
 export * from './bridge';
 export * from './responses';
+export * from './hierarchy';
 
 // Common schemas that might be used across multiple endpoints
 import { z } from 'zod';
