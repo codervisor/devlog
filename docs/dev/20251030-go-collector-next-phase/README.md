@@ -1,9 +1,11 @@
 # Go Collector - Next Phase Implementation
 
 **Created**: October 30, 2025  
-**Status**: In Progress  
-**Current Progress**: 85% (Phase 1-3 Complete, Phase 4 Complete)  
+**Status**: ⚠️ **CRITICAL BLOCKER** - Adapter Non-Functional  
+**Current Progress**: 70% (Infrastructure Complete, Core Adapter Broken)  
 **Target**: 95% (MVP Ready)
+
+**⚠️ BLOCKER**: The Copilot adapter cannot parse actual chat session files. 0 events extracted from 24.20 MB of data. Requires complete rewrite (3-4 hours).
 
 ---
 
@@ -439,6 +441,11 @@ devlog-collector daemon-status
 ### Overall Status
 
 ```
+⚠️  CRITICAL BLOCKER: Copilot adapter cannot parse actual log format
+
+Phase 1 (Core):           ████████████████████ 100% ✅ COMPLETE
+  └─ Copilot Adapter Fix  ░░░░░░░░░░░░░░░░░░░░   0% 🔴 BLOCKING
+
 Phase 2 (Adapters):       ⏸️  Paused (awaiting real log samples)
   └─ Task 1: Claude       ⏸️  Paused
   └─ Task 2: Cursor       ⏸️  Paused
@@ -451,12 +458,12 @@ Phase 4 (Backfill):       ██████████████████
   └─ Task 7: Testing      ████████████████████ 100% ✅
   └─ Bug Fixes            ████████████████████ 100% ✅
 
-Phase 5 (Distribution):   ░░░░░░░░░░░░░░░░░░░░   0% → 100%
+Phase 5 (Distribution):   ⏸️  Paused (blocked by adapter fix)
   └─ Task 8: NPM          ░░░░░░░░░░░░░░░░░░░░   0%
   └─ Task 9: Auto-start   ░░░░░░░░░░░░░░░░░░░░   0%
   └─ Task 10: Docs        ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall: 85% (Phase 4 Complete + Bug Fixes)
+Overall: 70% (Backfill complete but core adapter non-functional)
 ```
 
 ### Time Estimates
@@ -741,34 +748,41 @@ Data processed: 24.20 MB
 ## 🐛 Known Issues
 
 ### Issue: Copilot Adapter Format Mismatch
-**Status**: Known Limitation  
-**Priority**: HIGH  
-**Impact**: Backfill processes chat session files but extracts 0 events
+**Status**: ⚠️ **CRITICAL BLOCKER** - Design Complete, Ready for Implementation  
+**Priority**: CRITICAL  
+**Impact**: Backfill processes chat session files but extracts 0 events - **collector cannot extract any meaningful data**
 
-**Description**: The current `CopilotAdapter` expects line-based log format, but chat sessions are structured JSON files with a different schema:
+**Description**: The current `CopilotAdapter` expects line-based JSON logs (one JSON object per line), but Copilot's actual logs are **chat session JSON files** with a completely different schema.
 
-```json
-{
-  "version": 3,
-  "requesterUsername": "user",
-  "requests": [
-    {
-      "requestId": "...",
-      "message": { "parts": [...] },
-      "response": [...]
-    }
-  ]
-}
-```
+**Data Discovery**:
+- 657 chat session files across 11 workspace directories
+- 1.4 GB of conversation data
+- Rich structured format with requests, responses, tool calls, file references
 
-**Workaround**: None currently
+**Root Cause**: Complete format mismatch - the adapter was designed for a hypothetical line-based format that doesn't exist in reality.
 
-**Resolution**: Update `CopilotAdapter` to support both:
-1. Line-based logs (original format)
-2. Chat session JSON files (new format)
+**Resolution**: Complete redesign documented in [`copilot-adapter-redesign.md`](./copilot-adapter-redesign.md)
 
-**Assigned**: TBD  
-**Estimated**: 2-3 hours
+**Key Changes**:
+1. Detect file format (chat session vs line-based)
+2. Parse structured chat session JSON
+3. Extract multiple event types per request:
+   - LLM request/response events
+   - Tool invocation events (file reads, searches, etc.)
+   - File reference events (context files)
+   - Code edit events
+4. Maintain backward compatibility with line-based format
+
+**Implementation Plan**:
+- Phase 1: Core structure (1.5h) - Type definitions, file parsing setup
+- Phase 2: Chat session parser (2-3h) - Event extraction logic
+- Phase 3: Testing (2-3h) - Unit tests, integration tests with real data
+
+**Breaking Change**: Removes old line-based log parsing (doesn't exist in reality)
+
+**Assigned**: Ready for implementation  
+**Estimated**: 3.5-5 hours implementation + 2-3 hours testing  
+**Design Doc**: [`copilot-adapter-redesign.md`](./copilot-adapter-redesign.md)
 
 ---
 
