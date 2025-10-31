@@ -1,6 +1,19 @@
-package hierarchy
+package models
 
 import "time"
+
+// Machine represents a development machine
+type Machine struct {
+	ID          int                    `json:"id,omitempty"`
+	MachineID   string                 `json:"machineId"`
+	Hostname    string                 `json:"hostname"`
+	Username    string                 `json:"username"`
+	OSType      string                 `json:"osType"`
+	OSVersion   string                 `json:"osVersion,omitempty"`
+	MachineType string                 `json:"machineType"`
+	IPAddress   string                 `json:"ipAddress,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
 
 // Project represents a Git repository/project
 type Project struct {

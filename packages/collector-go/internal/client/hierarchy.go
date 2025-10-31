@@ -7,11 +7,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/codervisor/devlog/collector/internal/hierarchy"
+	"github.com/codervisor/devlog/collector/pkg/models"
 )
 
 // UpsertMachine registers or updates a machine with the backend
-func (c *Client) UpsertMachine(machine *hierarchy.Machine) (*hierarchy.Machine, error) {
+func (c *Client) UpsertMachine(machine *models.Machine) (*models.Machine, error) {
 	body, err := json.Marshal(machine)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal machine: %w", err)
@@ -41,7 +41,7 @@ func (c *Client) UpsertMachine(machine *hierarchy.Machine) (*hierarchy.Machine, 
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var result hierarchy.Machine
+	var result models.Machine
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -55,7 +55,7 @@ func (c *Client) UpsertMachine(machine *hierarchy.Machine) (*hierarchy.Machine, 
 }
 
 // GetMachine retrieves machine information by machine ID
-func (c *Client) GetMachine(machineID string) (*hierarchy.Machine, error) {
+func (c *Client) GetMachine(machineID string) (*models.Machine, error) {
 	url := fmt.Sprintf("%s/api/machines/%s", c.baseURL, machineID)
 	req, err := http.NewRequestWithContext(c.ctx, "GET", url, nil)
 	if err != nil {
@@ -83,7 +83,7 @@ func (c *Client) GetMachine(machineID string) (*hierarchy.Machine, error) {
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var machine hierarchy.Machine
+	var machine models.Machine
 	if err := json.Unmarshal(respBody, &machine); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -92,7 +92,7 @@ func (c *Client) GetMachine(machineID string) (*hierarchy.Machine, error) {
 }
 
 // UpsertWorkspace registers or updates a workspace with the backend
-func (c *Client) UpsertWorkspace(workspace *hierarchy.Workspace) (*hierarchy.Workspace, error) {
+func (c *Client) UpsertWorkspace(workspace *models.Workspace) (*models.Workspace, error) {
 	body, err := json.Marshal(workspace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal workspace: %w", err)
@@ -122,7 +122,7 @@ func (c *Client) UpsertWorkspace(workspace *hierarchy.Workspace) (*hierarchy.Wor
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var result hierarchy.Workspace
+	var result models.Workspace
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -137,7 +137,7 @@ func (c *Client) UpsertWorkspace(workspace *hierarchy.Workspace) (*hierarchy.Wor
 }
 
 // GetWorkspace retrieves workspace information by workspace ID
-func (c *Client) GetWorkspace(workspaceID string) (*hierarchy.Workspace, error) {
+func (c *Client) GetWorkspace(workspaceID string) (*models.Workspace, error) {
 	url := fmt.Sprintf("%s/api/workspaces/%s", c.baseURL, workspaceID)
 	req, err := http.NewRequestWithContext(c.ctx, "GET", url, nil)
 	if err != nil {
@@ -165,7 +165,7 @@ func (c *Client) GetWorkspace(workspaceID string) (*hierarchy.Workspace, error) 
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var workspace hierarchy.Workspace
+	var workspace models.Workspace
 	if err := json.Unmarshal(respBody, &workspace); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -174,7 +174,7 @@ func (c *Client) GetWorkspace(workspaceID string) (*hierarchy.Workspace, error) 
 }
 
 // ListWorkspaces retrieves all workspaces
-func (c *Client) ListWorkspaces() ([]*hierarchy.Workspace, error) {
+func (c *Client) ListWorkspaces() ([]*models.Workspace, error) {
 	url := fmt.Sprintf("%s/api/workspaces", c.baseURL)
 	req, err := http.NewRequestWithContext(c.ctx, "GET", url, nil)
 	if err != nil {
@@ -198,7 +198,7 @@ func (c *Client) ListWorkspaces() ([]*hierarchy.Workspace, error) {
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var workspaces []*hierarchy.Workspace
+	var workspaces []*models.Workspace
 	if err := json.Unmarshal(respBody, &workspaces); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -207,7 +207,7 @@ func (c *Client) ListWorkspaces() ([]*hierarchy.Workspace, error) {
 }
 
 // ResolveProject resolves or creates a project from a Git remote URL
-func (c *Client) ResolveProject(gitRemoteURL string) (*hierarchy.Project, error) {
+func (c *Client) ResolveProject(gitRemoteURL string) (*models.Project, error) {
 	body, err := json.Marshal(map[string]interface{}{
 		"repoUrl": gitRemoteURL,
 	})
@@ -239,7 +239,7 @@ func (c *Client) ResolveProject(gitRemoteURL string) (*hierarchy.Project, error)
 		return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var project hierarchy.Project
+	var project models.Project
 	if err := json.Unmarshal(respBody, &project); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}

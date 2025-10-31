@@ -9,21 +9,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/codervisor/devlog/collector/pkg/models"
 	"github.com/sirupsen/logrus"
 )
-
-// Machine represents a development machine
-type Machine struct {
-	ID          int    `json:"id,omitempty"`
-	MachineID   string `json:"machineId"`
-	Hostname    string `json:"hostname"`
-	Username    string `json:"username"`
-	OSType      string `json:"osType"`
-	OSVersion   string `json:"osVersion,omitempty"`
-	MachineType string `json:"machineType"`
-	IPAddress   string `json:"ipAddress,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-}
 
 // MachineDetector handles machine detection
 type MachineDetector struct {
@@ -41,7 +29,7 @@ func NewMachineDetector(log *logrus.Logger) *MachineDetector {
 }
 
 // Detect detects the current machine information
-func (md *MachineDetector) Detect() (*Machine, error) {
+func (md *MachineDetector) Detect() (*models.Machine, error) {
 	// Get system info
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -61,7 +49,7 @@ func (md *MachineDetector) Detect() (*Machine, error) {
 	// Generate unique machine ID
 	machineID := generateMachineID(hostname, username, osType)
 
-	machine := &Machine{
+	machine := &models.Machine{
 		MachineID:   machineID,
 		Hostname:    hostname,
 		Username:    username,
