@@ -13,6 +13,7 @@ import (
 	"github.com/codervisor/devlog/collector/internal/buffer"
 	"github.com/codervisor/devlog/collector/internal/client"
 	"github.com/codervisor/devlog/collector/internal/config"
+	"github.com/codervisor/devlog/collector/internal/hierarchy"
 	"github.com/codervisor/devlog/collector/internal/watcher"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -93,8 +94,9 @@ var startCmd = &cobra.Command{
 			}
 		}
 
-		// Initialize adapter registry
-		registry := adapters.DefaultRegistry(cfg.ProjectID)
+		// Initialize adapter registry with hierarchy cache
+		hiererchyCache := hierarchy.NewHierarchyCache(nil, log)
+		registry := adapters.DefaultRegistry(cfg.ProjectID, hiererchyCache, log)
 		log.Infof("Registered %d agent adapters", len(registry.List()))
 
 		// Initialize buffer
@@ -324,7 +326,8 @@ var backfillRunCmd = &cobra.Command{
 		}
 
 		// Initialize components
-		registry := adapters.DefaultRegistry(cfg.ProjectID)
+		hiererchyCache := hierarchy.NewHierarchyCache(nil, log)
+		registry := adapters.DefaultRegistry(cfg.ProjectID, hiererchyCache, log)
 
 		bufferConfig := buffer.Config{
 			DBPath:  cfg.Buffer.DBPath,

@@ -92,7 +92,7 @@ func (s *StateStore) Load(agentName, logFilePath string) (*BackfillState, error)
 	`
 
 	var state BackfillState
-	var lastTimestamp, completedAt sql.NullInt64
+	var lastTimestamp, startedAt, completedAt sql.NullInt64
 	var errorMessage sql.NullString
 
 	err := s.db.QueryRow(query, agentName, logFilePath).Scan(
@@ -103,7 +103,7 @@ func (s *StateStore) Load(agentName, logFilePath string) (*BackfillState, error)
 		&lastTimestamp,
 		&state.TotalEventsProcessed,
 		&state.Status,
-		&state.StartedAt,
+		&startedAt,
 		&completedAt,
 		&errorMessage,
 	)
@@ -126,6 +126,9 @@ func (s *StateStore) Load(agentName, logFilePath string) (*BackfillState, error)
 	if lastTimestamp.Valid {
 		t := time.Unix(lastTimestamp.Int64, 0)
 		state.LastTimestamp = &t
+	}
+	if startedAt.Valid {
+		state.StartedAt = time.Unix(startedAt.Int64, 0)
 	}
 	if completedAt.Valid {
 		t := time.Unix(completedAt.Int64, 0)
@@ -251,7 +254,7 @@ func (s *StateStore) ListByAgent(agentName string) ([]*BackfillState, error) {
 
 	for rows.Next() {
 		var state BackfillState
-		var lastTimestamp, completedAt sql.NullInt64
+		var lastTimestamp, startedAt, completedAt sql.NullInt64
 		var errorMessage sql.NullString
 
 		err := rows.Scan(
@@ -262,7 +265,7 @@ func (s *StateStore) ListByAgent(agentName string) ([]*BackfillState, error) {
 			&lastTimestamp,
 			&state.TotalEventsProcessed,
 			&state.Status,
-			&state.StartedAt,
+			&startedAt,
 			&completedAt,
 			&errorMessage,
 		)
@@ -274,6 +277,9 @@ func (s *StateStore) ListByAgent(agentName string) ([]*BackfillState, error) {
 		if lastTimestamp.Valid {
 			t := time.Unix(lastTimestamp.Int64, 0)
 			state.LastTimestamp = &t
+		}
+		if startedAt.Valid {
+			state.StartedAt = time.Unix(startedAt.Int64, 0)
 		}
 		if completedAt.Valid {
 			t := time.Unix(completedAt.Int64, 0)
