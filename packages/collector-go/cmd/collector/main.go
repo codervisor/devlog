@@ -325,10 +325,7 @@ var backfillRunCmd = &cobra.Command{
 			to = time.Now()
 		}
 
-		// Initialize components
-		hiererchyCache := hierarchy.NewHierarchyCache(nil, log)
-		registry := adapters.DefaultRegistry(cfg.ProjectID, hiererchyCache, log)
-
+		// Initialize buffer
 		bufferConfig := buffer.Config{
 			DBPath:  cfg.Buffer.DBPath,
 			MaxSize: cfg.Buffer.MaxSize,
@@ -340,6 +337,7 @@ var backfillRunCmd = &cobra.Command{
 		}
 		defer buf.Close()
 
+		// Initialize API client
 		batchInterval, _ := cfg.GetBatchInterval()
 		clientConfig := client.Config{
 			BaseURL:    cfg.BackendURL,
@@ -352,6 +350,10 @@ var backfillRunCmd = &cobra.Command{
 		apiClient := client.NewClient(clientConfig)
 		apiClient.Start()
 		defer apiClient.Stop()
+
+		// Initialize hierarchy cache and adapters (needs client)
+		hiererchyCache := hierarchy.NewHierarchyCache(apiClient, log)
+		registry := adapters.DefaultRegistry(cfg.ProjectID, hiererchyCache, log)
 
 		// Create backfill manager
 		backfillConfig := backfill.Config{

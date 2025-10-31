@@ -203,6 +203,155 @@ func (bm *BackfillManager) backfillFile(ctx context.Context, config BackfillConf
 		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 
+	// Determine if we should use file-based or line-based parsing
+	// Try ParseLogFile first - if adapter doesn't support it, fall back to line-based
+	useFileParsing := bm.shouldUseFileParsing(adapter, filePath)
+
+	if useFileParsing {
+		return bm.backfillFileWhole(ctx, config, adapter, filePath, state)
+	}
+	return bm.backfillFileLineByLine(ctx, config, adapter, filePath, state)
+}
+
+// shouldUseFileParsing determines if we should parse the entire file at once
+func (bm *BackfillManager) shouldUseFileParsing(adapter adapters.AgentAdapter, filePath string) bool {
+	// For Copilot chat sessions (JSON files), use file parsing
+	ext := filepath.Ext(filePath)
+	adapterName := adapter.Name()
+
+	// Copilot uses JSON session files - must use file parsing
+	if adapterName == "github-copilot" && ext == ".json" {
+		return true
+	}
+
+	// Other adapters with .jsonl or .ndjson use line parsing
+	return false
+}
+
+// backfillFileWhole parses an entire log file at once (for structured formats like JSON)
+func (bm *BackfillManager) backfillFileWhole(ctx context.Context, config BackfillConfig, adapter adapters.AgentAdapter, filePath string, state *BackfillState) (*BackfillResult, error) {
+	bm.log.Infof("Using file-based parsing for %s", filepath.Base(filePath))
+
+	// Get file size for progress tracking
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		state.Status = StatusFailed
+		state.ErrorMessage = err.Error()
+		bm.stateStore.Save(state)
+		return nil, fmt.Errorf("failed to stat file: %w", err)
+	}
+	totalBytes := fileInfo.Size()
+
+	// Parse entire file
+	events, err := adapter.ParseLogFile(filePath)
+	if err != nil {
+		state.Status = StatusFailed
+		state.ErrorMessage = fmt.Sprintf("parse error: %v", err)
+		bm.stateStore.Save(state)
+		bm.log.Errorf("Failed to parse %s: %v", filepath.Base(filePath), err)
+		return nil, fmt.Errorf("failed to parse file: %w", err)
+	}
+
+	bm.log.Infof("Parsed %d events from %s", len(events), filepath.Base(filePath))
+
+	// Initialize result
+	result := &BackfillResult{
+		TotalEvents:    len(events),
+		BytesProcessed: totalBytes,
+	}
+
+	// Filter by date range
+	var filteredEvents []*types.AgentEvent
+	for _, event := range events {
+		// Check context cancellation
+		select {
+		case <-ctx.Done():
+			state.Status = StatusPaused
+			state.TotalEventsProcessed = result.ProcessedEvents
+			bm.stateStore.Save(state)
+			return result, ctx.Err()
+		default:
+		}
+
+		// Filter by date range
+		if !config.FromDate.IsZero() && event.Timestamp.Before(config.FromDate) {
+			result.SkippedEvents++
+			continue
+		}
+		if !config.ToDate.IsZero() && event.Timestamp.After(config.ToDate) {
+			result.SkippedEvents++
+			continue
+		}
+
+		// Check for duplicate
+		if bm.isDuplicate(event) {
+			result.SkippedEvents++
+			continue
+		}
+
+		filteredEvents = append(filteredEvents, event)
+	}
+
+	bm.log.Infof("Filtered to %d events (skipped %d)", len(filteredEvents), result.SkippedEvents)
+
+	// Process events in batches
+	if config.BatchSize == 0 {
+		config.BatchSize = 100
+	}
+
+	for i := 0; i < len(filteredEvents); i += config.BatchSize {
+		end := i + config.BatchSize
+		if end > len(filteredEvents) {
+			end = len(filteredEvents)
+		}
+		batch := filteredEvents[i:end]
+
+		if !config.DryRun {
+			if err := bm.processBatch(ctx, batch); err != nil {
+				bm.log.Warnf("Failed to process batch: %v", err)
+				result.ErrorEvents += len(batch)
+			} else {
+				result.ProcessedEvents += len(batch)
+			}
+		} else {
+			result.ProcessedEvents += len(batch)
+		}
+
+		// Report progress
+		if config.ProgressCB != nil {
+			progress := Progress{
+				AgentName:       config.AgentName,
+				FilePath:        filePath,
+				BytesProcessed:  totalBytes * int64(end) / int64(len(filteredEvents)),
+				TotalBytes:      totalBytes,
+				EventsProcessed: result.ProcessedEvents,
+				Percentage:      float64(end) / float64(len(filteredEvents)) * 100,
+			}
+			config.ProgressCB(progress)
+		}
+	}
+
+	// Mark as completed
+	now := time.Now()
+	state.Status = StatusCompleted
+	state.CompletedAt = &now
+	state.LastByteOffset = totalBytes
+	state.TotalEventsProcessed = result.ProcessedEvents
+	if len(events) > 0 {
+		state.LastTimestamp = &events[len(events)-1].Timestamp
+	}
+
+	if err := bm.stateStore.Save(state); err != nil {
+		bm.log.Warnf("Failed to save final state: %v", err)
+	}
+
+	return result, nil
+}
+
+// backfillFileLineByLine processes a log file line by line (for NDJSON/text formats)
+func (bm *BackfillManager) backfillFileLineByLine(ctx context.Context, config BackfillConfig, adapter adapters.AgentAdapter, filePath string, state *BackfillState) (*BackfillResult, error) {
+	bm.log.Infof("Using line-based parsing for %s", filepath.Base(filePath))
+
 	// Open file
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -243,6 +392,8 @@ func (bm *BackfillManager) backfillFile(ctx context.Context, config BackfillConf
 	batch := make([]*types.AgentEvent, 0, config.BatchSize)
 	currentOffset := state.LastByteOffset
 	lastProgressUpdate := time.Now()
+	errorCount := 0
+	maxErrorsToLog := 10
 
 	// Process lines
 	lineNum := 0
@@ -266,6 +417,15 @@ func (bm *BackfillManager) backfillFile(ctx context.Context, config BackfillConf
 		event, err := adapter.ParseLogLine(line)
 		if err != nil {
 			result.ErrorEvents++
+			// Log first N errors with sample data for debugging
+			if errorCount < maxErrorsToLog {
+				sampleLine := line
+				if len(sampleLine) > 200 {
+					sampleLine = sampleLine[:200] + "..."
+				}
+				bm.log.Errorf("Parse error on line %d: %v | Sample: %s", lineNum, err, sampleLine)
+			}
+			errorCount++
 			currentOffset += lineBytes
 			continue
 		}
@@ -353,6 +513,11 @@ func (bm *BackfillManager) backfillFile(ctx context.Context, config BackfillConf
 		} else {
 			result.ProcessedEvents += len(batch)
 		}
+	}
+
+	// Log error summary if we stopped logging
+	if errorCount > maxErrorsToLog {
+		bm.log.Warnf("Suppressed %d additional parse errors", errorCount-maxErrorsToLog)
 	}
 
 	// Check for scanner errors
