@@ -64,6 +64,13 @@ export { PrismaProjectService } from './projects/index.js';
 export { PrismaDevlogService } from './work-items/index.js';
 export { PrismaDocumentService } from './documents/index.js';
 export { PrismaChatService } from './chat/index.js';
+export { HierarchyService } from './hierarchy/index.js';
+export type {
+  WorkspaceContext,
+  MachineCreateInput,
+  WorkspaceCreateInput,
+  ProjectHierarchy,
+} from './hierarchy/index.js';
 
 // ============================================================================
 // Types - Project Management Data Structures
