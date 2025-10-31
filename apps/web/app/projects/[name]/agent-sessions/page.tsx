@@ -5,8 +5,11 @@
  */
 
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { Network } from 'lucide-react';
 import { SessionList } from '@/components/agent-observability/agent-sessions/session-list';
 import { ActiveSessionsPanel } from '@/components/agent-observability/agent-sessions/active-sessions-panel';
+import { Button } from '@/components/ui/button';
 
 export default function AgentSessionsPage({ params }: { params: { name: string } }) {
   return (
@@ -18,6 +21,12 @@ export default function AgentSessionsPage({ params }: { params: { name: string }
             Monitor and analyze AI coding agent activities for {params.name}
           </p>
         </div>
+        <Link href={`/projects/${params.name}/hierarchy`}>
+          <Button variant="outline" className="gap-2">
+            <Network className="w-4 h-4" />
+            View Hierarchy
+          </Button>
+        </Link>
       </div>
 
       {/* Active Sessions Panel */}
