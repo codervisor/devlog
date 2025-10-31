@@ -2,4 +2,4 @@
  * Dashboard widgets
  */
 
-export { MachineActivityWidget } from './machine-activity-widget.js';
+export { MachineActivityWidget } from './machine-activity-widget';

@@ -20,20 +20,20 @@ describe('HierarchyFilter', () => {
 
 describe('Hierarchy Types', () => {
   it('should export hierarchy types', async () => {
-    const types = await import('@/lib/types/hierarchy.js');
+    const types = await import('@/lib/types/hierarchy');
     expect(types).toBeDefined();
   });
 });
 
 describe('Hierarchy API Client', () => {
   it('should export HierarchyApiClient', async () => {
-    const { HierarchyApiClient, hierarchyApi } = await import('@/lib/api/hierarchy-api-client.js');
+    const { HierarchyApiClient, hierarchyApi } = await import('@/lib/api/hierarchy-api-client');
     expect(HierarchyApiClient).toBeDefined();
     expect(hierarchyApi).toBeDefined();
   });
 
   it('should have correct methods', async () => {
-    const { hierarchyApi } = await import('@/lib/api/hierarchy-api-client.js');
+    const { hierarchyApi } = await import('@/lib/api/hierarchy-api-client');
     expect(hierarchyApi.getProjectHierarchy).toBeDefined();
     expect(hierarchyApi.listMachines).toBeDefined();
     expect(hierarchyApi.getMachine).toBeDefined();

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { Network } from 'lucide-react';
 import { SessionList } from '@/components/agent-observability/agent-sessions/session-list';
 import { ActiveSessionsPanel } from '@/components/agent-observability/agent-sessions/active-sessions-panel';
-import { Button } from '@/components/ui/button.js';
+import { Button } from '@/components/ui/button';
 
 export default function AgentSessionsPage({ params }: { params: { name: string } }) {
   return (

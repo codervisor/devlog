@@ -2,8 +2,8 @@
  * Hierarchy API client for fetching hierarchy data
  */
 
-import { ApiClient } from './api-client.js';
-import type { ProjectHierarchy } from '@/lib/types/hierarchy.js';
+import { ApiClient } from './api-client';
+import type { ProjectHierarchy } from '@/lib/types/hierarchy';
 import type { Machine, Workspace } from '@prisma/client';
 
 /**

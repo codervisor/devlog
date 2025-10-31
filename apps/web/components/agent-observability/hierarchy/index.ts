@@ -2,5 +2,5 @@
  * Hierarchy components
  */
 
-export { HierarchyTree } from './hierarchy-tree.js';
-export { HierarchyFilter } from './hierarchy-filter.js';
+export { HierarchyTree } from './hierarchy-tree';
+export { HierarchyFilter } from './hierarchy-filter';

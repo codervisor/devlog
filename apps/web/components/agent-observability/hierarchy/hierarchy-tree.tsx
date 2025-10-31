@@ -9,9 +9,9 @@
 
 import { useState } from 'react';
 import { ChevronRight, ChevronDown, Monitor, Folder, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button.js';
-import { Card } from '@/components/ui/card.js';
-import type { ProjectHierarchy } from '@/lib/types/hierarchy.js';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import type { ProjectHierarchy } from '@/lib/types/hierarchy';
 
 interface HierarchyTreeProps {
   hierarchy: ProjectHierarchy;

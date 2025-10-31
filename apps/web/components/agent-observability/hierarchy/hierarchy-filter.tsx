@@ -14,7 +14,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select.js';
+} from '@/components/ui/select';
 import type { Project, Machine, Workspace } from '@prisma/client';
 
 interface HierarchyFilterProps {

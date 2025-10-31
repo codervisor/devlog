@@ -8,8 +8,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { HierarchyTree } from '@/components/agent-observability/hierarchy';
-import { Card } from '@/components/ui/card.js';
-import { Button } from '@/components/ui/button.js';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ProjectService } from '@codervisor/devlog-core';
 import { HierarchyService } from '@codervisor/devlog-core';
 
