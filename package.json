@@ -26,8 +26,7 @@
     "validate:api": "pnpm exec tsx scripts/validation/validate-api-standardization-ast.ts",
     "validate:envelopes": "pnpm exec tsx scripts/validation/validate-response-envelopes-ast.ts",
     "validate:architecture": "pnpm exec tsx scripts/validation/validate-architecture-patterns-ast.ts",
-    "pre-commit": "lint-staged && pnpm exec tsx scripts/validation/validate-imports.ts",
-    "prepare": "husky"
+    "pre-commit": "lint-staged && pnpm exec tsx scripts/validation/validate-imports.ts"
   },
   "keywords": [
     "monorepo",
