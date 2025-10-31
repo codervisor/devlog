@@ -82,7 +82,10 @@ func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache,
 	// Register Copilot adapter with hierarchy support
 	registry.Register(NewCopilotAdapter(projectID, hierarchyCache, log))
 
-	// TODO: Register other adapters (Claude, Cursor, etc.) when implemented
+	// Register Claude adapter with hierarchy support
+	registry.Register(NewClaudeAdapter(projectID, hierarchyCache, log))
+
+	// TODO: Register Cursor adapter when implemented
 
 	return registry
 }
