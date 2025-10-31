@@ -5,8 +5,11 @@
  */
 
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 import { HierarchyTree } from '@/components/agent-observability/hierarchy';
 import { Card } from '@/components/ui/card.js';
+import { Button } from '@/components/ui/button.js';
 import { ProjectService } from '@codervisor/devlog-core';
 import { HierarchyService } from '@codervisor/devlog-core';
 
@@ -36,6 +39,16 @@ export default async function ProjectHierarchyPage({
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Navigation */}
+      <div>
+        <Link href={`/projects/${params.name}`}>
+          <Button variant="ghost" className="gap-2">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Project
+          </Button>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold">{hierarchy.project.fullName}</h1>
