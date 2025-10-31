@@ -283,6 +283,7 @@ See [NEXT_STEPS.md](./NEXT_STEPS.md) for the complete roadmap. Immediate priorit
 
 - **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Detailed roadmap and prioritization
 - [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - Detailed technical documentation
+- [Database Architecture](../20251031-database-architecture/README.md) - PostgreSQL + TimescaleDB design
 - [PR #48](https://github.com/codervisor/devlog/pull/48) - Original recommendations
 - [Phase 3 Summary](../20251021-codebase-reorganization/PHASE_3_IMPLEMENTATION_SUMMARY.md) - UI reorganization
 

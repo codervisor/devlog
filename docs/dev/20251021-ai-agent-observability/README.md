@@ -143,7 +143,8 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ### Backend Services
 - **TypeScript/Node.js**: API Gateway, MCP Server, Web UI
 - **Go**: Event collector, processing engine, analytics
-- **PostgreSQL + TimescaleDB**: Time-series event storage
+- **PostgreSQL + TimescaleDB**: Time-series event storage (see [Database Architecture](../20251031-database-architecture/README.md))
+- **SQLite**: Client-side offline buffer in Go collector
 - **Redis**: Caching and pub/sub (future)
 
 ### Frontend
@@ -170,6 +171,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 | [go-collector-design.md](./go-collector-design.md) | Go collector architecture | Go developers |
 | [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md) | 20-day implementation plan | Development team |
 | [ai-agent-observability-performance-analysis.md](./ai-agent-observability-performance-analysis.md) | Language performance comparison | Architects |
+| [Database Architecture](../20251031-database-architecture/README.md) | PostgreSQL + TimescaleDB design | Engineers & Architects |
 
 ---
 

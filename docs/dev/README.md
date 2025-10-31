@@ -10,7 +10,19 @@ The date represents when the feature design was started or last significantly up
 
 ## Active Features
 
-### 🔧 Codebase Reorganization (October 2025)
+### �️ Database Architecture (October 2025)
+**Status**: ✅ Design Complete  
+**Folder**: [20251031-database-architecture/](./20251031-database-architecture/)
+
+PostgreSQL + TimescaleDB architecture for AI agent observability. Defines time-series optimization, project hierarchy storage, and operational guidelines.
+
+### 🏗️ Project Hierarchy Redesign (October 2025)
+**Status**: 📋 Design Phase  
+**Folder**: [20251031-project-hierarchy-redesign/](./20251031-project-hierarchy-redesign/)
+
+Establish proper hierarchy for tracking AI agent activities: Organization → Projects → Machines → Workspaces → Sessions → Events. Resolves confusion between projects and workspaces.
+
+### �🔧 Codebase Reorganization (October 2025)
 **Status**: ✅ Phase 2 Complete (Phase 3 Ready)  
 **Folder**: [20251021-codebase-reorganization/](./20251021-codebase-reorganization/)
 
@@ -20,9 +32,15 @@ Comprehensive codebase reorganization to reflect AI agent observability focus. P
 
 ### 🔍 AI Agent Observability (January 2025)
 **Status**: 🚧 In Progress (Phase 0 - Go Collector)  
-**Folder**: [20250115-ai-agent-observability/](./20250115-ai-agent-observability/)
+**Folder**: [20251021-ai-agent-observability/](./20251021-ai-agent-observability/)
 
 Transform devlog into an AI coding agent observability platform. Currently implementing the Go collector (Days 1-4 complete, 20% done).
+
+### 📊 Agent Observability Core Features (October 2025)
+**Status**: ✅ Phase 1 Complete  
+**Folder**: [20251022-agent-observability-core-features/](./20251022-agent-observability-core-features/)
+
+Dashboard with real-time metrics, sessions page with active/history views, and API routes. Foundation built for visualization layer.
 
 ### 📊 AI Evaluation System (October 2025)
 **Status**: 📅 Planned  

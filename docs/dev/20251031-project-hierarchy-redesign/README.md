@@ -537,6 +537,7 @@ ORDER BY cs.started_at DESC;
 
 ## 📚 References
 
+- [Database Architecture](../20251031-database-architecture/README.md) - PostgreSQL + TimescaleDB design
 - [Workspace ID Mapping](./workspace-id-mapping.md)
 - [Copilot Adapter Design](./copilot-adapter-redesign.md)
 - Current schema: `packages/core/src/entities/`
