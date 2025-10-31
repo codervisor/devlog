@@ -7,20 +7,81 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Project management
+// ============================================================================
+// PROJECT HIERARCHY
+// ============================================================================
+
+// Projects - Repositories/codebases being worked on
 model Project {
-  id             Int      @id @default(autoincrement())
-  name           String   @unique
-  description    String?  @db.Text
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  lastAccessedAt DateTime @default(now()) @map("last_accessed_at") @db.Timestamptz
+  id          Int      @id @default(autoincrement())
+  name        String // "devlog"
+  fullName    String   @unique // "codervisor/devlog"
+  repoUrl     String   @unique // "git@github.com:codervisor/devlog.git"
+  repoOwner   String // "codervisor"
+  repoName    String // "devlog"
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  devlogEntries DevlogEntry[]
-  agentSessions AgentSession[]
+  machines      Machine[]      @relation("MachineProjects")
+  workspaces    Workspace[]
   agentEvents   AgentEvent[]
+  agentSessions AgentSession[]
+  devlogEntries DevlogEntry[]
 
-  @@map("devlog_projects")
+  @@index([fullName])
+  @@index([repoUrl])
+  @@map("projects")
+}
+
+// Machines - Physical or virtual machines where agents run
+model Machine {
+  id          Int      @id @default(autoincrement())
+  machineId   String   @unique // "marv-macbook-pro-darwin"
+  hostname    String // "marv-macbook-pro"
+  username    String // "marvzhang"
+  osType      String // "darwin", "linux", "windows"
+  osVersion   String? // "14.5"
+  machineType String // "local", "remote", "cloud", "ci"
+  ipAddress   String?
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  lastSeenAt  DateTime @updatedAt @map("last_seen_at") @db.Timestamptz
+
+  // Relations
+  projects   Project[]   @relation("MachineProjects")
+  workspaces Workspace[]
+
+  @@index([machineId])
+  @@index([hostname])
+  @@index([machineType])
+  @@map("machines")
+}
+
+// Workspaces - VS Code windows/folders on specific machines
+model Workspace {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  machineId     Int      @map("machine_id")
+  workspaceId   String   @unique @map("workspace_id") // VS Code UUID
+  workspacePath String   @map("workspace_path")
+  workspaceType String   @map("workspace_type") // "folder", "multi-root"
+  branch        String?
+  commit        String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  lastSeenAt    DateTime @updatedAt @map("last_seen_at") @db.Timestamptz
+
+  // Relations
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  machine      Machine       @relation(fields: [machineId], references: [id], onDelete: Cascade)
+  chatSessions ChatSession[]
+
+  @@unique([projectId, machineId, workspaceId])
+  @@index([workspaceId])
+  @@index([projectId])
+  @@index([machineId])
+  @@map("workspaces")
 }
 
 // Main devlog entries
@@ -52,7 +113,6 @@ model DevlogEntry {
   dependencies_from DevlogDependency[] @relation("DevlogDependencySource")
   dependencies_to   DevlogDependency[] @relation("DevlogDependencyTarget")
   documents         DevlogDocument[]
-  chatLinks         ChatDevlogLink[]
 
   @@index([status])
   @@index([type])
@@ -142,7 +202,7 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
 
-  @@map("devlog_users")
+  @@map("users")
 }
 
 // OAuth providers
@@ -160,7 +220,7 @@ model UserProvider {
 
   @@unique([provider, providerId])
   @@index([userId])
-  @@map("devlog_user_providers")
+  @@map("user_providers")
 }
 
 // Email verification tokens
@@ -175,7 +235,7 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("devlog_email_verification_tokens")
+  @@map("email_verification_tokens")
 }
 
 // Password reset tokens
@@ -190,78 +250,59 @@ model PasswordResetToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("devlog_password_reset_tokens")
+  @@map("password_reset_tokens")
 }
 
-// Chat sessions
+// Chat Sessions - Conversation threads within workspaces
 model ChatSession {
-  id            String  @id
-  agent         String // AgentType as string
-  timestamp     String // ISO string
-  workspace     String?
-  workspacePath String? @map("workspace_path")
-  title         String?
-  status        String  @default("imported") // ChatStatus as string
-  messageCount  Int     @default(0) @map("message_count")
-  duration      Int?
-  metadata      Json    @default("{}")
-  updatedAt     String  @map("updated_at") // ISO string
-  archived      Boolean @default(false)
+  id           Int       @id @default(autoincrement())
+  sessionId    String    @unique @db.Uuid // From chat session filename
+  workspaceId  Int       @map("workspace_id")
+  agentType    String    @map("agent_type") // "copilot", "claude", "cursor"
+  modelId      String?   @map("model_id") // "gpt-4", "claude-sonnet-4.5"
+  startedAt    DateTime  @map("started_at") @db.Timestamptz
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz
+  messageCount Int       @default(0) @map("message_count")
+  totalTokens  Int       @default(0) @map("total_tokens")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  messages    ChatMessage[]
-  devlogLinks ChatDevlogLink[]
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentEvents  AgentEvent[]
+  chatMessages ChatMessage[]
 
-  @@index([agent])
-  @@index([timestamp])
-  @@index([workspace])
-  @@index([status])
-  @@index([archived])
+  @@index([sessionId])
+  @@index([workspaceId])
+  @@index([startedAt(sort: Desc)])
+  @@index([agentType])
   @@map("chat_sessions")
 }
 
-// Chat messages
+// Chat Messages - Individual messages in chat sessions
 model ChatMessage {
-  id            String  @id
-  sessionId     String  @map("session_id")
-  role          String // ChatRole as string
-  content       String  @db.Text
-  timestamp     String // ISO string
+  id            String   @id @db.Uuid
+  sessionId     String   @map("session_id") @db.Uuid
+  role          String // "user", "assistant"
+  content       String   @db.Text
+  timestamp     DateTime @db.Timestamptz
   sequence      Int
-  metadata      Json    @default("{}")
-  searchContent String? @map("search_content") @db.Text
+  metadata      Json     @default("{}")
+  searchContent String?  @map("search_content") @db.Text
 
   // Relations
-  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session ChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
 
   @@index([sessionId])
   @@index([timestamp])
-  @@index([role])
   @@index([sessionId, sequence])
   @@map("chat_messages")
 }
 
-// Chat-devlog links
-model ChatDevlogLink {
-  id         String   @id
-  sessionId  String   @map("session_id")
-  devlogId   Int      @map("devlog_id")
-  timestamp  DateTime @db.Timestamptz
-  linkReason String   @map("link_reason")
+// ============================================================================
+// AGENT OBSERVABILITY - TIME-SERIES DATA
+// ============================================================================
 
-  // Relations
-  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  devlogEntry DevlogEntry @relation(fields: [devlogId], references: [id], onDelete: Cascade)
-
-  @@index([sessionId])
-  @@index([devlogId])
-  @@index([timestamp])
-  @@map("chat_devlog_links")
-}
-
-// AI Agent Observability Models
-
-// Agent events - Time-series event storage for AI agent activities
+// Agent Events - Individual actions (TimescaleDB hypertable)
 model AgentEvent {
   id           String   @id @default(uuid()) @db.Uuid
   timestamp    DateTime @db.Timestamptz
@@ -286,11 +327,11 @@ model AgentEvent {
 
   // Metadata
   tags     String[]
-  severity String? // EventSeverity as string
+  severity String? // "info", "warning", "error"
 
   // Relations
-  session AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session ChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([timestamp(sort: Desc)])
   @@index([sessionId])
@@ -319,12 +360,11 @@ model AgentSession {
   metrics Json @default("{}")
 
   // Outcome
-  outcome      String? // SessionOutcome as string
+  outcome      String? // "success", "failure", "partial", "cancelled"
   qualityScore Decimal? @map("quality_score") @db.Decimal(5, 2) // 0-100
 
   // Relations
-  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  events  AgentEvent[]
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([startTime(sort: Desc)])
   @@index([agentId])
