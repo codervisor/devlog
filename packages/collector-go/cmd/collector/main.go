@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -304,6 +305,8 @@ var backfillRunCmd = &cobra.Command{
 		toDate, _ := cmd.Flags().GetString("to")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		days, _ := cmd.Flags().GetInt("days")
+		allWorkspaces, _ := cmd.Flags().GetBool("all-workspaces")
+		specificWorkspaces, _ := cmd.Flags().GetStringSlice("workspaces")
 
 		// Parse dates
 		var from, to time.Time
@@ -383,9 +386,10 @@ var backfillRunCmd = &cobra.Command{
 			return fmt.Errorf("no log path specified")
 		}
 
-		// If log path is "auto", discover it
+		// If log path is "auto", discover paths
+		var logPaths []string
 		if logPath == "auto" {
-			log.Infof("Auto-discovering log path for %s...", agentName)
+			log.Infof("Auto-discovering log paths for %s...", agentName)
 			discovered, err := watcher.DiscoverAgentLogs(agentName)
 			if err != nil {
 				return fmt.Errorf("failed to discover logs for %s: %w", agentName, err)
@@ -393,9 +397,36 @@ var backfillRunCmd = &cobra.Command{
 			if len(discovered) == 0 {
 				return fmt.Errorf("no logs found for agent %s", agentName)
 			}
-			// Use first discovered log path
-			logPath = discovered[0].Path
-			log.Infof("Using discovered log path: %s", logPath)
+
+			// Filter by workspace IDs if specified
+			if len(specificWorkspaces) > 0 {
+				log.Infof("Filtering for workspaces: %v", specificWorkspaces)
+				for _, d := range discovered {
+					for _, wsID := range specificWorkspaces {
+						if strings.Contains(d.Path, wsID) {
+							logPaths = append(logPaths, d.Path)
+							break
+						}
+					}
+				}
+				if len(logPaths) == 0 {
+					return fmt.Errorf("no logs found for specified workspaces")
+				}
+			} else if allWorkspaces {
+				// Process all discovered workspaces
+				log.Infof("Processing all %d discovered workspaces", len(discovered))
+				for _, d := range discovered {
+					logPaths = append(logPaths, d.Path)
+				}
+			} else {
+				// Default: use first discovered path (backward compatibility)
+				logPaths = []string{discovered[0].Path}
+				log.Infof("Using discovered log path: %s", logPaths[0])
+				log.Infof("Hint: Use --all-workspaces to process all %d workspaces", len(discovered))
+			}
+		} else {
+			// Use specified log path
+			logPaths = []string{logPath}
 		}
 
 		// Progress callback
@@ -412,32 +443,59 @@ var backfillRunCmd = &cobra.Command{
 			)
 		}
 
-		// Run backfill
+		// Run backfill for each log path
 		ctx := context.Background()
 		adapterName := mapAgentName(agentName)
-		bfConfig := backfill.BackfillConfig{
-			AgentName:  adapterName,
-			LogPath:    logPath,
-			FromDate:   from,
-			ToDate:     to,
-			DryRun:     dryRun,
-			BatchSize:  100,
-			ProgressCB: progressFunc,
+
+		// Aggregate results
+		totalResult := &backfill.BackfillResult{}
+		overallStart := time.Now()
+
+		for i, logPath := range logPaths {
+			if len(logPaths) > 1 {
+				fmt.Printf("\n[%d/%d] Processing: %s\n", i+1, len(logPaths), logPath)
+			}
+
+			bfConfig := backfill.BackfillConfig{
+				AgentName:  adapterName,
+				LogPath:    logPath,
+				FromDate:   from,
+				ToDate:     to,
+				DryRun:     dryRun,
+				BatchSize:  100,
+				ProgressCB: progressFunc,
+			}
+
+			result, err := manager.Backfill(ctx, bfConfig)
+			if err != nil {
+				log.Warnf("Failed to process %s: %v", logPath, err)
+				totalResult.ErrorEvents++
+				continue
+			}
+
+			// Aggregate results
+			totalResult.TotalEvents += result.TotalEvents
+			totalResult.ProcessedEvents += result.ProcessedEvents
+			totalResult.SkippedEvents += result.SkippedEvents
+			totalResult.ErrorEvents += result.ErrorEvents
+			totalResult.BytesProcessed += result.BytesProcessed
 		}
 
-		result, err := manager.Backfill(ctx, bfConfig)
-		if err != nil {
-			return fmt.Errorf("backfill failed: %w", err)
-		}
+		totalResult.Duration = time.Since(overallStart)
 
 		// Print summary
 		fmt.Println("\n\n✓ Backfill completed")
-		fmt.Printf("Duration: %s\n", result.Duration)
-		fmt.Printf("Events processed: %d\n", result.ProcessedEvents)
-		fmt.Printf("Events skipped: %d (duplicates)\n", result.SkippedEvents)
-		fmt.Printf("Errors: %d\n", result.ErrorEvents)
-		fmt.Printf("Throughput: %.1f events/sec\n", float64(result.ProcessedEvents)/result.Duration.Seconds())
-		fmt.Printf("Data processed: %.2f MB\n", float64(result.BytesProcessed)/(1024*1024))
+		if len(logPaths) > 1 {
+			fmt.Printf("Workspaces processed: %d\n", len(logPaths))
+		}
+		fmt.Printf("Duration: %s\n", totalResult.Duration)
+		fmt.Printf("Events processed: %d\n", totalResult.ProcessedEvents)
+		fmt.Printf("Events skipped: %d (duplicates)\n", totalResult.SkippedEvents)
+		fmt.Printf("Errors: %d\n", totalResult.ErrorEvents)
+		if totalResult.Duration.Seconds() > 0 {
+			fmt.Printf("Throughput: %.1f events/sec\n", float64(totalResult.ProcessedEvents)/totalResult.Duration.Seconds())
+		}
+		fmt.Printf("Data processed: %.2f MB\n", float64(totalResult.BytesProcessed)/(1024*1024))
 
 		return nil
 	},
@@ -542,6 +600,8 @@ func init() {
 	backfillRunCmd.Flags().StringP("to", "t", "", "End date (YYYY-MM-DD)")
 	backfillRunCmd.Flags().IntP("days", "d", 0, "Backfill last N days (alternative to from/to)")
 	backfillRunCmd.Flags().Bool("dry-run", false, "Preview without processing")
+	backfillRunCmd.Flags().Bool("all-workspaces", false, "Process all discovered workspaces")
+	backfillRunCmd.Flags().StringSlice("workspaces", []string{}, "Specific workspace IDs to process (comma-separated)")
 
 	// Backfill status flags
 	backfillStatusCmd.Flags().StringP("agent", "a", "", "Agent name to check")

@@ -105,7 +105,9 @@ hiererchyCache := hierarchy.NewHierarchyCache(apiClient, log)  // proper client
 
 ## Results
 
-### Before Fix
+### Phase 1: Parsing Fix (Single Workspace)
+
+**Before Fix:**
 ```bash
 ✓ Backfill completed
 Duration: 78ms
@@ -116,7 +118,7 @@ Throughput: 0.0 events/sec
 Data processed: 18.02 MB
 ```
 
-### After Fix
+**After Fix:**
 ```bash
 ✓ Backfill completed
 Duration: 132ms
@@ -125,24 +127,90 @@ Events skipped: 0
 Errors: 0  ✅
 Throughput: 6,451.6 events/sec  ✅
 Data processed: 18.02 MB
-
-Log output showing successful parsing:
-INFO: Parsed 31 events from 0ff791c0-4cc3-4eaa-91c9-c265a9a90c15.json
-INFO: Parsed 16 events from 3b973629-fbcc-4167-9038-e8219c54c2f5.json
-INFO: Parsed 267 events from 5c0f791b-c9ca-4e4f-8f79-462c5862be18.json
-INFO: Parsed 151 events from a637b87a-57d5-45aa-b955-bf598badb9ba.json
-INFO: Parsed 245 events from e9338204-6692-4e09-8861-8ea24fe696d9.json
-... (11 files total)
 ```
 
-### Key Improvements
-- ✅ **100% success rate** - 0 errors (down from 447K)
-- ✅ **853 events extracted** from 11 chat session files  
-- ✅ **6,451 events/sec** throughput
-- ✅ **Proper error logging** for debugging
-- ✅ **Hierarchy context resolution** (when backend available)
+### Phase 2: Buffer Fix
+
+**Issue:** Events were not being stored in SQLite buffer.
+
+**Root Cause:** `SendEvent()` always returns `nil` (queues events internally), so the fallback to buffer never executed:
+```go
+// OLD - WRONG
+if err := bm.client.SendEvent(event); err != nil {
+    // Never executes because SendEvent() always returns nil!
+    bm.buffer.Store(event)
+}
+```
+
+**Solution:** Buffer first during backfill operations (historical data doesn't need real-time delivery):
+```go
+// NEW - CORRECT
+// Buffer events first for reliable storage
+if err := bm.buffer.Store(event); err != nil {
+    bm.log.Warnf("Failed to buffer event: %v", err)
+}
+// Also try to send immediately (best effort)
+bm.client.SendEvent(event)
+```
+
+**Result:** 
+- ✅ **853 events buffered** in SQLite (was 0)
+- ✅ Database size: 632KB
+- ✅ Event types: llm_request, llm_response, file_read, file_modify, tool_use
+
+### Phase 3: Multi-Workspace Support
+
+**Issue:** Only processing logs from one workspace (current working directory).
+
+**Enhancement:** Added flexible workspace selection with 3 modes:
+
+1. **Single workspace** (default - backward compatible):
+   ```bash
+   ./bin/devlog-collector backfill run --days 365
+   ```
+
+2. **All workspaces** (new):
+   ```bash
+   ./bin/devlog-collector backfill run --days 365 --all-workspaces
+   ```
+
+3. **Specific workspaces** (new):
+   ```bash
+   ./bin/devlog-collector backfill run --days 365 --workspaces 487fd76a,d339d6b0
+   ```
+
+**Results from All Workspaces:**
+```bash
+✓ Backfill completed
+Workspaces processed: 12
+Duration: 24.8s
+Events processed: 19,707  ✅ (23x more than single workspace!)
+Events skipped: 1 (duplicates)
+Errors: 243
+Throughput: 795.1 events/sec
+Data processed: 997.42 MB
+```
+
+- ✅ **12 workspaces processed** (out of 16 total, 12 have chat sessions)
+- ✅ **19,707 events extracted** (vs 853 from single workspace)
+- ✅ **10,000 events buffered** (hit buffer max_size limit)
+- ⚠️ **243 parsing errors** (older log format with different CopilotVariable.value types)
+
+**Event Type Breakdown:**
+```
+tool_use:       480 events
+file_modify:    171 events
+file_read:      130 events  
+llm_response:    36 events
+llm_request:     36 events
+Total:          853 events (from first workspace)
+```
+
+**Average:** ~23.7 events per request (detailed activity tracking of tools, files, and LLM interactions)
 
 ## Files Modified
+
+### Phase 1: Parsing Fix
 
 1. **`packages/collector-go/internal/backfill/backfill.go`** (Major refactor)
    - Added `shouldUseFileParsing()` to detect file format
@@ -157,16 +225,55 @@ INFO: Parsed 245 events from e9338204-6692-4e09-8861-8ea24fe696d9.json
    - Pass `apiClient` instead of `nil` to `NewHierarchyCache()`
    - Ensures hierarchy resolution works during backfill
 
+### Phase 2: Buffer Fix
+
+3. **`packages/collector-go/internal/backfill/backfill.go`** (`processBatch` fix)
+   - Changed to buffer-first strategy for backfill operations
+   - Ensures events are stored reliably in SQLite
+   - Best-effort sending to backend (non-blocking)
+
+### Phase 3: Multi-Workspace Support
+
+4. **`packages/collector-go/cmd/collector/main.go`** (Multi-workspace support)
+   - Added `--all-workspaces` flag to process all discovered workspaces
+   - Added `--workspaces` flag to select specific workspace IDs
+   - Modified discovery logic to return multiple paths
+   - Aggregate results from multiple workspaces
+   - Backward compatible (default processes single workspace)
+
 ## Testing
 
+### Single Workspace (Default)
 ```bash
-# Clean state and run backfill
 cd packages/collector-go
 ./build.sh
 rm -f ~/.devlog/buffer.db*
 
-# Test with 365 days to capture all events
 ./bin/devlog-collector-darwin-arm64 backfill run --days 365
+# Result: 853 events from 11 files
+```
+
+### All Workspaces
+```bash
+./bin/devlog-collector-darwin-arm64 backfill run --days 365 --all-workspaces
+# Result: 19,707 events from 12 workspaces
+```
+
+### Specific Workspaces
+```bash
+./bin/devlog-collector-darwin-arm64 backfill run --days 365 \
+  --workspaces 487fd76abf5d5f8744f78317893cc477,d339d6b095ee421b12111ec2b1c33601
+# Result: Events from specified workspaces only
+```
+
+### Verify Buffered Events
+```bash
+# Quick verification
+sqlite3 ~/.devlog/buffer.db "SELECT COUNT(*) FROM events;"
+sqlite3 ~/.devlog/buffer.db "SELECT agent_id, COUNT(*) FROM events GROUP BY agent_id;"
+
+# Detailed verification (use provided script)
+/tmp/verify_collector_db.sh
 
 # Check backfill status
 ./bin/devlog-collector-darwin-arm64 backfill status --agent github-copilot
@@ -181,6 +288,31 @@ rm -f ~/.devlog/buffer.db*
 3. **Dependency Order** - Initialize dependencies before consumers (client before cache).
 
 4. **Type Safety** - Go's interface system (`ParseLogLine` vs `ParseLogFile`) helped identify the mismatch.
+
+5. **Async Complexity** - When `SendEvent()` queues asynchronously, errors aren't immediately visible. Buffer-first is safer for historical data.
+
+6. **Scale Discovery** - Default single-workspace behavior masked the true scale (12 workspaces with 19K+ events). Always check what discovery finds.
+
+## Next Steps
+
+1. **Increase Buffer Size** - Current 10K limit fills quickly with multi-workspace backfill. Consider:
+   - Configurable buffer size
+   - Auto-flush when buffer reaches threshold
+   - Buffer rotation/archival
+
+2. **Fix Parsing Errors** - 243 errors from older Copilot log format:
+   - `CopilotVariable.value` can be string, array, or map
+   - Need flexible type handling or schema version detection
+
+3. **Progress Tracking** - Better progress visibility for multi-workspace:
+   - Per-workspace progress bars
+   - ETA calculation
+   - Pause/resume support
+
+4. **Deduplication** - Currently placeholder (`isDuplicate()` returns false):
+   - Implement content-based hashing
+   - Store hashes in SQLite index
+   - Prevent reprocessing on re-run
 
 ## Related Issues
 

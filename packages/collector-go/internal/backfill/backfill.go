@@ -546,12 +546,19 @@ func (bm *BackfillManager) backfillFileLineByLine(ctx context.Context, config Ba
 // processBatch sends a batch of events to the client and buffer
 func (bm *BackfillManager) processBatch(ctx context.Context, batch []*types.AgentEvent) error {
 	for _, event := range batch {
-		// Try to send immediately
+		// For backfill operations, buffer events first for reliable storage
+		// The buffer will be processed by the normal collector sync mechanism
+		if err := bm.buffer.Store(event); err != nil {
+			bm.log.Warnf("Failed to buffer event: %v", err)
+			// Continue to try sending directly as fallback
+		}
+
+		// Also try to send immediately if backend is available
+		// This is best-effort and failures are acceptable since we've buffered
 		if err := bm.client.SendEvent(event); err != nil {
-			// Buffer if send fails
-			if err := bm.buffer.Store(event); err != nil {
-				return fmt.Errorf("failed to buffer event: %w", err)
-			}
+			// SendEvent currently always returns nil, so this won't catch async send failures
+			// But we keep it for future compatibility
+			bm.log.Debugf("Failed to queue event for sending: %v", err)
 		}
 	}
 	return nil
