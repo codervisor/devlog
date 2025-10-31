@@ -37,71 +37,67 @@
 2. Does it maintain type safety? → Non-negotiable
 3. Is it the simplest solution? → Occam's razor test
 
-## 📋 Development Tracking SOP
+## 📋 Specifications (Specs) - Development Tracking SOP
 
-### Feature Documentation (docs/dev/)
-- **When to create**: Starting significant features requiring design/planning
-- **Folder naming**: `docs/dev/YYYYMMDD-feature-name/` (use date when design begins)
-- **Required docs**: At minimum, one primary design document
-- **Status tracking**: Mark status clearly (Design, In Progress, Complete, Paused)
+### Overview
 
-## 🔍 Agent Observability Workflow
+Specifications (specs) follow **Spec-Driven Development (SDD)** - document design before implementation. 
 
-### When Monitoring AI Agent Sessions (Primary Feature)
+**Terminology**: "Specs", "dev docs", and "development documentation" are interchangeable aliases.
 
-This is the core use case of the Devlog platform - tracking and analyzing AI coding agent activities.
+### When to Create a Spec
 
-```typescript
-// Before any AI coding work - start a session
-mcp_agent_start_session({
-  agentId: "github-copilot",
-  projectId: 1,
-  objective: "Implement user authentication",
-  workItemId: 123  // Optional: link to work item if tracking
-});
+Create a spec when starting:
+- Significant features requiring design/planning (>2 days work)
+- Architectural decisions affecting multiple components
+- Complex features needing documentation
+- Breaking changes or major refactors
 
-// During work - events logged automatically by collector
-// Or manually log significant events
-mcp_agent_log_event({
-  type: "file_write",
-  filePath: "src/auth/login.ts",
-  metrics: { linesAdded: 45, tokensUsed: 1200 }
-});
+**Don't create specs for**: Small bug fixes, minor tweaks, routine maintenance, simple one-file changes.
 
-// After work completes - end the session
-mcp_agent_end_session({
-  outcome: "success",
-  summary: "Implemented JWT-based auth with tests"
-});
+### Directory Structure
 
-// Query and analyze agent performance
-mcp_agent_query_events({
-  sessionId: "session-id",
-  eventTypes: ["file_write", "llm_request"]
-});
+**Multi-tier hierarchy**: `specs/YYYYMMDD/NNN-short-name/`
+
+- **Level 1**: `YYYYMMDD/` - Date folder (when spec design begins)
+- **Level 2**: `NNN-short-name/` - Numbered spec within that date
+  - `NNN` starts from `001` within each date
+  - `short-name` is brief, hyphenated (e.g., `database-architecture`)
+
+**Example**:
+```
+specs/
+├── 20251031/
+│   ├── 001-database-architecture/
+│   ├── 002-project-hierarchy/
+│   └── 003-api-refactor/
+└── 20251101/
+    └── 001-auth-system/
 ```
 
-### When Managing Work Items (Optional Supporting Feature)
+### Creating Specs
 
-Work items help organize and contextualize agent sessions, but are not required.
+```bash
+# Create new spec (auto-increments NNN)
+pnpm spec create "short-name" "Optional Title"
 
-```typescript
-// Create a work item to organize work
-mcp_work_item_create({
-  title: "Implement user authentication",
-  type: "feature",
-  description: "Add JWT-based authentication system"
-});
+# Example
+pnpm spec create "database-architecture" "Database Architecture Design"
+# Creates: specs/20251031/001-database-architecture/
 
-// Update progress
-mcp_work_item_update({
-  id: 123,
-  status: "in-progress",
-  note: "Completed login endpoint"
-});
+# List active specs
+pnpm spec list
 
-// Link agent sessions to work items
-// Sessions can reference workItemId when started
+# Archive completed spec
+pnpm spec archive 20251031 001-database-architecture
 ```
 
-**Note**: The terminology "work item" is an alias for "devlog entry" - both are interchangeable. New code should prefer `WorkItem` type, but `DevlogEntry` remains fully supported for backward compatibility.
+### Spec Content
+
+**Recommended structure** (not mandatory):
+- `design.md` - Full technical design specification
+- `README.md` or `summary.md` - Quick overview
+- `implementation.md` or `checklist.md` - Implementation tasks
+- `reference.md` - Quick reference for completed features
+
+**Status indicators**: 📅 Planned | 🚧 In Progress | ✅ Complete | ⏸️ Paused | ❌ Cancelled

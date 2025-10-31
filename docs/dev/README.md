@@ -1,16 +1,43 @@
-# Development Documentation
+# Specifications (Specs)
 
-This directory contains feature design documents organized by date and feature name.
+> **Note**: This directory is a symlink to `specs/` at the project root. "Specs", "dev docs", and "development documentation" are interchangeable terms.
 
-## Structure
+This directory contains **specifications** following **Spec-Driven Development (SDD)** - document design before implementation.
 
-Each feature gets its own folder with the format: `YYYYMMDD-feature-name/`
+## 📁 Structure
 
-The date represents when the feature design was started or last significantly updated.
+**Multi-tier hierarchy**: `YYYYMMDD/NNN-short-name/`
 
-## Active Features
+- **Level 1**: `YYYYMMDD/` - Date folder (when spec design begins)
+- **Level 2**: `NNN-short-name/` - Numbered spec within that date (starting from `000`)
 
-### �️ Database Architecture (October 2025)
+**Example**:
+```
+specs/
+├── 20251031/
+│   ├── 000-database-architecture/
+│   ├── 001-project-hierarchy/
+│   └── 002-api-refactor/
+└── 20251101/
+    └── 000-auth-system/
+```
+
+## 🛠️ Utility Scripts
+
+```bash
+# Create new spec (auto-increments NNN)
+pnpm spec:create "short-name" "Optional Title"
+
+# List active specs
+pnpm spec:list
+
+# Archive completed spec
+pnpm spec:archive "20251031/000-database-architecture"
+```
+
+## Active Specs
+
+### 🏗️ Database Architecture (October 2025)
 **Status**: ✅ Design Complete  
 **Folder**: [20251031-database-architecture/](./20251031-database-architecture/)
 
@@ -35,36 +62,37 @@ Comprehensive codebase reorganization to reflect AI agent observability focus. P
 **Folder**: [20251021-ai-agent-observability/](./20251021-ai-agent-observability/)
 
 Transform devlog into an AI coding agent observability platform. Currently implementing the Go collector (Days 1-4 complete, 20% done).
-
-### 📊 Agent Observability Core Features (October 2025)
-**Status**: ✅ Phase 1 Complete  
-**Folder**: [20251022-agent-observability-core-features/](./20251022-agent-observability-core-features/)
-
-Dashboard with real-time metrics, sessions page with active/history views, and API routes. Foundation built for visualization layer.
-
-### 📊 AI Evaluation System (October 2025)
-**Status**: 📅 Planned  
-**Folder**: [20251021-ai-evaluation-system/](./20251021-ai-evaluation-system/)
-
-Quantitative evaluation system for AI coding agents using TSR/HEI/OQS metrics. Design complete, implementation pending.
-
 ---
 
-Each feature folder contains its own documentation. Browse the dated folders to see full details.
+Browse the dated folders to see full details on each spec.
 
-### Recommended Document Structure
+## 📝 Recommended Document Structure
 
 While not mandatory, consider including:
-- `*-design.md` - Full technical design specification
-- `*-summary.md` or `README.md` - Quick overview and key points
-- `*-implementation-checklist.md` - Phase-by-phase tasks (optional)
-- `*-quick-reference.md` - Quick reference guide (optional)
-- Additional technical deep-dives as needed
+- `design.md` - Full technical design specification
+- `README.md` or `summary.md` - Quick overview
+- `implementation.md` or `checklist.md` - Implementation tasks
+- `reference.md` - Quick reference for completed features
 
-Each folder should contain a clear status indicator in one of its documents.
+**Status indicators**: 📅 Planned | 🚧 In Progress | ✅ Complete | ⏸️ Paused | ❌ Cancelled
 
-## Guidelines
+## 🎯 When to Create a Spec
 
+Create a spec when starting:
+- Significant features requiring design/planning (>2 days work)
+- Architectural decisions affecting multiple components
+- Complex features needing documentation
+- Breaking changes or major refactors
+
+**Don't create specs for**: Small bug fixes, minor tweaks, routine maintenance, simple one-file changes.
+
+## 📖 Historical Notes
+
+- **November 2025**: Migrated to multi-tier hierarchy (`YYYYMMDD/NNN-name/`)
+- **October 2025**: Organized as `YYYYMMDD-feature-name/`
+- **Pre-October 2025**: Docs lived in `docs/design/`
+
+**Backward compatibility**: The `docs/dev/` path remains available as a symlink to `specs/` for existing scripts and documentation references.
 When creating new feature documentation:
 
 1. Create a new folder: `docs/dev/YYYYMMDD-feature-name/`
