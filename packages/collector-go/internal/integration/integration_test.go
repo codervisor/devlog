@@ -65,7 +65,7 @@ func TestEndToEnd_CopilotLogParsing(t *testing.T) {
 	defer server.Close()
 
 	// Initialize components
-	registry := adapters.DefaultRegistry("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
 	adapter := adapters.NewCopilotAdapter("test-project")
 
 	log := logrus.New()
@@ -234,7 +234,7 @@ func TestEndToEnd_OfflineBuffering(t *testing.T) {
 	defer server.Close()
 
 	// Initialize components
-	registry := adapters.DefaultRegistry("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
 	adapter := adapters.NewCopilotAdapter("test-project")
 
 	log := logrus.New()
@@ -423,7 +423,7 @@ func TestEndToEnd_LogRotation(t *testing.T) {
 	defer server.Close()
 
 	// Initialize components
-	registry := adapters.DefaultRegistry("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
 	adapter := adapters.NewCopilotAdapter("test-project")
 
 	log := logrus.New()
@@ -562,7 +562,7 @@ func TestEndToEnd_HighVolume(t *testing.T) {
 	defer server.Close()
 
 	// Initialize components
-	registry := adapters.DefaultRegistry("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
 	adapter := adapters.NewCopilotAdapter("test-project")
 
 	log := logrus.New()

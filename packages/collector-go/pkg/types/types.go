@@ -8,11 +8,19 @@ type AgentEvent struct {
 	Timestamp time.Time              `json:"timestamp"`
 	Type      string                 `json:"type"`
 	AgentID   string                 `json:"agentId"`
-	SessionID string                 `json:"sessionId"`
-	ProjectID string                 `json:"projectId"`
-	Context   map[string]interface{} `json:"context,omitempty"`
-	Data      map[string]interface{} `json:"data"`
-	Metrics   *EventMetrics          `json:"metrics,omitempty"`
+	SessionID string                 `json:"sessionId"` // Chat session UUID
+	
+	// Hierarchy context (resolved from workspace)
+	ProjectID   int `json:"projectId,omitempty"`   // Resolved project ID
+	MachineID   int `json:"machineId,omitempty"`   // Current machine ID
+	WorkspaceID int `json:"workspaceId,omitempty"` // VS Code workspace ID
+	
+	// Legacy field for backward compatibility (deprecated)
+	LegacyProjectID string `json:"legacyProjectId,omitempty"`
+	
+	Context map[string]interface{} `json:"context,omitempty"`
+	Data    map[string]interface{} `json:"data"`
+	Metrics *EventMetrics          `json:"metrics,omitempty"`
 }
 
 // EventMetrics contains performance metrics for an event

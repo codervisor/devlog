@@ -80,8 +80,8 @@ func TestCopilotAdapter_ParseLogFile(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(testFile, data, 0644))
 
-	// Parse the file
-	adapter := NewCopilotAdapter("test-project")
+	// Parse the file (without hierarchy - testing graceful degradation)
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 	events, err := adapter.ParseLogFile(testFile)
 
 	// Assertions
@@ -110,7 +110,7 @@ func TestCopilotAdapter_ParseLogFile_RealSample(t *testing.T) {
 		t.Skip("Real sample file not available")
 	}
 
-	adapter := NewCopilotAdapter("test-project")
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 	events, err := adapter.ParseLogFile(samplePath)
 
 	require.NoError(t, err)
@@ -249,7 +249,7 @@ func TestCopilotAdapter_EstimateTokens(t *testing.T) {
 }
 
 func TestCopilotAdapter_SupportsFormat(t *testing.T) {
-	adapter := NewCopilotAdapter("test-project")
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 
 	tests := []struct {
 		name   string
@@ -325,7 +325,7 @@ func TestCopilotAdapter_ExtractSessionID(t *testing.T) {
 }
 
 func TestCopilotAdapter_CreateLLMRequestEvent(t *testing.T) {
-	adapter := NewCopilotAdapter("test-project")
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 	adapter.sessionID = "test-session"
 
 	session := &CopilotChatSession{
@@ -345,13 +345,13 @@ func TestCopilotAdapter_CreateLLMRequestEvent(t *testing.T) {
 	}
 
 	timestamp := time.Now()
-	event := adapter.createLLMRequestEvent(session, request, timestamp)
+	event := adapter.createLLMRequestEvent(session, request, timestamp, nil)
 
 	assert.NotNil(t, event)
 	assert.Equal(t, types.EventTypeLLMRequest, event.Type)
 	assert.Equal(t, "github-copilot", event.AgentID)
 	assert.Equal(t, "test-session", event.SessionID)
-	assert.Equal(t, "test-project", event.ProjectID)
+	assert.Equal(t, "test-project", event.LegacyProjectID)
 	assert.Equal(t, timestamp, event.Timestamp)
 
 	// Check data fields
@@ -398,7 +398,7 @@ func TestCopilotAdapter_SkipCanceledRequests(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(testFile, data, 0644))
 
-	adapter := NewCopilotAdapter("test-project")
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 	events, err := adapter.ParseLogFile(testFile)
 
 	require.NoError(t, err)
@@ -414,4 +414,40 @@ func TestCopilotAdapter_SkipCanceledRequests(t *testing.T) {
 // Helper function
 func strPtr(s string) *string {
 	return &s
+}
+
+func TestExtractWorkspaceIDFromPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		filePath string
+		want     string
+	}{
+		{
+			name:     "Standard VS Code path",
+			filePath: "/Users/username/.vscode/extensions/workspaceStorage/abc123def456/chatSessions/session1.json",
+			want:     "abc123def456",
+		},
+		{
+			name:     "Windows path with forward slashes",
+			filePath: "C:/Users/username/AppData/Roaming/Code/User/workspaceStorage/xyz789/chatSessions/session.json",
+			want:     "xyz789",
+		},
+		{
+			name:     "No workspaceStorage",
+			filePath: "/some/other/path/session.json",
+			want:     "",
+		},
+		{
+			name:     "WorkspaceStorage at end",
+			filePath: "/path/to/workspaceStorage",
+			want:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractWorkspaceIDFromPath(tt.filePath)
+			assert.Equal(t, tt.want, result)
+		})
+	}
 }
