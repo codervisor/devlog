@@ -11,7 +11,7 @@ import (
 )
 
 func TestWatcher_Creation(t *testing.T) {
-	registry := adapters.DefaultRegistry("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
 
 	config := Config{
 		Registry:       registry,
@@ -39,8 +39,8 @@ func TestWatcher_WatchFile(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 	tmpFile.Close()
 
-	registry := adapters.DefaultRegistry("test-project")
-	adapter := adapters.NewCopilotAdapter("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	config := Config{
 		Registry:       registry,
@@ -87,8 +87,8 @@ func TestWatcher_ProcessLogEvents(t *testing.T) {
 	}
 	tmpFile.Close()
 
-	registry := adapters.DefaultRegistry("test-project")
-	adapter := adapters.NewCopilotAdapter("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	config := Config{
 		Registry:       registry,
@@ -145,8 +145,8 @@ func TestWatcher_WatchDirectory(t *testing.T) {
 		t.Fatalf("failed to create log file: %v", err)
 	}
 
-	registry := adapters.DefaultRegistry("test-project")
-	adapter := adapters.NewCopilotAdapter("test-project")
+	registry := adapters.DefaultRegistry("test-project", nil, nil)
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	config := Config{
 		Registry:       registry,

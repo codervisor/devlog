@@ -3,6 +3,9 @@ package adapters
 import (
 	"fmt"
 	"sync"
+
+	"github.com/codervisor/devlog/collector/internal/hierarchy"
+	"github.com/sirupsen/logrus"
 )
 
 // Registry manages available agent adapters
@@ -73,13 +76,17 @@ func (r *Registry) DetectAdapter(sample string) (AgentAdapter, error) {
 }
 
 // DefaultRegistry creates and populates a registry with all available adapters
-func DefaultRegistry(projectID string) *Registry {
+func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache, log *logrus.Logger) *Registry {
 	registry := NewRegistry()
 
-	// Register Copilot adapter
-	registry.Register(NewCopilotAdapter(projectID))
+	// Register Copilot adapter with hierarchy support
+	registry.Register(NewCopilotAdapter(projectID, hierarchyCache, log))
 
-	// TODO: Register other adapters (Claude, Cursor, etc.)
+	// Register Claude adapter with hierarchy support
+	registry.Register(NewClaudeAdapter(projectID, hierarchyCache, log))
+
+	// Register Cursor adapter with hierarchy support
+	registry.Register(NewCursorAdapter(projectID, hierarchyCache, log))
 
 	return registry
 }

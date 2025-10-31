@@ -7,7 +7,7 @@ import (
 func TestRegistry(t *testing.T) {
 	registry := NewRegistry()
 
-	adapter := NewCopilotAdapter("test-project")
+	adapter := NewCopilotAdapter("test-project", nil, nil)
 	if err := registry.Register(adapter); err != nil {
 		t.Fatalf("failed to register adapter: %v", err)
 	}
