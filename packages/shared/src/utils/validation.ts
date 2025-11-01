@@ -4,9 +4,14 @@
 
 /**
  * Check if a value is a valid email address
+ * 
+ * Note: Uses a simplified but safe regex that avoids ReDoS vulnerabilities.
+ * For production use, consider using a library like `validator` for comprehensive validation.
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Simplified regex that is safe from ReDoS attacks
+  // Matches: local-part@domain.tld
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
 }
 
