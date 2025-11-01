@@ -59,7 +59,7 @@ Added GIN index for the `data` JSONB field:
 **Why:** Enables fast queries on JSON fields:
 
 - `WHERE data @> '{"filePath": "src/auth/login.ts"}'::jsonb`
-- Supports containment operators (@>, @?, etc.)
+- Supports containment operators (@>, <@) and existence operators (?, ?|, ?&)
 
 ### 4. Index Documentation
 
