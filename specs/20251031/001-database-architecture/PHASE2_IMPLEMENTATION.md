@@ -1,7 +1,7 @@
 # Phase 2 Implementation: Prisma Schema Updates for TimescaleDB
 
 **Date**: November 1, 2025  
-**Specification**: [specs/20251031/001-database-architecture/README.md](../../specs/20251031/001-database-architecture/README.md)  
+**Specification**: [README.md](./README.md)  
 **Status**: ✅ Complete
 
 ---
@@ -322,8 +322,8 @@ _To be measured after production deployment_:
 
 - [Database Architecture Spec](./README.md) - Full specification
 - [Phase 1 Implementation](./IMPLEMENTATION_SUMMARY.md) - TimescaleDB setup
-- [Prisma Schema](/prisma/schema.prisma) - Updated schema file
-- [Migration File](/prisma/migrations/20251101000000_add_timescaledb_composite_indexes/migration.sql) - Index migration
+- [Prisma Schema](../../../prisma/schema.prisma) - Updated schema file
+- [Migration File](../../../prisma/migrations/20251101000000_add_timescaledb_composite_indexes/migration.sql) - Index migration
 
 ---
 
