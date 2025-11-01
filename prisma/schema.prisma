@@ -303,6 +303,20 @@ model ChatMessage {
 // ============================================================================
 
 // Agent Events - Individual actions (TimescaleDB hypertable)
+//
+// NOTE: This table is converted to a TimescaleDB hypertable for time-series optimization.
+// The conversion is performed by scripts/enable-timescaledb.sql which:
+// - Creates a hypertable partitioned by timestamp (1-day chunks)
+// - Enables compression after 7 days (70-90% storage reduction)
+// - Sets up automatic retention policy (1 year)
+// - Creates continuous aggregates for hourly and daily statistics
+//
+// Performance characteristics:
+// - Write throughput: 50-100K events/sec
+// - Query latency: 30-50ms P95 for time-range queries
+// - Storage: 200-500 bytes per event after compression
+//
+// See: specs/20251031/001-database-architecture/README.md for details
 model AgentEvent {
   id           String   @id @default(uuid()) @db.Uuid
   timestamp    DateTime @db.Timestamptz
@@ -333,13 +347,15 @@ model AgentEvent {
   session ChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
   project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([timestamp(sort: Desc)])
-  @@index([sessionId])
-  @@index([agentId])
-  @@index([eventType])
-  @@index([projectId])
-  @@index([tags])
-  @@index([severity])
+  // Indexes optimized for TimescaleDB time-series queries
+  @@index([timestamp(sort: Desc)]) // Primary time-series index
+  @@index([sessionId, timestamp(sort: Desc)]) // Session timeline queries (composite)
+  @@index([projectId, timestamp(sort: Desc)]) // Project timeline queries (composite)
+  @@index([agentId]) // Filter by agent type
+  @@index([eventType]) // Filter by event type
+  @@index([tags]) // Array index for tag filtering
+  @@index([severity]) // Filter by severity level
+  @@index([data]) // GIN index for JSONB field queries (created in migration)
   @@map("agent_events")
 }
 
