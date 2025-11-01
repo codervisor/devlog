@@ -26,6 +26,6 @@ CREATE INDEX "agent_events_project_id_timestamp_idx" ON "agent_events"("project_
 CREATE INDEX "agent_events_data_idx" ON "agent_events" USING GIN ("data");
 
 -- Note: The `data` field uses the default GIN operator class (jsonb_ops),
--- which supports containment queries (@>, @?, etc.) but uses more storage.
+-- which supports containment queries (@>, <@) and existence queries (?, ?|, ?&).
 -- Alternative: jsonb_path_ops uses less storage but only supports @> operator.
 -- The default is chosen for maximum query flexibility.

@@ -320,10 +320,10 @@ _To be measured after production deployment_:
 
 ## 📚 Related Documentation
 
-- [Database Architecture Spec](../../specs/20251031/001-database-architecture/README.md) - Full specification
-- [Phase 1 Implementation](../../specs/20251031/001-database-architecture/IMPLEMENTATION_SUMMARY.md) - TimescaleDB setup
-- [Prisma Schema](../../prisma/schema.prisma) - Updated schema file
-- [Migration File](../../prisma/migrations/20251101000000_add_timescaledb_composite_indexes/migration.sql) - Index migration
+- [Database Architecture Spec](./README.md) - Full specification
+- [Phase 1 Implementation](./IMPLEMENTATION_SUMMARY.md) - TimescaleDB setup
+- [Prisma Schema](/prisma/schema.prisma) - Updated schema file
+- [Migration File](/prisma/migrations/20251101000000_add_timescaledb_composite_indexes/migration.sql) - Index migration
 
 ---
 
@@ -339,4 +339,4 @@ _To be measured after production deployment_:
 
 **Phase 2 Status**: ✅ Complete  
 **Implementation Date**: November 1, 2025  
-**Next Phase**: Phase 3 - Optimize Queries (specs/20251031/001-database-architecture/README.md)
+**Next Phase**: Phase 3 - Optimize Queries (see [Database Architecture Spec](./README.md))
