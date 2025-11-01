@@ -3,13 +3,19 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["build/**", ".next/**"],
-      "env": [
-        "DATABASE_URL",
-        "NODE_ENV",
-        "NEXT_BUILD_MODE",
-        "npm_package_version"
-      ]
+      "outputs": ["build/**", "dist/**", ".next/**", "bin/**"],
+      "env": ["DATABASE_URL", "NODE_ENV", "NEXT_BUILD_MODE", "npm_package_version"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

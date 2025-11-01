@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "pnpm run build && next start --port 3010",
     "preview": "next start --port 3010",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "clean": "rimraf .next out *.tsbuildinfo",
     "clean:dev": "rimraf .next",
     "test": "vitest run",
