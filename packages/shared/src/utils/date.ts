@@ -78,24 +78,29 @@ export function relativeTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
+  const isPast = diffMs > 0;
+  const absDiffMs = Math.abs(diffMs);
+  const diffSec = Math.floor(absDiffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
   const diffMonth = Math.floor(diffDay / 30);
   const diffYear = Math.floor(diffDay / 365);
 
-  if (Math.abs(diffSec) < 60) {
+  const suffix = isPast ? 'ago' : 'from now';
+  const prefix = isPast ? '' : 'in ';
+
+  if (diffSec < 60) {
     return 'just now';
-  } else if (Math.abs(diffMin) < 60) {
-    return `${Math.abs(diffMin)} minute${Math.abs(diffMin) !== 1 ? 's' : ''} ago`;
-  } else if (Math.abs(diffHour) < 24) {
-    return `${Math.abs(diffHour)} hour${Math.abs(diffHour) !== 1 ? 's' : ''} ago`;
-  } else if (Math.abs(diffDay) < 30) {
-    return `${Math.abs(diffDay)} day${Math.abs(diffDay) !== 1 ? 's' : ''} ago`;
-  } else if (Math.abs(diffMonth) < 12) {
-    return `${Math.abs(diffMonth)} month${Math.abs(diffMonth) !== 1 ? 's' : ''} ago`;
+  } else if (diffMin < 60) {
+    return `${prefix}${diffMin} minute${diffMin !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else if (diffHour < 24) {
+    return `${prefix}${diffHour} hour${diffHour !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else if (diffDay < 30) {
+    return `${prefix}${diffDay} day${diffDay !== 1 ? 's' : ''} ${suffix}`.trim();
+  } else if (diffMonth < 12) {
+    return `${prefix}${diffMonth} month${diffMonth !== 1 ? 's' : ''} ${suffix}`.trim();
   } else {
-    return `${Math.abs(diffYear)} year${Math.abs(diffYear) !== 1 ? 's' : ''} ago`;
+    return `${prefix}${diffYear} year${diffYear !== 1 ? 's' : ''} ${suffix}`.trim();
   }
 }
