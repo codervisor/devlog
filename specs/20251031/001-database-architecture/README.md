@@ -11,7 +11,8 @@
 
 **Decision**: Use PostgreSQL with TimescaleDB extension as the primary database, with SQLite for client-side buffering.
 
-**Rationale**: 
+**Rationale**:
+
 - Single operational database to manage
 - TimescaleDB is just a PostgreSQL extension (not a separate database)
 - Proven at scale with billions of time-series events
@@ -39,10 +40,10 @@ Developer Machine (Go Collector)          Backend Server
 
 ### Two-Database Strategy
 
-| Database | Location | Purpose | Visibility |
-|----------|----------|---------|------------|
-| **PostgreSQL + TimescaleDB** | Backend server | Primary persistent storage | All application code |
-| **SQLite** | Client machines | Offline buffer/queue | Go collector only |
+| Database                     | Location        | Purpose                    | Visibility           |
+| ---------------------------- | --------------- | -------------------------- | -------------------- |
+| **PostgreSQL + TimescaleDB** | Backend server  | Primary persistent storage | All application code |
+| **SQLite**                   | Client machines | Offline buffer/queue       | Go collector only    |
 
 **Key Point**: From your application's perspective, you only have **one database** (PostgreSQL). SQLite is an implementation detail hidden inside the Go collector.
 
@@ -68,6 +69,7 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day';
 ```
 
 **Same**:
+
 - Connection string
 - Prisma client
 - SQL syntax
@@ -75,6 +77,7 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day';
 - Monitoring tools
 
 **Added**:
+
 - Automatic time-based partitioning
 - 10-20x faster time-range queries
 - 70-90% storage compression
@@ -82,21 +85,23 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day';
 
 #### Use Cases
 
-| Data Type | Table Type | Why |
-|-----------|------------|-----|
-| **Agent Events** | TimescaleDB hypertable | High-volume time-series data |
-| **Agent Sessions** | PostgreSQL table | Medium volume, needs JOINs with events |
-| **Projects, Machines, Workspaces** | PostgreSQL tables | Low volume, strict relational hierarchy |
-| **Chat Sessions & Messages** | PostgreSQL tables | Medium volume, relational structure |
-| **User Authentication** | PostgreSQL tables | Low volume, ACID requirements |
-| **Devlog Entries** | PostgreSQL tables | Medium volume, complex relations |
+| Data Type                          | Table Type             | Why                                     |
+| ---------------------------------- | ---------------------- | --------------------------------------- |
+| **Agent Events**                   | TimescaleDB hypertable | High-volume time-series data            |
+| **Agent Sessions**                 | PostgreSQL table       | Medium volume, needs JOINs with events  |
+| **Projects, Machines, Workspaces** | PostgreSQL tables      | Low volume, strict relational hierarchy |
+| **Chat Sessions & Messages**       | PostgreSQL tables      | Medium volume, relational structure     |
+| **User Authentication**            | PostgreSQL tables      | Low volume, ACID requirements           |
+| **Devlog Entries**                 | PostgreSQL tables      | Medium volume, complex relations        |
 
 ### 2. SQLite (Client-Side Buffer)
 
 #### Purpose
+
 Temporary queue for offline operation in Go collector.
 
 #### Lifecycle
+
 ```
 Event generated → Queued in SQLite → Batched → Sent to PostgreSQL → Deleted from SQLite
                                           ↓
@@ -104,6 +109,7 @@ Event generated → Queued in SQLite → Batched → Sent to PostgreSQL → Dele
 ```
 
 #### Characteristics
+
 - **Size**: ~10-50MB typical, self-cleaning
 - **Lifetime**: Minutes to hours (until sync)
 - **Visibility**: Encapsulated in `collector-go/internal/buffer`
@@ -125,12 +131,12 @@ CREATE TABLE agent_events (
   agent_version TEXT NOT NULL,
   session_id UUID NOT NULL,
   project_id INT NOT NULL,
-  
+
   -- Flexible JSON fields
   context JSONB DEFAULT '{}',
   data JSONB DEFAULT '{}',
   metrics JSONB,
-  
+
   -- Metadata
   tags TEXT[],
   severity TEXT,
@@ -211,7 +217,7 @@ CREATE TABLE workspaces (
   commit TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   last_seen_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   UNIQUE(project_id, machine_id, workspace_id)
 );
 
@@ -244,13 +250,13 @@ CREATE TABLE agent_sessions (
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ,
   duration INT, -- seconds
-  
+
   context JSONB DEFAULT '{}',
   metrics JSONB DEFAULT '{}',
-  
+
   outcome TEXT CHECK(outcome IN ('success', 'failure', 'partial', 'cancelled')),
   quality_score DECIMAL(5,2), -- 0-100
-  
+
   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -265,7 +271,7 @@ CREATE INDEX idx_agent_sessions_agent ON agent_sessions(agent_id);
 -- Pre-aggregated metrics for dashboard (updated automatically)
 CREATE MATERIALIZED VIEW agent_events_hourly
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
   time_bucket('1 hour', timestamp) AS bucket,
   project_id,
   agent_id,
@@ -286,7 +292,7 @@ SELECT add_continuous_aggregate_policy('agent_events_hourly',
 -- Daily aggregates for longer-term analytics
 CREATE MATERIALIZED VIEW agent_events_daily
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
   time_bucket('1 day', timestamp) AS bucket,
   project_id,
   agent_id,
@@ -361,22 +367,22 @@ WHERE data @> '{"filePath": "src/auth/login.ts"}'::jsonb
 
 Based on TimescaleDB benchmarks and your requirements:
 
-| Metric | Target | Expected | Status |
-|--------|--------|----------|--------|
-| **Event write throughput** | >10K/sec | 50-100K/sec | ✅ Exceeds |
-| **Query latency (P95)** | <100ms | 30-50ms | ✅ Exceeds |
-| **Storage per event** | <1KB | 200-500 bytes | ✅ Exceeds |
-| **Compression ratio** | N/A | 70-90% | ✅ Bonus |
-| **Dashboard load time** | <1s | 200-500ms | ✅ Exceeds |
+| Metric                     | Target   | Expected      | Status     |
+| -------------------------- | -------- | ------------- | ---------- |
+| **Event write throughput** | >10K/sec | 50-100K/sec   | ✅ Exceeds |
+| **Query latency (P95)**    | <100ms   | 30-50ms       | ✅ Exceeds |
+| **Storage per event**      | <1KB     | 200-500 bytes | ✅ Exceeds |
+| **Compression ratio**      | N/A      | 70-90%        | ✅ Bonus   |
+| **Dashboard load time**    | <1s      | 200-500ms     | ✅ Exceeds |
 
 ### Scalability Estimates
 
 | Events/Day | Storage/Month (Raw) | Storage/Month (Compressed) | Query Time |
-|------------|---------------------|----------------------------|------------|
-| 10K | 300 MB | 30-90 MB | <10ms |
-| 100K | 3 GB | 300-900 MB | 10-30ms |
-| 1M | 30 GB | 3-9 GB | 30-50ms |
-| 10M | 300 GB | 30-90 GB | 50-100ms |
+| ---------- | ------------------- | -------------------------- | ---------- |
+| 10K        | 300 MB              | 30-90 MB                   | <10ms      |
+| 100K       | 3 GB                | 300-900 MB                 | 10-30ms    |
+| 1M         | 30 GB               | 3-9 GB                     | 30-50ms    |
+| 10M        | 300 GB              | 30-90 GB                   | 50-100ms   |
 
 ---
 
@@ -389,7 +395,7 @@ Based on TimescaleDB benchmarks and your requirements:
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 -- 2. Convert agent_events to hypertable
-SELECT create_hypertable('agent_events', 'timestamp', 
+SELECT create_hypertable('agent_events', 'timestamp',
   migrate_data => true,
   chunk_time_interval => INTERVAL '1 day');
 
@@ -414,7 +420,7 @@ model AgentEvent {
   id        String   @id @default(uuid()) @db.Uuid
   timestamp DateTime @db.Timestamptz
   // ... rest of fields
-  
+
   @@index([timestamp(sort: Desc)])
   @@index([sessionId, timestamp(sort: Desc)])
   @@index([projectId, timestamp(sort: Desc)])
@@ -459,7 +465,7 @@ SELECT * FROM timescaledb_information.compression_settings;
 SELECT * FROM timescaledb_information.continuous_aggregates;
 
 -- Check storage savings
-SELECT 
+SELECT
   pg_size_pretty(before_compression_total_bytes) as before,
   pg_size_pretty(after_compression_total_bytes) as after,
   round(100 - (after_compression_total_bytes::numeric / before_compression_total_bytes::numeric * 100), 2) as compression_ratio
@@ -490,7 +496,7 @@ pg_restore -d devlog devlog_backup_20251031.dump
 SELECT pg_size_pretty(pg_database_size('devlog'));
 
 -- Table sizes
-SELECT 
+SELECT
   tablename,
   pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
 FROM pg_tables
@@ -498,9 +504,9 @@ WHERE schemaname = 'public'
 ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 
 -- Active queries
-SELECT pid, age(clock_timestamp(), query_start), usename, query 
-FROM pg_stat_activity 
-WHERE state != 'idle' AND query NOT ILIKE '%pg_stat_activity%' 
+SELECT pid, age(clock_timestamp(), query_start), usename, query
+FROM pg_stat_activity
+WHERE state != 'idle' AND query NOT ILIKE '%pg_stat_activity%'
 ORDER BY query_start;
 
 -- TimescaleDB specific stats
@@ -532,11 +538,11 @@ REINDEX TABLE agent_events;
 
 -- Check data volume
 SELECT COUNT(*) FROM agent_events;
-SELECT 
+SELECT
   date_trunc('day', timestamp) as day,
-  COUNT(*) 
-FROM agent_events 
-GROUP BY day 
+  COUNT(*)
+FROM agent_events
+GROUP BY day
 ORDER BY day DESC;
 ```
 
@@ -574,7 +580,9 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 ## ❌ What We're NOT Using
 
 ### MongoDB / NoSQL
+
 **Why not:**
+
 - Complex relational hierarchy requires ACID transactions
 - Frequent JOINs between projects/machines/workspaces/sessions
 - Foreign key constraints are critical
@@ -583,7 +591,9 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 **Consider if:** You need schema-less documents (not the case here)
 
 ### Redis
-**Why not:** 
+
+**Why not:**
+
 - Data needs persistence (not just caching)
 - Complex queries and aggregations required
 - In-memory storage expensive at scale
@@ -591,7 +601,9 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 **Consider for:** Session caching, pub/sub for real-time updates (Phase 2+)
 
 ### ClickHouse
+
 **Why not:**
+
 - Overkill for current scale (<1M events/day)
 - Higher operational complexity
 - No UPDATE/DELETE support (GDPR issues)
@@ -600,7 +612,9 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 **Consider if:** You reach 100M+ events/day and need sub-second analytics
 
 ### Cassandra / ScyllaDB
+
 **Why not:**
+
 - Complex distributed setup
 - Eventual consistency conflicts with relational needs
 - No JOINs (would require denormalization)
@@ -621,32 +635,35 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 
 ## 📋 Decision Log
 
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| Oct 31, 2025 | PostgreSQL + TimescaleDB | Time-series + relational in one database |
-| Oct 31, 2025 | SQLite for client buffer | Offline-first, self-contained |
-| Oct 31, 2025 | No Redis/MongoDB/ClickHouse | Unnecessary complexity for current scale |
-| Oct 31, 2025 | 1-day chunk interval | Balance between query speed and management |
-| Oct 31, 2025 | 7-day compression delay | Balance between write speed and storage |
-| Oct 31, 2025 | 1-year retention | Compliance + cost optimization |
+| Date         | Decision                    | Rationale                                  |
+| ------------ | --------------------------- | ------------------------------------------ |
+| Oct 31, 2025 | PostgreSQL + TimescaleDB    | Time-series + relational in one database   |
+| Oct 31, 2025 | SQLite for client buffer    | Offline-first, self-contained              |
+| Oct 31, 2025 | No Redis/MongoDB/ClickHouse | Unnecessary complexity for current scale   |
+| Oct 31, 2025 | 1-day chunk interval        | Balance between query speed and management |
+| Oct 31, 2025 | 7-day compression delay     | Balance between write speed and storage    |
+| Oct 31, 2025 | 1-year retention            | Compliance + cost optimization             |
 
 ---
 
 ## ✅ Success Criteria
 
 ### Performance
+
 - [ ] Event writes: >50K/sec sustained
 - [ ] Query latency: <50ms P95 for time-range queries
 - [ ] Dashboard load: <500ms for last 24 hours
 - [ ] Storage: <500 bytes per event after compression
 
 ### Reliability
+
 - [ ] Zero data loss during collector offline periods
 - [ ] Automatic failover in clustered setup (future)
 - [ ] Point-in-time recovery with WAL archiving
 - [ ] 99.9% uptime
 
 ### Operations
+
 - [ ] Automated backups (daily)
 - [ ] Compression running automatically
 - [ ] Retention policies executing
@@ -654,11 +671,20 @@ SELECT * FROM agent_events WHERE timestamp > NOW() - INTERVAL '1 day' LIMIT 10;
 
 ---
 
-**Status**: ✅ Design Complete  
-**Next Steps**: 
-1. Review and approve design
-2. Enable TimescaleDB on existing PostgreSQL
-3. Convert agent_events to hypertable
-4. Monitor performance improvements
+**Status**: ✅ Implementation Complete  
+**Implementation Date**: November 1, 2025  
+**Implementation Summary**: [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)
 
-**Estimated Implementation Time**: 4-6 hours total
+**Completed**:
+
+- ✅ TimescaleDB setup script with daily + hourly aggregates
+- ✅ Database initialization scripts updated for Prisma
+- ✅ Comprehensive setup documentation and helper script
+- ✅ Schema validated and matches specification
+
+**Next Steps**:
+
+1. Deploy to production environment with PostgreSQL + TimescaleDB
+2. Run database setup scripts
+3. Monitor performance metrics
+4. Update service code to match new schema (tracked separately)
