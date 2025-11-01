@@ -1,24 +1,24 @@
 /**
  * Prisma-based Project Service
- * 
+ *
  * **SUPPORTING SERVICE - Project management functionality**
  *
  * Manages project metadata and organization. Projects provide context for
  * agent sessions and optional work items, enabling multi-project isolation
  * and organization of observability data.
- * 
+ *
  * **Key Responsibilities:**
  * - Project CRUD: Create, read, update, delete projects
  * - Project isolation: Separate data for different codebases/teams
  * - Context management: Track project-level settings and metadata
- * 
+ *
  * **Relationship to Agent Observability:**
  * Projects are containers for agent sessions. Each session belongs to a project,
  * enabling teams to organize observability data by codebase or product.
- * 
+ *
  * Migrated from TypeORM to Prisma for better Next.js integration.
  * Manages projects using Prisma Client with improved type safety.
- * 
+ *
  * @module services/prisma-project-service
  * @category Project Management
  */
@@ -41,7 +41,7 @@ export class PrismaProjectService extends PrismaServiceBase {
 
   static getInstance(): PrismaProjectService {
     const key = 'default';
-    
+
     return this.getOrCreateInstance(this.instances, key, () => new PrismaProjectService());
   }
 
@@ -86,7 +86,7 @@ export class PrismaProjectService extends PrismaServiceBase {
 
     const projects = await this.prismaClient!.project.findMany({
       orderBy: {
-        lastAccessedAt: 'desc',
+        updatedAt: 'desc',
       },
     });
 
@@ -98,7 +98,7 @@ export class PrismaProjectService extends PrismaServiceBase {
    */
   async get(id: number): Promise<Project | null> {
     await this.ensureInitialized();
-    
+
     if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] get() called in fallback mode - returning null');
       return null;
@@ -112,12 +112,6 @@ export class PrismaProjectService extends PrismaServiceBase {
       return null;
     }
 
-    // Update last accessed time
-    await this.prismaClient!.project.update({
-      where: { id },
-      data: { lastAccessedAt: new Date() },
-    });
-
     return this.entityToProject(project);
   }
 
@@ -126,7 +120,7 @@ export class PrismaProjectService extends PrismaServiceBase {
    */
   async getByName(name: string): Promise<Project | null> {
     await this.ensureInitialized();
-    
+
     if (this.isFallbackMode) {
       console.warn('[PrismaProjectService] getByName() called in fallback mode - returning null');
       return null;
@@ -155,21 +149,13 @@ export class PrismaProjectService extends PrismaServiceBase {
       return null;
     }
 
-    // Update last accessed time
-    await this.prismaClient!.project.update({
-      where: { id: project.id },
-      data: { lastAccessedAt: new Date() },
-    });
-
     return this.entityToProject(project);
   }
 
   /**
    * Create a new project
    */
-  async create(
-    projectData: Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>
-  ): Promise<Project> {
+  async create(projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {
     await this.ensureInitialized();
 
     // Validate input
@@ -180,21 +166,26 @@ export class PrismaProjectService extends PrismaServiceBase {
 
     if (this.isFallbackMode) {
       // Return a mock project in fallback mode
-      console.warn('[PrismaProjectService] create() called in fallback mode - returning mock project');
+      console.warn(
+        '[PrismaProjectService] create() called in fallback mode - returning mock project',
+      );
       return {
         id: Math.floor(Math.random() * 1000) + 1,
         name: projectData.name,
         description: projectData.description,
         createdAt: new Date(),
-        lastAccessedAt: new Date(),
+        updatedAt: new Date(),
       };
     }
 
     const project = await this.prismaClient!.project.create({
       data: {
         name: projectData.name,
+        fullName: projectData.name, // Legacy: use name as fullName
+        repoUrl: `https://github.com/local/${projectData.name}`, // Legacy: generate fake URL
+        repoOwner: 'local', // Legacy: default owner
+        repoName: projectData.name, // Legacy: use name as repoName
         description: projectData.description,
-        lastAccessedAt: new Date(),
       },
     });
 
@@ -208,13 +199,15 @@ export class PrismaProjectService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaProjectService] update() called in fallback mode - returning mock project');
+      console.warn(
+        '[PrismaProjectService] update() called in fallback mode - returning mock project',
+      );
       return {
         id,
         name: updates.name || 'Mock Project',
         description: updates.description || 'Mock Description',
         createdAt: new Date(),
-        lastAccessedAt: new Date(),
+        updatedAt: new Date(),
       };
     }
 
@@ -237,9 +230,7 @@ export class PrismaProjectService extends PrismaServiceBase {
       }
     }
 
-    const updateData: any = {
-      lastAccessedAt: new Date(),
-    };
+    const updateData: any = {};
 
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.description !== undefined) updateData.description = updates.description;
@@ -293,7 +284,7 @@ export class PrismaProjectService extends PrismaServiceBase {
       name: entity.name,
       description: entity.description,
       createdAt: entity.createdAt,
-      lastAccessedAt: entity.lastAccessedAt,
+      updatedAt: entity.updatedAt,
     };
   }
 }

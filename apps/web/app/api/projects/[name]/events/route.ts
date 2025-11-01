@@ -1,6 +1,6 @@
 /**
  * Project Events API Endpoint
- * 
+ *
  * GET /api/projects/[id]/events - Get project events with filters
  */
 
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/projects/:id/events - Get project events with filters
- * 
+ *
  * Supports filtering by:
  * - machineId: Filter by specific machine
  * - workspaceId: Filter by specific workspace
@@ -22,18 +22,12 @@ export const dynamic = 'force-dynamic';
  * - severity: Filter by severity level
  * - limit: Maximum number of results (default: 100, max: 1000)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const projectId = parseInt(params.id, 10);
 
     if (isNaN(projectId)) {
-      return NextResponse.json(
-        { error: 'Invalid project ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid project ID' }, { status: 400 });
     }
 
     // Parse query parameters
@@ -45,10 +39,7 @@ export async function GET(
     const eventType = searchParams.get('eventType');
     const agentId = searchParams.get('agentId');
     const severity = searchParams.get('severity');
-    const limit = Math.min(
-      parseInt(searchParams.get('limit') || '100', 10),
-      1000
-    );
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 1000);
 
     // Build where clause
     const where: any = {
@@ -79,20 +70,14 @@ export async function GET(
         try {
           where.timestamp.gte = new Date(from);
         } catch (error) {
-          return NextResponse.json(
-            { error: 'Invalid from date' },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: 'Invalid from date' }, { status: 400 });
         }
       }
       if (to) {
         try {
           where.timestamp.lte = new Date(to);
         } catch (error) {
-          return NextResponse.json(
-            { error: 'Invalid to date' },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: 'Invalid to date' }, { status: 400 });
         }
       }
     }
@@ -112,7 +97,7 @@ export async function GET(
       if (!['info', 'warning', 'error'].includes(severity)) {
         return NextResponse.json(
           { error: 'Invalid severity. Must be: info, warning, or error' },
-          { status: 400 }
+          { status: 400 },
         );
       }
       where.severity = severity;
@@ -160,7 +145,7 @@ export async function GET(
       {
         error: error instanceof Error ? error.message : 'Failed to get project events',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

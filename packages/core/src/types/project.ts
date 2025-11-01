@@ -22,6 +22,6 @@ export interface Project {
   /** Project creation timestamp */
   createdAt: Date;
 
-  /** Last accessed timestamp */
-  lastAccessedAt: Date;
+  /** Last updated timestamp */
+  updatedAt: Date;
 }

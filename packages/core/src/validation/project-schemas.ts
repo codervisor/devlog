@@ -17,9 +17,12 @@ export const CreateProjectRequestSchema = z.object({
     .string()
     .min(1, 'Project name is required')
     .max(100, 'Project name must be less than 100 characters')
-    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.'),
+    .refine(
+      validateProjectDisplayName,
+      'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.',
+    ),
   description: z.string().max(500, 'Description must be less than 500 characters').optional(),
-}) satisfies z.ZodType<Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>>;
+}) satisfies z.ZodType<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>;
 
 /**
  * Project update request schema (all fields optional)
@@ -29,14 +32,17 @@ export const UpdateProjectRequestSchema = z.object({
     .string()
     .min(1, 'Project name is required')
     .max(100, 'Project name must be less than 100 characters')
-    .refine(validateProjectDisplayName, 'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.')
+    .refine(
+      validateProjectDisplayName,
+      'Project name can contain letters, numbers, spaces, hyphens, underscores, and dots. Cannot start or end with whitespace.',
+    )
     .optional(),
   description: z
     .string()
     .max(500, 'Description must be less than 500 characters')
     .optional()
     .or(z.literal('')), // Allow empty string to clear description
-}) satisfies z.ZodType<Partial<Omit<Project, 'id' | 'createdAt' | 'lastAccessedAt'>>>;
+}) satisfies z.ZodType<Partial<Omit<Project, 'id' | 'createdAt' | 'updatedAt'>>>;
 
 /**
  * Project ID parameter schema

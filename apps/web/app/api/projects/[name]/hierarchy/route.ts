@@ -1,6 +1,6 @@
 /**
  * Project Hierarchy API Endpoint
- * 
+ *
  * GET /api/projects/[id]/hierarchy - Get full project hierarchy tree
  */
 
@@ -12,22 +12,16 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/projects/:id/hierarchy - Get full hierarchy tree
- * 
+ *
  * Returns the complete project hierarchy including all machines,
  * workspaces, and session information organized in a tree structure.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const projectId = parseInt(params.id, 10);
 
     if (isNaN(projectId)) {
-      return NextResponse.json(
-        { error: 'Invalid project ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid project ID' }, { status: 400 });
     }
 
     // Get hierarchy service
@@ -43,17 +37,14 @@ export async function GET(
 
     // Handle specific error for project not found
     if (error instanceof Error && error.message.includes('Project not found')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to get project hierarchy',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

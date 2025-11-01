@@ -18,8 +18,6 @@
     "build": "tsc",
     "clean": "rimraf build",
     "dev": "tsc --watch",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch"

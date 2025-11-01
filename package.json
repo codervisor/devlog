@@ -4,8 +4,6 @@
   "description": "Monorepo for development logging tools and MCP server",
   "scripts": {
     "build": "turbo build",
-    "lint": "turbo lint",
-    "lint:fix": "turbo lint -- --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -40,12 +38,10 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
-    "@codervisor/eslint-config": "workspace:^",
     "@types/node": "^20.0.0",
     "@types/semver": "^7.5.8",
     "@vitest/coverage-v8": "2.1.9",
     "concurrently": "9.2.0",
-    "eslint": "9.39.0",
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
     "prettier": "3.6.1",
@@ -60,11 +56,9 @@
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
-      "eslint --fix",
       "prettier --write"
     ],
     "apps/**/*.{ts,tsx}": [
-      "eslint --fix",
       "prettier --write"
     ],
     "**/*.{js,jsx,json,md}": [
