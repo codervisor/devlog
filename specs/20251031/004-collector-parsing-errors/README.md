@@ -1,3 +1,10 @@
+---
+status: complete
+created: 2025-10-31
+tags: [go-collector, bugfix, parser]
+priority: high
+---
+
 # Fix Collector Backfill Parsing Errors
 
 **Status**: ✅ Complete  
@@ -57,18 +64,19 @@ Added logic to detect file format and use appropriate parsing method:
 func (bm *BackfillManager) shouldUseFileParsing(adapter adapters.AgentAdapter, filePath string) bool {
     ext := filepath.Ext(filePath)
     adapterName := adapter.Name()
-    
+
     // Copilot uses JSON session files - must use file parsing
     if adapterName == "github-copilot" && ext == ".json" {
         return true
     }
-    
+
     // Other adapters with .jsonl or .ndjson use line parsing
     return false
 }
 ```
 
 Created two separate parsing paths:
+
 - **`backfillFileWhole()`** - Parses entire file at once using `adapter.ParseLogFile()`
 - **`backfillFileLineByLine()`** - Original line-by-line parsing for NDJSON formats
 
@@ -108,6 +116,7 @@ hiererchyCache := hierarchy.NewHierarchyCache(apiClient, log)  // proper client
 ### Phase 1: Parsing Fix (Single Workspace)
 
 **Before Fix:**
+
 ```bash
 ✓ Backfill completed
 Duration: 78ms
@@ -119,6 +128,7 @@ Data processed: 18.02 MB
 ```
 
 **After Fix:**
+
 ```bash
 ✓ Backfill completed
 Duration: 132ms
@@ -134,6 +144,7 @@ Data processed: 18.02 MB
 **Issue:** Events were not being stored in SQLite buffer.
 
 **Root Cause:** `SendEvent()` always returns `nil` (queues events internally), so the fallback to buffer never executed:
+
 ```go
 // OLD - WRONG
 if err := bm.client.SendEvent(event); err != nil {
@@ -143,6 +154,7 @@ if err := bm.client.SendEvent(event); err != nil {
 ```
 
 **Solution:** Buffer first during backfill operations (historical data doesn't need real-time delivery):
+
 ```go
 // NEW - CORRECT
 // Buffer events first for reliable storage
@@ -153,7 +165,8 @@ if err := bm.buffer.Store(event); err != nil {
 bm.client.SendEvent(event)
 ```
 
-**Result:** 
+**Result:**
+
 - ✅ **853 events buffered** in SQLite (was 0)
 - ✅ Database size: 632KB
 - ✅ Event types: llm_request, llm_response, file_read, file_modify, tool_use
@@ -165,11 +178,13 @@ bm.client.SendEvent(event)
 **Enhancement:** Added flexible workspace selection with 3 modes:
 
 1. **Single workspace** (default - backward compatible):
+
    ```bash
    ./bin/devlog-collector backfill run --days 365
    ```
 
 2. **All workspaces** (new):
+
    ```bash
    ./bin/devlog-collector backfill run --days 365 --all-workspaces
    ```
@@ -180,6 +195,7 @@ bm.client.SendEvent(event)
    ```
 
 **Results from All Workspaces:**
+
 ```bash
 ✓ Backfill completed
 Workspaces processed: 12
@@ -197,10 +213,11 @@ Data processed: 997.42 MB
 - ⚠️ **243 parsing errors** (older log format with different CopilotVariable.value types)
 
 **Event Type Breakdown:**
+
 ```
 tool_use:       480 events
 file_modify:    171 events
-file_read:      130 events  
+file_read:      130 events
 llm_response:    36 events
 llm_request:     36 events
 Total:          853 events (from first workspace)
@@ -244,6 +261,7 @@ Total:          853 events (from first workspace)
 ## Testing
 
 ### Single Workspace (Default)
+
 ```bash
 cd packages/collector-go
 ./build.sh
@@ -254,12 +272,14 @@ rm -f ~/.devlog/buffer.db*
 ```
 
 ### All Workspaces
+
 ```bash
 ./bin/devlog-collector-darwin-arm64 backfill run --days 365 --all-workspaces
 # Result: 19,707 events from 12 workspaces
 ```
 
 ### Specific Workspaces
+
 ```bash
 ./bin/devlog-collector-darwin-arm64 backfill run --days 365 \
   --workspaces 487fd76abf5d5f8744f78317893cc477,d339d6b095ee421b12111ec2b1c33601
@@ -267,6 +287,7 @@ rm -f ~/.devlog/buffer.db*
 ```
 
 ### Verify Buffered Events
+
 ```bash
 # Quick verification
 sqlite3 ~/.devlog/buffer.db "SELECT COUNT(*) FROM events;"

@@ -1,3 +1,10 @@
+---
+status: planned
+created: 2025-10-31
+tags: [database, architecture, timescaledb, postgresql]
+priority: high
+---
+
 # Database Architecture - PostgreSQL + TimescaleDB
 
 **Created**: October 31, 2025  

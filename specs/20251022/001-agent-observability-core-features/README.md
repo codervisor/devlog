@@ -1,3 +1,10 @@
+---
+status: complete
+created: 2025-10-22
+tags: [observability, api, dashboard, ui]
+priority: high
+---
+
 # Agent Observability Core Features
 
 **Date**: October 22, 2025  
@@ -15,19 +22,25 @@ Implementation of core agent observability features following the recommendation
 ## What's New
 
 ### 🎯 Dashboard (`/dashboard`)
+
 The main landing page now shows:
+
 - **4 Real-Time Metrics**: Active sessions, events today, average duration, events per minute
 - **Recent Activity Timeline**: Color-coded events with relative timestamps
 - **Live Sessions Panel**: Currently running agent sessions with objectives
 
 ### 🔍 Sessions (`/sessions`)
+
 The sessions page now displays:
+
 - **Active Sessions**: Currently running agents with durations
 - **Recent History**: Past sessions with outcomes and summaries
 - **Session Details**: Objective, duration, timestamps, and outcome badges
 
 ### 🔌 API Routes
+
 Three new API endpoints power the frontend:
+
 - `/api/dashboard/stats` - Aggregated metrics
 - `/api/dashboard/activity` - Recent events feed
 - `/api/sessions` - Session listing with filtering
@@ -72,18 +85,21 @@ Three new API endpoints power the frontend:
 ### Dashboard Components
 
 #### `DashboardStats`
+
 - Displays 4 metric cards
 - Fetches from `/api/dashboard/stats`
 - Auto-formats durations (e.g., "2h 15m")
 - Graceful fallback to zeros
 
-#### `RecentActivity`  
+#### `RecentActivity`
+
 - Timeline of recent events
 - Color-coded by event type
 - Relative timestamps ("5m ago")
 - Empty state with guidance
 
 #### `ActiveSessions`
+
 - Lists running sessions
 - Shows objective and duration
 - Live status badge
@@ -91,6 +107,7 @@ Three new API endpoints power the frontend:
 ### Sessions Components
 
 #### `SessionsList`
+
 - Reusable session display
 - Supports filtering by status
 - Outcome badges (success/failure)
@@ -101,6 +118,7 @@ Three new API endpoints power the frontend:
 ### `GET /api/dashboard/stats`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -117,6 +135,7 @@ Three new API endpoints power the frontend:
 ### `GET /api/dashboard/activity?limit=20`
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -138,6 +157,7 @@ Three new API endpoints power the frontend:
 ### `GET /api/sessions?status=active&limit=50`
 
 **Query Parameters:**
+
 - `agentId`: Filter by agent type
 - `outcome`: Filter by outcome (success/failure/partial/cancelled)
 - `status`: Filter by status (active/all)
@@ -147,6 +167,7 @@ Three new API endpoints power the frontend:
 - `offset`: Pagination offset (default: 0)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -194,6 +215,7 @@ open http://localhost:3200/dashboard
 ### Environment Variables
 
 Required in `.env`:
+
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/devlog"
 NEXT_PUBLIC_API_URL="http://localhost:3200"
@@ -251,6 +273,7 @@ curl http://localhost:3200/api/sessions?status=active
 ### ✅ Phase 1 Complete (October 22, 2025)
 
 **What's Working:**
+
 - Dashboard with real-time metrics display
 - Sessions page with active and recent history
 - 3 backend API routes serving data
@@ -259,6 +282,7 @@ curl http://localhost:3200/api/sessions?status=active
 - Error handling and empty states
 
 **Metrics:**
+
 - 13 files changed
 - 1,370+ lines of code added
 - All builds passing
@@ -290,6 +314,7 @@ See [NEXT_STEPS.md](./NEXT_STEPS.md) for the complete roadmap. Immediate priorit
 ## Support
 
 For questions or issues:
+
 1. Check the [Implementation Summary](./IMPLEMENTATION_SUMMARY.md)
 2. Review the [API documentation](#api-endpoints) above
 3. Examine the component source code

@@ -1,9 +1,16 @@
+---
+status: in-progress
+created: 2025-10-31
+tags: [mvp, launch, planning]
+priority: high
+---
+
 # AI Agent Observability Platform - MVP Launch Plan
 
 **Created**: October 31, 2025  
 **Status**: 🚀 **BIG BANG MIGRATION** - Pre-launch consolidation  
 **Target Launch**: November 30, 2025 (4 weeks)  
-**Strategy**: Complete system integration before first release  
+**Strategy**: Complete system integration before first release
 
 ---
 
@@ -49,12 +56,12 @@ Developer Machine                     Backend Server
 
 ## 📅 4-Week Timeline
 
-| Week | Focus | Docs | Status |
-|------|-------|------|--------|
+| Week       | Focus                        | Docs                                 | Status     |
+| ---------- | ---------------------------- | ------------------------------------ | ---------- |
 | **Week 1** | Foundation (Database + Core) | [Week 1 Plan](./week1-foundation.md) | 📋 Planned |
-| **Week 2** | Collector Implementation | [Week 2 Plan](./week2-collector.md) | 📋 Planned |
-| **Week 3** | Backend & API | [Week 3 Plan](./week3-backend.md) | 📋 Planned |
-| **Week 4** | UI & Launch | [Week 4 Plan](./week4-launch.md) | 📋 Planned |
+| **Week 2** | Collector Implementation     | [Week 2 Plan](./week2-collector.md)  | 📋 Planned |
+| **Week 3** | Backend & API                | [Week 3 Plan](./week3-backend.md)    | 📋 Planned |
+| **Week 4** | UI & Launch                  | [Week 4 Plan](./week4-launch.md)     | 📋 Planned |
 
 ---
 
@@ -63,24 +70,28 @@ Developer Machine                     Backend Server
 ### Launch Criteria (All Must Pass)
 
 **Functionality**:
+
 - ✅ Collector detects machines and workspaces automatically
 - ✅ Events flow from collector to database with full hierarchy
 - ✅ Dashboard displays hierarchy correctly
 - ✅ Real-time updates work (<5s latency)
 
 **Performance**:
+
 - ✅ Event ingestion: >1000 events/sec
 - ✅ Dashboard load: <2s
 - ✅ Hierarchy queries: <100ms P95
 - ✅ Memory: <100MB collector, <500MB backend
 
 **Quality**:
+
 - ✅ Test coverage: >70% core, >60% web
 - ✅ Zero critical bugs
 - ✅ Zero data loss scenarios
 - ✅ Comprehensive documentation
 
 **Operations**:
+
 - ✅ One-command collector installation
 - ✅ Auto-start on system boot
 - ✅ Automatic database backups
@@ -92,7 +103,6 @@ Developer Machine                     Backend Server
 
 1. **Database Migration** - Schema changes could break existing code
    - **Mitigation**: Transaction-based migration, rollback script ready
-   
 2. **Collector Hierarchy Resolution** - Workspace discovery might fail
    - **Mitigation**: Graceful fallback, manual registration API
 
@@ -107,6 +117,7 @@ Developer Machine                     Backend Server
 ## 📚 Documentation
 
 ### Implementation Details
+
 - **[Database Schema](./database-schema.md)** - Complete Prisma schema + TimescaleDB setup
 - **[Week 1: Foundation](./week1-foundation.md)** - Database migration + core collector
 - **[Week 2: Collector](./week2-collector.md)** - All adapters + backfill system
@@ -115,12 +126,14 @@ Developer Machine                     Backend Server
 - **[Launch Checklist](./launch-checklist.md)** - Pre-launch, launch day, post-launch tasks
 
 ### Architecture References
+
 - [Go Collector Design](../20251021-ai-agent-observability/go-collector-design.md)
 - [Original Completion Roadmap](../20251030-completion-roadmap/README.md)
 - [Database Architecture](../20251031-database-architecture/README.md)
 - [Project Hierarchy Redesign](../20251031-project-hierarchy-redesign/README.md)
 
 ### Development Guidelines
+
 - [AI Agent Guidelines](../../../AGENTS.md)
 - [Contributing Guide](../../../CONTRIBUTING.md)
 

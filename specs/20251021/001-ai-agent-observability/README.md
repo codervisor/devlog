@@ -1,3 +1,10 @@
+---
+status: in-progress
+created: 2025-01-15
+tags: [observability, architecture, go-collector]
+priority: high
+---
+
 # AI Agent Observability - Project Overview
 
 **Started**: January 15, 2025  
@@ -12,6 +19,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ## Architecture
 
 **Hybrid TypeScript + Go Architecture**
+
 - **TypeScript**: Web UI, MCP Server, API Gateway, Business Logic
 - **Go**: Client-side collector (~10-20MB binary), Event processing, Real-time streaming, Analytics
 
@@ -22,6 +30,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ## Current Progress by Phase
 
 ### Phase 0: Go Collector (Days 1-20) 🎯 **IN PROGRESS**
+
 **Target**: Production-ready collector binary  
 **Progress**: 20% (Days 1-4 Complete)  
 **Timeline**: 20 days (~4 weeks)
@@ -29,6 +38,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 **Purpose**: Lightweight binary that runs on developer machines to capture AI agent logs in real-time.
 
 **Key Features**:
+
 - Multi-platform support (macOS, Linux, Windows)
 - Offline-first with SQLite buffer
 - Agent-specific adapters (Copilot, Claude, Cursor)
@@ -39,6 +49,7 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 **Status**: Days 1-4 completed, Day 5 in progress
 
 **Completed**:
+
 - ✅ Project structure and Go module setup
 - ✅ CLI with Cobra (start/status/version commands)
 - ✅ Cross-platform build system (Makefile, build scripts)
@@ -52,27 +63,32 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ---
 
 ### Phase 1: Foundation (Weeks 1-4) ⏳ **PARTIALLY COMPLETE**
+
 **Progress**: ~70% complete  
 **Status**: On hold while Go collector is prioritized
 
 #### ✅ Week 1: Core Data Models & Schema (100%)
+
 - [x] Database schema with TimescaleDB hypertables
 - [x] TypeScript type definitions
 - [x] Prisma schema and migrations
 - [x] Basic CRUD operations
 
 #### ✅ Week 2: Event Collection System (100%)
+
 - [x] AgentEventService implementation
-- [x] AgentSessionService implementation  
+- [x] AgentSessionService implementation
 - [x] Event context enrichment (git, files, project)
 - [x] Unit tests
 
 #### ⚠️ Week 3: Storage & Performance (0%)
+
 - [ ] TimescaleDB optimization
 - [ ] Performance benchmarking
 - [ ] Monitoring and logging
 
 #### ⏳ Week 4: MCP Integration & Basic UI (~60%)
+
 - [x] MCP tools (start/end session, log events, query)
 - [x] Basic session list UI
 - [x] Active sessions panel
@@ -85,10 +101,12 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ---
 
 ### Phase 2: Visualization (Weeks 5-8) 📅 **PLANNED**
+
 **Progress**: 0%  
 **Start Date**: After Phase 0 complete
 
 **Key Deliverables**:
+
 - Session management dashboard
 - Interactive event timeline
 - Real-time activity monitoring
@@ -99,9 +117,11 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ---
 
 ### Phase 3: Intelligence (Weeks 9-12) 📅 **PLANNED**
+
 **Progress**: 0%
 
 **Key Deliverables**:
+
 - Pattern recognition system
 - Code quality analysis integration
 - Recommendation engine
@@ -113,9 +133,11 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 ---
 
 ### Phase 4: Enterprise (Weeks 13-16) 📅 **PLANNED**
+
 **Progress**: 0%
 
 **Key Deliverables**:
+
 - Team collaboration features
 - Compliance and audit trails
 - Third-party integrations (GitHub, Jira, Slack)
@@ -128,19 +150,20 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Overall Project Metrics
 
-| Metric | Target | Current | Status |
-|--------|--------|---------|--------|
-| **Event Collection Rate** | >10K events/sec | Not measured | ⏸️ Pending |
-| **Query Performance** | <100ms P95 | Not measured | ⏸️ Pending |
-| **Storage Efficiency** | <1KB per event | Not measured | ⏸️ Pending |
-| **Collector Binary Size** | <20MB | ~3MB | ✅ Excellent |
-| **Collector Memory Usage** | <50MB | Not measured | ⏸️ Pending |
+| Metric                     | Target          | Current      | Status       |
+| -------------------------- | --------------- | ------------ | ------------ |
+| **Event Collection Rate**  | >10K events/sec | Not measured | ⏸️ Pending   |
+| **Query Performance**      | <100ms P95      | Not measured | ⏸️ Pending   |
+| **Storage Efficiency**     | <1KB per event  | Not measured | ⏸️ Pending   |
+| **Collector Binary Size**  | <20MB           | ~3MB         | ✅ Excellent |
+| **Collector Memory Usage** | <50MB           | Not measured | ⏸️ Pending   |
 
 ---
 
 ## Technology Stack
 
 ### Backend Services
+
 - **TypeScript/Node.js**: API Gateway, MCP Server, Web UI
 - **Go**: Event collector, processing engine, analytics
 - **PostgreSQL + TimescaleDB**: Time-series event storage (see [Database Architecture](../20251031-database-architecture/README.md))
@@ -148,12 +171,14 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 - **Redis**: Caching and pub/sub (future)
 
 ### Frontend
+
 - **Next.js 14+**: React with App Router
 - **Tailwind CSS**: Styling
 - **shadcn/ui**: Component library
 - **Recharts**: Data visualization
 
 ### Infrastructure
+
 - **Docker**: Containerization
 - **Docker Compose**: Local development
 - **GitHub Actions**: CI/CD (planned)
@@ -162,16 +187,16 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Key Documents
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [ai-agent-observability-design.md](./ai-agent-observability-design.md) | Complete technical specification | Engineers |
-| [ai-agent-observability-executive-summary.md](./ai-agent-observability-executive-summary.md) | Business case and vision | Leadership |
-| [ai-agent-observability-quick-reference.md](./ai-agent-observability-quick-reference.md) | Quick start guide | Developers |
-| [ai-agent-observability-implementation-checklist.md](./ai-agent-observability-implementation-checklist.md) | Detailed task breakdown | Project managers |
-| [go-collector-design.md](./go-collector-design.md) | Go collector architecture | Go developers |
-| [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md) | 20-day implementation plan | Development team |
-| [ai-agent-observability-performance-analysis.md](./ai-agent-observability-performance-analysis.md) | Language performance comparison | Architects |
-| [Database Architecture](../20251031-database-architecture/README.md) | PostgreSQL + TimescaleDB design | Engineers & Architects |
+| Document                                                                                                   | Purpose                          | Audience               |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------- | ---------------------- |
+| [ai-agent-observability-design.md](./ai-agent-observability-design.md)                                     | Complete technical specification | Engineers              |
+| [ai-agent-observability-executive-summary.md](./ai-agent-observability-executive-summary.md)               | Business case and vision         | Leadership             |
+| [ai-agent-observability-quick-reference.md](./ai-agent-observability-quick-reference.md)                   | Quick start guide                | Developers             |
+| [ai-agent-observability-implementation-checklist.md](./ai-agent-observability-implementation-checklist.md) | Detailed task breakdown          | Project managers       |
+| [go-collector-design.md](./go-collector-design.md)                                                         | Go collector architecture        | Go developers          |
+| [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md)                                                       | 20-day implementation plan       | Development team       |
+| [ai-agent-observability-performance-analysis.md](./ai-agent-observability-performance-analysis.md)         | Language performance comparison  | Architects             |
+| [Database Architecture](../20251031-database-architecture/README.md)                                       | PostgreSQL + TimescaleDB design  | Engineers & Architects |
 
 ---
 
@@ -186,12 +211,12 @@ graph TB
         D8["Days 8-12<br/>Adapter system<br/>(Copilot, Claude, Generic)"]
         D13["Days 13-16<br/>Backend communication<br/>and retry logic"]
         D17["Days 17-20<br/>Cross-platform<br/>distribution via NPM"]
-        
+
         D1 --> D3 --> D8 --> D13 --> D17
     end
-    
+
     D17 --> Output["✅ Production-ready<br/>collector binary"]
-    
+
     Output --> Phase1["Complete Phase 1<br/>(finish Week 3-4 tasks)"]
     Phase1 --> Phase2["Phase 2:<br/>Visualization"]
     Phase2 --> Phase3["Phase 3:<br/>Intelligence"]
@@ -203,6 +228,7 @@ graph TB
 ## Next Actions
 
 ### Completed (Days 1-4)
+
 1. ✅ Created `packages/collector-go/` directory structure
 2. ✅ Initialized Go module with dependencies
 3. ✅ Set up CLI with Cobra framework
@@ -211,11 +237,13 @@ graph TB
 6. ✅ Built log discovery mechanism
 
 ### Next (Days 5-7)
+
 1. Implement file watcher with fsnotify
 2. Implement SQLite buffer
 3. Test offline mode behavior
 
 ### This Month (Days 1-20)
+
 1. Complete Go collector with all adapters
 2. Test cross-platform distribution
 3. Publish NPM package
@@ -225,19 +253,20 @@ graph TB
 
 ## Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| **Agent log format changes** | High | Version detection, fallback parsing |
+| Risk                             | Impact | Mitigation                              |
+| -------------------------------- | ------ | --------------------------------------- |
+| **Agent log format changes**     | High   | Version detection, fallback parsing     |
 | **Cross-platform compatibility** | Medium | Extensive testing, clear error messages |
-| **Performance overhead** | High | Benchmarking, resource limits |
-| **User adoption** | Medium | Easy install via npm, clear value prop |
-| **Privacy concerns** | High | Transparent docs, opt-in, local-first |
+| **Performance overhead**         | High   | Benchmarking, resource limits           |
+| **User adoption**                | Medium | Easy install via npm, clear value prop  |
+| **Privacy concerns**             | High   | Transparent docs, opt-in, local-first   |
 
 ---
 
 ## Success Criteria
 
 ### Phase 0 (Go Collector)
+
 - [x] Binary builds on all platforms (mac/linux/windows)
 - [x] Binary size < 20MB (~3MB achieved)
 - [ ] Memory usage < 50MB during operation
@@ -247,6 +276,7 @@ graph TB
 - [ ] At least 2 agent adapters working (Copilot, Claude)
 
 ### Overall Project
+
 - [ ] Event collection rate > 10K events/sec
 - [ ] Query performance < 100ms P95
 - [ ] Storage efficiency < 1KB per event

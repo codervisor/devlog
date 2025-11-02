@@ -1,3 +1,10 @@
+---
+status: planned
+created: 2025-11-01
+tags: [refactor, testing, tooling, organization]
+priority: medium
+---
+
 # Project Folder Restructure & Organization
 
 **Status**: 📅 Planned  
@@ -52,29 +59,34 @@ Each phase has detailed checklists with specific tasks.
 ## Success Criteria
 
 ### Testing
+
 - [ ] Test coverage ≥ 50% for core packages
 - [ ] Test coverage ≥ 70% for web app
 - [ ] E2E tests for critical user flows
 - [ ] All tests run in CI/CD
 
 ### Code Quality
+
 - [ ] ESLint enabled on all packages with 0 errors
 - [ ] Zero console.log statements in production code
 - [ ] All TODO comments tracked in issues
 - [ ] Pre-commit hooks enforcing quality
 
 ### Structure
+
 - [ ] `@codervisor/devlog-shared` package created and used
 - [ ] `@codervisor/devlog-auth` package extracted from core
 - [ ] Web app components organized: ui / features / layouts
 - [ ] Go collector integrated with package.json
 
 ### Performance
+
 - [ ] Build time reduced by 20%
 - [ ] Bundle size reduced by 15%
 - [ ] Hot reload time < 2 seconds
 
 ### Documentation
+
 - [ ] API documentation (OpenAPI/Swagger)
 - [ ] Architecture documentation with diagrams
 - [ ] Comprehensive developer guide

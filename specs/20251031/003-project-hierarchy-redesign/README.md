@@ -1,3 +1,10 @@
+---
+status: planned
+created: 2025-10-31
+tags: [hierarchy, architecture, project-management]
+priority: high
+---
+
 # Project Management Hierarchy Redesign
 
 **Created**: October 31, 2025  
@@ -10,6 +17,7 @@
 ## 🎯 Problem Statement
 
 Current system has a **flat structure** that doesn't capture the real-world organization:
+
 - ❌ Projects are conflated with workspaces (VS Code folders)
 - ❌ No concept of machines/environments where agents run
 - ❌ Multiple developers on same project create confusion
@@ -17,6 +25,7 @@ Current system has a **flat structure** that doesn't capture the real-world orga
 - ❌ Can't distinguish between personal machine vs CI/CD vs cloud workspace
 
 **Real-world scenario that's broken:**
+
 ```
 Developer opens codervisor/devlog on:
 1. MacBook Pro (local development)
@@ -75,6 +84,7 @@ codervisor/devlog (PROJECT)
 **Definition**: A codebase/repository that's being worked on.
 
 **Attributes**:
+
 - `id`: Unique identifier (auto-increment)
 - `name`: Human-readable name (e.g., "devlog")
 - `full_name`: Full repo name (e.g., "codervisor/devlog")
@@ -88,6 +98,7 @@ codervisor/devlog (PROJECT)
 **Identity**: Determined by git remote URL (canonical identifier)
 
 **Example**:
+
 ```json
 {
   "id": 1,
@@ -106,6 +117,7 @@ codervisor/devlog (PROJECT)
 **Definition**: A physical or virtual machine where AI agents run.
 
 **Attributes**:
+
 - `id`: Unique identifier
 - `machine_id`: Unique machine identifier (hostname + user + OS)
 - `hostname`: Machine hostname
@@ -120,12 +132,14 @@ codervisor/devlog (PROJECT)
 **Identity**: Generated from `{hostname}-{username}-{os_type}`
 
 **Machine Types**:
+
 - `local`: Developer's personal machine
 - `remote`: SSH/remote development server
 - `cloud`: Cloud workspace (Codespaces, Gitpod, etc.)
 - `ci`: CI/CD pipeline runner
 
 **Example**:
+
 ```json
 {
   "id": 1,
@@ -145,6 +159,7 @@ codervisor/devlog (PROJECT)
 **Definition**: A VS Code window/folder opened on a specific machine for a specific project.
 
 **Attributes**:
+
 - `id`: Unique identifier
 - `project_id`: Foreign key → projects
 - `machine_id`: Foreign key → machines
@@ -159,6 +174,7 @@ codervisor/devlog (PROJECT)
 **Identity**: `workspace_id` is unique per VS Code installation
 
 **Example**:
+
 ```json
 {
   "id": 1,
@@ -179,6 +195,7 @@ codervisor/devlog (PROJECT)
 **Definition**: A single conversation thread between user and AI agent.
 
 **Attributes**:
+
 - `id`: Unique identifier
 - `session_id`: UUID from chat session filename
 - `workspace_id`: Foreign key → workspaces
@@ -193,6 +210,7 @@ codervisor/devlog (PROJECT)
 **Identity**: `session_id` (UUID from filename)
 
 **Example**:
+
 ```json
 {
   "id": 1,
@@ -213,6 +231,7 @@ codervisor/devlog (PROJECT)
 **Definition**: Individual actions within a chat session (existing structure).
 
 **Attributes**: (Keep existing structure, add foreign keys)
+
 - `id`: Unique identifier
 - `session_id`: Foreign key → chat_sessions
 - `event_type`: Type (llm_request, tool_use, etc.)
@@ -363,7 +382,7 @@ CREATE INDEX idx_events_timestamp ON events(timestamp);
 
 ```sql
 -- Get all activity for a project across all machines
-SELECT 
+SELECT
     p.name as project,
     m.hostname as machine,
     w.workspace_path,
@@ -386,6 +405,7 @@ ORDER BY cs.started_at DESC;
 ### Phase 1: Schema Migration (2-3 hours)
 
 **Tasks**:
+
 - [ ] Create migration script for new schema
 - [ ] Migrate existing data:
   - [ ] Extract projects from old project_id/path data
@@ -399,6 +419,7 @@ ORDER BY cs.started_at DESC;
 ### Phase 2: Collector Updates (3-4 hours)
 
 **Tasks**:
+
 - [ ] Update collector initialization:
   - [ ] Detect current machine
   - [ ] Scan workspaces and resolve projects
@@ -413,6 +434,7 @@ ORDER BY cs.started_at DESC;
 ### Phase 3: API & Web UI Updates (4-5 hours)
 
 **Tasks**:
+
 - [ ] Update API endpoints:
   - [ ] `/api/projects` - List projects
   - [ ] `/api/projects/:id/machines` - Machines for project
@@ -429,6 +451,7 @@ ORDER BY cs.started_at DESC;
 ### Phase 4: Testing & Documentation (2 hours)
 
 **Tasks**:
+
 - [ ] Test with multiple machines (simulate remote/cloud)
 - [ ] Test with multiple workspaces per project
 - [ ] Test migration with real data
@@ -440,24 +463,28 @@ ORDER BY cs.started_at DESC;
 ## 🎯 Benefits
 
 ### 1. Proper Organization
+
 - ✅ Same project tracked across multiple machines
 - ✅ Clear machine/environment context
 - ✅ Multiple developers on same project distinguished
 - ✅ Historical tracking of where work happened
 
 ### 2. Better Analytics
+
 - ✅ Aggregate project activity across all machines
 - ✅ Compare productivity on different machines
 - ✅ Track which environments are most used
 - ✅ Identify patterns (local vs remote development)
 
 ### 3. Team Collaboration
+
 - ✅ See who's working on what machine
 - ✅ Track team activity on shared projects
 - ✅ Understand distributed development patterns
 - ✅ Support for pair programming / remote sessions
 
 ### 4. Data Integrity
+
 - ✅ No duplicate projects for same repo
 - ✅ Proper foreign key relationships
 - ✅ Cascade deletes work correctly
@@ -468,16 +495,19 @@ ORDER BY cs.started_at DESC;
 ## 🚨 Breaking Changes
 
 ### Database
+
 - **BREAKING**: Schema change requires migration
 - **BREAKING**: Old `projectId` field in events needs mapping
 - **IMPACT**: Existing data must be migrated
 
 ### API
+
 - **BREAKING**: Response shapes will change to include hierarchy
 - **BREAKING**: Some endpoints may be renamed/restructured
 - **IMPACT**: Web UI needs updates, MCP server tools need updates
 
 ### Migration Strategy
+
 1. Create new tables alongside old ones
 2. Migrate data with mapping
 3. Update code to use new tables
@@ -490,7 +520,9 @@ ORDER BY cs.started_at DESC;
 ## 📋 Open Questions
 
 ### Q1: How to handle machine detection?
+
 **Options**:
+
 - A) Auto-detect on collector startup
 - B) User configures machine name
 - C) Hybrid: auto-detect with option to override
@@ -498,7 +530,9 @@ ORDER BY cs.started_at DESC;
 **Recommendation**: Option C - auto-detect but allow override in config
 
 ### Q2: How to handle multiple projects in one workspace (monorepo)?
+
 **Options**:
+
 - A) Link workspace to primary project only
 - B) Support many-to-many relationship
 - C) Create separate workspace records per project
@@ -506,7 +540,9 @@ ORDER BY cs.started_at DESC;
 **Recommendation**: Option A for now - link to primary project, enhance later
 
 ### Q3: Should we support Organization entity?
+
 **Options**:
+
 - A) Yes - add organization level above projects
 - B) No - extract from repo_owner field when needed
 - C) Later - add in future iteration
@@ -514,7 +550,9 @@ ORDER BY cs.started_at DESC;
 **Recommendation**: Option B - not needed yet, can add later
 
 ### Q4: How to sync across multiple machines?
+
 **Options**:
+
 - A) Each machine sends to central server
 - B) Machines sync databases
 - C) Export/import between machines
