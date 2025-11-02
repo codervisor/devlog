@@ -20,7 +20,7 @@ func main() {
 	dir := os.Args[1]
 	showPreview := len(os.Args) > 2 && os.Args[2] == "--preview"
 
-	adapter := adapters.NewCopilotAdapter("test-project")
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	// Find all JSON files
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
@@ -80,7 +80,7 @@ func main() {
 
 	if showPreview && len(sampleEvents) > 0 {
 		fmt.Printf("\n🔍 Sample Events Preview (from first file):\n")
-		fmt.Printf("=" + strings.Repeat("=", 79) + "\n\n")
+		fmt.Print("=" + strings.Repeat("=", 79) + "\n\n")
 
 		// Show first 5 events
 		maxPreview := 5

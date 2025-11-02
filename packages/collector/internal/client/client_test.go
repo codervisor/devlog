@@ -56,7 +56,7 @@ func TestClient_SendBatch(t *testing.T) {
 		Type:      types.EventTypeLLMRequest,
 		AgentID:   "test-agent",
 		SessionID: "test-session",
-		ProjectID: "test-project",
+		ProjectID: 1,
 		Data:      map[string]interface{}{"test": "data"},
 	}
 
@@ -66,7 +66,7 @@ func TestClient_SendBatch(t *testing.T) {
 		Type:      types.EventTypeLLMResponse,
 		AgentID:   "test-agent",
 		SessionID: "test-session",
-		ProjectID: "test-project",
+		ProjectID: 1,
 		Data:      map[string]interface{}{"test": "data2"},
 	}
 
@@ -143,7 +143,7 @@ func TestClient_RetryOnFailure(t *testing.T) {
 		Type:      types.EventTypeLLMRequest,
 		AgentID:   "test-agent",
 		SessionID: "test-session",
-		ProjectID: "test-project",
+		ProjectID: 1,
 		Data:      map[string]interface{}{"test": "data"},
 	}
 

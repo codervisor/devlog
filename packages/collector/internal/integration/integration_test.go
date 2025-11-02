@@ -66,7 +66,7 @@ func TestEndToEnd_CopilotLogParsing(t *testing.T) {
 
 	// Initialize components
 	registry := adapters.DefaultRegistry("test-project", nil, nil)
-	adapter := adapters.NewCopilotAdapter("test-project")
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	log := logrus.New()
 	log.SetLevel(logrus.DebugLevel)
@@ -235,7 +235,7 @@ func TestEndToEnd_OfflineBuffering(t *testing.T) {
 
 	// Initialize components
 	registry := adapters.DefaultRegistry("test-project", nil, nil)
-	adapter := adapters.NewCopilotAdapter("test-project")
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	log := logrus.New()
 	log.SetLevel(logrus.WarnLevel) // Reduce noise
@@ -424,7 +424,7 @@ func TestEndToEnd_LogRotation(t *testing.T) {
 
 	// Initialize components
 	registry := adapters.DefaultRegistry("test-project", nil, nil)
-	adapter := adapters.NewCopilotAdapter("test-project")
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	log := logrus.New()
 	log.SetLevel(logrus.WarnLevel)
@@ -563,7 +563,7 @@ func TestEndToEnd_HighVolume(t *testing.T) {
 
 	// Initialize components
 	registry := adapters.DefaultRegistry("test-project", nil, nil)
-	adapter := adapters.NewCopilotAdapter("test-project")
+	adapter := adapters.NewCopilotAdapter("test-project", nil, nil)
 
 	log := logrus.New()
 	log.SetLevel(logrus.ErrorLevel) // Minimal logging for performance

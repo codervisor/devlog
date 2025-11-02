@@ -37,7 +37,7 @@ func TestBuffer_StoreAndRetrieve(t *testing.T) {
 		Type:      types.EventTypeLLMRequest,
 		AgentID:   "test-agent",
 		SessionID: "test-session",
-		ProjectID: "test-project",
+		ProjectID: 1,
 		Data:      map[string]interface{}{"test": "data"},
 	}
 
@@ -100,7 +100,7 @@ func TestBuffer_MaxSizeEviction(t *testing.T) {
 			Type:      types.EventTypeLLMRequest,
 			AgentID:   "test-agent",
 			SessionID: "test-session",
-			ProjectID: "test-project",
+			ProjectID: 1,
 			Data:      map[string]interface{}{"index": i},
 		}
 
@@ -170,7 +170,7 @@ func TestBuffer_Delete(t *testing.T) {
 			Type:      types.EventTypeLLMRequest,
 			AgentID:   "test-agent",
 			SessionID: "test-session",
-			ProjectID: "test-project",
+			ProjectID: 1,
 			Data:      map[string]interface{}{"index": i},
 		}
 
@@ -239,7 +239,7 @@ func TestBuffer_GetStats(t *testing.T) {
 			Type:      types.EventTypeLLMRequest,
 			AgentID:   "test-agent",
 			SessionID: "test-session",
-			ProjectID: "test-project",
+			ProjectID: 1,
 			Data:      map[string]interface{}{"index": i},
 		}
 
