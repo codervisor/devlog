@@ -76,8 +76,9 @@ type CopilotMessagePart struct {
 
 // CopilotResponseItem represents an item in the agent's response stream
 type CopilotResponseItem struct {
-	Kind              *string                `json:"kind"` // nullable
-	Value             string                 `json:"value,omitempty"`
+	Kind              *string                `json:"kind"`              // nullable
+	Value             json.RawMessage        `json:"value,omitempty"`   // Can be string or array
+	Content           *CopilotContent        `json:"content,omitempty"` // Nested content with value
 	ToolID            string                 `json:"toolId,omitempty"`
 	ToolName          string                 `json:"toolName,omitempty"`
 	ToolCallID        string                 `json:"toolCallId,omitempty"`
@@ -87,6 +88,12 @@ type CopilotResponseItem struct {
 	Source            *CopilotToolSource     `json:"source,omitempty"`
 	URI               map[string]interface{} `json:"uri,omitempty"`
 	Edits             []interface{}          `json:"edits,omitempty"`
+}
+
+// CopilotContent represents nested content with flexible value type
+type CopilotContent struct {
+	Value json.RawMessage        `json:"value,omitempty"` // Can be string or array
+	URIs  map[string]interface{} `json:"uris,omitempty"`
 }
 
 // CopilotToolSource represents the source of a tool
@@ -397,9 +404,9 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(
 	for _, item := range request.Response {
 		// Handle different response item kinds
 		if item.Kind == nil {
-			// Plain text response
-			if item.Value != "" {
-				responseTextParts = append(responseTextParts, item.Value)
+			// Plain text response - extract value flexibly
+			if valueText := extractValueAsString(item.Value); valueText != "" {
+				responseTextParts = append(responseTextParts, valueText)
 			}
 		} else if *item.Kind == "toolInvocationSerialized" {
 			// Tool invocation
@@ -554,6 +561,42 @@ func extractFilePath(uri map[string]interface{}) string {
 		return fsPath
 	}
 
+	return ""
+}
+
+// extractValueAsString extracts text from a value that can be string, array, or other types
+func extractValueAsString(raw json.RawMessage) string {
+	if len(raw) == 0 {
+		return ""
+	}
+
+	// Try as string first (most common)
+	var str string
+	if err := json.Unmarshal(raw, &str); err == nil {
+		return str
+	}
+
+	// Try as array of strings
+	var arrStr []string
+	if err := json.Unmarshal(raw, &arrStr); err == nil {
+		// Join array elements with newlines
+		return strings.Join(arrStr, "\n")
+	}
+
+	// Try as array of interfaces (mixed types)
+	var arrInterface []interface{}
+	if err := json.Unmarshal(raw, &arrInterface); err == nil {
+		// Convert each element to string
+		var parts []string
+		for _, elem := range arrInterface {
+			if s, ok := elem.(string); ok {
+				parts = append(parts, s)
+			}
+		}
+		return strings.Join(parts, "\n")
+	}
+
+	// Fallback: return empty string for unparseable values (like empty arrays)
 	return ""
 }
 

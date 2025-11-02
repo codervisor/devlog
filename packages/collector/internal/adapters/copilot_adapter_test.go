@@ -34,7 +34,7 @@ func TestCopilotAdapter_ParseLogFile(t *testing.T) {
 				Response: []CopilotResponseItem{
 					{
 						Kind:  nil,
-						Value: "I'll help you fix the bug. Let me search for the issue.",
+						Value: json.RawMessage(`"I'll help you fix the bug. Let me search for the issue."`),
 					},
 					{
 						Kind:              strPtr("toolInvocationSerialized"),
@@ -51,7 +51,7 @@ func TestCopilotAdapter_ParseLogFile(t *testing.T) {
 					},
 					{
 						Kind:  nil,
-						Value: "Here's the fix you need.",
+						Value: json.RawMessage(`"Here's the fix you need."`),
 					},
 				},
 				VariableData: CopilotVariableData{
@@ -379,14 +379,14 @@ func TestCopilotAdapter_SkipCanceledRequests(t *testing.T) {
 				RequestID:  "req_1",
 				Timestamp:  int64(1730372400000),
 				Message:    CopilotMessage{Text: "First request"},
-				Response:   []CopilotResponseItem{{Value: "Response"}},
+				Response:   []CopilotResponseItem{{Value: json.RawMessage(`"Response"`)}},
 				IsCanceled: true, // Should be skipped
 			},
 			{
 				RequestID:  "req_2",
 				Timestamp:  int64(1730372401000),
 				Message:    CopilotMessage{Text: "Second request"},
-				Response:   []CopilotResponseItem{{Value: "Response"}},
+				Response:   []CopilotResponseItem{{Value: json.RawMessage(`"Response"`)}},
 				IsCanceled: false, // Should be processed
 			},
 		},
@@ -450,4 +450,107 @@ func TestExtractWorkspaceIDFromPath(t *testing.T) {
 			assert.Equal(t, tt.want, result)
 		})
 	}
+}
+
+func TestCopilotAdapter_ArrayValueSupport(t *testing.T) {
+	// Test with file containing array values
+	testFile := "testdata/copilot-array-value.json"
+	if _, err := os.Stat(testFile); os.IsNotExist(err) {
+		t.Skip("Test file not available")
+	}
+
+	adapter := NewCopilotAdapter("test-project", nil, nil)
+	events, err := adapter.ParseLogFile(testFile)
+
+	require.NoError(t, err, "Should parse file with array values successfully")
+	require.NotEmpty(t, events, "Should extract events from file with array values")
+
+	t.Logf("Extracted %d events from array value test file", len(events))
+
+	// Verify we have the expected event types
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		eventTypes[event.Type]++
+	}
+
+	assert.Greater(t, eventTypes[types.EventTypeLLMRequest], 0, "Should have request event")
+	assert.Greater(t, eventTypes[types.EventTypeLLMResponse], 0, "Should have response event")
+}
+
+func TestExtractValueAsString(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "String value",
+			input: `"hello world"`,
+			want:  "hello world",
+		},
+		{
+			name:  "Empty string",
+			input: `""`,
+			want:  "",
+		},
+		{
+			name:  "Array of strings",
+			input: `["line1", "line2", "line3"]`,
+			want:  "line1\nline2\nline3",
+		},
+		{
+			name:  "Empty array",
+			input: `[]`,
+			want:  "",
+		},
+		{
+			name:  "Array with single string",
+			input: `["single"]`,
+			want:  "single",
+		},
+		{
+			name:  "Null value",
+			input: `null`,
+			want:  "",
+		},
+		{
+			name:  "Empty input",
+			input: ``,
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractValueAsString(json.RawMessage(tt.input))
+			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
+func TestCopilotAdapter_RealFileWithArrayValue(t *testing.T) {
+	// Test with the actual problematic file if available
+	realFile := "/Users/marvzhang/Library/Application Support/Code - Insiders/User/workspaceStorage/5987bb38e8bfe2022dbffb3d3bdd5fd7/chatSessions/571316aa-c122-405c-aac7-b02ea42d15e0.json"
+	if _, err := os.Stat(realFile); os.IsNotExist(err) {
+		t.Skip("Real problematic file not available")
+	}
+
+	adapter := NewCopilotAdapter("test-project", nil, nil)
+	events, err := adapter.ParseLogFile(realFile)
+
+	require.NoError(t, err, "Should successfully parse the previously failing file")
+	require.NotEmpty(t, events, "Should extract events from previously failing file")
+
+	t.Logf("Successfully extracted %d events from previously failing file", len(events))
+
+	// Log event types for verification
+	eventTypes := make(map[string]int)
+	for _, event := range events {
+		eventTypes[event.Type]++
+	}
+	t.Logf("Event types: %+v", eventTypes)
+
+	assert.Greater(t, len(eventTypes), 1, "Should have multiple event types")
+	assert.Greater(t, eventTypes[types.EventTypeLLMRequest], 0, "Should have request events")
+	assert.Greater(t, eventTypes[types.EventTypeLLMResponse], 0, "Should have response events")
 }
