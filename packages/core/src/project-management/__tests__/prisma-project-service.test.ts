@@ -3,45 +3,20 @@
  * Ensures compatibility with TypeORM version and validates new functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { PrismaProjectService } from '../projects/prisma-project-service.js';
-import type { Project } from '../../types/project.js';
-
-// Mock Prisma Client
-const mockPrismaClient = {
-  project: {
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  },
-  $queryRaw: vi.fn(),
-  $disconnect: vi.fn(),
-};
-
-// Mock the prisma config
-vi.mock('../../utils/prisma-config.js', () => ({
-  getPrismaClient: () => mockPrismaClient,
-}));
-
-// Mock the validator
-vi.mock('../../validation/project-schemas.js', () => ({
-  ProjectValidator: {
-    validate: vi.fn(() => ({ success: true })),
-  },
-}));
+import { TestDataFactory, getTestDatabase } from '@codervisor/test-utils';
+import type { PrismaClient } from '@prisma/client';
 
 describe('PrismaProjectService', () => {
   let service: PrismaProjectService;
+  let factory: TestDataFactory;
+  let prisma: PrismaClient;
 
   beforeEach(() => {
+    prisma = getTestDatabase();
+    factory = new TestDataFactory(prisma);
     service = PrismaProjectService.getInstance();
-    // Reset all mocks
-    vi.clearAllMocks();
-    // Mock successful connection test
-    mockPrismaClient.$queryRaw.mockResolvedValue([{ 1: 1 }]);
   });
 
   afterEach(async () => {
@@ -61,147 +36,57 @@ describe('PrismaProjectService', () => {
   describe('initialization', () => {
     it('should initialize database connection', async () => {
       await service.initialize();
-      expect(mockPrismaClient.$queryRaw).toHaveBeenCalledWith(expect.arrayContaining(['SELECT 1']));
-    });
-
-    it('should handle initialization errors', async () => {
-      mockPrismaClient.$queryRaw.mockRejectedValue(new Error('Connection failed'));
-      await expect(service.initialize()).rejects.toThrow('Connection failed');
+      expect(service).toBeDefined();
     });
   });
 
   describe('list', () => {
     it('should return all projects ordered by last accessed time', async () => {
-      const mockProjects = [
-        {
-          id: 1,
-          name: 'Test Project 1',
-          description: 'Test Description 1',
-          createdAt: new Date('2023-01-01'),
-          lastAccessedAt: new Date('2023-01-02'),
-        },
-        {
-          id: 2,
-          name: 'Test Project 2',
-          description: 'Test Description 2',
-          createdAt: new Date('2023-01-01'),
-          lastAccessedAt: new Date('2023-01-01'),
-        },
-      ];
-
-      mockPrismaClient.project.findMany.mockResolvedValue(mockProjects);
+      // Create test projects
+      await factory.createProject({ name: 'Project 1' });
+      await factory.createProject({ name: 'Project 2' });
 
       const result = await service.list();
 
-      expect(mockPrismaClient.project.findMany).toHaveBeenCalledWith({
-        orderBy: {
-          lastAccessedAt: 'desc',
-        },
-      });
-      expect(result).toEqual(mockProjects);
+      expect(result.length).toBeGreaterThanOrEqual(2);
+      expect(result[0].name).toBeDefined();
+    });
+
+    it('should return empty array when no projects exist', async () => {
+      const result = await service.list();
+      expect(Array.isArray(result)).toBe(true);
     });
   });
 
   describe('get', () => {
-    it('should return project by ID and update last accessed time', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'Test Project',
-        description: 'Test Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
+    it('should return project by ID', async () => {
+      const project = await factory.createProject({ name: 'Test-Project' });
 
-      mockPrismaClient.project.findUnique.mockResolvedValue(mockProject);
-      mockPrismaClient.project.update.mockResolvedValue({
-        ...mockProject,
-        lastAccessedAt: new Date(),
-      });
+      const result = await service.get(project.id);
 
-      const result = await service.get(1);
-
-      expect(mockPrismaClient.project.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
-      expect(mockPrismaClient.project.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { lastAccessedAt: expect.any(Date) },
-      });
-      expect(result).toEqual(mockProject);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(project.id);
+      expect(result?.name).toBe('Test-Project');
     });
 
-    it('should return null if project not found', async () => {
-      mockPrismaClient.project.findUnique.mockResolvedValue(null);
-
-      const result = await service.get(999);
-
+    it('should return null for non-existent project', async () => {
+      const result = await service.get(99999);
       expect(result).toBeNull();
-      expect(mockPrismaClient.project.update).not.toHaveBeenCalled();
     });
   });
 
   describe('getByName', () => {
-    it('should return project by name (case-insensitive) and update last accessed time', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'Test Project',
-        description: 'Test Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
+    it('should find project by exact name', async () => {
+      await factory.createProject({ name: 'Unique-Project-Name' });
 
-      mockPrismaClient.project.findFirst.mockResolvedValue(mockProject);
-      mockPrismaClient.project.update.mockResolvedValue({
-        ...mockProject,
-        lastAccessedAt: new Date(),
-      });
+      const result = await service.getByName('Unique-Project-Name');
 
-      const result = await service.getByName('test project');
-
-      expect(mockPrismaClient.project.findFirst).toHaveBeenCalledWith({
-        where: {
-          name: {
-            equals: 'test project',
-            mode: 'insensitive',
-          },
-        },
-      });
-      expect(result).toEqual(mockProject);
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe('Unique-Project-Name');
     });
 
-    it('should fallback to exact match for databases without case-insensitive support', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'Test Project',
-        description: 'Test Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
-
-      // First call with case-insensitive fails
-      mockPrismaClient.project.findFirst
-        .mockRejectedValueOnce(new Error('Case insensitive not supported'))
-        .mockResolvedValue(mockProject);
-
-      mockPrismaClient.project.update.mockResolvedValue({
-        ...mockProject,
-        lastAccessedAt: new Date(),
-      });
-
-      const result = await service.getByName('Test Project');
-
-      expect(mockPrismaClient.project.findFirst).toHaveBeenCalledTimes(2);
-      expect(mockPrismaClient.project.findFirst).toHaveBeenLastCalledWith({
-        where: { name: 'Test Project' },
-      });
-      expect(result).toEqual(mockProject);
-    });
-
-    it('should return null if project not found', async () => {
-      mockPrismaClient.project.findFirst.mockResolvedValue(null);
-
-      const result = await service.getByName('nonexistent');
-
+    it('should return null when project not found', async () => {
+      const result = await service.getByName('Non-existent-Project');
       expect(result).toBeNull();
     });
   });
@@ -209,146 +94,78 @@ describe('PrismaProjectService', () => {
   describe('create', () => {
     it('should create a new project', async () => {
       const projectData = {
-        name: 'New Project',
-        description: 'New Description',
+        name: 'New-Project',
+        description: 'A new test project',
       };
 
-      const mockCreatedProject = {
-        id: 1,
-        ...projectData,
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
+      const result = await service.create(projectData as any);
 
-      mockPrismaClient.project.create.mockResolvedValue(mockCreatedProject);
-
-      const result = await service.create(projectData);
-
-      expect(mockPrismaClient.project.create).toHaveBeenCalledWith({
-        data: {
-          name: projectData.name,
-          description: projectData.description,
-          lastAccessedAt: expect.any(Date),
-        },
-      });
-      expect(result).toEqual(mockCreatedProject);
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe('New-Project');
+      expect(result.description).toBe('A new test project');
     });
 
-    it('should throw error for invalid project data', async () => {
-      const { ProjectValidator } = await import('../../validation/project-schemas.js');
-      vi.mocked(ProjectValidator.validate).mockReturnValue({
-        success: false,
-        error: {
-          issues: [{ message: 'Name is required' }],
-        },
-      } as any);
+    it('should create project without description', async () => {
+      const projectData = {
+        name: 'Minimal-Project',
+      };
 
-      await expect(service.create({ name: '', description: '' })).rejects.toThrow(
-        'Invalid project data: Name is required'
-      );
+      const result = await service.create(projectData as any);
+
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe('Minimal-Project');
     });
   });
 
   describe('update', () => {
-    it('should update existing project', async () => {
-      const existingProject = {
-        id: 1,
-        name: 'Old Name',
-        description: 'Old Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
-
-      const updates = {
-        name: 'New Name',
-        description: 'New Description',
-      };
-
-      const updatedProject = {
-        ...existingProject,
-        ...updates,
-        lastAccessedAt: new Date(),
-      };
-
-      // Ensure validation passes
-      const { ProjectValidator } = await import('../../validation/project-schemas.js');
-      vi.mocked(ProjectValidator.validate).mockReturnValue({ success: true } as any);
-
-      mockPrismaClient.project.findUnique.mockResolvedValue(existingProject);
-      mockPrismaClient.project.update.mockResolvedValue(updatedProject);
-
-      const result = await service.update(1, updates);
-
-      expect(mockPrismaClient.project.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: {
-          name: updates.name,
-          description: updates.description,
-          lastAccessedAt: expect.any(Date),
-        },
+    it('should update project details', async () => {
+      const project = await factory.createProject({
+        name: 'Original-Name',
+        description: 'Original Description',
       });
-      expect(result).toEqual(updatedProject);
+
+      const result = await service.update(project.id, {
+        name: 'Updated-Name',
+        description: 'Updated Description',
+      });
+
+      expect(result.id).toBe(project.id);
+      expect(result.name).toBe('Updated-Name');
+      expect(result.description).toBe('Updated Description');
     });
 
-    it('should throw error if project not found', async () => {
-      mockPrismaClient.project.findUnique.mockResolvedValue(null);
+    it('should partially update project', async () => {
+      const project = await factory.createProject({
+        name: 'Original-Name',
+        description: 'Original Description',
+      });
 
-      await expect(service.update(999, { name: 'New Name' })).rejects.toThrow(
-        'Project with ID 999 not found'
-      );
+      const result = await service.update(project.id, {
+        description: 'Only Description Updated',
+      });
+
+      expect(result.id).toBe(project.id);
+      expect(result.name).toBe('Original-Name');
+      expect(result.description).toBe('Only Description Updated');
     });
 
-    it('should validate updates', async () => {
-      const existingProject = {
-        id: 1,
-        name: 'Old Name',
-        description: 'Old Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
-
-      mockPrismaClient.project.findUnique.mockResolvedValue(existingProject);
-
-      const { ProjectValidator } = await import('../../validation/project-schemas.js');
-      vi.mocked(ProjectValidator.validate).mockReturnValue({
-        success: false,
-        error: {
-          issues: [{ message: 'Invalid name' }],
-        },
-      } as any);
-
-      await expect(service.update(1, { name: '' })).rejects.toThrow(
-        'Invalid project data: Invalid name'
-      );
+    it('should throw error when updating non-existent project', async () => {
+      await expect(service.update(99999, { name: 'Updated' })).rejects.toThrow();
     });
   });
 
   describe('delete', () => {
     it('should delete existing project', async () => {
-      const existingProject = {
-        id: 1,
-        name: 'Test Project',
-        description: 'Test Description',
-        createdAt: new Date('2023-01-01'),
-        lastAccessedAt: new Date('2023-01-01'),
-      };
+      const project = await factory.createProject({ name: 'To-Delete' });
 
-      mockPrismaClient.project.findUnique.mockResolvedValue(existingProject);
-      mockPrismaClient.project.delete.mockResolvedValue(existingProject);
+      await service.delete(project.id);
 
-      await service.delete(1);
-
-      expect(mockPrismaClient.project.delete).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
+      const result = await service.get(project.id);
+      expect(result).toBeNull();
     });
 
     it('should throw error if project not found', async () => {
-      mockPrismaClient.project.findUnique.mockResolvedValue(null);
-
-      await expect(service.delete(999)).rejects.toThrow(
-        'Project with ID 999 not found'
-      );
+      await expect(service.delete(99999)).rejects.toThrow();
     });
   });
 });

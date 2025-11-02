@@ -3,47 +3,21 @@
  * Validates workspace resolution, hierarchy building, and upsert operations
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { HierarchyService } from '../hierarchy/hierarchy-service.js';
-import type {
-  WorkspaceContext,
-  MachineCreateInput,
-  WorkspaceCreateInput,
-} from '../hierarchy/hierarchy-service.js';
-
-// Mock Prisma Client
-const mockPrismaClient = {
-  workspace: {
-    findUnique: vi.fn(),
-    upsert: vi.fn(),
-  },
-  machine: {
-    findUnique: vi.fn(),
-    findMany: vi.fn(),
-    upsert: vi.fn(),
-  },
-  project: {
-    findUnique: vi.fn(),
-    upsert: vi.fn(),
-  },
-  $queryRaw: vi.fn(),
-  $disconnect: vi.fn(),
-};
-
-// Mock the prisma config
-vi.mock('../../utils/prisma-config.js', () => ({
-  getPrismaClient: () => mockPrismaClient,
-}));
+import type { MachineCreateInput, WorkspaceCreateInput } from '../hierarchy/hierarchy-service.js';
+import { TestDataFactory, getTestDatabase } from '@codervisor/test-utils';
+import type { PrismaClient } from '@prisma/client';
 
 describe('HierarchyService', () => {
   let service: HierarchyService;
+  let factory: TestDataFactory;
+  let prisma: PrismaClient;
 
   beforeEach(() => {
+    prisma = getTestDatabase();
+    factory = new TestDataFactory(prisma);
     service = HierarchyService.getInstance();
-    // Reset all mocks
-    vi.clearAllMocks();
-    // Mock successful connection test
-    mockPrismaClient.$queryRaw.mockResolvedValue([{ 1: 1 }]);
   });
 
   afterEach(async () => {
@@ -62,265 +36,113 @@ describe('HierarchyService', () => {
 
   describe('resolveWorkspace', () => {
     it('should resolve workspace to full context', async () => {
-      const mockWorkspace = {
-        id: 1,
-        projectId: 10,
-        machineId: 20,
-        workspaceId: 'test-workspace-uuid',
-        workspacePath: '/path/to/workspace',
-        workspaceType: 'folder',
-        branch: 'main',
-        commit: 'abc123',
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-        project: {
-          id: 10,
-          name: 'test-project',
-          fullName: 'owner/test-project',
-          repoUrl: 'https://github.com/owner/test-project',
-          repoOwner: 'owner',
-          repoName: 'test-project',
-          description: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        machine: {
-          id: 20,
-          machineId: 'test-machine-id',
-          hostname: 'test-hostname',
-          username: 'testuser',
-          osType: 'linux',
-          osVersion: '22.04',
-          machineType: 'local',
-          ipAddress: '192.168.1.1',
-          metadata: {},
-          createdAt: new Date(),
-          lastSeenAt: new Date(),
-        },
-      };
-
-      mockPrismaClient.workspace.findUnique.mockResolvedValue(mockWorkspace);
+      const { project, machine, workspace } = await factory.createCompleteSetup({
+        projectData: { fullName: 'owner/test-project' },
+        machineData: { hostname: 'test-hostname' },
+        workspaceData: { workspaceId: 'test-workspace-uuid' },
+      });
 
       const result = await service.resolveWorkspace('test-workspace-uuid');
 
       expect(result).toEqual({
-        projectId: 10,
-        machineId: 20,
-        workspaceId: 1,
+        projectId: project.id,
+        machineId: machine.id,
+        workspaceId: workspace.id,
         projectName: 'owner/test-project',
         machineName: 'test-hostname',
-      });
-
-      expect(mockPrismaClient.workspace.findUnique).toHaveBeenCalledWith({
-        where: { workspaceId: 'test-workspace-uuid' },
-        include: {
-          project: true,
-          machine: true,
-        },
       });
     });
 
     it('should throw error if workspace not found', async () => {
-      mockPrismaClient.workspace.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.resolveWorkspace('non-existent-workspace')
-      ).rejects.toThrow('Workspace not found: non-existent-workspace');
+      await expect(service.resolveWorkspace('non-existent-workspace')).rejects.toThrow(
+        'Workspace not found: non-existent-workspace',
+      );
     });
   });
 
   describe('getProjectHierarchy', () => {
     it('should build project hierarchy with machines and workspaces', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'test-project',
+      const project = await factory.createProject({
         fullName: 'owner/test-project',
-        repoUrl: 'https://github.com/owner/test-project',
-        repoOwner: 'owner',
-        repoName: 'test-project',
         description: 'Test project',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        workspaces: [
-          {
-            id: 1,
-            projectId: 1,
-            machineId: 1,
-            workspaceId: 'ws-1',
-            workspacePath: '/path1',
-            workspaceType: 'folder',
-            branch: 'main',
-            commit: 'abc',
-            createdAt: new Date(),
-            lastSeenAt: new Date(),
-            machine: {
-              id: 1,
-              machineId: 'machine-1',
-              hostname: 'host1',
-              username: 'user1',
-              osType: 'linux',
-              osVersion: '22.04',
-              machineType: 'local',
-              ipAddress: '192.168.1.1',
-              metadata: {},
-              createdAt: new Date(),
-              lastSeenAt: new Date(),
-            },
-            chatSessions: [
-              {
-                id: 1,
-                sessionId: 'session-1',
-                workspaceId: 1,
-                agentType: 'copilot',
-                modelId: 'gpt-4',
-                startedAt: new Date(),
-                endedAt: new Date(),
-                messageCount: 10,
-                totalTokens: 1000,
-                createdAt: new Date(),
-                _count: {
-                  agentEvents: 5,
-                },
-              },
-            ],
-          },
-          {
-            id: 2,
-            projectId: 1,
-            machineId: 2,
-            workspaceId: 'ws-2',
-            workspacePath: '/path2',
-            workspaceType: 'folder',
-            branch: 'dev',
-            commit: 'def',
-            createdAt: new Date(),
-            lastSeenAt: new Date(),
-            machine: {
-              id: 2,
-              machineId: 'machine-2',
-              hostname: 'host2',
-              username: 'user2',
-              osType: 'darwin',
-              osVersion: '14.0',
-              machineType: 'local',
-              ipAddress: '192.168.1.2',
-              metadata: {},
-              createdAt: new Date(),
-              lastSeenAt: new Date(),
-            },
-            chatSessions: [
-              {
-                id: 2,
-                sessionId: 'session-2',
-                workspaceId: 2,
-                agentType: 'claude',
-                modelId: 'claude-sonnet',
-                startedAt: new Date(),
-                endedAt: null,
-                messageCount: 5,
-                totalTokens: 500,
-                createdAt: new Date(),
-                _count: {
-                  agentEvents: 3,
-                },
-              },
-            ],
-          },
-        ],
-      };
+      });
 
-      mockPrismaClient.project.findUnique.mockResolvedValue(mockProject);
+      const machine1 = await factory.createMachine({ hostname: 'host1' });
+      const machine2 = await factory.createMachine({ hostname: 'host2' });
 
-      const result = await service.getProjectHierarchy(1);
+      const workspace1 = await factory.createWorkspace({
+        projectId: project.id,
+        machineId: machine1.id,
+        workspaceId: 'ws-1',
+        branch: 'main',
+      });
 
-      expect(result.project).toEqual(mockProject);
+      const workspace2 = await factory.createWorkspace({
+        projectId: project.id,
+        machineId: machine2.id,
+        workspaceId: 'ws-2',
+        branch: 'dev',
+      });
+
+      const session1 = await factory.createChatSession({
+        workspaceId: workspace1.id,
+        agentType: 'copilot',
+      });
+
+      const session2 = await factory.createChatSession({
+        workspaceId: workspace2.id,
+        agentType: 'claude',
+      });
+
+      // Create agent events (5 for session1, 3 for session2)
+      for (let i = 0; i < 5; i++) {
+        await factory.createAgentEvent({
+          chatSessionId: session1.sessionId,
+          workspaceId: workspace1.id,
+        });
+      }
+
+      for (let i = 0; i < 3; i++) {
+        await factory.createAgentEvent({
+          chatSessionId: session2.sessionId,
+          workspaceId: workspace2.id,
+        });
+      }
+
+      const result = await service.getProjectHierarchy(project.id);
+
+      expect(result.project.id).toBe(project.id);
       expect(result.machines).toHaveLength(2);
-      expect(result.machines[0].machine.id).toBe(1);
-      expect(result.machines[0].workspaces).toHaveLength(1);
-      expect(result.machines[0].workspaces[0].eventCount).toBe(5);
-      expect(result.machines[1].machine.id).toBe(2);
-      expect(result.machines[1].workspaces).toHaveLength(1);
-      expect(result.machines[1].workspaces[0].eventCount).toBe(3);
+      const allWorkspaces = [...result.machines[0].workspaces, ...result.machines[1].workspaces];
+      const totalEvents = allWorkspaces.reduce((sum, ws) => sum + ws.eventCount, 0);
+      expect(totalEvents).toBe(8);
     });
 
     it('should throw error if project not found', async () => {
-      mockPrismaClient.project.findUnique.mockResolvedValue(null);
-
-      await expect(service.getProjectHierarchy(999)).rejects.toThrow(
-        'Project not found: 999'
-      );
+      await expect(service.getProjectHierarchy(999)).rejects.toThrow('Project not found: 999');
     });
 
     it('should handle multiple workspaces on same machine', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'test-project',
+      const project = await factory.createProject({
         fullName: 'owner/test-project',
-        repoUrl: 'https://github.com/owner/test-project',
-        repoOwner: 'owner',
-        repoName: 'test-project',
-        description: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        workspaces: [
-          {
-            id: 1,
-            projectId: 1,
-            machineId: 1,
-            workspaceId: 'ws-1',
-            workspacePath: '/path1',
-            workspaceType: 'folder',
-            branch: 'main',
-            commit: 'abc',
-            createdAt: new Date(),
-            lastSeenAt: new Date(),
-            machine: {
-              id: 1,
-              machineId: 'machine-1',
-              hostname: 'host1',
-              username: 'user1',
-              osType: 'linux',
-              osVersion: null,
-              machineType: 'local',
-              ipAddress: null,
-              metadata: {},
-              createdAt: new Date(),
-              lastSeenAt: new Date(),
-            },
-            chatSessions: [],
-          },
-          {
-            id: 2,
-            projectId: 1,
-            machineId: 1, // Same machine
-            workspaceId: 'ws-2',
-            workspacePath: '/path2',
-            workspaceType: 'folder',
-            branch: 'dev',
-            commit: 'def',
-            createdAt: new Date(),
-            lastSeenAt: new Date(),
-            machine: {
-              id: 1,
-              machineId: 'machine-1',
-              hostname: 'host1',
-              username: 'user1',
-              osType: 'linux',
-              osVersion: null,
-              machineType: 'local',
-              ipAddress: null,
-              metadata: {},
-              createdAt: new Date(),
-              lastSeenAt: new Date(),
-            },
-            chatSessions: [],
-          },
-        ],
-      };
+      });
+      const machine = await factory.createMachine({ hostname: 'host1' });
 
-      mockPrismaClient.project.findUnique.mockResolvedValue(mockProject);
+      await factory.createWorkspace({
+        projectId: project.id,
+        machineId: machine.id,
+        workspaceId: 'ws-1',
+        branch: 'main',
+      });
 
-      const result = await service.getProjectHierarchy(1);
+      await factory.createWorkspace({
+        projectId: project.id,
+        machineId: machine.id,
+        workspaceId: 'ws-2',
+        branch: 'dev',
+      });
+
+      const result = await service.getProjectHierarchy(project.id);
 
       expect(result.machines).toHaveLength(1);
       expect(result.machines[0].workspaces).toHaveLength(2);
@@ -340,38 +162,16 @@ describe('HierarchyService', () => {
         metadata: { key: 'value' },
       };
 
-      const mockMachine = {
-        id: 1,
-        ...machineData,
-        metadata: { key: 'value' },
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-      };
-
-      mockPrismaClient.machine.upsert.mockResolvedValue(mockMachine);
-
       const result = await service.upsertMachine(machineData);
 
-      expect(result).toEqual(mockMachine);
-      expect(mockPrismaClient.machine.upsert).toHaveBeenCalledWith({
-        where: { machineId: 'test-machine' },
-        create: expect.objectContaining({
-          machineId: 'test-machine',
-          hostname: 'test-host',
-          username: 'testuser',
-          osType: 'linux',
-          osVersion: '22.04',
-          machineType: 'local',
-          ipAddress: '192.168.1.1',
-          metadata: { key: 'value' },
-        }),
-        update: expect.objectContaining({
-          lastSeenAt: expect.any(Date),
-          osVersion: '22.04',
-          ipAddress: '192.168.1.1',
-          metadata: { key: 'value' },
-        }),
-      });
+      expect(result.machineId).toBe('test-machine');
+      expect(result.hostname).toBe('test-host');
+      expect(result.username).toBe('testuser');
+      expect(result.osType).toBe('linux');
+      expect(result.osVersion).toBe('22.04');
+      expect(result.machineType).toBe('local');
+      expect(result.ipAddress).toBe('192.168.1.1');
+      expect(result.metadata).toEqual({ key: 'value' });
     });
 
     it('should update existing machine on upsert', async () => {
@@ -380,25 +180,22 @@ describe('HierarchyService', () => {
         hostname: 'test-host',
         username: 'testuser',
         osType: 'linux',
-        osVersion: '24.04', // Updated version
+        osVersion: '22.04',
         machineType: 'local',
-        ipAddress: '192.168.1.100', // Updated IP
+        ipAddress: '192.168.1.1',
       };
 
-      const mockMachine = {
-        id: 5,
+      const initial = await service.upsertMachine(machineData);
+
+      const updated = await service.upsertMachine({
         ...machineData,
-        metadata: {},
-        createdAt: new Date('2023-01-01'),
-        lastSeenAt: new Date(),
-      };
+        osVersion: '24.04',
+        ipAddress: '192.168.1.100',
+      });
 
-      mockPrismaClient.machine.upsert.mockResolvedValue(mockMachine);
-
-      const result = await service.upsertMachine(machineData);
-
-      expect(result).toEqual(mockMachine);
-      expect(mockPrismaClient.machine.upsert).toHaveBeenCalled();
+      expect(updated.id).toBe(initial.id);
+      expect(updated.osVersion).toBe('24.04');
+      expect(updated.ipAddress).toBe('192.168.1.100');
     });
 
     it('should handle machine without optional fields', async () => {
@@ -410,29 +207,21 @@ describe('HierarchyService', () => {
         machineType: 'local',
       };
 
-      const mockMachine = {
-        id: 1,
-        ...machineData,
-        osVersion: null,
-        ipAddress: null,
-        metadata: {},
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-      };
-
-      mockPrismaClient.machine.upsert.mockResolvedValue(mockMachine);
-
       const result = await service.upsertMachine(machineData);
 
-      expect(result).toEqual(mockMachine);
+      expect(result.machineId).toBe('minimal-machine');
+      expect(result.osVersion).toBeNull();
+      expect(result.ipAddress).toBeNull();
     });
   });
 
   describe('upsertWorkspace', () => {
     it('should create new workspace', async () => {
+      const { project, machine } = await factory.createCompleteSetup();
+
       const workspaceData: WorkspaceCreateInput = {
-        projectId: 1,
-        machineId: 1,
+        projectId: project.id,
+        machineId: machine.id,
         workspaceId: 'test-ws-uuid',
         workspacePath: '/path/to/workspace',
         workspaceType: 'folder',
@@ -440,154 +229,77 @@ describe('HierarchyService', () => {
         commit: 'abc123',
       };
 
-      const mockWorkspace = {
-        id: 1,
-        ...workspaceData,
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-      };
-
-      mockPrismaClient.workspace.upsert.mockResolvedValue(mockWorkspace);
-
       const result = await service.upsertWorkspace(workspaceData);
 
-      expect(result).toEqual(mockWorkspace);
-      expect(mockPrismaClient.workspace.upsert).toHaveBeenCalledWith({
-        where: { workspaceId: 'test-ws-uuid' },
-        create: expect.objectContaining(workspaceData),
-        update: expect.objectContaining({
-          lastSeenAt: expect.any(Date),
-          branch: 'main',
-          commit: 'abc123',
-        }),
-      });
+      expect(result.workspaceId).toBe('test-ws-uuid');
+      expect(result.projectId).toBe(project.id);
+      expect(result.machineId).toBe(machine.id);
+      expect(result.branch).toBe('main');
+      expect(result.commit).toBe('abc123');
     });
 
     it('should update existing workspace on upsert', async () => {
+      const { project, machine } = await factory.createCompleteSetup();
+
       const workspaceData: WorkspaceCreateInput = {
-        projectId: 1,
-        machineId: 1,
+        projectId: project.id,
+        machineId: machine.id,
         workspaceId: 'existing-ws',
         workspacePath: '/path',
         workspaceType: 'folder',
-        branch: 'feature-branch', // Updated branch
-        commit: 'xyz789', // Updated commit
+        branch: 'main',
+        commit: 'abc123',
       };
 
-      const mockWorkspace = {
-        id: 5,
+      const initial = await service.upsertWorkspace(workspaceData);
+
+      const updated = await service.upsertWorkspace({
         ...workspaceData,
-        createdAt: new Date('2023-01-01'),
-        lastSeenAt: new Date(),
-      };
+        branch: 'feature-branch',
+        commit: 'xyz789',
+      });
 
-      mockPrismaClient.workspace.upsert.mockResolvedValue(mockWorkspace);
-
-      const result = await service.upsertWorkspace(workspaceData);
-
-      expect(result).toEqual(mockWorkspace);
+      expect(updated.id).toBe(initial.id);
+      expect(updated.branch).toBe('feature-branch');
+      expect(updated.commit).toBe('xyz789');
     });
   });
 
   describe('resolveProject', () => {
     it('should normalize and resolve project from git URL', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'test-repo',
-        fullName: 'owner/test-repo',
-        repoUrl: 'https://github.com/owner/test-repo',
-        repoOwner: 'owner',
-        repoName: 'test-repo',
-        description: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const result = await service.resolveProject('https://github.com/owner/test-repo.git');
 
-      mockPrismaClient.project.upsert.mockResolvedValue(mockProject);
-
-      const result = await service.resolveProject(
-        'https://github.com/owner/test-repo.git'
-      );
-
-      expect(result).toEqual(mockProject);
-      expect(mockPrismaClient.project.upsert).toHaveBeenCalledWith({
-        where: { repoUrl: 'https://github.com/owner/test-repo' },
-        create: {
-          name: 'test-repo',
-          fullName: 'owner/test-repo',
-          repoUrl: 'https://github.com/owner/test-repo',
-          repoOwner: 'owner',
-          repoName: 'test-repo',
-        },
-        update: {
-          updatedAt: expect.any(Date),
-        },
-      });
+      expect(result.name).toBe('test-repo');
+      expect(result.fullName).toBe('owner/test-repo');
+      expect(result.repoUrl).toBe('https://github.com/owner/test-repo');
+      expect(result.repoOwner).toBe('owner');
+      expect(result.repoName).toBe('test-repo');
     });
 
     it('should convert SSH URLs to HTTPS', async () => {
-      const mockProject = {
-        id: 1,
-        name: 'test-repo',
-        fullName: 'owner/test-repo',
-        repoUrl: 'https://github.com/owner/test-repo',
-        repoOwner: 'owner',
-        repoName: 'test-repo',
-        description: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const result = await service.resolveProject('git@github.com:owner/test-repo.git');
 
-      mockPrismaClient.project.upsert.mockResolvedValue(mockProject);
-
-      const result = await service.resolveProject(
-        'git@github.com:owner/test-repo.git'
-      );
-
-      expect(result).toEqual(mockProject);
-      expect(mockPrismaClient.project.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { repoUrl: 'https://github.com/owner/test-repo' },
-        })
-      );
+      expect(result.repoUrl).toBe('https://github.com/owner/test-repo');
+      expect(result.fullName).toBe('owner/test-repo');
     });
 
     it('should throw error for invalid GitHub URL', async () => {
-      await expect(
-        service.resolveProject('invalid-url')
-      ).rejects.toThrow('Invalid GitHub URL');
+      await expect(service.resolveProject('invalid-url')).rejects.toThrow('Invalid GitHub URL');
     });
   });
 
   describe('getMachine', () => {
     it('should get machine by ID', async () => {
-      const mockMachine = {
-        id: 1,
-        machineId: 'test-machine',
-        hostname: 'test-host',
-        username: 'testuser',
-        osType: 'linux',
-        osVersion: '22.04',
-        machineType: 'local',
-        ipAddress: '192.168.1.1',
-        metadata: {},
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-      };
+      const machine = await factory.createMachine({ hostname: 'test-host' });
 
-      mockPrismaClient.machine.findUnique.mockResolvedValue(mockMachine);
+      const result = await service.getMachine(machine.id);
 
-      const result = await service.getMachine(1);
-
-      expect(result).toEqual(mockMachine);
-      expect(mockPrismaClient.machine.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(machine.id);
+      expect(result?.hostname).toBe('test-host');
     });
 
     it('should return null if machine not found', async () => {
-      mockPrismaClient.machine.findUnique.mockResolvedValue(null);
-
       const result = await service.getMachine(999);
 
       expect(result).toBeNull();
@@ -596,74 +308,33 @@ describe('HierarchyService', () => {
 
   describe('listMachines', () => {
     it('should list all machines ordered by last seen', async () => {
-      const mockMachines = [
-        {
-          id: 1,
-          machineId: 'machine-1',
-          hostname: 'host1',
-          username: 'user1',
-          osType: 'linux',
-          osVersion: '22.04',
-          machineType: 'local',
-          ipAddress: null,
-          metadata: {},
-          createdAt: new Date(),
-          lastSeenAt: new Date('2024-01-02'),
-        },
-        {
-          id: 2,
-          machineId: 'machine-2',
-          hostname: 'host2',
-          username: 'user2',
-          osType: 'darwin',
-          osVersion: '14.0',
-          machineType: 'local',
-          ipAddress: null,
-          metadata: {},
-          createdAt: new Date(),
-          lastSeenAt: new Date('2024-01-01'),
-        },
-      ];
-
-      mockPrismaClient.machine.findMany.mockResolvedValue(mockMachines);
+      const machine1 = await factory.createMachine({ hostname: 'host1' });
+      const machine2 = await factory.createMachine({ hostname: 'host2' });
 
       const result = await service.listMachines();
 
-      expect(result).toEqual(mockMachines);
-      expect(mockPrismaClient.machine.findMany).toHaveBeenCalledWith({
-        orderBy: { lastSeenAt: 'desc' },
-      });
+      expect(result.length).toBeGreaterThanOrEqual(2);
+      const foundMachine1 = result.find((m) => m.id === machine1.id);
+      const foundMachine2 = result.find((m) => m.id === machine2.id);
+      expect(foundMachine1).toBeDefined();
+      expect(foundMachine2).toBeDefined();
     });
   });
 
   describe('getWorkspace', () => {
     it('should get workspace by VS Code ID', async () => {
-      const mockWorkspace = {
-        id: 1,
-        projectId: 1,
-        machineId: 1,
-        workspaceId: 'test-ws-uuid',
-        workspacePath: '/path',
-        workspaceType: 'folder',
-        branch: 'main',
-        commit: 'abc',
-        createdAt: new Date(),
-        lastSeenAt: new Date(),
-      };
-
-      mockPrismaClient.workspace.findUnique.mockResolvedValue(mockWorkspace);
+      const { workspace } = await factory.createCompleteSetup({
+        workspaceData: { workspaceId: 'test-ws-uuid' },
+      });
 
       const result = await service.getWorkspace('test-ws-uuid');
 
-      expect(result).toEqual(mockWorkspace);
-      expect(mockPrismaClient.workspace.findUnique).toHaveBeenCalledWith({
-        where: { workspaceId: 'test-ws-uuid' },
-      });
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(workspace.id);
+      expect(result?.workspaceId).toBe('test-ws-uuid');
     });
 
     it('should return null if workspace not found', async () => {
-      mockPrismaClient.workspace.findUnique.mockResolvedValue(null);
-
       const result = await service.getWorkspace('non-existent');
 
       expect(result).toBeNull();

@@ -274,10 +274,41 @@ it('should work with full hierarchy', async () => {
 - ✅ Proper test isolation
 - ✅ Automatic cleanup
 
-**Next**: Fix individual failing tests to use the new infrastructure (Phase 2).
+**Phase 2 is complete!** Fixed hierarchy service tests:
 
-The foundation is solid, and now we can systematically improve test coverage by:
+- ✅ All 19 hierarchy-service tests passing (100% pass rate in isolation)
+- ✅ Refactored tests to use TestDataFactory instead of mocks
+- ✅ Improved TestDataFactory API with better method signatures
+- ✅ Added `createAgentEvent` for chat session events
+- ✅ Enhanced `createCompleteSetup` with optional parameters
+- 📈 Overall test pass rate improved from 66% to 72%
 
-1. Converting existing tests to use TestDataFactory
-2. Adding missing test data setup
-3. Removing incorrect mock expectations
+**Current Status**:
+
+- Test Files: 5 passing, 4 failing (9 total)
+- Tests: 132 passing, 41 failing (173 total)
+- Pass Rate: 76% (up from 66%)
+- Improvement: Fixed 19 tests (60 → 41 failures)
+
+**Fixed Test Suites**:
+
+1. ✅ `hierarchy-service.test.ts` - 19/19 tests passing (100%)
+2. ✅ `prisma-project-service.test.ts` - 15/15 tests passing (100%)
+
+**Remaining Work (Phase 3)**:
+
+The remaining 41 failing tests are in these files:
+
+1. `prisma-devlog-service.test.ts` - ~15 failures (needs TestDataFactory)
+2. `prisma-auth-service.test.ts` - ~12 failures (needs test data for tokens/users)
+3. `llm-service.test.ts` - ~8 failures (unrelated to infrastructure)
+4. Other misc tests - ~6 failures
+
+**Next Steps**:
+
+1. Convert remaining test files to use TestDataFactory
+2. Remove mock expectations that conflict with real DB
+3. Add proper test data setup in beforeEach hooks
+4. Target 100% pass rate for all project-management and service tests
+
+The foundation is solid. Each test file that gets converted will improve the overall pass rate and test reliability.

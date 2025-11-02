@@ -240,7 +240,9 @@ export class TestDataFactory {
   /**
    * Create a test workspace
    */
-  async createWorkspace(projectId: number, machineId: number, data?: {
+  async createWorkspace(data: {
+    projectId: number;
+    machineId: number;
     workspaceId?: string;
     workspacePath?: string;
     workspaceType?: string;
@@ -250,14 +252,13 @@ export class TestDataFactory {
     const timestamp = Date.now();
     return this.prisma.workspace.create({
       data: {
-        projectId,
-        machineId,
-        workspaceId: data?.workspaceId || `test-workspace-${timestamp}`,
-        workspacePath: data?.workspacePath || `/test/workspace-${timestamp}`,
-        workspaceType: data?.workspaceType || 'folder',
-        branch: data?.branch || 'main',
-        commit: data?.commit || 'abc123',
-        ...data,
+        projectId: data.projectId,
+        machineId: data.machineId,
+        workspaceId: data.workspaceId || `test-workspace-${timestamp}`,
+        workspacePath: data.workspacePath || `/test/workspace-${timestamp}`,
+        workspaceType: data.workspaceType || 'folder',
+        branch: data.branch || 'main',
+        commit: data.commit || 'abc123',
       },
     });
   }
@@ -265,7 +266,8 @@ export class TestDataFactory {
   /**
    * Create a test devlog entry
    */
-  async createDevlogEntry(projectId: number, data?: {
+  async createDevlogEntry(data: {
+    projectId: number;
     key?: string;
     title?: string;
     type?: string;
@@ -277,15 +279,14 @@ export class TestDataFactory {
     const id = nextId();
     return this.prisma.devlogEntry.create({
       data: {
-        projectId,
-        key: data?.key || `DEVLOG-${id}`,
-        title: data?.title || `Test Devlog Entry ${id}`,
-        type: data?.type || 'task',
-        description: data?.description || 'Test devlog entry',
-        status: data?.status || 'new',
-        priority: data?.priority || 'medium',
-        assignee: data?.assignee,
-        ...data,
+        projectId: data.projectId,
+        key: data.key || `DEVLOG-${id}`,
+        title: data.title || `Test Devlog Entry ${id}`,
+        type: data.type || 'task',
+        description: data.description || 'Test devlog entry',
+        status: data.status || 'new',
+        priority: data.priority || 'medium',
+        assignee: data.assignee,
       },
     });
   }
@@ -293,7 +294,8 @@ export class TestDataFactory {
   /**
    * Create a test chat session
    */
-  async createChatSession(workspaceId: number, data?: {
+  async createChatSession(data: {
+    workspaceId: number;
     sessionId?: string;
     agentType?: string;
     modelId?: string;
@@ -302,22 +304,21 @@ export class TestDataFactory {
   }) {
     return this.prisma.chatSession.create({
       data: {
-        workspaceId,
-        sessionId: data?.sessionId || crypto.randomUUID(),
-        agentType: data?.agentType || 'copilot',
-        modelId: data?.modelId || 'gpt-4',
-        startedAt: data?.startedAt || new Date(),
-        endedAt: data?.endedAt,
-        ...data,
+        workspaceId: data.workspaceId,
+        sessionId: data.sessionId || crypto.randomUUID(),
+        agentType: data.agentType || 'copilot',
+        modelId: data.modelId || 'gpt-4',
+        startedAt: data.startedAt || new Date(),
+        endedAt: data.endedAt,
       },
     });
   }
 
   /**
-   * Create a test agent session
+   * Create a test agent session (for project-level agent activity)
    */
-  async createAgentSession(projectId: number, data?: {
-    id?: string;
+  async createAgentSession(data: {
+    projectId: number;
     agentId?: string;
     agentVersion?: string;
     startTime?: Date;
@@ -326,14 +327,45 @@ export class TestDataFactory {
   }) {
     return this.prisma.agentSession.create({
       data: {
-        projectId,
-        id: data?.id || crypto.randomUUID(),
-        agentId: data?.agentId || 'github-copilot',
-        agentVersion: data?.agentVersion || '1.0.0',
-        startTime: data?.startTime || new Date(),
-        endTime: data?.endTime,
-        outcome: data?.outcome,
-        ...data,
+        projectId: data.projectId,
+        id: crypto.randomUUID(),
+        agentId: data.agentId || 'github-copilot',
+        agentVersion: data.agentVersion || '1.0.0',
+        startTime: data.startTime || new Date(),
+        endTime: data.endTime,
+        outcome: data.outcome,
+      },
+    });
+  }
+
+  /**
+   * Create a test agent event (for chat session events)
+   */
+  async createAgentEvent(data: {
+    chatSessionId: string;
+    workspaceId: number;
+    eventType?: string;
+    agentId?: string;
+    agentVersion?: string;
+  }) {
+    // Get the workspace to find projectId
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id: data.workspaceId },
+    });
+    
+    if (!workspace) {
+      throw new Error(`Workspace ${data.workspaceId} not found`);
+    }
+
+    return this.prisma.agentEvent.create({
+      data: {
+        sessionId: data.chatSessionId,
+        projectId: workspace.projectId,
+        timestamp: new Date(),
+        eventType: data.eventType || 'test_event',
+        agentId: data.agentId || 'github-copilot',
+        agentVersion: data.agentVersion || '1.0.0',
+        tags: [],
       },
     });
   }
@@ -341,10 +373,24 @@ export class TestDataFactory {
   /**
    * Create a complete test setup with project, machine, and workspace
    */
-  async createCompleteSetup() {
-    const project = await this.createProject();
-    const machine = await this.createMachine();
-    const workspace = await this.createWorkspace(project.id, machine.id);
+  async createCompleteSetup(options?: {
+    projectData?: Partial<Omit<PrismaProject, 'id' | 'createdAt' | 'updatedAt'>>;
+    machineData?: Partial<Omit<PrismaMachine, 'id' | 'createdAt' | 'lastSeenAt'>>;
+    workspaceData?: {
+      workspaceId?: string;
+      workspacePath?: string;
+      workspaceType?: string;
+      branch?: string;
+      commit?: string;
+    };
+  }) {
+    const project = await this.createProject(options?.projectData);
+    const machine = await this.createMachine(options?.machineData);
+    const workspace = await this.createWorkspace({
+      projectId: project.id,
+      machineId: machine.id,
+      ...options?.workspaceData,
+    });
 
     return { project, machine, workspace };
   }
