@@ -1,6 +1,6 @@
 /**
  * Batch Event Creation API Endpoint
- * 
+ *
  * POST /api/events/batch - Batch create agent events
  */
 
@@ -14,17 +14,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/events/batch - Batch create events
- * 
+ *
  * Creates multiple agent events in a single transaction.
  * Maximum 1000 events per request for performance.
  */
 export async function POST(request: NextRequest) {
   try {
     // Validate request body
-    const validation = await ApiValidator.validateJsonBody(
-      request,
-      BatchEventsCreateSchema
-    );
+    const validation = await ApiValidator.validateJsonBody(request, BatchEventsCreateSchema);
 
     if (!validation.success) {
       return validation.response;
@@ -33,10 +30,7 @@ export async function POST(request: NextRequest) {
     const events = validation.data;
 
     if (events.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one event is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'At least one event is required' }, { status: 400 });
     }
 
     // Get Prisma client
@@ -51,9 +45,9 @@ export async function POST(request: NextRequest) {
         agentVersion: event.agentVersion,
         sessionId: event.sessionId,
         projectId: event.projectId,
-        context: event.context,
-        data: event.data,
-        metrics: event.metrics,
+        context: event.context as any, // Cast to satisfy Prisma JsonValue type
+        data: event.data as any,
+        metrics: event.metrics as any,
         parentEventId: event.parentEventId,
         relatedEventIds: event.relatedEventIds,
         tags: event.tags,
@@ -67,7 +61,7 @@ export async function POST(request: NextRequest) {
         created: result.count,
         requested: events.length,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('[POST /api/events/batch] Error:', error);
@@ -80,7 +74,7 @@ export async function POST(request: NextRequest) {
             error: 'Invalid reference: session or project not found',
             details: error.message,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -89,7 +83,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : 'Failed to create events',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

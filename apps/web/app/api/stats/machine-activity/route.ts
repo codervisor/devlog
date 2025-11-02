@@ -1,6 +1,6 @@
 /**
  * Machine Activity Stats API
- * 
+ *
  * GET /api/stats/machine-activity
  * Returns aggregated activity statistics by machine
  */
@@ -17,24 +17,28 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = Object.fromEntries(req.nextUrl.searchParams);
     const query = QuerySchema.parse(searchParams);
-    
+
     const prisma = new PrismaClient();
-    
+
     try {
       // Aggregate activity by machine
       const machines = await prisma.machine.findMany({
-        where: query.projectId ? {
-          workspaces: {
-            some: {
-              projectId: query.projectId,
-            },
-          },
-        } : undefined,
+        where: query.projectId
+          ? {
+              workspaces: {
+                some: {
+                  projectId: query.projectId,
+                },
+              },
+            }
+          : undefined,
         include: {
           workspaces: {
-            where: query.projectId ? {
-              projectId: query.projectId,
-            } : undefined,
+            where: query.projectId
+              ? {
+                  projectId: query.projectId,
+                }
+              : undefined,
             include: {
               chatSessions: {
                 select: {
@@ -45,27 +49,27 @@ export async function GET(req: NextRequest) {
           },
         },
       });
-      
+
       // Get event counts for each machine
       const machineActivity = await Promise.all(
         machines.map(async (machine) => {
-          const workspaceIds = machine.workspaces.map(w => w.id);
-          
+          const workspaceIds = machine.workspaces.map((w) => w.id);
+
           const eventCount = await prisma.agentEvent.count({
             where: {
-              chatSession: {
+              session: {
                 workspaceId: {
                   in: workspaceIds,
                 },
               },
             },
           });
-          
+
           const sessionCount = machine.workspaces.reduce(
             (sum, w) => sum + w.chatSessions.length,
-            0
+            0,
           );
-          
+
           return {
             hostname: machine.hostname,
             machineType: machine.machineType,
@@ -73,9 +77,9 @@ export async function GET(req: NextRequest) {
             eventCount,
             workspaceCount: machine.workspaces.length,
           };
-        })
+        }),
       );
-      
+
       return NextResponse.json({
         success: true,
         data: machineActivity,
@@ -88,7 +92,7 @@ export async function GET(req: NextRequest) {
     }
   } catch (error) {
     console.error('[API] Machine activity error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -102,10 +106,10 @@ export async function GET(req: NextRequest) {
             timestamp: new Date().toISOString(),
           },
         },
-        { status: 422 }
+        { status: 422 },
       );
     }
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -117,7 +121,7 @@ export async function GET(req: NextRequest) {
           timestamp: new Date().toISOString(),
         },
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Project Hierarchy Page
- * 
+ *
  * Displays the complete project hierarchy with machines, workspaces, and sessions
  */
 
@@ -10,26 +10,23 @@ import { ChevronLeft } from 'lucide-react';
 import { HierarchyTree } from '@/components/agent-observability/hierarchy';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ProjectService } from '@codervisor/devlog-core';
-import { HierarchyService } from '@codervisor/devlog-core';
+import { PrismaProjectService, HierarchyService } from '@codervisor/devlog-core/server';
 
 interface ProjectHierarchyPageProps {
   params: { name: string };
 }
 
-export default async function ProjectHierarchyPage({
-  params,
-}: ProjectHierarchyPageProps) {
+export default async function ProjectHierarchyPage({ params }: ProjectHierarchyPageProps) {
   // Initialize services
-  const projectService = ProjectService.getInstance();
+  const projectService = PrismaProjectService.getInstance();
   const hierarchyService = HierarchyService.getInstance();
-  
+
   await projectService.initialize();
   await hierarchyService.initialize();
 
-  // Fetch project by full name
-  const project = await projectService.getProjectByFullName(params.name);
-  
+  // Fetch project by name
+  const project = await projectService.getByName(params.name);
+
   if (!project) {
     notFound();
   }
@@ -55,13 +52,13 @@ export default async function ProjectHierarchyPage({
         {hierarchy.project.description && (
           <p className="text-muted-foreground mt-2">{hierarchy.project.description}</p>
         )}
-        
+
         {/* Project metadata */}
         <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
           {hierarchy.project.repoUrl && (
-            <a 
-              href={hierarchy.project.repoUrl} 
-              target="_blank" 
+            <a
+              href={hierarchy.project.repoUrl}
+              target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors"
             >
@@ -80,9 +77,7 @@ export default async function ProjectHierarchyPage({
       {/* Hierarchy Tree */}
       {hierarchy.machines.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">
-            No machines or workspaces detected yet.
-          </p>
+          <p className="text-muted-foreground">No machines or workspaces detected yet.</p>
           <p className="text-sm text-muted-foreground mt-2">
             Install the devlog collector to start tracking activity for this project.
           </p>
