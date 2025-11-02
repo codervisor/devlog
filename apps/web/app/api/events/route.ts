@@ -105,13 +105,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate and parse projectId
+    const projectId =
+      typeof body.projectId === 'number' ? body.projectId : parseInt(body.projectId, 10);
+    if (isNaN(projectId) || projectId <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid projectId: must be a positive integer',
+        },
+        { status: 400 },
+      );
+    }
+
     // Create event input
     const eventInput: CreateAgentEventInput = {
       type: body.type,
       agentId: body.agentId,
       agentVersion: body.agentVersion,
       sessionId: body.sessionId,
-      projectId: parseInt(body.projectId),
+      projectId: projectId,
       context: body.context,
       data: body.data,
       metrics: body.metrics,

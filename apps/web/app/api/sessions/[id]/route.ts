@@ -76,8 +76,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       );
     }
 
-    // Handle special case: ending a session with just outcome
-    if (body.outcome && Object.keys(body).length === 1) {
+    // Special case: If only 'outcome' is provided, use endSession which also sets endTime and duration
+    // This is a convenience for the common case of just ending a session
+    const bodyKeys = Object.keys(body);
+    const isJustOutcome = bodyKeys.length === 1 && bodyKeys[0] === 'outcome';
+
+    if (isJustOutcome) {
       const updatedSession = await sessionService.endSession(id, body.outcome as SessionOutcome);
       return NextResponse.json({
         success: true,
@@ -85,7 +89,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       });
     }
 
-    // Handle general update
+    // General update: Apply all provided fields
     const updateInput: UpdateAgentSessionInput = {};
 
     if (body.endTime) updateInput.endTime = new Date(body.endTime);
