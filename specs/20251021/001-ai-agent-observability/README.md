@@ -8,8 +8,8 @@ priority: high
 # AI Agent Observability - Project Overview
 
 **Started**: January 15, 2025  
-**Current Phase**: Phase 0-3 Complete | Phase 4 (Backfill) Ready  
-**Overall Progress**: ~65% complete (as of Nov 2, 2025)  
+**Current Status**: Core infrastructure complete, integration needed  
+**Overall Progress**: ~40-45% complete (as of Nov 2, 2025)  
 **Status**: 🚧 Active Development
 
 ## Vision
@@ -29,74 +29,81 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Current Progress by Phase
 
-### Phase 0: Go Collector (Days 1-20) 🎯 **IN PROGRESS**
+### Phase 0: Go Collector Infrastructure ✅ **65% COMPLETE**
 
 **Target**: Production-ready collector binary  
-**Progress**: 20% (Days 1-4 Complete)  
-**Timeline**: 20 days (~4 weeks)
+**Progress**: 65% (Core infrastructure done)  
+**Priority**: High - Fix test failures and backend integration
 
 **Purpose**: Lightweight binary that runs on developer machines to capture AI agent logs in real-time.
 
-**Key Features**:
+**✅ Completed (Core Infrastructure)**:
 
-- Multi-platform support (macOS, Linux, Windows)
-- Offline-first with SQLite buffer
-- Agent-specific adapters (Copilot, Claude, Cursor)
-- Auto-discovery of agent log locations
-- Batching and compression for efficiency
-- NPM distribution for easy installation
-
-**Status**: Days 1-4 completed, Day 5 in progress
-
-**Completed**:
-
-- ✅ Project structure and Go module setup
+- ✅ Project structure and Go module setup (39 Go files)
 - ✅ CLI with Cobra (start/status/version commands)
 - ✅ Cross-platform build system (Makefile, build scripts)
-- ✅ Configuration system with validation and env var support
-- ✅ Log discovery for 5 agents (Copilot, Claude, Cursor, Cline, Aider)
-- ✅ Test coverage: config (100%), watcher (85.5%)
-- ✅ Binary builds successfully (~3MB)
+- ✅ Configuration system (81.2% test coverage)
+- ✅ File watcher with fsnotify (75.3% coverage)
+- ✅ SQLite buffer for offline support
+- ✅ Copilot adapter complete (78.6% coverage)
+- ✅ HTTP client with retry logic
+- ✅ Hierarchy resolution (43.2% coverage)
+- ✅ Binary builds successfully (~15MB)
+
+**� In Progress (Priority)**:
+
+- 🔨 Fix failing tests (buffer, client, integration)
+- 🔨 End-to-end integration testing
+- 🔨 Backend communication validation
+- 🔨 Historical backfill system (0% coverage) - Import existing logs
+
+**⏳ Deferred (Low Priority)**:
+
+- ⏸️ Additional adapters (Claude, Cursor) - Nice to have
+- ⏸️ NPM distribution - Not needed now
 
 📄 **Detailed Plan**: [GO_COLLECTOR_ROADMAP.md](./GO_COLLECTOR_ROADMAP.md)
 
 ---
 
-### Phase 1: Foundation (Weeks 1-4) ⏳ **PARTIALLY COMPLETE**
+### Phase 1: Foundation (Weeks 1-4) ✅ **85% COMPLETE**
 
-**Progress**: ~70% complete  
-**Status**: On hold while Go collector is prioritized
+**Progress**: 85% complete  
+**Status**: Core complete, API endpoints needed
 
-#### ✅ Week 1: Core Data Models & Schema (100%)
+#### ✅ Week 1-2: Core Services (100%)
 
 - [x] Database schema with TimescaleDB hypertables
 - [x] TypeScript type definitions
 - [x] Prisma schema and migrations
-- [x] Basic CRUD operations
-
-#### ✅ Week 2: Event Collection System (100%)
-
-- [x] AgentEventService implementation
-- [x] AgentSessionService implementation
+- [x] AgentEventService implementation (~600 LOC)
+- [x] AgentSessionService implementation (~600 LOC)
 - [x] Event context enrichment (git, files, project)
-- [x] Unit tests
+- [x] Unit tests (~2,142 LOC total)
 
-#### ⚠️ Week 3: Storage & Performance (0%)
+#### ✅ Week 3-4: Web UI (100%)
 
-- [ ] TimescaleDB optimization
-- [ ] Performance benchmarking
-- [ ] Monitoring and logging
+- [x] 16 React components built
+- [x] Sessions page (`/sessions`)
+- [x] Session details page (`/sessions/[id]`)
+- [x] Dashboard with active sessions
+- [x] Hierarchy navigation UI
+- [x] Real-time activity widgets
 
-#### ⏳ Week 4: MCP Integration & Basic UI (~60%)
+#### 🚧 Critical Gap: API Layer (0%)
 
-- [x] MCP tools (start/end session, log events, query)
-- [x] Basic session list UI
-- [x] Active sessions panel
-- [ ] Agent adapters (TypeScript - deprioritized)
-- [ ] Filtering and pagination
-- [ ] Documentation
+**Priority: HIGH** - Needed for frontend-backend integration
 
-**Decision**: Pausing TypeScript adapters in favor of Go adapters for better performance.
+- [ ] Create `/api/sessions` endpoints
+- [ ] Create `/api/events` endpoints
+- [ ] Implement real-time streaming
+- [ ] Connect frontend to real APIs (currently using mock data)
+
+#### ⏸️ Deferred: Performance & MCP
+
+- [ ] TimescaleDB continuous aggregates (Week 3 - deferred)
+- [ ] MCP integration with services (low priority)
+- [ ] Advanced filtering and pagination (nice to have)
 
 ---
 
@@ -150,13 +157,15 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ## Overall Project Metrics
 
-| Metric                     | Target          | Current      | Status       |
-| -------------------------- | --------------- | ------------ | ------------ |
-| **Event Collection Rate**  | >10K events/sec | Not measured | ⏸️ Pending   |
-| **Query Performance**      | <100ms P95      | Not measured | ⏸️ Pending   |
-| **Storage Efficiency**     | <1KB per event  | Not measured | ⏸️ Pending   |
-| **Collector Binary Size**  | <20MB           | ~3MB         | ✅ Excellent |
-| **Collector Memory Usage** | <50MB           | Not measured | ⏸️ Pending   |
+| Metric                    | Target   | Current       | Status      |
+| ------------------------- | -------- | ------------- | ----------- |
+| **Backend Services**      | Complete | ✅ 2,142 LOC  | ✅ Complete |
+| **Frontend Components**   | Complete | ✅ 16 files   | ✅ Complete |
+| **Go Collector**          | Working  | ✅ 39 files   | 🔨 85% done |
+| **API Endpoints**         | Complete | ❌ 0 routes   | ⏳ Needed   |
+| **Integration Tests**     | Passing  | ⚠️ Some fail  | 🔨 In work  |
+| **Collector Binary Size** | <20MB    | ✅ ~15MB      | ✅ Good     |
+| **End-to-End Flow**       | Working  | ❌ Not tested | ⏳ Critical |
 
 ---
 
@@ -204,86 +213,150 @@ Transform devlog into a comprehensive AI coding agent observability platform tha
 
 ```mermaid
 graph TB
-    subgraph Phase0["🎯 Phase 0: Go Collector Development (Days 1-20)"]
-        direction LR
-        D1["Days 1-2<br/>Project setup<br/>and tooling"]
-        D3["Days 3-7<br/>Core infrastructure<br/>(config, watcher, buffer)"]
-        D8["Days 8-12<br/>Adapter system<br/>(Copilot, Claude, Generic)"]
-        D13["Days 13-16<br/>Backend communication<br/>and retry logic"]
-        D17["Days 17-20<br/>Cross-platform<br/>distribution via NPM"]
-
-        D1 --> D3 --> D8 --> D13 --> D17
+    subgraph Current["✅ Completed Infrastructure"]
+        Backend["Backend Services<br/>AgentEventService<br/>AgentSessionService<br/>~2,142 LOC"]
+        Frontend["Frontend UI<br/>16 Components<br/>Sessions + Dashboard"]
+        Collector["Go Collector<br/>39 files<br/>Copilot adapter working"]
     end
 
-    D17 --> Output["✅ Production-ready<br/>collector binary"]
+    subgraph Critical["🔥 Critical Next Steps (Week 1)"]
+        API["API Endpoints<br/>/api/sessions<br/>/api/events"]
+        Tests["Fix Tests<br/>Integration<br/>End-to-end"]
+        Integration["Connect Layers<br/>Frontend → Backend<br/>Collector → Backend"]
+    end
 
-    Output --> Phase1["Complete Phase 1<br/>(finish Week 3-4 tasks)"]
-    Phase1 --> Phase2["Phase 2:<br/>Visualization"]
-    Phase2 --> Phase3["Phase 3:<br/>Intelligence"]
-    Phase3 --> Phase4["Phase 4:<br/>Enterprise"]
+    subgraph Critical2["🔥 Also Critical (Week 1)"]
+        Backfill["Historical Backfill<br/>Import existing logs<br/>Bulk API endpoint"]
+    end
+
+    subgraph Future["⏸️ Deferred"]
+        Adapters["More Adapters<br/>(Claude, Cursor)"]
+        NPM["NPM Package"]
+        MCP["MCP Integration"]
+    end
+
+    Backend --> API
+    Frontend --> API
+    Collector --> API
+    Collector --> Backfill
+
+    API --> Integration
+    Tests --> Integration
+    Backfill --> Integration
+
+    Integration --> Working["✅ Working System"]
+
+    Working -.-> Adapters
+    Working -.-> NPM
+    Working -.-> MCP
 ```
 
 ---
 
-## Next Actions
+## Next Actions (Priority Order)
 
-### Completed (Days 1-4)
+### 🔥 Critical (Week 1)
 
-1. ✅ Created `packages/collector-go/` directory structure
-2. ✅ Initialized Go module with dependencies
-3. ✅ Set up CLI with Cobra framework
-4. ✅ Configured cross-compilation (Makefile + scripts)
-5. ✅ Implemented configuration system
-6. ✅ Built log discovery mechanism
+**Backend API Integration**:
 
-### Next (Days 5-7)
+1. Create `/api/sessions` REST endpoints (GET, POST, PATCH)
+2. Create `/api/events` REST endpoints (GET, POST, bulk)
+3. Implement real-time event streaming endpoint
+4. Connect frontend components to real APIs
+5. Remove mock data from frontend
 
-1. Implement file watcher with fsnotify
-2. Implement SQLite buffer
-3. Test offline mode behavior
+**Go Collector Stabilization**:
 
-### This Month (Days 1-20)
+1. Fix failing tests (buffer, client, integration)
+2. Validate end-to-end flow: Collector → Backend → Database
+3. Test real-time event collection with Copilot
 
-1. Complete Go collector with all adapters
-2. Test cross-platform distribution
-3. Publish NPM package
-4. Begin real data collection
+**Historical Backfill**:
+
+1. Implement backfill system to import existing agent logs
+2. Parse historical log files and extract events
+3. Bulk import API endpoint for backfill data
+4. Backfill progress tracking and status
+
+### 📋 Important (Week 2)
+
+**Performance & Optimization**:
+
+1. TimescaleDB continuous aggregates setup
+2. Query performance benchmarking
+3. Frontend pagination implementation
+4. Caching strategy for dashboard
+
+### ⏸️ Deferred (Future)
+
+- Additional adapters (Claude, Cursor)
+- NPM distribution package
+- MCP service integration
+- Phase 2-4 features (visualization, intelligence, enterprise)ure)
+
+- Additional adapters (Claude, Cursor)
+- NPM distribution package
+- MCP service integration
+- Historical backfill system
+- Phase 2-4 features
 
 ---
 
 ## Risks & Mitigation
 
-| Risk                             | Impact | Mitigation                              |
-| -------------------------------- | ------ | --------------------------------------- |
-| **Agent log format changes**     | High   | Version detection, fallback parsing     |
-| **Cross-platform compatibility** | Medium | Extensive testing, clear error messages |
-| **Performance overhead**         | High   | Benchmarking, resource limits           |
-| **User adoption**                | Medium | Easy install via npm, clear value prop  |
-| **Privacy concerns**             | High   | Transparent docs, opt-in, local-first   |
+| Risk                             | Impact | Status     | Mitigation                             |
+| -------------------------------- | ------ | ---------- | -------------------------------------- |
+| **Missing API endpoints**        | HIGH   | ⚠️ Active  | Create REST endpoints (2-3 days)       |
+| **Frontend using mock data**     | HIGH   | ⚠️ Active  | Connect to real APIs after endpoints   |
+| **Test failures in collector**   | MEDIUM | 🔨 In work | Debug buffer/client/integration tests  |
+| **No end-to-end validation**     | HIGH   | ⚠️ Active  | Integration testing after API complete |
+| **Agent log format changes**     | LOW    | Deferred   | Version detection (future)             |
+| **Cross-platform compatibility** | LOW    | ✅ Handled | Binary builds successfully             |
+| **Performance overhead**         | LOW    | Deferred   | Benchmark after integration (future)   |
 
 ---
 
 ## Success Criteria
 
-### Phase 0 (Go Collector)
+### Phase 0 (Go Collector Infrastructure)
 
 - [x] Binary builds on all platforms (mac/linux/windows)
-- [x] Binary size < 20MB (~3MB achieved)
-- [ ] Memory usage < 50MB during operation
-- [ ] Processes > 1K events/sec
-- [ ] Works offline, syncs when online
-- [ ] NPM package installs successfully
-- [ ] At least 2 agent adapters working (Copilot, Claude)
+- [x] Binary size < 20MB (~15MB achieved)
+- [x] Configuration system working
+- [x] File watcher operational
+- [x] SQLite buffer implemented
+- [x] Copilot adapter working
+- [ ] All tests passing (buffer/client/integration need fixes)
+- [ ] End-to-end flow validated
 
-### Overall Project
+### Phase 1 (Backend Integration) - CURRENT PRIORITY
 
-- [ ] Event collection rate > 10K events/sec
-- [ ] Query performance < 100ms P95
-- [ ] Storage efficiency < 1KB per event
-- [ ] Real-time dashboard with < 1s load time
-- [ ] Pattern detection identifies common success/failure modes
-- [ ] Quality analysis integrated with SonarQube
-- [ ] Enterprise features (SSO, audit logs, integrations)
+- [x] Backend services complete (AgentEventService, AgentSessionService)
+- [x] Frontend components complete (16 components)
+- [x] Database schema with TimescaleDB
+- [ ] **API endpoints created** ⚠️ CRITICAL
+
+### Phase 1 Remaining (High Priority)
+
+- [ ] **Historical backfill system** ⚠️ HIGH PRIORITY
+  - [ ] Backfill command/API to import existing logs
+  - [ ] Bulk event import endpoint
+  - [ ] Progress tracking for backfill operations
+  - [ ] Handle duplicate detection
+
+### Deferred (Future Phases)
+
+- [ ] Additional adapters (Claude, Cursor) - nice to have
+- [ ] NPM distribution - not priority
+- [ ] MCP integration - not priority
+- [ ] Performance optimization (<100ms P95, >10K events/sec)
+- [ ] Pattern detection and analytics (Phase 3)
+      **Last Updated**: November 2, 2025  
+      **Current Focus**: API endpoints + integration layer + historical backfill  
+      **Estimated Time to Working System**: 2-3 days (API) + 1-2 days (backfill) + 1-2 days (testing)  
+      **Next Review**: After API endpoints complete10K events/sec)
+- [ ] Pattern detection and analytics (Phase 3)
+- [ ] Enterprise features (Phase 4)
 
 ---
 
@@ -295,7 +368,7 @@ graph TB
 
 ---
 
-**Last Updated**: October 21, 2025  
-**Latest Progress**: Days 1-4 completed (20% of Phase 0)  
-**Next Milestone**: Complete Days 5-7 (file watching + buffer)  
-**Next Review**: After Phase 0 completion
+**Last Updated**: November 2, 2025  
+**Current Focus**: API endpoints + integration layer  
+**Estimated Time to Working System**: 2-3 days (API) + 1-2 days (testing)  
+**Next Review**: After API endpoints complete
