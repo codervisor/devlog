@@ -471,7 +471,8 @@ export class AgentSessionService extends PrismaServiceBase {
       return [];
     }
 
-    // Build WHERE clause
+    // Build WHERE clause with dynamic parameter indexing
+    // Parameter order: projectId (always $1), agentId?, startTime?, endTime?, interval (last)
     const whereConditions: string[] = ['project_id = $1'];
     const whereParams: any[] = [projectId];
     let paramIndex = 2;
@@ -494,6 +495,7 @@ export class AgentSessionService extends PrismaServiceBase {
     const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
     // Execute time_bucket query
+    // Final parameter is the interval for time_bucket function
     const query = `
       SELECT 
         time_bucket($${paramIndex}, start_time) AS bucket,

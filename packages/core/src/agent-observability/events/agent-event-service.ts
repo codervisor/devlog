@@ -371,7 +371,8 @@ export class AgentEventService extends PrismaServiceBase {
 
     const { interval, projectId, agentId, eventType, startTime, endTime } = params;
 
-    // Build WHERE clause
+    // Build WHERE clause with dynamic parameter indexing
+    // Parameter order: projectId?, agentId?, eventType?, startTime?, endTime?, interval (last)
     const whereConditions: string[] = [];
     const whereParams: any[] = [];
     let paramIndex = 1;
@@ -403,13 +404,18 @@ export class AgentEventService extends PrismaServiceBase {
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
+    // Build SELECT fields and GROUP BY based on whether eventType is included
+    const eventTypeField = eventType ? 'event_type,' : '';
+    const eventTypeGroupBy = eventType ? ', event_type' : '';
+
     // Execute time_bucket query
+    // Parameter order is maintained by whereParams array, final param is interval
     const query = `
       SELECT 
         time_bucket($${paramIndex}, timestamp) AS bucket,
         project_id,
         agent_id,
-        ${eventType ? `event_type,` : ''}
+        ${eventTypeField}
         COUNT(*) as event_count,
         AVG((metrics->>'duration')::numeric) as avg_duration,
         SUM((metrics->>'tokenCount')::numeric) as total_tokens,
@@ -417,7 +423,7 @@ export class AgentEventService extends PrismaServiceBase {
         AVG((metrics->>'responseTokens')::numeric) as avg_response_tokens
       FROM agent_events
       ${whereClause}
-      GROUP BY bucket, project_id, agent_id${eventType ? ', event_type' : ''}
+      GROUP BY bucket, project_id, agent_id${eventTypeGroupBy}
       ORDER BY bucket DESC
     `;
 
@@ -518,7 +524,12 @@ export class AgentEventService extends PrismaServiceBase {
       }));
     } catch (error) {
       // Continuous aggregate might not exist yet, fall back to regular query
-      console.warn('Could not query agent_events_hourly, falling back to regular query:', error);
+      // This happens when TimescaleDB is not enabled or aggregates haven't been created
+      if (error instanceof Error) {
+        console.warn(
+          `[AgentEventService] Could not query agent_events_hourly: ${error.message}. Falling back to time_bucket query.`,
+        );
+      }
       return this.getTimeBucketStats({
         interval: '1 hour',
         projectId,
@@ -612,7 +623,12 @@ export class AgentEventService extends PrismaServiceBase {
       }));
     } catch (error) {
       // Continuous aggregate might not exist yet, fall back to regular query
-      console.warn('Could not query agent_events_daily, falling back to regular query:', error);
+      // This happens when TimescaleDB is not enabled or aggregates haven't been created
+      if (error instanceof Error) {
+        console.warn(
+          `[AgentEventService] Could not query agent_events_daily: ${error.message}. Falling back to time_bucket query.`,
+        );
+      }
       return this.getTimeBucketStats({
         interval: '1 day',
         projectId,
