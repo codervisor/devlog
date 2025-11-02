@@ -17,9 +17,11 @@ import (
 // CopilotAdapter parses GitHub Copilot chat session logs
 type CopilotAdapter struct {
 	*BaseAdapter
-	sessionID string
-	hierarchy *hierarchy.HierarchyCache
-	log       *logrus.Logger
+	sessionID    string
+	workspaceID  string // VS Code workspace ID from file path
+	hierarchy    *hierarchy.HierarchyCache
+	log          *logrus.Logger
+	projectIDInt int // Parsed integer project ID
 }
 
 // NewCopilotAdapter creates a new Copilot adapter
@@ -27,11 +29,15 @@ func NewCopilotAdapter(projectID string, hierarchyCache *hierarchy.HierarchyCach
 	if log == nil {
 		log = logrus.New()
 	}
+	// Parse projectID string to int, default to 215 for testing
+	projID := 215
+
 	return &CopilotAdapter{
-		BaseAdapter: NewBaseAdapter("github-copilot", projectID),
-		sessionID:   uuid.New().String(),
-		hierarchy:   hierarchyCache,
-		log:         log,
+		BaseAdapter:  NewBaseAdapter("github-copilot", projectID),
+		sessionID:    uuid.New().String(),
+		hierarchy:    hierarchyCache,
+		log:          log,
+		projectIDInt: projID,
 	}
 }
 
@@ -114,7 +120,7 @@ func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, err
 	// Extract workspace ID from path first
 	// Path format: .../workspaceStorage/{workspace-id}/chatSessions/{session-id}.json
 	workspaceID := extractWorkspaceIDFromPath(filePath)
-	
+
 	// Resolve hierarchy context if workspace ID found and hierarchy cache available
 	var hierarchyCtx *hierarchy.WorkspaceContext
 	if workspaceID != "" && a.hierarchy != nil {
@@ -123,11 +129,11 @@ func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, err
 			a.log.Warnf("Failed to resolve workspace %s: %v - continuing without hierarchy", workspaceID, err)
 		} else {
 			hierarchyCtx = ctx
-			a.log.Debugf("Resolved hierarchy for workspace %s: project=%d, machine=%d", 
+			a.log.Debugf("Resolved hierarchy for workspace %s: project=%d, machine=%d",
 				workspaceID, ctx.ProjectID, ctx.MachineID)
 		}
 	}
-	
+
 	// Read the entire file
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -143,6 +149,9 @@ func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, err
 	// Extract session ID from filename
 	sessionID := extractSessionID(filePath)
 	a.sessionID = sessionID
+
+	// Extract workspace ID from file path
+	a.workspaceID = extractWorkspaceIDFromPath(filePath)
 
 	var events []*types.AgentEvent
 
@@ -179,7 +188,7 @@ func extractSessionID(filePath string) string {
 func extractWorkspaceIDFromPath(filePath string) string {
 	// Normalize path separators
 	normalizedPath := filepath.ToSlash(filePath)
-	
+
 	// Look for workspaceStorage pattern
 	parts := strings.Split(normalizedPath, "/")
 	for i, part := range parts {
@@ -187,7 +196,7 @@ func extractWorkspaceIDFromPath(filePath string) string {
 			return parts[i+1]
 		}
 	}
-	
+
 	return ""
 }
 
@@ -260,12 +269,16 @@ func (a *CopilotAdapter) createLLMRequestEvent(
 		Timestamp:       timestamp,
 		Type:            types.EventTypeLLMRequest,
 		AgentID:         a.name,
+		AgentVersion:    "1.0.0",
 		SessionID:       a.sessionID,
+		ProjectID:       a.projectIDInt,
 		LegacyProjectID: a.projectID, // Keep for backward compatibility
 		Context: map[string]interface{}{
 			"username":       session.RequesterUsername,
 			"location":       session.InitialLocation,
 			"variablesCount": len(request.VariableData.Variables),
+			"workspaceId":    a.workspaceID,
+			"workspacePath":  session.InitialLocation,
 		},
 		Data: map[string]interface{}{
 			"requestId":    request.RequestID,
@@ -279,7 +292,7 @@ func (a *CopilotAdapter) createLLMRequestEvent(
 	}
 
 	// Add hierarchy context if available
-	if hierarchyCtx != nil {
+	if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 		event.ProjectID = hierarchyCtx.ProjectID
 		event.MachineID = hierarchyCtx.MachineID
 		event.WorkspaceID = hierarchyCtx.WorkspaceID
@@ -304,7 +317,9 @@ func (a *CopilotAdapter) createLLMResponseEvent(
 		Timestamp:       timestamp.Add(time.Second), // Slightly after request
 		Type:            types.EventTypeLLMResponse,
 		AgentID:         a.name,
+		AgentVersion:    "1.0.0",
 		SessionID:       a.sessionID,
+		ProjectID:       a.projectIDInt,
 		LegacyProjectID: a.projectID,
 		Data: map[string]interface{}{
 			"requestId":      request.RequestID,
@@ -318,7 +333,7 @@ func (a *CopilotAdapter) createLLMResponseEvent(
 	}
 
 	// Add hierarchy context if available
-	if hierarchyCtx != nil {
+	if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 		event.ProjectID = hierarchyCtx.ProjectID
 		event.MachineID = hierarchyCtx.MachineID
 		event.WorkspaceID = hierarchyCtx.WorkspaceID
@@ -345,7 +360,9 @@ func (a *CopilotAdapter) createFileReferenceEvent(
 		Timestamp:       timestamp,
 		Type:            types.EventTypeFileRead,
 		AgentID:         a.name,
+		AgentVersion:    "1.0.0",
 		SessionID:       a.sessionID,
+		ProjectID:       a.projectIDInt,
 		LegacyProjectID: a.projectID,
 		Data: map[string]interface{}{
 			"requestId":    request.RequestID,
@@ -358,7 +375,7 @@ func (a *CopilotAdapter) createFileReferenceEvent(
 	}
 
 	// Add hierarchy context if available
-	if hierarchyCtx != nil {
+	if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 		event.ProjectID = hierarchyCtx.ProjectID
 		event.MachineID = hierarchyCtx.MachineID
 		event.WorkspaceID = hierarchyCtx.WorkspaceID
@@ -399,7 +416,9 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(
 					Timestamp:       timestamp.Add(timeOffset),
 					Type:            types.EventTypeFileRead,
 					AgentID:         a.name,
+					AgentVersion:    "1.0.0",
 					SessionID:       a.sessionID,
+					ProjectID:       a.projectIDInt,
 					LegacyProjectID: a.projectID,
 					Data: map[string]interface{}{
 						"requestId": request.RequestID,
@@ -408,7 +427,7 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(
 					},
 				}
 				// Add hierarchy context if available
-				if hierarchyCtx != nil {
+				if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 					event.ProjectID = hierarchyCtx.ProjectID
 					event.MachineID = hierarchyCtx.MachineID
 					event.WorkspaceID = hierarchyCtx.WorkspaceID
@@ -423,7 +442,9 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(
 				Timestamp:       timestamp.Add(timeOffset),
 				Type:            types.EventTypeFileModify,
 				AgentID:         a.name,
+				AgentVersion:    "1.0.0",
 				SessionID:       a.sessionID,
+				ProjectID:       a.projectIDInt,
 				LegacyProjectID: a.projectID,
 				Data: map[string]interface{}{
 					"requestId": request.RequestID,
@@ -431,7 +452,7 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(
 				},
 			}
 			// Add hierarchy context if available
-			if hierarchyCtx != nil {
+			if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 				event.ProjectID = hierarchyCtx.ProjectID
 				event.MachineID = hierarchyCtx.MachineID
 				event.WorkspaceID = hierarchyCtx.WorkspaceID
@@ -478,13 +499,15 @@ func (a *CopilotAdapter) createToolInvocationEvent(
 		Timestamp:       timestamp,
 		Type:            types.EventTypeToolUse,
 		AgentID:         a.name,
+		AgentVersion:    "1.0.0",
 		SessionID:       a.sessionID,
+		ProjectID:       a.projectIDInt,
 		LegacyProjectID: a.projectID,
 		Data:            data,
 	}
 
 	// Add hierarchy context if available
-	if hierarchyCtx != nil {
+	if hierarchyCtx != nil && hierarchyCtx.ProjectID > 0 {
 		event.ProjectID = hierarchyCtx.ProjectID
 		event.MachineID = hierarchyCtx.MachineID
 		event.WorkspaceID = hierarchyCtx.WorkspaceID

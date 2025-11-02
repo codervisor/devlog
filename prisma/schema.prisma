@@ -357,7 +357,8 @@ model AgentEvent {
   @@index([eventType]) // Filter by event type
   @@index([tags]) // Array index for tag filtering
   @@index([severity]) // Filter by severity level
-  @@index([data]) // GIN index for JSONB field queries (created in migration)
+  // Note: GIN index on data field should be created via raw SQL migration if needed
+  // @@index([data]) causes "index row size exceeds btree maximum" for large JSONB values
   @@map("agent_events")
 }
 

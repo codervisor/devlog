@@ -4,20 +4,21 @@ import "time"
 
 // AgentEvent represents a standardized AI agent event
 type AgentEvent struct {
-	ID        string                 `json:"id"`
-	Timestamp time.Time              `json:"timestamp"`
-	Type      string                 `json:"type"`
-	AgentID   string                 `json:"agentId"`
-	SessionID string                 `json:"sessionId"` // Chat session UUID
-	
+	ID           string    `json:"id"`
+	Timestamp    time.Time `json:"timestamp"`
+	Type         string    `json:"eventType"` // Maps to eventType in API
+	AgentID      string    `json:"agentId"`
+	AgentVersion string    `json:"agentVersion"` // Agent version
+	SessionID    string    `json:"sessionId"`    // Chat session UUID
+
 	// Hierarchy context (resolved from workspace)
-	ProjectID   int `json:"projectId,omitempty"`   // Resolved project ID
+	ProjectID   int `json:"projectId"`             // Resolved project ID (required)
 	MachineID   int `json:"machineId,omitempty"`   // Current machine ID
 	WorkspaceID int `json:"workspaceId,omitempty"` // VS Code workspace ID
-	
+
 	// Legacy field for backward compatibility (deprecated)
 	LegacyProjectID string `json:"legacyProjectId,omitempty"`
-	
+
 	Context map[string]interface{} `json:"context,omitempty"`
 	Data    map[string]interface{} `json:"data"`
 	Metrics *EventMetrics          `json:"metrics,omitempty"`

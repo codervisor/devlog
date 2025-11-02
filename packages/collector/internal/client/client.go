@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -93,13 +94,17 @@ func (c *Client) Start() {
 // Stop stops the client and flushes remaining events
 func (c *Client) Stop() error {
 	c.log.Info("Stopping API client...")
-	c.cancel()
 
-	// Flush remaining events
+	// Flush remaining events before canceling context
 	if err := c.FlushBatch(); err != nil {
-		c.log.Errorf("Failed to flush batch on shutdown: %v", err)
+		// Only log if not a context cancellation
+		if !errors.Is(err, context.Canceled) {
+			c.log.Errorf("Failed to flush batch on shutdown: %v", err)
+		}
 	}
 
+	// Now cancel the context to stop background workers
+	c.cancel()
 	c.wg.Wait()
 	c.log.Info("API client stopped")
 	return nil
@@ -153,7 +158,10 @@ func (c *Client) processBatchLoop() {
 			return
 		case <-ticker.C:
 			if err := c.FlushBatch(); err != nil {
-				c.log.Errorf("Failed to flush batch: %v", err)
+				// Only log if not a context cancellation
+				if !errors.Is(err, context.Canceled) {
+					c.log.Errorf("Failed to flush batch: %v", err)
+				}
 			}
 		}
 	}
@@ -167,7 +175,6 @@ func (c *Client) sendBatchWithRetry(batch []*types.AgentEvent) error {
 		if attempt > 0 {
 			// Exponential backoff: 1s, 2s, 4s, 8s...
 			backoff := time.Duration(1<<uint(attempt-1)) * time.Second
-			c.log.Infof("Retry attempt %d/%d after %v", attempt, c.maxRetries, backoff)
 
 			select {
 			case <-time.After(backoff):
@@ -178,14 +185,14 @@ func (c *Client) sendBatchWithRetry(batch []*types.AgentEvent) error {
 
 		err := c.sendBatch(batch)
 		if err == nil {
-			if attempt > 0 {
-				c.log.Infof("Batch sent successfully after %d retries", attempt)
-			}
 			return nil
 		}
 
 		lastErr = err
-		c.log.Warnf("Failed to send batch (attempt %d/%d): %v", attempt+1, c.maxRetries+1, err)
+		// Only log warnings if not a context cancellation
+		if !errors.Is(err, context.Canceled) && c.ctx.Err() == nil {
+			c.log.Warnf("Failed to send batch (attempt %d/%d): %v", attempt+1, c.maxRetries+1, err)
+		}
 	}
 
 	return fmt.Errorf("failed after %d attempts: %w", c.maxRetries+1, lastErr)
@@ -193,16 +200,14 @@ func (c *Client) sendBatchWithRetry(batch []*types.AgentEvent) error {
 
 // sendBatch sends a batch of events to the backend
 func (c *Client) sendBatch(batch []*types.AgentEvent) error {
-	// Prepare request body
-	body, err := json.Marshal(map[string]interface{}{
-		"events": batch,
-	})
+	// Prepare request body - API expects array directly, not wrapped in object
+	body, err := json.Marshal(batch)
 	if err != nil {
 		return fmt.Errorf("failed to marshal events: %w", err)
 	}
 
 	// Create request
-	url := fmt.Sprintf("%s/api/v1/agent/events/batch", c.baseURL)
+	url := fmt.Sprintf("%s/api/events/batch", c.baseURL)
 	req, err := http.NewRequestWithContext(c.ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -239,7 +244,7 @@ func (c *Client) SendSingleEvent(event *types.AgentEvent) error {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/api/v1/agent/events", c.baseURL)
+	url := fmt.Sprintf("%s/api/events", c.baseURL)
 	req, err := http.NewRequestWithContext(c.ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
