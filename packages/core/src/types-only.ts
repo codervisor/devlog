@@ -24,12 +24,38 @@ export type {
   TimeSeriesRequest,
   FilterType,
   Project,
-  StorageType
+  StorageType,
+} from './types/index.js';
+
+// Agent observability types
+export type {
+  ObservabilityAgentType,
+  AgentEventType,
+  SessionOutcome,
+  EventSeverity,
+  AgentEventContext,
+  AgentEventMetrics,
+  AgentEvent,
+  CreateAgentEventInput,
+  EventFilter,
+  EventStats,
+  AgentSessionContext,
+  AgentSessionMetrics,
+  AgentSession,
+  CreateAgentSessionInput,
+  UpdateAgentSessionInput,
+  SessionFilter,
+  SessionStats,
+  TimelineEvent,
+  TimeBucketInterval,
+  TimeBucketQueryParams,
+  EventTimeBucketStats,
+  SessionDailyStats,
 } from './types/index.js';
 
 // Validation types (schemas are runtime, but types are compile-time)
 export type {
   ValidatedDevlogEntry,
   CreateDevlogValidationRequest,
-  UpdateDevlogValidationRequest
+  UpdateDevlogValidationRequest,
 } from './validation/index.js';
