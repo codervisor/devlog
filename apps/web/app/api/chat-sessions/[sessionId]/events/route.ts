@@ -1,6 +1,6 @@
 /**
  * Chat Session Events API Endpoint
- * 
+ *
  * GET /api/chat-sessions/[sessionId]/events - Get session events
  */
 
@@ -12,24 +12,18 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/chat-sessions/:sessionId/events - Get events for a chat session
- * 
+ *
  * Returns all agent events associated with the specified chat session,
  * ordered chronologically.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { sessionId: string } }) {
   try {
     const { sessionId } = params;
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(sessionId)) {
-      return NextResponse.json(
-        { error: 'Invalid session ID format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid session ID format' }, { status: 400 });
     }
 
     // Get Prisma client
@@ -40,16 +34,8 @@ export async function GET(
       where: { sessionId },
       orderBy: { timestamp: 'asc' },
       include: {
-        session: {
-          include: {
-            workspace: {
-              include: {
-                machine: true,
-                project: true,
-              },
-            },
-          },
-        },
+        session: true,
+        project: true,
       },
     });
 
@@ -64,7 +50,7 @@ export async function GET(
       {
         error: error instanceof Error ? error.message : 'Failed to get session events',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -64,6 +64,23 @@ export class TestApiClient {
     return { status: response.status, data };
   }
 
+  async patch(path: string, body: any, expectedStatus = 200) {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = response.status !== 204 ? await response.json() : null;
+
+    if (response.status !== expectedStatus) {
+      throw new Error(
+        `Expected ${expectedStatus}, got ${response.status}: ${JSON.stringify(data)}`,
+      );
+    }
+
+    return { status: response.status, data };
+  }
+
   async delete(path: string, expectedStatus = 200) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'DELETE',

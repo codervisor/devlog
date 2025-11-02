@@ -1,9 +1,14 @@
-import { NextRequest } from 'next/server';
-import { activeConnections } from '@/lib/api/server-realtime';
+import { NextRequest, NextResponse } from 'next/server';
+import { activeConnections, broadcastUpdate } from '@/lib/api/server-realtime';
+import { AgentEventService } from '@codervisor/devlog-core/server';
+import type { CreateAgentEventInput } from '@codervisor/devlog-core/types-only';
 
 // Mark this route as dynamic to prevent static generation
 export const dynamic = 'force-dynamic';
 
+/**
+ * GET /api/events - Server-Sent Events (SSE) stream for real-time event updates
+ */
 export async function GET(request: NextRequest) {
   // Create a readable stream for SSE
   console.log('[SSE Route] Creating ReadableStream...');
@@ -58,4 +63,104 @@ export async function GET(request: NextRequest) {
       'Access-Control-Allow-Headers': 'Cache-Control',
     },
   });
+}
+
+/**
+ * POST /api/events - Create a single agent event
+ *
+ * Creates a single event and broadcasts it to active SSE connections
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate required fields
+    if (
+      !body.type ||
+      !body.agentId ||
+      !body.agentVersion ||
+      !body.sessionId ||
+      !body.projectId ||
+      !body.context ||
+      !body.data
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Missing required fields: type, agentId, agentVersion, sessionId, projectId, context, data',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate context required field
+    if (!body.context.workingDirectory) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing required context field: workingDirectory',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate and parse projectId
+    const projectId =
+      typeof body.projectId === 'number' ? body.projectId : parseInt(body.projectId, 10);
+    if (isNaN(projectId) || projectId <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid projectId: must be a positive integer',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Create event input
+    const eventInput: CreateAgentEventInput = {
+      type: body.type,
+      agentId: body.agentId,
+      agentVersion: body.agentVersion,
+      sessionId: body.sessionId,
+      projectId: projectId,
+      context: body.context,
+      data: body.data,
+      metrics: body.metrics,
+      parentEventId: body.parentEventId,
+      relatedEventIds: body.relatedEventIds,
+      tags: body.tags,
+      severity: body.severity || 'info',
+    };
+
+    const eventService = AgentEventService.getInstance(eventInput.projectId);
+    await eventService.initialize();
+
+    // Create the event
+    const event = await eventService.collectEvent(eventInput);
+
+    // Broadcast to active SSE connections
+    broadcastUpdate('event_created', {
+      event: event,
+      timestamp: new Date().toISOString(),
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: event,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error('Error creating event:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create event',
+      },
+      { status: 500 },
+    );
+  }
 }
