@@ -5,6 +5,7 @@
 This document provides a detailed, actionable checklist for implementing the AI Agent Observability features described in the [design document](./ai-agent-observability-design.md).
 
 **Architecture Decision**: TypeScript + Go Hybrid (finalized)
+
 - **TypeScript**: Web UI, MCP Server, API Gateway
 - **Go**: Client-side collector, Event processing, Real-time streaming, Analytics
 - See [Performance Analysis](./ai-agent-observability-performance-analysis.md) for detailed rationale
@@ -594,6 +595,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 ## Post-MVP Enhancements
 
 ### Advanced Features
+
 - [ ] Video recording of coding sessions
 - [ ] Voice command transcription
 - [ ] Multi-agent collaboration tracking
@@ -604,6 +606,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Agent training feedback loop
 
 ### Scalability
+
 - [ ] Distributed event collection
 - [ ] Edge processing
 - [ ] Multi-region deployment
@@ -611,6 +614,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Cold storage archival
 
 ### Additional Agents & Adapters
+
 - [ ] Aider adapter
 - [ ] Windsurf adapter
 - [ ] Continue.dev adapter
@@ -625,6 +629,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 ## Testing Checklist
 
 ### Unit Tests
+
 - [ ] AgentEventService tests
 - [ ] AgentSessionService tests
 - [ ] AgentAnalyticsService tests
@@ -633,12 +638,14 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Recommendation engine tests
 
 ### Integration Tests
+
 - [ ] MCP tool integration tests
 - [ ] Database integration tests
 - [ ] API integration tests
 - [ ] External service integration tests
 
 ### E2E Tests
+
 - [ ] Session creation and tracking flow
 - [ ] Event viewing and filtering flow
 - [ ] Dashboard interaction flow
@@ -646,6 +653,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Report generation flow
 
 ### Performance Tests
+
 - [ ] Event ingestion load test (10k/sec)
 - [ ] Query performance test (<100ms)
 - [ ] Dashboard rendering test (<1s)
@@ -655,6 +663,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 ## Documentation Checklist
 
 ### Technical Documentation
+
 - [x] Design document
 - [x] Quick reference guide
 - [ ] API reference
@@ -663,6 +672,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Deployment guide
 
 ### User Documentation
+
 - [ ] Getting started guide
 - [ ] Dashboard user guide
 - [ ] Timeline user guide
@@ -671,6 +681,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Troubleshooting guide
 
 ### Developer Documentation
+
 - [ ] Development setup guide
 - [ ] Contributing guide
 - [ ] Agent integration guide
@@ -679,6 +690,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Testing guide
 
 ### Video Tutorials
+
 - [ ] Product overview (5 min)
 - [ ] Dashboard walkthrough (10 min)
 - [ ] Timeline deep dive (15 min)
@@ -688,6 +700,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 ## Launch Checklist
 
 ### Pre-Launch
+
 - [ ] All Phase 1-4 features complete
 - [ ] All tests passing
 - [ ] Documentation complete
@@ -697,6 +710,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Feedback incorporated
 
 ### Launch Day
+
 - [ ] Deploy to production
 - [ ] Announce on GitHub
 - [ ] Publish blog post
@@ -705,6 +719,7 @@ This document provides a detailed, actionable checklist for implementing the AI 
 - [ ] Email existing users
 
 ### Post-Launch
+
 - [ ] Monitor system health
 - [ ] Gather user feedback
 - [ ] Fix critical bugs

@@ -6,6 +6,7 @@
 ## 🎯 The Problem
 
 "Devlog entry" creates confusion:
+
 - ❌ Not industry-standard terminology
 - ❌ Sounds like a "development log" (diary) rather than work tracking
 - ❌ "Entry" is vague - entry into what?
@@ -16,6 +17,7 @@
 ### Option 1: **Work Item** (Recommended ⭐)
 
 **Pros:**
+
 - ✅ Industry standard (Azure DevOps, GitHub Projects)
 - ✅ Neutral - works for any type of work
 - ✅ Immediately understandable
@@ -23,6 +25,7 @@
 - ✅ Aligns with AI agent observability (agents work on "work items")
 
 **Usage:**
+
 ```typescript
 // Types
 interface WorkItem { ... }
@@ -44,6 +47,7 @@ work_item_notes (table)
 ```
 
 **Marketing:**
+
 - "Track work items alongside AI agent activities"
 - "Organize agent sessions by work item"
 - "See which work items your AI agents are helping with"
@@ -53,15 +57,18 @@ work_item_notes (table)
 ### Option 2: **Task**
 
 **Pros:**
+
 - ✅ Simple and clear
 - ✅ Everyone knows what a task is
 - ✅ Short and concise
 
 **Cons:**
+
 - ⚠️ Might feel too specific (what about features, bugs?)
 - ⚠️ Already one of our "types" (task vs feature vs bug)
 
 **Usage:**
+
 ```typescript
 interface Task { ... }
 type TaskType = 'feature' | 'bugfix' | 'task' | 'refactor' | 'docs';
@@ -74,15 +81,18 @@ type TaskType = 'feature' | 'bugfix' | 'task' | 'refactor' | 'docs';
 ### Option 3: **Issue**
 
 **Pros:**
+
 - ✅ Industry standard (GitHub Issues, Jira, GitLab)
 - ✅ Widely recognized
 - ✅ Works well with "bug" context
 
 **Cons:**
+
 - ⚠️ Implies problems/bugs (not great for features)
 - ⚠️ Less neutral than "work item"
 
 **Usage:**
+
 ```typescript
 interface Issue { ... }
 // POST /api/projects/{id}/issues
@@ -93,10 +103,12 @@ interface Issue { ... }
 ### Option 4: **Ticket**
 
 **Pros:**
+
 - ✅ Industry standard (Jira, ServiceNow)
 - ✅ Clear tracking connotation
 
 **Cons:**
+
 - ⚠️ More corporate/support desk feel
 - ⚠️ Less developer-friendly
 
@@ -105,10 +117,12 @@ interface Issue { ... }
 ### Option 5: **Story** (User Story)
 
 **Pros:**
+
 - ✅ Agile methodology standard
 - ✅ Works well for feature work
 
 **Cons:**
+
 - ⚠️ Too specific to Agile
 - ⚠️ Doesn't work well for bugs/tasks
 - ⚠️ Implies user-facing features only
@@ -118,6 +132,7 @@ interface Issue { ... }
 ## 🏆 Recommendation: "Work Item"
 
 **Rationale:**
+
 1. **Most versatile**: Works for features, bugs, tasks, refactors, docs
 2. **Industry standard**: Used by Azure DevOps, GitHub Projects
 3. **Agent observability alignment**: "Agents help you complete work items"
@@ -125,6 +140,7 @@ interface Issue { ... }
 5. **Developer-friendly**: Intuitive without being corporate
 
 ### Mental Model
+
 ```
 Project: "Mobile App"
 ├── Work Item #123: "Implement user authentication"
@@ -141,18 +157,22 @@ Project: "Mobile App"
 ## 📋 Migration Strategy
 
 ### Phase 1: Introduce Dual Terminology (Week 1)
+
 Keep "devlog" internally but introduce "work item" in user-facing areas:
+
 - Documentation uses "work item" primarily
 - UI shows "Work Items" but code still uses `DevlogEntry`
 - API accepts both terms (aliases)
 
 ### Phase 2: Gradual Code Migration (Weeks 2-4)
+
 - Create type aliases: `type WorkItem = DevlogEntry`
 - Add new exports alongside old ones
 - Update internal code incrementally
 - Keep backward compatibility
 
 ### Phase 3: Deprecation (Future)
+
 - Mark `DevlogEntry` as deprecated
 - Encourage migration to `WorkItem`
 - Eventually remove old terminology (v2.0)
@@ -161,51 +181,57 @@ Keep "devlog" internally but introduce "work item" in user-facing areas:
 
 ### Current → New
 
-| Current | New | Notes |
-|---------|-----|-------|
-| Devlog entry | Work item | Primary change |
-| DevlogEntry | WorkItem | Type interface |
-| devlog_entries | work_items | Database table |
-| create_devlog | create_work_item | MCP tool |
-| /api/devlogs | /api/work-items | API route |
-| Devlog list | Work items | UI |
-| Entry details | Work item details | UI |
+| Current        | New               | Notes          |
+| -------------- | ----------------- | -------------- |
+| Devlog entry   | Work item         | Primary change |
+| DevlogEntry    | WorkItem          | Type interface |
+| devlog_entries | work_items        | Database table |
+| create_devlog  | create_work_item  | MCP tool       |
+| /api/devlogs   | /api/work-items   | API route      |
+| Devlog list    | Work items        | UI             |
+| Entry details  | Work item details | UI             |
 
 ### Keep as-is (Don't Change)
 
-| Term | Reason |
-|------|--------|
-| Project | Already clear |
+| Term          | Reason        |
+| ------------- | ------------- |
+| Project       | Already clear |
 | Agent Session | Already clear |
-| Agent Event | Already clear |
-| Note | Already clear |
-| Document | Already clear |
+| Agent Event   | Already clear |
+| Note          | Already clear |
+| Document      | Already clear |
 
 ## 💬 User Communication
 
 ### Documentation Updates
 
 **Before:**
+
 > "Create devlog entries to track your development work"
 
 **After:**
+
 > "Create work items to track features, bugs, and tasks"
 
 **Before:**
+
 > "Devlog entries help organize your coding activities"
 
 **After:**
+
 > "Work items help organize your development activities and connect them to AI agent sessions"
 
 ### UI Copy Updates
 
 **Before:**
+
 ```
 + New Devlog Entry
 Devlog #123: Implement auth
 ```
 
 **After:**
+
 ```
 + New Work Item
 Work Item #123: Implement auth
@@ -214,14 +240,17 @@ Work Item #123: Implement auth
 ## 🎨 Branding Considerations
 
 ### Product Name: Keep "Devlog"
+
 The product name "devlog" can stay - it's the brand. We're just clarifying what the **items** within it are called.
 
 **Analogy:**
+
 - **Jira** (product) tracks **issues** (items)
 - **GitHub** (product) has **issues** (items)
 - **Devlog** (product) tracks **work items** (items)
 
 ### Marketing Copy
+
 - "Devlog: AI Agent Observability Platform"
 - "Track work items and AI agent activities in one place"
 - "See which work items your AI agents are helping with"
@@ -230,12 +259,14 @@ The product name "devlog" can stay - it's the brand. We're just clarifying what 
 ## 🚀 Implementation Checklist
 
 ### Documentation (Quick - 2-3 hours)
+
 - [ ] Update main README.md to use "work item"
 - [ ] Update AGENTS.md examples
 - [ ] Update API documentation
 - [ ] Update user guides
 
 ### Code (Gradual - can span multiple PRs)
+
 - [ ] Add `WorkItem` type alias to `core/types`
 - [ ] Export both `DevlogEntry` and `WorkItem`
 - [ ] Add JSDoc comments explaining the rename
@@ -244,6 +275,7 @@ The product name "devlog" can stay - it's the brand. We're just clarifying what 
 - [ ] Update MCP tools (add aliases)
 
 ### Database (Later - requires migration)
+
 - [ ] Plan table rename strategy
 - [ ] Consider views/aliases for transition
 - [ ] Create migration scripts

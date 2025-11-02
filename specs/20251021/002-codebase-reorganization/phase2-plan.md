@@ -14,6 +14,7 @@ Move actual service files into the organized folder structure established in Pha
 ## 📊 Current State Analysis
 
 ### Existing Structure
+
 ```
 packages/core/src/
 ├── services/
@@ -235,6 +236,7 @@ After all moves complete:
 ## 🔧 Implementation Commands
 
 ### Create Directory Structure
+
 ```bash
 # Agent observability
 mkdir -p packages/core/src/agent-observability/{events,sessions,__tests__}
@@ -244,6 +246,7 @@ mkdir -p packages/core/src/project-management/{projects,work-items,documents,cha
 ```
 
 ### Move Files (Example for AgentEventService)
+
 ```bash
 # Move service
 mv packages/core/src/services/agent-event-service.ts \
@@ -255,6 +258,7 @@ mv packages/core/src/services/__tests__/agent-event-service.test.ts \
 ```
 
 ### Update Imports (Example)
+
 ```bash
 # Find all imports of the moved service
 grep -r "from.*services/agent-event-service" packages/core/src
@@ -268,17 +272,18 @@ grep -r "from.*services/agent-event-service" packages/core/src
 
 ### Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Breaking existing imports | High | Maintain backward compatibility via services/index.ts |
-| Circular dependencies | Medium | Move in dependency order, validate after each move |
-| Test failures | Medium | Update test imports immediately after moving files |
-| Build failures | High | Build after each service move, fix before continuing |
-| External package issues | Low | MCP and Web packages use services via server.ts exports |
+| Risk                      | Impact | Mitigation                                              |
+| ------------------------- | ------ | ------------------------------------------------------- |
+| Breaking existing imports | High   | Maintain backward compatibility via services/index.ts   |
+| Circular dependencies     | Medium | Move in dependency order, validate after each move      |
+| Test failures             | Medium | Update test imports immediately after moving files      |
+| Build failures            | High   | Build after each service move, fix before continuing    |
+| External package issues   | Low    | MCP and Web packages use services via server.ts exports |
 
 ### Rollback Strategy
 
 If issues arise:
+
 1. Each service move is a separate commit
 2. Can revert individual service moves
 3. Backward compatibility ensures old imports still work

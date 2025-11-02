@@ -5,9 +5,11 @@
 This document outlines the transformation of the devlog project into a comprehensive **AI Coding Agent Observability Platform**. Building on the existing AI memory persistence foundation, we're expanding to provide deep insights into AI coding agent behavior, enabling developers to monitor, analyze, and optimize their AI-assisted development workflows.
 
 ### Vision
+
 Transform devlog into the go-to platform for understanding and improving AI-assisted software development by providing complete visibility into AI coding agent activities, decisions, and outcomes.
 
 ### Target AI Coding Agents
+
 - GitHub Copilot & GitHub Coding Agent
 - Claude Code (Anthropic)
 - Cursor AI
@@ -30,26 +32,31 @@ AI coding agents are becoming ubiquitous in software development, but organizati
 ## Core Value Propositions
 
 ### 1. Complete Agent Activity Transparency
+
 - Real-time visibility into all AI agent actions (file reads, writes, executions, API calls)
 - Visual timeline of agent behavior during coding sessions
 - Context reconstruction for any point in development history
 
 ### 2. Quality & Performance Analytics
+
 - Code quality metrics for AI-generated code
 - Agent performance benchmarking (speed, accuracy, token efficiency)
 - Comparative analysis across different AI agents and models
 
 ### 3. Intelligent Debugging & Root Cause Analysis
+
 - Automatic capture of failure contexts and error conditions
 - Pattern recognition in agent failures
 - Suggestions for prompt improvements and workflow optimization
 
 ### 4. Team Collaboration & Knowledge Sharing
+
 - Share successful prompts and interaction patterns
 - Team-wide learning from AI agent usage patterns
 - Best practice identification and dissemination
 
 ### 5. Enterprise Compliance & Governance
+
 - Complete audit trails for AI-assisted development
 - Policy enforcement for AI agent usage
 - Security scanning of AI-generated code changes
@@ -59,6 +66,7 @@ AI coding agents are becoming ubiquitous in software development, but organizati
 **Architecture Decision**: **TypeScript + Go Hybrid** (finalized based on [performance analysis](./ai-agent-observability-performance-analysis.md))
 
 **Rationale**:
+
 - **TypeScript**: Fast MVP development, MCP ecosystem, web UI (2 months to market)
 - **Go**: High-performance backend services (50-120K events/sec), efficient resource usage
 - **Benefits**: Best of both worlds - rapid iteration + production scalability
@@ -154,18 +162,18 @@ packages/
 
 ### Technology Stack Summary
 
-| Component | Language | Rationale |
-|-----------|----------|-----------|
-| **Client Collector** | Go | Small binary (~10-20MB), cross-platform, efficient |
-| **Event Processing** | Go | High throughput (50-120K events/sec), low latency |
-| **Real-time Streaming** | Go | Efficient WebSocket handling, 50K+ connections |
-| **Analytics Engine** | Go | Fast aggregations, pattern detection performance |
-| **API Gateway** | TypeScript | MCP integration, rapid development, Next.js |
-| **Business Logic** | TypeScript | Fast iteration, existing codebase integration |
-| **Web UI** | TypeScript/Next.js | React ecosystem, server components |
-| **Database** | PostgreSQL + TimescaleDB | Time-series optimization, mature ecosystem |
+| Component               | Language                 | Rationale                                          |
+| ----------------------- | ------------------------ | -------------------------------------------------- |
+| **Client Collector**    | Go                       | Small binary (~10-20MB), cross-platform, efficient |
+| **Event Processing**    | Go                       | High throughput (50-120K events/sec), low latency  |
+| **Real-time Streaming** | Go                       | Efficient WebSocket handling, 50K+ connections     |
+| **Analytics Engine**    | Go                       | Fast aggregations, pattern detection performance   |
+| **API Gateway**         | TypeScript               | MCP integration, rapid development, Next.js        |
+| **Business Logic**      | TypeScript               | Fast iteration, existing codebase integration      |
+| **Web UI**              | TypeScript/Next.js       | React ecosystem, server components                 |
+| **Database**            | PostgreSQL + TimescaleDB | Time-series optimization, mature ecosystem         |
 
-```
+````
 
 ## Core Features
 
@@ -187,7 +195,7 @@ packages/
 **Event Types to Capture**:
 ```typescript
 // Core event types
-type AgentEventType = 
+type AgentEventType =
   | 'session_start'          // Agent session initiated
   | 'session_end'            // Agent session completed
   | 'file_read'              // Agent read a file
@@ -215,7 +223,7 @@ interface AgentEvent {
   agentVersion: string;            // Agent version
   sessionId: string;               // Session identifier
   projectId: string;               // Project identifier
-  
+
   // Context
   context: {
     filePath?: string;             // File path if relevant
@@ -224,10 +232,10 @@ interface AgentEvent {
     commit?: string;               // Git commit SHA
     devlogId?: string;             // Associated devlog entry
   };
-  
+
   // Event-specific data
   data: Record<string, any>;       // Flexible event data
-  
+
   // Metrics
   metrics?: {
     duration?: number;             // Event duration in ms
@@ -235,30 +243,31 @@ interface AgentEvent {
     fileSize?: number;             // File size in bytes
     linesChanged?: number;         // Lines added/removed
   };
-  
+
   // Relationships
   parentEventId?: string;          // Parent event for causality
   relatedEventIds?: string[];      // Related events
-  
+
   // Metadata
   tags?: string[];                 // Searchable tags
   severity?: 'debug' | 'info' | 'warning' | 'error' | 'critical';
 }
-```
+````
 
 **Implementation**:
+
 ```typescript
 // New service: AgentEventCollectionService
 class AgentEventCollectionService {
   // Collect event from any agent
   async collectEvent(event: AgentEvent): Promise<void>;
-  
+
   // Start real-time streaming for a session
   async startEventStream(sessionId: string): Promise<EventStream>;
-  
+
   // Query events with filtering
   async queryEvents(filter: EventFilter): Promise<AgentEvent[]>;
-  
+
   // Get event statistics
   async getEventStats(filter: EventFilter): Promise<EventStats>;
 }
@@ -277,13 +286,13 @@ We implement a pluggable adapter pattern where each AI agent has a dedicated ada
 interface AgentAdapter {
   agentId: string;
   agentVersion: string;
-  
+
   // Parse raw log entry to standard event
   parseEvent(rawLog: any): AgentEvent | null;
-  
+
   // Validate if this adapter can handle the log
   canHandle(rawLog: any): boolean;
-  
+
   // Extract session information
   extractSessionInfo(rawLogs: any[]): SessionInfo;
 }
@@ -292,11 +301,11 @@ interface AgentAdapter {
 class CopilotAdapter implements AgentAdapter {
   agentId = 'github-copilot';
   agentVersion = '1.x';
-  
+
   parseEvent(rawLog: CopilotLogEntry): AgentEvent | null {
     // Copilot-specific log format:
     // { timestamp, action, file, completion, metadata }
-    
+
     return {
       id: generateEventId(rawLog),
       timestamp: rawLog.timestamp,
@@ -318,17 +327,16 @@ class CopilotAdapter implements AgentAdapter {
       },
     };
   }
-  
+
   canHandle(rawLog: any): boolean {
-    return rawLog.source === 'copilot' || 
-           rawLog.agent === 'github-copilot';
+    return rawLog.source === 'copilot' || rawLog.agent === 'github-copilot';
   }
-  
+
   private mapActionToEventType(action: string): AgentEventType {
     const mapping = {
-      'completion': 'llm_response',
-      'file_edit': 'file_write',
-      'command': 'command_execute',
+      completion: 'llm_response',
+      file_edit: 'file_write',
+      command: 'command_execute',
       // ... more mappings
     };
     return mapping[action] || 'user_interaction';
@@ -339,11 +347,11 @@ class CopilotAdapter implements AgentAdapter {
 class ClaudeAdapter implements AgentAdapter {
   agentId = 'claude-code';
   agentVersion = '1.x';
-  
+
   parseEvent(rawLog: ClaudeLogEntry): AgentEvent | null {
     // Claude-specific log format:
     // { time, event_type, tool_use, content, metadata }
-    
+
     return {
       id: generateEventId(rawLog),
       timestamp: rawLog.time,
@@ -365,17 +373,16 @@ class ClaudeAdapter implements AgentAdapter {
       },
     };
   }
-  
+
   canHandle(rawLog: any): boolean {
-    return rawLog.provider === 'anthropic' || 
-           rawLog.model?.includes('claude');
+    return rawLog.provider === 'anthropic' || rawLog.model?.includes('claude');
   }
-  
+
   private mapEventType(eventType: string): AgentEventType {
     const mapping = {
-      'tool_use': 'tool_invocation',
-      'text_generation': 'llm_response',
-      'file_operation': 'file_write',
+      tool_use: 'tool_invocation',
+      text_generation: 'llm_response',
+      file_operation: 'file_write',
       // ... more mappings
     };
     return mapping[eventType] || 'user_interaction';
@@ -385,15 +392,15 @@ class ClaudeAdapter implements AgentAdapter {
 // Adapter Registry
 class AgentAdapterRegistry {
   private adapters: Map<string, AgentAdapter> = new Map();
-  
+
   register(adapter: AgentAdapter): void {
     this.adapters.set(adapter.agentId, adapter);
   }
-  
+
   getAdapter(agentId: string): AgentAdapter | null {
     return this.adapters.get(agentId) || null;
   }
-  
+
   detectAdapter(rawLog: any): AgentAdapter | null {
     for (const adapter of this.adapters.values()) {
       if (adapter.canHandle(rawLog)) {
@@ -407,19 +414,19 @@ class AgentAdapterRegistry {
 // Usage in collection service
 class AgentEventCollectionService {
   private adapterRegistry: AgentAdapterRegistry;
-  
+
   async collectRawLog(rawLog: any): Promise<void> {
     // Auto-detect which adapter to use
     const adapter = this.adapterRegistry.detectAdapter(rawLog);
-    
+
     if (!adapter) {
       console.warn('No adapter found for log:', rawLog);
       return;
     }
-    
+
     // Parse to standard format
     const event = adapter.parseEvent(rawLog);
-    
+
     if (event) {
       await this.collectEvent(event);
     }
@@ -445,6 +452,7 @@ class AgentEventCollectionService {
    - Custom enterprise adapters
 
 **Benefits of Adapter Pattern**:
+
 - **Extensibility**: Easy to add new agents without changing core code
 - **Maintainability**: Each adapter is isolated and can evolve independently
 - **Testability**: Adapters can be unit tested with sample logs
@@ -453,6 +461,7 @@ class AgentEventCollectionService {
 
 **Adapter Development Guide**:
 Each adapter implementation should:
+
 1. Study the agent's log format (JSON, plain text, structured logs)
 2. Identify key fields and their semantics
 3. Map agent-specific event types to standard `AgentEventType`
@@ -461,15 +470,18 @@ Each adapter implementation should:
 6. Include comprehensive unit tests with real log samples
 
 #### 1.2 Agent Session Management
+
 **Objective**: Track complete agent working sessions with full context
 
 **Key Features**:
+
 - Session lifecycle tracking (start, duration, completion)
 - Automatic session context capture
 - Session quality scoring
 - Session outcome tracking (success, failure, abandoned)
 
 **Session Schema**:
+
 ```typescript
 interface AgentSession {
   id: string;
@@ -479,17 +491,17 @@ interface AgentSession {
   startTime: string;
   endTime?: string;
   duration?: number;
-  
+
   // Session context
   context: {
-    objective?: string;            // What the agent is trying to achieve
-    devlogId?: string;             // Associated devlog entry
+    objective?: string; // What the agent is trying to achieve
+    devlogId?: string; // Associated devlog entry
     branch: string;
     initialCommit: string;
     finalCommit?: string;
     triggeredBy: 'user' | 'automation' | 'schedule';
   };
-  
+
   // Session metrics
   metrics: {
     eventsCount: number;
@@ -504,26 +516,29 @@ interface AgentSession {
     buildAttempts: number;
     buildSuccesses: number;
   };
-  
+
   // Outcome
   outcome: 'success' | 'partial' | 'failure' | 'abandoned';
-  qualityScore?: number;           // 0-100 quality assessment
-  
+  qualityScore?: number; // 0-100 quality assessment
+
   // Events in this session
   events: AgentEvent[];
 }
 ```
 
 #### 1.3 Storage & Indexing
+
 **Objective**: Efficient storage and retrieval of agent activity data
 
 **Storage Strategy**:
+
 - **Time-series database**: For high-volume event storage (e.g., TimescaleDB extension for PostgreSQL)
 - **Document store**: For complex event data and sessions
 - **Full-text search**: For querying event content (Elasticsearch or PostgreSQL FTS)
 - **Aggregation tables**: Pre-computed metrics for fast dashboard queries
 
 **Retention Policy**:
+
 - Raw events: 90 days (configurable)
 - Aggregated metrics: 2 years
 - Critical events (errors, security): Indefinite
@@ -532,6 +547,7 @@ interface AgentSession {
 ### Phase 2: Visualization & Analytics (Core Value Delivery)
 
 #### 2.1 Real-Time Activity Dashboard
+
 **Objective**: Live view of current agent activities across projects
 
 **Dashboard Components**:
@@ -561,6 +577,7 @@ interface AgentSession {
    - Quality threshold violations
 
 **Visualization Examples**:
+
 ```
 Real-Time Session View:
 ┌─────────────────────────────────────────────────────────┐
@@ -582,6 +599,7 @@ Real-Time Session View:
 ```
 
 #### 2.2 Historical Analysis Dashboard
+
 **Objective**: Understand agent behavior patterns over time
 
 **Dashboard Components**:
@@ -611,9 +629,11 @@ Real-Time Session View:
    - User engagement patterns
 
 #### 2.3 Interactive Timeline Visualization
+
 **Objective**: Detailed visual exploration of agent sessions
 
 **Features**:
+
 - Zoomable timeline from session to millisecond level
 - Event filtering and search
 - Color coding by event type and severity
@@ -623,6 +643,7 @@ Real-Time Session View:
 - Shareable timeline links
 
 **Timeline View Levels**:
+
 1. **Session Overview**: All events in chronological order
 2. **File Focus**: Events related to specific files
 3. **Error Trace**: Path from cause to error
@@ -630,6 +651,7 @@ Real-Time Session View:
 5. **Test Cycle**: Test executions and results
 
 #### 2.4 Agent Behavior Reports
+
 **Objective**: Generated insights and recommendations
 
 **Report Types**:
@@ -663,9 +685,11 @@ Real-Time Session View:
 ### Phase 3: Advanced Analytics & Intelligence (Value Multiplication)
 
 #### 3.1 Pattern Recognition & Learning
+
 **Objective**: Automatically identify patterns in agent behavior
 
 **Features**:
+
 - **Success Pattern Detection**: Identify what leads to successful outcomes
 - **Failure Pattern Analysis**: Recognize common failure modes
 - **Prompt Engineering Insights**: Which prompts work best
@@ -673,6 +697,7 @@ Real-Time Session View:
 - **Anti-Pattern Detection**: Identify problematic agent behaviors
 
 **Machine Learning Models**:
+
 - Session outcome prediction
 - Quality score prediction
 - Error prediction and prevention
@@ -680,6 +705,7 @@ Real-Time Session View:
 - Cost optimization recommendations
 
 #### 3.2 Intelligent Recommendations
+
 **Objective**: Provide actionable insights to improve AI coding workflows
 
 **Recommendation Types**:
@@ -701,9 +727,11 @@ Real-Time Session View:
    - "Sessions under 20 minutes have 2x higher success rate"
 
 #### 3.3 Code Quality Analysis
+
 **Objective**: Assess and track quality of AI-generated code
 
 **Quality Metrics**:
+
 - **Correctness**: Does the code work as intended?
 - **Maintainability**: Is the code easy to understand and modify?
 - **Test Coverage**: Are tests adequate?
@@ -712,6 +740,7 @@ Real-Time Session View:
 - **Best Practices**: Does it follow coding standards?
 
 **Analysis Methods**:
+
 - Static analysis integration (ESLint, SonarQube, etc.)
 - Test execution and coverage analysis
 - Security scanning (Snyk, Dependabot, etc.)
@@ -719,26 +748,29 @@ Real-Time Session View:
 - Production incident correlation
 
 **Quality Scoring**:
+
 ```typescript
 interface CodeQualityScore {
-  overall: number;                    // 0-100 overall score
+  overall: number; // 0-100 overall score
   dimensions: {
-    correctness: number;              // Does it work?
-    maintainability: number;          // Is it maintainable?
-    testability: number;              // Is it testable?
-    performance: number;              // Is it efficient?
-    security: number;                 // Is it secure?
-    standards: number;                // Follows conventions?
+    correctness: number; // Does it work?
+    maintainability: number; // Is it maintainable?
+    testability: number; // Is it testable?
+    performance: number; // Is it efficient?
+    security: number; // Is it secure?
+    standards: number; // Follows conventions?
   };
-  issues: QualityIssue[];            // Specific issues found
-  recommendations: string[];          // How to improve
+  issues: QualityIssue[]; // Specific issues found
+  recommendations: string[]; // How to improve
 }
 ```
 
 #### 3.4 Comparative Analysis
+
 **Objective**: Compare different agents, models, and approaches
 
 **Comparison Dimensions**:
+
 - **Performance**: Speed, token efficiency, success rate
 - **Quality**: Code quality, bug rate, test coverage
 - **Cost**: Token usage, API costs
@@ -746,6 +778,7 @@ interface CodeQualityScore {
 - **User Satisfaction**: Based on feedback and iterations
 
 **Use Cases**:
+
 - "Which agent should I use for this project?"
 - "Is upgrading to the latest model worth it?"
 - "How much would switching agents save?"
@@ -754,9 +787,11 @@ interface CodeQualityScore {
 ### Phase 4: Enterprise Features (Scale & Governance)
 
 #### 4.1 Team Collaboration Features
+
 **Objective**: Enable teams to learn from each other's AI interactions
 
 **Features**:
+
 - **Shared Session Library**: Browse and replay team sessions
 - **Prompt Templates**: Share successful prompts
 - **Best Practices Database**: Curated learnings from successful patterns
@@ -764,9 +799,11 @@ interface CodeQualityScore {
 - **Mentoring Insights**: Help new team members learn effective AI interaction
 
 #### 4.2 Compliance & Audit Trails
+
 **Objective**: Meet enterprise compliance and security requirements
 
 **Features**:
+
 - **Complete Audit Logs**: Every AI action logged with context
 - **Change Attribution**: Clear attribution for all AI-generated changes
 - **Policy Enforcement**: Rules for AI agent behavior
@@ -775,9 +812,11 @@ interface CodeQualityScore {
 - **Compliance Reports**: SOC2, ISO 27001, GDPR compliance
 
 #### 4.3 Integration Ecosystem
+
 **Objective**: Integrate with existing development tools
 
 **Integration Points**:
+
 - **Version Control**: GitHub, GitLab, Bitbucket
 - **CI/CD**: Jenkins, GitHub Actions, CircleCI
 - **Issue Tracking**: Jira, Linear, GitHub Issues
@@ -786,9 +825,11 @@ interface CodeQualityScore {
 - **Communication**: Slack, Teams, Discord
 
 #### 4.4 API & Extensibility
+
 **Objective**: Allow customization and extension
 
 **API Capabilities**:
+
 - REST API for all observability data
 - GraphQL API for complex queries
 - Webhook notifications for events
@@ -799,9 +840,11 @@ interface CodeQualityScore {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-4)
+
 **Goal**: Basic event collection and storage
 
 **Tasks**:
+
 1. Design and implement agent event schema
 2. Create AgentEventCollectionService
 3. Implement storage layer with TimescaleDB
@@ -809,15 +852,18 @@ interface CodeQualityScore {
 5. Build simple event viewer UI
 
 **Deliverables**:
+
 - Working event collection for GitHub Copilot and Claude
 - Events stored in database
 - Basic web UI showing recent events
 - Documentation for adding new agent support
 
 ### Phase 2: Core Visualization (Weeks 5-8)
+
 **Goal**: Essential dashboards and timeline view
 
 **Tasks**:
+
 1. Implement session management
 2. Build real-time activity dashboard
 3. Create interactive timeline visualization
@@ -825,6 +871,7 @@ interface CodeQualityScore {
 5. Add filtering and search capabilities
 
 **Deliverables**:
+
 - Real-time dashboard showing active sessions
 - Interactive timeline for session replay
 - Basic metrics dashboard
@@ -832,9 +879,11 @@ interface CodeQualityScore {
 - Agent comparison view
 
 ### Phase 3: Analytics & Intelligence (Weeks 9-12)
+
 **Goal**: Advanced insights and recommendations
 
 **Tasks**:
+
 1. Implement pattern recognition system
 2. Build quality analysis engine
 3. Create recommendation engine
@@ -842,6 +891,7 @@ interface CodeQualityScore {
 5. Add automated reporting
 
 **Deliverables**:
+
 - Pattern detection for common success/failure modes
 - Code quality scoring for AI-generated code
 - Intelligent recommendations
@@ -849,9 +899,11 @@ interface CodeQualityScore {
 - Weekly automated reports
 
 ### Phase 4: Enterprise Features (Weeks 13-16)
+
 **Goal**: Team collaboration and compliance
 
 **Tasks**:
+
 1. Implement team collaboration features
 2. Build compliance and audit system
 3. Create integration framework
@@ -859,6 +911,7 @@ interface CodeQualityScore {
 5. Add enterprise authentication and authorization
 
 **Deliverables**:
+
 - Team sharing and collaboration features
 - Complete audit trail system
 - Major tool integrations (GitHub, Jira, Slack)
@@ -870,6 +923,7 @@ interface CodeQualityScore {
 ### Data Models
 
 #### Agent Event Schema (PostgreSQL + TimescaleDB)
+
 ```sql
 -- Hypertable for time-series event storage
 CREATE TABLE agent_events (
@@ -880,24 +934,24 @@ CREATE TABLE agent_events (
   agent_version VARCHAR(50) NOT NULL,
   session_id UUID NOT NULL,
   project_id UUID NOT NULL,
-  
+
   -- Context
   context JSONB NOT NULL,
-  
+
   -- Event data
   data JSONB NOT NULL,
-  
+
   -- Metrics
   metrics JSONB,
-  
+
   -- Relationships
   parent_event_id UUID,
   related_event_ids UUID[],
-  
+
   -- Metadata
   tags TEXT[],
   severity VARCHAR(20),
-  
+
   -- Indexes
   INDEX idx_timestamp (timestamp DESC),
   INDEX idx_session (session_id),
@@ -927,6 +981,7 @@ GROUP BY hour, agent_id, project_id;
 ```
 
 #### Agent Session Schema
+
 ```sql
 CREATE TABLE agent_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -934,24 +989,24 @@ CREATE TABLE agent_sessions (
   agent_version VARCHAR(50) NOT NULL,
   project_id UUID NOT NULL,
   devlog_id UUID,
-  
+
   start_time TIMESTAMPTZ NOT NULL,
   end_time TIMESTAMPTZ,
   duration INTEGER, -- seconds
-  
+
   -- Context
   context JSONB NOT NULL,
-  
+
   -- Metrics
   metrics JSONB NOT NULL,
-  
+
   -- Outcome
   outcome VARCHAR(20), -- success, partial, failure, abandoned
   quality_score NUMERIC(5,2), -- 0-100
-  
+
   -- Full-text search
   search_vector tsvector,
-  
+
   INDEX idx_start_time (start_time DESC),
   INDEX idx_agent (agent_id),
   INDEX idx_project (project_id),
@@ -971,15 +1026,15 @@ export class AgentEventService extends PrismaServiceBase {
   // Event collection
   async collectEvent(event: AgentEvent): Promise<void>;
   async collectEventBatch(events: AgentEvent[]): Promise<void>;
-  
+
   // Event querying
   async getEvents(filter: EventFilter): Promise<AgentEvent[]>;
   async getEventById(id: string): Promise<AgentEvent | null>;
   async getEventsBySession(sessionId: string): Promise<AgentEvent[]>;
-  
+
   // Event streaming
   async streamEvents(filter: EventFilter): AsyncIterator<AgentEvent>;
-  
+
   // Event analytics
   async getEventStats(filter: EventFilter): Promise<EventStats>;
   async getEventTimeline(sessionId: string): Promise<TimelineEvent[]>;
@@ -991,12 +1046,12 @@ export class AgentSessionService extends PrismaServiceBase {
   async startSession(session: CreateSessionInput): Promise<AgentSession>;
   async endSession(sessionId: string, outcome: SessionOutcome): Promise<AgentSession>;
   async updateSession(sessionId: string, updates: Partial<AgentSession>): Promise<AgentSession>;
-  
+
   // Session querying
   async getSession(sessionId: string): Promise<AgentSession | null>;
   async listSessions(filter: SessionFilter): Promise<AgentSession[]>;
   async getActiveSessions(): Promise<AgentSession[]>;
-  
+
   // Session analytics
   async getSessionStats(filter: SessionFilter): Promise<SessionStats>;
   async getSessionTimeline(sessionId: string): Promise<SessionTimeline>;
@@ -1008,16 +1063,16 @@ export class AgentAnalyticsService extends PrismaServiceBase {
   // Performance analytics
   async getAgentPerformance(agentId: string, timeRange: TimeRange): Promise<PerformanceMetrics>;
   async compareAgents(agentIds: string[], timeRange: TimeRange): Promise<AgentComparison>;
-  
+
   // Quality analytics
   async getCodeQuality(filter: QualityFilter): Promise<QualityMetrics>;
   async analyzeSessionQuality(sessionId: string): Promise<QualityAnalysis>;
-  
+
   // Pattern detection
   async detectPatterns(filter: PatternFilter): Promise<DetectedPattern[]>;
   async getSuccessPatterns(agentId: string): Promise<SuccessPattern[]>;
   async getFailurePatterns(agentId: string): Promise<FailurePattern[]>;
-  
+
   // Recommendations
   async getRecommendations(context: RecommendationContext): Promise<Recommendation[]>;
   async suggestAgentForTask(taskType: string): Promise<AgentRecommendation>;
@@ -1136,18 +1191,21 @@ mcp_agent_get_recommendations({
 ## Success Metrics
 
 ### Technical Metrics
+
 - **Event Collection Rate**: > 10,000 events/second per instance
 - **Query Performance**: < 100ms for dashboard queries
 - **Storage Efficiency**: < 1KB per event average
 - **Uptime**: 99.9% availability
 
 ### User Experience Metrics
+
 - **Time to Insight**: Users find relevant information in < 30 seconds
 - **Session Replay**: < 2 seconds to load and start playback
 - **Dashboard Load**: < 1 second for initial render
 - **Search Speed**: Results in < 200ms
 
 ### Business Metrics
+
 - **Adoption Rate**: 70% of AI coding users use observability features
 - **Active Usage**: Users check dashboards at least weekly
 - **Value Realization**: Teams report 20%+ improvement in AI coding productivity
@@ -1156,18 +1214,21 @@ mcp_agent_get_recommendations({
 ## Security & Privacy Considerations
 
 ### Data Protection
+
 - **Code Privacy**: Option to hash/redact actual code content in events
 - **PII Filtering**: Automatic detection and redaction of sensitive data
 - **Encryption**: All data encrypted at rest and in transit
 - **Access Control**: Fine-grained permissions for viewing agent data
 
 ### Compliance
+
 - **Data Retention**: Configurable retention policies
 - **Data Deletion**: Complete deletion on request (GDPR, CCPA)
 - **Audit Logging**: All access to agent data is logged
 - **Compliance Reports**: SOC2, ISO 27001 compliance support
 
 ### Agent Privacy
+
 - **Opt-in Tracking**: Users/teams must explicitly enable tracking
 - **Granular Control**: Control what data is collected
 - **Data Ownership**: Clear ownership and control of collected data
@@ -1176,12 +1237,14 @@ mcp_agent_get_recommendations({
 ## Migration Path
 
 ### For Existing Devlog Users
+
 1. **Backward Compatibility**: All existing devlog features remain unchanged
 2. **Opt-in Observability**: Agent observability is an additive feature
 3. **Seamless Integration**: Devlog entries can link to agent sessions
 4. **Data Continuity**: Existing data structure is enhanced, not replaced
 
 ### Integration with Existing Workflow
+
 1. **Phase 1**: Add agent session tracking to existing devlog workflows
 2. **Phase 2**: Link agent sessions to devlog entries automatically
 3. **Phase 3**: Use agent analytics to enhance devlog insights
@@ -1190,6 +1253,7 @@ mcp_agent_get_recommendations({
 ## Future Enhancements
 
 ### Advanced Features (Post-MVP)
+
 - **Video Recording**: Screen recording of coding sessions
 - **Voice Transcription**: Transcribe voice commands to agents
 - **Multi-Agent Collaboration**: Track multiple agents working together
@@ -1200,6 +1264,7 @@ mcp_agent_get_recommendations({
 - **Agent Training**: Use observability data to improve agent prompts
 
 ### Scaling Considerations
+
 - **Distributed Collection**: Support for distributed event collection
 - **Edge Processing**: Process events at the edge before central storage
 - **Multi-Region**: Deploy across multiple regions for global teams
@@ -1221,16 +1286,21 @@ The phased approach ensures we deliver value early while building toward a compr
 ## Appendices
 
 ### Appendix A: Agent Integration Guides
+
 (To be developed for each supported agent)
 
 ### Appendix B: API Reference
+
 (To be developed with implementation)
 
 ### Appendix C: Database Schema
+
 (To be developed with detailed schema definitions)
 
 ### Appendix D: Performance Benchmarks
+
 (To be measured during implementation)
 
 ### Appendix E: Security Architecture
+
 (To be detailed during implementation)

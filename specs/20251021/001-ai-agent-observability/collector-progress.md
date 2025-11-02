@@ -9,6 +9,7 @@
 ## ✅ What's Completed
 
 ### Phase 0: Project Setup (100% Complete)
+
 - ✅ Go module structure with proper organization
 - ✅ Dependencies: fsnotify, sqlite, logrus, cobra
 - ✅ Makefile with build, test, clean targets
@@ -18,12 +19,14 @@
 ### Phase 1: Core Infrastructure (100% Complete)
 
 **Configuration System**
+
 - ✅ Config loading from `~/.devlog/collector.json`
 - ✅ Environment variable expansion (`${VAR}` syntax)
 - ✅ Validation and defaults
 - ✅ Test coverage: 81.2%
 
 **Log Discovery**
+
 - ✅ OS-specific path detection (darwin/linux/windows)
 - ✅ Support for: Copilot, Claude Code, Cursor, Cline, Aider
 - ✅ Glob pattern matching for version wildcards
@@ -31,6 +34,7 @@
 - ✅ Test coverage: 85%+ (from previous milestone)
 
 **File Watching**
+
 - ✅ Real-time monitoring using fsnotify
 - ✅ File change detection (Write/Create events)
 - ✅ Directory watching with recursive support
@@ -40,6 +44,7 @@
 - ✅ Test coverage: 74.7%
 
 **Local Buffer (SQLite)**
+
 - ✅ SQLite-based offline storage
 - ✅ Events table with proper indexing
 - ✅ Store/Retrieve/Delete operations
@@ -51,6 +56,7 @@
 ### Phase 2: Adapter System (50% Complete)
 
 **Base Infrastructure** ✅
+
 - ✅ AgentAdapter interface definition
 - ✅ Registry with adapter registration
 - ✅ Auto-detection via `SupportsFormat()`
@@ -59,6 +65,7 @@
 - ✅ Test coverage: 68.5%
 
 **GitHub Copilot Adapter** ✅
+
 - ✅ JSON log format parsing
 - ✅ Event type mapping (llm_request/llm_response)
 - ✅ Metadata extraction (model, tokens, duration)
@@ -67,6 +74,7 @@
 - ✅ Comprehensive tests
 
 **Pending Adapters** ⏳
+
 - ⏳ Claude Code adapter (Day 10)
 - ⏳ Cursor adapter (bonus)
 - ⏳ Generic fallback adapter (Day 11-12)
@@ -74,6 +82,7 @@
 ### Phase 3: Backend Communication (100% Complete)
 
 **HTTP Client** ✅
+
 - ✅ RESTful API communication
 - ✅ TLS/HTTPS support
 - ✅ Bearer token authentication
@@ -82,6 +91,7 @@
 - ✅ Test coverage: 75.7%
 
 **Batch Manager** ✅
+
 - ✅ Batching integrated into client
 - ✅ Configurable batch size and interval
 - ✅ Auto-flush on size threshold
@@ -89,6 +99,7 @@
 - ✅ Graceful batch handling
 
 **Retry Logic** ✅
+
 - ✅ Exponential backoff (1s, 2s, 4s, 8s...)
 - ✅ Configurable max retries
 - ✅ Network failure handling
@@ -96,6 +107,7 @@
 - ✅ Context cancellation support
 
 **End-to-End Integration** ✅
+
 - ✅ Complete CLI with start/version/status commands
 - ✅ Graceful shutdown (SIGINT/SIGTERM)
 - ✅ Health check with backend
@@ -107,26 +119,26 @@
 
 ## 📊 Test Coverage Summary
 
-| Package | Coverage | Status |
-|---------|----------|--------|
-| `internal/config` | 81.2% | ✅ Excellent |
-| `internal/watcher` | 74.7% | ✅ Good |
-| `internal/buffer` | 74.8% | ✅ Good |
-| `internal/client` | 75.7% | ✅ Good |
-| `internal/adapters` | 68.5% | ✅ Acceptable |
-| `pkg/types` | N/A | ✅ Type definitions |
-| **Average** | **~75%** | ✅ Good |
+| Package             | Coverage | Status              |
+| ------------------- | -------- | ------------------- |
+| `internal/config`   | 81.2%    | ✅ Excellent        |
+| `internal/watcher`  | 74.7%    | ✅ Good             |
+| `internal/buffer`   | 74.8%    | ✅ Good             |
+| `internal/client`   | 75.7%    | ✅ Good             |
+| `internal/adapters` | 68.5%    | ✅ Acceptable       |
+| `pkg/types`         | N/A      | ✅ Type definitions |
+| **Average**         | **~75%** | ✅ Good             |
 
 ---
 
 ## 🔧 Binary Characteristics
 
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| Binary Size | ~15MB | < 20MB | ✅ On target |
-| Build Time | ~0.5s | < 2s | ✅ Fast |
-| Startup Time | ~50ms | < 1s | ✅ Excellent |
-| Platforms | darwin/linux/windows | 3 | ✅ Complete |
+| Metric       | Current              | Target | Status       |
+| ------------ | -------------------- | ------ | ------------ |
+| Binary Size  | ~15MB                | < 20MB | ✅ On target |
+| Build Time   | ~0.5s                | < 2s   | ✅ Fast      |
+| Startup Time | ~50ms                | < 1s   | ✅ Excellent |
+| Platforms    | darwin/linux/windows | 3      | ✅ Complete  |
 
 ---
 
@@ -167,6 +179,7 @@ make build
 **Critical Missing Feature**: The collector only captures events from when it starts. Historical logs are ignored.
 
 **Backfill Requirements** (Days 17-20):
+
 - [ ] BackfillManager component
 - [ ] Read log files from arbitrary date range
 - [ ] Timestamp tracking to prevent duplicates
@@ -177,6 +190,7 @@ make build
 - [ ] Resume capability after interruption
 
 **Use Cases**:
+
 - Initial setup with existing context
 - Gap recovery after collector downtime
 - Historical analysis of agent activities
@@ -185,6 +199,7 @@ make build
 ### Phase 2: Additional Adapters (50% Complete)
 
 **Claude Code Adapter** (Day 10):
+
 - [ ] Research Claude Code log format
 - [ ] Implement adapter methods
 - [ ] Map Claude events to standard types
@@ -192,11 +207,13 @@ make build
 - [ ] Write tests with samples
 
 **Cursor Adapter** (Bonus):
+
 - [ ] Research Cursor log format
 - [ ] Implement adapter
 - [ ] Write tests
 
 **Generic Adapter** (Days 11-12):
+
 - [ ] Best-effort parsing for unknown formats
 - [ ] Fallback detection
 - [ ] Adapter development guide
@@ -204,18 +221,21 @@ make build
 ### Phase 5: Distribution (0% Complete)
 
 **NPM Package** (Days 21-22):
+
 - [ ] Create `@codervisor/devlog-collector` npm package
 - [ ] Post-install script for binary selection
 - [ ] Platform detection and binary placement
 - [ ] Test npm install on all platforms
 
 **Auto-start** (Day 23):
+
 - [ ] macOS launchd plist template
 - [ ] Linux systemd service template
 - [ ] Windows service (optional)
 - [ ] Install/uninstall scripts
 
 **Documentation** (Day 24):
+
 - [ ] Comprehensive README
 - [ ] Installation guide
 - [ ] Configuration reference
@@ -227,16 +247,19 @@ make build
 ## 🎯 Next Steps (Priority Order)
 
 ### Immediate (Next 1-2 days)
+
 1. **Implement Claude Code adapter** - Add second major agent support
 2. **Manual integration testing** - Test offline→online transition with real backend
 3. **Performance profiling** - Verify resource usage meets targets
 
 ### Short-term (Next 1 week)
+
 4. **Historical backfill feature** - Critical for real-world usage
 5. **Cursor adapter** - Add third agent support
 6. **Generic adapter** - Fallback for unsupported agents
 
 ### Medium-term (Next 2 weeks)
+
 7. **NPM package** - Easy installation for developers
 8. **Auto-start scripts** - Background daemon setup
 9. **Documentation** - User guides and troubleshooting
@@ -275,6 +298,7 @@ Overall Progress:     █████████████░░░░░░�
 ## 💡 Recommendations
 
 ### For Real-World Deployment
+
 1. **Implement backfill first** - Critical for user onboarding
 2. **Add Claude adapter** - Second most popular AI coding assistant
 3. **Test with actual backend** - Verify API contract matches
@@ -282,6 +306,7 @@ Overall Progress:     █████████████░░░░░░�
 5. **Write migration guide** - For users moving from TypeScript collector
 
 ### For Code Quality
+
 1. **Increase test coverage to 80%+** - Currently at ~75%
 2. **Add integration tests** - Test full pipeline with mock backend
 3. **Document internal APIs** - Help future contributors

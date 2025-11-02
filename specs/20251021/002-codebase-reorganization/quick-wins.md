@@ -7,6 +7,7 @@
 Rename "devlog entry" to "work item" for better clarity and industry alignment.
 
 ### Why "Work Item"?
+
 - ✅ Industry standard (Azure DevOps, GitHub Projects)
 - ✅ Immediately understandable to developers
 - ✅ Versatile - works for features, bugs, tasks, refactors
@@ -19,6 +20,7 @@ Rename "devlog entry" to "work item" for better clarity and industry alignment.
 **File**: `packages/core/src/types/core.ts`
 
 Add at the top:
+
 ```typescript
 /**
  * Work Item - Industry-standard terminology for trackable work
@@ -32,6 +34,7 @@ export type WorkItem = DevlogEntry;
 **File**: `packages/core/src/types/index.ts`
 
 Add export:
+
 ```typescript
 export type { WorkItem } from './core.js';
 ```
@@ -39,6 +42,7 @@ export type { WorkItem } from './core.js';
 **3. Document the Change** (20 minutes)
 
 Add to README files and documentation:
+
 - "Track **work items** (features, bugs, tasks) alongside agent activities"
 - "Organize **work items** by project"
 - "See which **work items** AI agents are working on"
@@ -57,6 +61,7 @@ These changes immediately clarify the project vision without breaking any code.
 **Target**: Lead with "AI agent observability platform"
 
 **Action**: Replace the "Vision" and "Core Capabilities" sections to emphasize:
+
 1. AI agent activity monitoring (primary)
 2. Performance & quality analytics
 3. Enterprise compliance for AI-generated code
@@ -65,50 +70,56 @@ These changes immediately clarify the project vision without breaking any code.
 ### 2. Update AGENTS.md
 
 **Action**: Add section on agent observability workflow:
+
 ```markdown
 ## Agent Observability Workflow
 
 ### When Monitoring AI Agent Sessions
 ```
+
 // Before any AI coding work
 mcp_agent_start_session({
-  agentId: "github-copilot",
-  projectId: 1,
-  objective: "Implement user authentication",
-  workItemId: 123  // Optional: link to work item
+agentId: "github-copilot",
+projectId: 1,
+objective: "Implement user authentication",
+workItemId: 123 // Optional: link to work item
 });
 
 // During work - events logged automatically by collector
 // Or manually log significant events
 mcp_agent_log_event({
-  type: "file_write",
-  filePath: "src/auth/login.ts",
-  metrics: { linesAdded: 45, tokensUsed: 1200 }
+type: "file_write",
+filePath: "src/auth/login.ts",
+metrics: { linesAdded: 45, tokensUsed: 1200 }
 });
 
 // After work completes
 mcp_agent_end_session({
-  outcome: "success",
-  summary: "Implemented JWT-based auth with tests"
+outcome: "success",
+summary: "Implemented JWT-based auth with tests"
 });
+
 ```
 
 ### When Managing Work Items (Optional)
 ```
+
 // Create a work item to organize work
 mcp_work_item_create({
-  title: "Implement user authentication",
-  type: "feature",
-  description: "Add JWT-based authentication system"
+title: "Implement user authentication",
+type: "feature",
+description: "Add JWT-based authentication system"
 });
 
 // Update progress
 mcp_work_item_update({
-  id: 123,
-  status: "in-progress",
-  note: "Completed login endpoint"
+id: 123,
+status: "in-progress",
+note: "Completed login endpoint"
 });
+
 ```
+
 ```
 
 ### 3. Create Agent Observability Quick Start
@@ -116,6 +127,7 @@ mcp_work_item_update({
 **File**: `docs/ai-agent-observability/QUICK_START.md`
 
 **Content**: Step-by-step guide:
+
 1. Setting up a project
 2. Starting an agent session
 3. Viewing live agent activity
@@ -131,21 +143,22 @@ Add clarity to existing code without moving anything.
 **File**: `packages/core/src/types/agent-observability.ts`
 
 Add comprehensive JSDoc comments:
-```typescript
+
+````typescript
 /**
  * Agent Observability Core Types
- * 
+ *
  * This module defines the core data structures for tracking AI coding agent
  * activities, sessions, and metrics. These types form the foundation of the
  * AI agent observability platform.
- * 
+ *
  * @module agent-observability
  */
 
 /**
  * Represents a single event captured from an AI coding agent.
  * Events are immutable, timestamped records of agent actions.
- * 
+ *
  * @example
  * ```typescript
  * const event: AgentEvent = {
@@ -161,27 +174,29 @@ Add comprehensive JSDoc comments:
 export interface AgentEvent {
   // ...
 }
-```
+````
 
 ### 2. Add Service Layer Documentation
 
 **Files**: All services in `packages/core/src/services/`
 
 Add module-level comments distinguishing:
+
 - **Agent Observability Services** (primary)
 - **Project Management Services** (secondary)
 
 Example:
+
 ```typescript
 /**
  * Agent Event Service
- * 
+ *
  * PRIMARY SERVICE - Core agent observability functionality
- * 
+ *
  * Manages the lifecycle of agent events including creation, querying,
  * and aggregation for analytics. This service handles high-volume
  * event ingestion and efficient time-series queries.
- * 
+ *
  * @module services/agent-event-service
  */
 export class AgentEventService {
@@ -208,10 +223,11 @@ mkdir -p packages/core/src/project-management/documents
 ### 2. Create Index Files with Re-exports
 
 Create `packages/core/src/agent-observability/index.ts`:
+
 ```typescript
 /**
  * Agent Observability Module
- * 
+ *
  * Core functionality for AI coding agent monitoring and analytics.
  * This is the primary feature of the platform.
  */
@@ -225,19 +241,20 @@ export * from '../types/agent-observability.js';
 ```
 
 Create `packages/core/src/project-management/index.ts`:
+
 ```typescript
 /**
  * Project Management Module
- * 
+ *
  * Optional project and work tracking features.
  * Supporting functionality for organizing agent sessions by project.
  */
 
 // Re-export from existing locations
 export * from '../services/project-service.js';
-export * from '../services/devlog-service.js';  // TODO: rename to work-item-service
+export * from '../services/devlog-service.js'; // TODO: rename to work-item-service
 export * from '../types/project.js';
-export * from '../types/core.js';  // Includes WorkItem type alias
+export * from '../types/core.js'; // Includes WorkItem type alias
 
 // TODO: Move actual files here in next phase
 ```
@@ -287,14 +304,14 @@ export const agentObservabilityTools = [
     description: '[AGENT OBSERVABILITY] End an active agent session...',
     // ...
   },
-  
+
   // Event Logging
   {
     name: 'mcp_agent_log_event',
     description: '[AGENT OBSERVABILITY] Log an agent activity event...',
     // ...
   },
-  
+
   // Querying & Analytics
   {
     name: 'mcp_agent_query_events',
@@ -331,10 +348,7 @@ export const projectManagementTools = [
 // ALL TOOLS (for backward compatibility)
 // ============================================================================
 
-export const allTools = [
-  ...agentObservabilityTools,
-  ...projectManagementTools,
-];
+export const allTools = [...agentObservabilityTools, ...projectManagementTools];
 ```
 
 ### 2. Update MCP Server Description
@@ -376,7 +390,8 @@ Update all package README files.
 ### 1. Update packages/core/README.md
 
 Add clear sections:
-```markdown
+
+````markdown
 # @codervisor/devlog-core
 
 Core services and types for the AI Coding Agent Observability Platform.
@@ -384,12 +399,14 @@ Core services and types for the AI Coding Agent Observability Platform.
 ## Features
 
 ### 🔍 Agent Observability (Primary)
+
 - **Event Collection**: Capture all AI agent activities
-- **Session Management**: Track complete agent working sessions  
+- **Session Management**: Track complete agent working sessions
 - **Analytics Engine**: Metrics, patterns, and quality scores
 - **Time-series Storage**: Efficient PostgreSQL + TimescaleDB
 
 ### 📊 Project Management (Supporting)
+
 - **Project Organization**: Organize sessions by project
 - **Work Item Tracking**: Optional system for tracking features, bugs, tasks
 - **Document Management**: Attach files and notes
@@ -397,6 +414,7 @@ Core services and types for the AI Coding Agent Observability Platform.
 ## Usage
 
 ### Agent Observability
+
 ```typescript
 import { AgentEventService, AgentSessionService } from '@codervisor/devlog-core/server';
 
@@ -413,8 +431,10 @@ await AgentEventService.getInstance().logEvent({
   // ...
 });
 ```
+````
 
 ### Project Management
+
 ```typescript
 import { ProjectService, WorkItem } from '@codervisor/devlog-core/server';
 // Note: WorkItem is an alias for DevlogEntry for backward compatibility
@@ -424,6 +444,7 @@ const project = await ProjectService.getInstance().create({
   name: 'My Project',
 });
 ```
+
 ```
 
 ### 2. Similar Updates for Other Packages
@@ -441,7 +462,7 @@ After completing quick wins:
 - [x] All README files emphasize agent observability as primary feature
 - [x] "Work item" terminology used instead of "devlog entry"
 - [x] WorkItem type alias exported from core package
-- [x] Code comments clearly distinguish primary vs. secondary features  
+- [x] Code comments clearly distinguish primary vs. secondary features
 - [x] New folder structure exists (even if files not moved yet)
 - [x] MCP tools are categorized by feature domain
 - [x] Package exports are logically organized
@@ -503,3 +524,4 @@ All 5 priorities successfully implemented:
 **Remember**: These changes improve clarity without breaking anything. They set the foundation for larger reorganization work.
 
 **Next Phase**: Phase 2 - Code Structure (moving actual files into new folder structure)
+```

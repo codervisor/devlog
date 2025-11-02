@@ -9,6 +9,7 @@
 ## Phase 0: Project Setup (Days 1-2)
 
 ### Day 1: Go Project Structure ✅ COMPLETE
+
 - [x] Create `packages/collector-go/` directory
 - [x] Initialize Go module: `go mod init github.com/codervisor/devlog/collector`
 - [ ] Set up project structure:
@@ -37,6 +38,7 @@
 - [x] Create basic `main.go` with CLI structure
 
 ### Day 2: Development Tooling ✅ COMPLETE
+
 - [x] Set up cross-compilation script (darwin/linux/windows)
 - [x] Create Makefile for common tasks (build, test, clean)
 - [x] Add `.gitignore` for Go binaries
@@ -48,6 +50,7 @@
 ## Phase 1: Core Infrastructure (Days 3-7)
 
 ### Day 3: Configuration System ✅ COMPLETE
+
 - [x] Create `internal/config/config.go`
 - [x] Define config structure (matches design doc)
 - [x] Implement config loading from `~/.devlog/collector.json`
@@ -58,6 +61,7 @@
 - [x] Integrate config system into main CLI
 
 ### Day 4: Log Discovery ✅ COMPLETE
+
 - [x] Create `internal/watcher/discovery.go`
 - [x] Implement OS-specific log path detection:
   - [x] GitHub Copilot paths (darwin/linux/windows)
@@ -71,6 +75,7 @@
 - [x] Test discovery on real system (found Cursor logs)
 
 ### Day 5: File Watching ✅ COMPLETE
+
 - [x] Create `internal/watcher/watcher.go`
 - [x] Implement LogWatcher using fsnotify
 - [x] Add file change detection (write events)
@@ -80,6 +85,7 @@
 - [x] Write integration tests (74.7% coverage)
 
 ### Days 6-7: Local Buffer (SQLite) ✅ COMPLETE
+
 - [x] Create `internal/buffer/buffer.go`
 - [x] Define SQLite schema (events table)
 - [x] Implement Buffer initialization
@@ -94,6 +100,7 @@
 ## Phase 2: Adapter System (Days 8-12)
 
 ### Day 8: Base Adapter Infrastructure ✅ COMPLETE
+
 - [x] Create `internal/adapters/adapter.go` (interface definition)
 - [x] Create `internal/adapters/registry.go`
 - [x] Implement adapter registration
@@ -103,6 +110,7 @@
 - [x] Write base adapter tests (68.5% coverage)
 
 ### Day 9: GitHub Copilot Adapter ✅ COMPLETE
+
 - [x] Create `internal/adapters/copilot_adapter.go`
 - [x] Research Copilot log format (JSON-based)
 - [x] Implement `Name()` method
@@ -115,6 +123,7 @@
 - [x] Documented in code comments
 
 ### Day 10: Claude Code Adapter
+
 - [ ] Create `internal/adapters/claude.go`
 - [ ] Research Claude Code log format
 - [ ] Implement adapter methods
@@ -124,6 +133,7 @@
 - [ ] Document Claude log format
 
 ### Days 11-12: Generic Adapter + Testing
+
 - [ ] Create `internal/adapters/generic.go` (fallback)
 - [ ] Implement best-effort parsing for unknown formats
 - [ ] Integration test with all adapters
@@ -134,6 +144,7 @@
 ## Phase 3: Backend Communication (Days 13-16)
 
 ### Day 13: HTTP Client ✅ COMPLETE
+
 - [x] Create `internal/client/client.go`
 - [x] Implement Client struct with batching
 - [x] Add connection pooling (via http.Client)
@@ -143,6 +154,7 @@
 - [x] Write client unit tests (75.7% coverage)
 
 ### Day 14: Batch Manager ✅ COMPLETE (Integrated into Client)
+
 - [x] Batching integrated into `client.go` (no separate file needed)
 - [x] Implement batch queue and auto-flush logic
 - [x] Add event batching (configurable size/interval)
@@ -152,6 +164,7 @@
 - [ ] Implement gzip compression (deferred - not critical)
 
 ### Day 15: Retry Logic ✅ COMPLETE
+
 - [x] Implement exponential backoff
 - [x] Add max retry limit (configurable)
 - [x] Handle network failures
@@ -160,6 +173,7 @@
 - [ ] Implement circuit breaker pattern (deferred - nice to have)
 
 ### Day 16: End-to-End Integration ✅ COMPLETE
+
 - [x] Wire all components together in `cmd/collector/main.go`
 - [x] Implement graceful shutdown (SIGINT/SIGTERM)
 - [x] Add startup validation and health checks
@@ -172,6 +186,7 @@
 ## Phase 4: Historical Log Collection (Days 17-20)
 
 ### Day 17: Backfill Architecture
+
 - [ ] Design backfill data structures
 - [ ] Add `BackfillManager` component
 - [ ] Define timestamp tracking mechanism
@@ -181,6 +196,7 @@
 - [ ] Write architecture documentation
 
 ### Day 18: Backfill Implementation
+
 - [ ] Create `internal/backfill/` package
 - [ ] Implement log file historical reading (from start/date)
 - [ ] Add date range filtering for events
@@ -190,6 +206,7 @@
 - [ ] Write comprehensive tests
 
 ### Day 19: Backfill CLI Integration
+
 - [ ] Add `backfill` subcommand to CLI
 - [ ] Add flags: `--agent`, `--from`, `--to`, `--dry-run`
 - [ ] Add `--backfill` flag to `start` command
@@ -199,8 +216,9 @@
 - [ ] Document backfill command usage
 
 ### Day 20: Backfill Testing & Validation
+
 - [ ] Test with Copilot historical logs
-- [ ] Test with Claude historical logs  
+- [ ] Test with Claude historical logs
 - [ ] Test with Cursor historical logs
 - [ ] Verify deduplication works correctly
 - [ ] Test large backfill operations (>10K events)
@@ -210,6 +228,7 @@
 ## Phase 5: Distribution (Days 21-24)
 
 ### Day 21: Build System
+
 - [ ] Create cross-compilation script
 - [ ] Build for all platforms:
   - darwin/amd64
@@ -222,6 +241,7 @@
 - [ ] Measure binary sizes
 
 ### Day 18: NPM Package
+
 - [ ] Create `packages/collector-npm/` directory
 - [ ] Create `package.json` for `@codervisor/devlog-collector`
 - [ ] Add post-install script
@@ -231,6 +251,7 @@
 - [ ] Publish to npm (test registry first)
 
 ### Day 19: Auto-start Configuration
+
 - [ ] Create macOS launchd plist template
 - [ ] Create Linux systemd service template
 - [ ] Create Windows service installer (optional)
@@ -240,6 +261,7 @@
 - [ ] Document manual setup steps
 
 ### Day 20: Documentation
+
 - [ ] Write comprehensive README
 - [ ] Add installation guide
 - [ ] Document configuration options
@@ -251,18 +273,21 @@
 ## Testing Strategy
 
 ### Unit Tests
+
 - [ ] All adapters (with real log samples)
 - [ ] Buffer operations
 - [ ] Config loading and validation
 - [ ] Event parsing and transformation
 
 ### Integration Tests
+
 - [ ] Full pipeline: watch → parse → buffer → send
 - [ ] Multi-agent concurrent collection
 - [ ] Offline mode and recovery
 - [ ] Error handling and retry
 
 ### Performance Tests
+
 - [ ] Measure event processing throughput
 - [ ] Test with high-volume log generation
 - [ ] Memory usage profiling
@@ -270,6 +295,7 @@
 - [ ] Battery impact assessment (macOS)
 
 ### Platform Tests
+
 - [ ] macOS (Intel + Apple Silicon)
 - [ ] Linux (Ubuntu, Fedora)
 - [ ] Windows 10/11
@@ -291,19 +317,18 @@
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Log format changes**: Adapters may break with agent updates
   - Mitigation: Version detection, graceful fallbacks, monitoring
-  
 - **Platform-specific issues**: File paths, permissions vary by OS
   - Mitigation: Extensive testing, clear error messages
-  
 - **Performance impact**: Collector shouldn't slow down development
   - Mitigation: Benchmarking, resource limits, efficient algorithms
 
 ### Operational Risks
+
 - **User adoption**: Developers may resist installing collectors
   - Mitigation: Easy install (npm), clear value proposition, minimal footprint
-  
 - **Privacy concerns**: Developers may worry about data collection
   - Mitigation: Clear documentation, opt-in, local-first design, data controls
 

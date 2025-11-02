@@ -12,7 +12,7 @@ $ go test ./internal/integration -v -timeout 30s
 === RUN   TestEndToEnd_CopilotLogParsing
 --- PASS: TestEndToEnd_CopilotLogParsing (2.07s)
 
-=== RUN   TestEndToEnd_OfflineBuffering  
+=== RUN   TestEndToEnd_OfflineBuffering
 --- PASS: TestEndToEnd_OfflineBuffering (2.14s)
 
 === RUN   TestEndToEnd_LogRotation
@@ -34,6 +34,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 **Purpose**: Verify complete flow from log file to backend API
 
 **Test Flow**:
+
 1. Create temporary log directory
 2. Initialize all components (adapters, watcher, client, buffer)
 3. Start mock backend server
@@ -43,6 +44,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 7. Verify events received correctly
 
 **Assertions**:
+
 - ✅ 2 events parsed from log file
 - ✅ 2 events received by backend
 - ✅ Event metadata correct (agent ID, type, file path)
@@ -55,6 +57,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 **Purpose**: Verify events are buffered when backend is unavailable
 
 **Test Flow**:
+
 1. Start mock backend in "down" state (returns 503)
 2. Parse and attempt to send events
 3. Events fail to send, get stored in SQLite buffer
@@ -64,6 +67,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 7. Delete successfully sent events from buffer
 
 **Assertions**:
+
 - ✅ 2 events buffered when backend down
 - ✅ 2 events successfully sent when backend up
 - ✅ Events retrieved from buffer intact
@@ -76,6 +80,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 **Purpose**: Verify collector handles log file rotation gracefully
 
 **Test Flow**:
+
 1. Write initial log file with events
 2. Parse and send events
 3. Simulate log rotation (rename file to .1)
@@ -84,6 +89,7 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 6. Verify all events from both files processed
 
 **Assertions**:
+
 - ✅ Events from original file processed
 - ✅ Log rotation detected
 - ✅ Events from new file processed
@@ -96,12 +102,14 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 **Purpose**: Verify collector handles many events efficiently
 
 **Test Flow**:
+
 1. Generate log file with 100 events
 2. Parse all events
 3. Send via batching client
 4. Verify success rate
 
 **Assertions**:
+
 - ✅ 100/100 events parsed (100% success rate)
 - ✅ 100/100 events received by backend
 - ✅ No memory leaks
@@ -148,16 +156,17 @@ ok  github.com/codervisor/devlog/collector/internal/integration  8.721s
 ## 📝 Key Test Patterns
 
 ### Mock Backend Server
+
 ```go
 server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     // Decode batch request
     var body map[string]interface{}
     json.NewDecoder(r.Body).Decode(&body)
-    
+
     // Track received events
     events := body["events"].([]interface{})
     receivedEvents = append(receivedEvents, events...)
-    
+
     // Return success
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
@@ -165,6 +174,7 @@ server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *htt
 ```
 
 ### Temporary Test Environment
+
 ```go
 tmpDir := t.TempDir()                          // Auto-cleanup
 logDir := filepath.Join(tmpDir, "logs")         // Isolated logs
@@ -172,6 +182,7 @@ bufferPath := filepath.Join(tmpDir, "buffer.db") // Isolated buffer
 ```
 
 ### Component Integration
+
 ```go
 // Real components, no mocks (except backend)
 registry := adapters.DefaultRegistry("test-project")
@@ -184,6 +195,7 @@ fileWatcher, _ := watcher.NewWatcher(watcherConfig)
 ## ✅ Coverage Summary
 
 **Overall Project Coverage**:
+
 ```
 internal/adapters     68.5%
 internal/buffer       74.8%
@@ -196,24 +208,28 @@ internal/integration  100% (4/4 scenarios)
 ## 🎯 What's Tested
 
 **Component Integration**:
+
 - ✅ Adapter → Client flow
 - ✅ Client → Backend API flow
 - ✅ Client → Buffer → Backend flow
 - ✅ Watcher → Adapter → Client flow
 
 **Error Handling**:
+
 - ✅ Backend unavailable (503)
 - ✅ Network failures
 - ✅ Malformed log entries (graceful skip)
 - ✅ File system operations
 
 **Performance**:
+
 - ✅ High volume (100 events)
 - ✅ Batching efficiency
 - ✅ No memory leaks
 - ✅ Reasonable latency
 
 **Reliability**:
+
 - ✅ Offline buffering
 - ✅ Automatic retry
 - ✅ Log rotation

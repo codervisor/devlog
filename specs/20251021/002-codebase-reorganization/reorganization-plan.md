@@ -7,6 +7,7 @@
 ## 🎯 Overview
 
 As we pivot to the AI agent observability value proposition, our codebase needs reorganization to:
+
 1. **Clarify the new vision** - Make it obvious this is an AI agent observability platform
 2. **Clean up legacy concepts** - Remove or consolidate outdated "devlog entry" terminology
 3. **Prepare for Go integration** - Structure for hybrid TypeScript + Go architecture
@@ -15,6 +16,7 @@ As we pivot to the AI agent observability value proposition, our codebase needs 
 ## 📊 Current State Analysis
 
 ### What We Have (Good Foundation)
+
 ✅ **Database Schema** - Already has `agent_events`, `agent_sessions` tables (Prisma)
 ✅ **Core Services** - `AgentEventService`, `AgentSessionService` implemented
 ✅ **Hybrid Architecture** - Clear separation: TypeScript (web/API) + Go (collector planned)
@@ -22,6 +24,7 @@ As we pivot to the AI agent observability value proposition, our codebase needs 
 ✅ **Documentation** - Comprehensive design docs for AI agent observability
 
 ### What's Messy (Needs Cleanup)
+
 ❌ **Mixed Terminology** - "Devlog entry" vs "AI agent session" confusion
 ❌ **Legacy Features** - Devlog entry CRUD still prominent in UI/API
 ❌ **Unclear Focus** - READMEs emphasize work tracking over observability
@@ -31,9 +34,11 @@ As we pivot to the AI agent observability value proposition, our codebase needs 
 ## 🗂️ Reorganization Strategy
 
 ### Phase 1: Terminology & Concept Cleanup (Week 1)
+
 **Goal**: Update documentation and core concepts to reflect AI agent observability focus
 
 #### 1.1 Terminology Rebrand: "Devlog Entry" → "Work Item"
+
 - [ ] **Update all documentation** - Replace "devlog entry" with "work item"
 - [ ] **Update UI labels** - Navigation, buttons, headers use "Work Item"
 - [ ] **Add type aliases** - `type WorkItem = DevlogEntry` for gradual migration
@@ -41,16 +46,19 @@ As we pivot to the AI agent observability value proposition, our codebase needs 
 - [ ] **Keep backward compatibility** - Support both terms during transition
 
 #### 1.2 Update Primary Documentation
+
 - [ ] **README.md** - Rewrite to emphasize AI agent observability as primary value
 - [ ] **AGENTS.md** - Update guidelines to focus on observability features
 - [ ] **Package READMEs** - Align all package docs with new vision
 
 #### 1.3 Clarify Product Positioning
+
 - [ ] Position "work items" as **optional project management feature**
 - [ ] Make "agent sessions" and "agent events" the **primary concepts**
 - [ ] Update all user-facing terminology consistently
 
 #### 1.3 Documentation Structure
+
 ```
 docs/
 ├── README.md (updated)
@@ -77,6 +85,7 @@ docs/
 #### 2.1 Package Structure - Current to Target
 
 **Current Structure:**
+
 ```
 packages/
 ├── core/                  # Mixed: devlog + agent observability
@@ -86,6 +95,7 @@ packages/
 ```
 
 **Target Structure:**
+
 ```
 packages/
 ├── core/                           # TypeScript core - business logic
@@ -142,30 +152,36 @@ packages/
 #### 2.2 Service Layer Consolidation
 
 **Current Issues:**
+
 - Services scattered across multiple files
 - Inconsistent naming (DevlogService vs PrismaDevlogService)
 - Mixed concerns (CRUD + business logic)
 
 **Target Service Architecture:**
-```typescript
-packages/core/src/services/
 
-// Agent Observability Services (PRIMARY)
-agent-event-service.ts              // Event CRUD & querying
-agent-session-service.ts            // Session management
-agent-analytics-service.ts          // Metrics & aggregations
-agent-pattern-service.ts            // Pattern detection
-collector-management-service.ts     // Collector control
+```typescript
+packages /
+  core /
+  src /
+  services /
+  // Agent Observability Services (PRIMARY)
+  agent -
+  event -
+  service.ts; // Event CRUD & querying
+agent - session - service.ts; // Session management
+agent - analytics - service.ts; // Metrics & aggregations
+agent - pattern - service.ts; // Pattern detection
+collector - management - service.ts; // Collector control
 
 // Project Management Services (SECONDARY)
-project-service.ts                  // Project CRUD
-work-item-service.ts                // Work item CRUD (renamed from devlog-service)
-document-service.ts                 // Document management
+project - service.ts; // Project CRUD
+work - item - service.ts; // Work item CRUD (renamed from devlog-service)
+document - service.ts; // Document management
 
 // Infrastructure Services
-database-service.ts                 // Database connection
-llm-service.ts                      // LLM integrations
-auth-service.ts                     // Authentication
+database - service.ts; // Database connection
+llm - service.ts; // LLM integrations
+auth - service.ts; // Authentication
 ```
 
 ### Phase 3: UI/UX Reorganization (Week 3)
@@ -173,6 +189,7 @@ auth-service.ts                     // Authentication
 #### 3.1 Web App Structure - Current to Target
 
 **Current Structure:**
+
 ```
 apps/web/
 ├── app/
@@ -186,6 +203,7 @@ apps/web/
 ```
 
 **Target Structure:**
+
 ```
 apps/web/
 ├── app/
@@ -216,11 +234,13 @@ apps/web/
 #### 3.2 Navigation Reorganization
 
 **Current Navigation:**
+
 ```
 Home > Projects > Devlog Entries
 ```
 
 **Target Navigation:**
+
 ```
 Dashboard (Agent Activity)          # PRIMARY - Default landing
   ├── Live Sessions
@@ -244,6 +264,7 @@ Settings
 #### 4.1 API Structure
 
 **Target API Routes:**
+
 ```
 /api/v1/
 
@@ -272,6 +293,7 @@ Settings
 **Current:** Mixed devlog and agent tools in flat structure
 
 **Target:** Organized by feature domain
+
 ```typescript
 // Agent Observability Tools (PRIMARY - 10+ tools)
 mcp_agent_start_session
@@ -297,6 +319,7 @@ mcp_project_list
 ## 📋 Implementation Checklist
 
 ### Week 1: Documentation & Terminology
+
 - [ ] **Rebrand "devlog entry" to "work item"** across all documentation
 - [ ] Add `type WorkItem = DevlogEntry` alias in core package
 - [ ] Update root README.md with AI agent observability focus
@@ -307,6 +330,7 @@ mcp_project_list
 - [ ] Update terminology across all docs (consistent language)
 
 ### Week 2: Code Structure
+
 - [ ] Create new folder structure in packages/core/src/
 - [ ] Move agent-related code to agent-observability/
 - [ ] Move work item code to project-management/work-items/
@@ -317,6 +341,7 @@ mcp_project_list
 - [ ] Keep backward compatibility for DevlogEntry type
 
 ### Week 3: UI/UX
+
 - [ ] Create new app/dashboard/ as default landing
 - [ ] Build agent-observability components
 - [ ] Rename "Devlog" to "Work Items" in all UI labels
@@ -326,6 +351,7 @@ mcp_project_list
 - [ ] Test all user flows
 
 ### Week 4: API & Integration
+
 - [ ] Reorganize API routes
 - [ ] Group MCP tools by domain
 - [ ] Update MCP tool descriptions
@@ -336,6 +362,7 @@ mcp_project_list
 ## 🎯 Success Criteria
 
 ### User Experience
+
 - [ ] First-time users immediately understand this is an AI agent observability tool
 - [ ] Agent sessions and events are the primary UI focus
 - [ ] Work items are clearly secondary/optional features (not "devlog entries")
@@ -343,12 +370,14 @@ mcp_project_list
 - [ ] Navigation is intuitive and reflects feature priority
 
 ### Developer Experience
+
 - [ ] Code organization matches mental model (agent observability > project management)
 - [ ] Service layer is clean and well-defined
 - [ ] Import paths are logical and consistent
 - [ ] New developers can quickly understand the architecture
 
 ### Technical Quality
+
 - [ ] All tests pass after reorganization
 - [ ] No breaking changes to public APIs (or documented migration path)
 - [ ] Performance not degraded
@@ -357,14 +386,16 @@ mcp_project_list
 ## 🚧 Migration Strategy
 
 ### Backward Compatibility
+
 - **API Routes**: Maintain old routes with deprecation warnings for 2 versions
   - `/devlogs` → `/work-items` (both supported)
 - **Types**: Export both `DevlogEntry` and `WorkItem` (alias)
 - **Database Schema**: No breaking changes (table names stay same internally)
-- **MCP Tools**: Support both naming conventions (devlog_* and work_item_*)
+- **MCP Tools**: Support both naming conventions (devlog*\* and work_item*\*)
 - **Documentation**: Keep old docs in `/docs/archive/` for reference
 
 ### Communication
+
 - [ ] Create migration guide for existing users
 - [ ] Announce changes in release notes
 - [ ] Update public documentation
@@ -373,6 +404,7 @@ mcp_project_list
 ## 📝 Notes
 
 ### Key Decisions
+
 1. **Rebrand "devlog entry" to "work item"** - More intuitive for users
 2. **Preserve functionality** - Don't remove features, just rename and deprioritize
 3. **Hybrid architecture confirmed** - TypeScript for web/API, Go for collectors/processing
@@ -381,12 +413,14 @@ mcp_project_list
 6. **Focus on developer experience** - Make code structure match product vision
 
 ### Open Questions
+
 - [ ] Do we rename the repository from "devlog" to something else?
 - [ ] Should we version the API during this reorganization?
 - [ ] How aggressively should we deprecate old terminology?
 - [ ] Timeline for removing legacy code completely?
 
 ### Related Documents
+
 - [AI Agent Observability Design](../20250115-ai-agent-observability/ai-agent-observability-design.md)
 - [Go Collector Roadmap](../20250115-ai-agent-observability/GO_COLLECTOR_ROADMAP.md)
 - [Performance Analysis](../20250115-ai-agent-observability/ai-agent-observability-performance-analysis.md)

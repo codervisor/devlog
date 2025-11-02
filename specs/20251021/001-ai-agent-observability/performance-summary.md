@@ -16,12 +16,12 @@ Phase 3: Go Backend (Months 4-5) → Scale to 50K+ events/sec
 
 ## Quick Comparison
 
-| Language | Performance | Dev Speed | Ecosystem | Team Fit | Best For |
-|----------|------------|-----------|-----------|----------|----------|
-| **TypeScript** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | MVP, Web UI, MCP |
-| **Go** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | **Event Processing** |
-| **C#/.NET** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | Enterprise/Azure |
-| **Rust** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ | Ultra-high perf |
+| Language       | Performance | Dev Speed  | Ecosystem  | Team Fit   | Best For             |
+| -------------- | ----------- | ---------- | ---------- | ---------- | -------------------- |
+| **TypeScript** | ⭐⭐⭐      | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | MVP, Web UI, MCP     |
+| **Go**         | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐   | ⭐⭐⭐⭐   | ⭐⭐⭐     | **Event Processing** |
+| **C#/.NET**    | ⭐⭐⭐⭐    | ⭐⭐⭐⭐   | ⭐⭐⭐     | ⭐⭐⭐     | Enterprise/Azure     |
+| **Rust**       | ⭐⭐⭐⭐⭐  | ⭐⭐       | ⭐⭐⭐     | ⭐⭐       | Ultra-high perf      |
 
 ---
 
@@ -29,23 +29,23 @@ Phase 3: Go Backend (Months 4-5) → Scale to 50K+ events/sec
 
 ### Throughput (events/sec per instance)
 
-| Language | Single Core | Multi-Core (4) | P99 Latency |
-|----------|-------------|----------------|-------------|
-| TypeScript | 3-5K | 12-20K | 50-100ms |
-| **Go** | 20-30K | **80-120K** | 5-15ms |
-| C#/.NET | 15-25K | 60-100K | 10-25ms |
-| Rust | 40-60K | 150-240K | 2-8ms |
+| Language   | Single Core | Multi-Core (4) | P99 Latency |
+| ---------- | ----------- | -------------- | ----------- |
+| TypeScript | 3-5K        | 12-20K         | 50-100ms    |
+| **Go**     | 20-30K      | **80-120K**    | 5-15ms      |
+| C#/.NET    | 15-25K      | 60-100K        | 10-25ms     |
+| Rust       | 40-60K      | 150-240K       | 2-8ms       |
 
 ### Resource Efficiency
 
-| Language | Memory/Process | Cost/Month* |
-|----------|----------------|-------------|
-| TypeScript | 150-250 MB | $1,400 |
-| **Go** | 50-100 MB | **$500** |
-| C#/.NET | 100-200 MB | $650 |
-| Rust | 30-60 MB | $425 |
+| Language   | Memory/Process | Cost/Month\* |
+| ---------- | -------------- | ------------ |
+| TypeScript | 150-250 MB     | $1,400       |
+| **Go**     | 50-100 MB      | **$500**     |
+| C#/.NET    | 100-200 MB     | $650         |
+| Rust       | 30-60 MB       | $425         |
 
-*Infrastructure cost for 50K events/sec sustained load
+\*Infrastructure cost for 50K events/sec sustained load
 
 ---
 
@@ -101,12 +101,14 @@ Team has Go experience?
 ### Why This Works
 
 **TypeScript for:**
+
 - ✅ Fast MVP development (weeks vs months)
 - ✅ MCP ecosystem integration (native SDK)
 - ✅ Rich web UI (Next.js, React)
 - ✅ Team expertise (existing skills)
 
 **Go for:**
+
 - ✅ 5-10x performance improvement
 - ✅ Efficient concurrency (goroutines)
 - ✅ Low resource usage (save $$)
@@ -117,6 +119,7 @@ Team has Go experience?
 ## Implementation Phases
 
 ### Phase 1: TypeScript MVP (Months 1-2)
+
 **Goal:** Ship working product, validate market
 
 - Full TypeScript implementation
@@ -129,6 +132,7 @@ Team has Go experience?
 **Cost:** $45K/month development + $200/month infra
 
 ### Phase 2: Measure & Analyze (Month 3)
+
 **Goal:** Gather real data, plan optimization
 
 - Profile TypeScript implementation
@@ -141,6 +145,7 @@ Team has Go experience?
 **Cost:** $55K/month development
 
 ### Phase 3: Go Integration (Months 4-5)
+
 **Goal:** Scale to production load
 
 - Build Go event processing service
@@ -154,6 +159,7 @@ Team has Go experience?
 **Cost:** $55K/month development + $500/month infra
 
 ### Phase 4: Optimize (Month 6+)
+
 **Goal:** Fine-tune performance
 
 - Build Go analytics engine
@@ -162,19 +168,20 @@ Team has Go experience?
 - Implement auto-scaling
 - Performance tuning
 
-**Target:** 100K+ events/sec  
+**Target:** 100K+ events/sec
 
 ---
 
 ## Cost Analysis (6 months)
 
-| Approach | Development | Infrastructure | Total |
-|----------|-------------|----------------|-------|
-| TypeScript-only | $270K | $8.4K | **$278K** |
-| Go-only | $330K | $3K | **$333K** |
-| **Hybrid (recommended)** | **$330K** | **$4.8K** | **$335K** |
+| Approach                 | Development | Infrastructure | Total     |
+| ------------------------ | ----------- | -------------- | --------- |
+| TypeScript-only          | $270K       | $8.4K          | **$278K** |
+| Go-only                  | $330K       | $3K            | **$333K** |
+| **Hybrid (recommended)** | **$330K**   | **$4.8K**      | **$335K** |
 
 **ROI:** Hybrid approach costs +$57K vs TypeScript-only but delivers:
+
 - 5-10x better performance
 - 65% lower infrastructure cost long-term
 - Better scalability for growth
@@ -184,6 +191,7 @@ Team has Go experience?
 ## When to Choose Each Option
 
 ### Choose TypeScript-Only When:
+
 - ✅ Budget constrained (< $300K)
 - ✅ Tight timeline (< 3 months)
 - ✅ Small team (1-3 developers)
@@ -191,6 +199,7 @@ Team has Go experience?
 - ✅ Load < 5K events/sec expected
 
 ### Choose Hybrid TypeScript + Go When:
+
 - ✅ Need to scale (> 10K events/sec)
 - ✅ 6+ month timeline
 - ✅ Can hire/upskill Go developer
@@ -198,18 +207,21 @@ Team has Go experience?
 - ✅ **RECOMMENDED for this project**
 
 ### Choose Go-First When:
+
 - ✅ Performance critical from day 1
 - ✅ Team has Go expertise
 - ✅ Expected load > 20K events/sec
 - ✅ Infrastructure cost sensitive
 
 ### Choose C#/.NET When:
+
 - ✅ Azure-first deployment
 - ✅ Enterprise environment
 - ✅ Team has .NET expertise
 - ✅ Windows ecosystem
 
 ### Choose Rust When:
+
 - ✅ Absolute maximum performance needed
 - ✅ Team has Rust expertise
 - ✅ Predictable latency critical (no GC)
@@ -220,18 +232,23 @@ Team has Go experience?
 ## Common Questions
 
 ### Q: Why not Go from the start?
+
 **A:** TypeScript gets you to market 2x faster. You can validate product-market fit before investing in performance optimization. Real usage data informs better Go architecture.
 
 ### Q: Can TypeScript handle the load?
+
 **A:** Yes for Phase 1-2 (< 10K events/sec). At scale, Go provides better economics and performance.
 
 ### Q: How hard is TypeScript → Go migration?
+
 **A:** Relatively easy with clear service boundaries. Event schema is language-agnostic. Gradual extraction minimizes risk.
 
 ### Q: What about the MCP server?
+
 **A:** Keep it in TypeScript. The MCP SDK is native TypeScript, and the MCP server isn't the performance bottleneck.
 
 ### Q: When do we need Rust?
+
 **A:** Probably never. Go handles 100K+ events/sec easily. Only consider Rust if Go can't meet requirements.
 
 ---
@@ -239,12 +256,14 @@ Team has Go experience?
 ## Success Metrics
 
 ### Technical Targets
+
 - ✅ Event ingestion: 50K+ events/sec (with Go)
 - ✅ Query latency: < 100ms P95
 - ✅ Real-time streaming: < 50ms latency
 - ✅ Storage efficiency: < 1KB per event
 
 ### Business Targets
+
 - ✅ Time to MVP: 2 months (TypeScript)
 - ✅ Time to production scale: 6 months (hybrid)
 - ✅ Infrastructure cost: < $1000/month at scale

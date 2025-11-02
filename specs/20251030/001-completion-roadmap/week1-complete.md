@@ -11,6 +11,7 @@ Successfully implemented all core components of the Go collector in a single day
 ## ✅ Completed Components
 
 ### 1. Agent Adapters (68.5% test coverage)
+
 **Files**: `internal/adapters/*.go`
 
 - ✅ `adapter.go` - Base interface and adapter implementation
@@ -19,15 +20,18 @@ Successfully implemented all core components of the Go collector in a single day
 - ✅ `adapters_test.go` - Comprehensive tests
 
 **Capabilities**:
+
 - Parse GitHub Copilot JSON logs
 - Extract completion events with full context
 - Handle malformed entries gracefully
 - Extensible for additional agents
 
 ### 2. File System Watcher (74.7% test coverage)
+
 **Files**: `internal/watcher/watcher.go`, `watcher_test.go`
 
 **Capabilities**:
+
 - Monitor log directories recursively
 - Detect file changes within 100ms
 - Debounce rapid changes (configurable)
@@ -38,9 +42,11 @@ Successfully implemented all core components of the Go collector in a single day
 **Dependencies**: `github.com/fsnotify/fsnotify` v1.9.0
 
 ### 3. HTTP Client (75.7% test coverage)
+
 **Files**: `internal/client/client.go`, `client_test.go`
 
 **Capabilities**:
+
 - Batch events (configurable size/interval)
 - Exponential backoff retry (3 attempts default)
 - Circuit breaker for failures
@@ -49,14 +55,17 @@ Successfully implemented all core components of the Go collector in a single day
 - Connection pooling
 
 **API Endpoints**:
+
 - `POST /api/v1/agent/events/batch` - Send batch
 - `POST /api/v1/agent/events` - Send single event
 - `GET /api/health` - Health check
 
 ### 4. SQLite Buffer (74.8% test coverage)
+
 **Files**: `internal/buffer/buffer.go`, `buffer_test.go`
 
 **Capabilities**:
+
 - Offline event storage
 - FIFO eviction when full (10,000 events default)
 - Persist across restarts
@@ -66,9 +75,11 @@ Successfully implemented all core components of the Go collector in a single day
 **Dependencies**: `modernc.org/sqlite` v1.39.1
 
 ### 5. Main Integration
+
 **File**: `cmd/collector/main.go`
 
 **Capabilities**:
+
 - Complete component integration
 - Event flow: Watcher → Adapter → Client/Buffer → Backend
 - Graceful shutdown (SIGTERM, SIGINT)
@@ -77,6 +88,7 @@ Successfully implemented all core components of the Go collector in a single day
 - Comprehensive logging
 
 **Binary**:
+
 - Size: 18MB
 - Version: 1.0.0
 - Commands: `start`, `version`, `status`
@@ -137,19 +149,19 @@ Example `~/.devlog/collector.json`:
   "backendUrl": "http://localhost:3200",
   "apiKey": "${DEVLOG_API_KEY}",
   "projectId": "my-project",
-  
+
   "collection": {
     "batchSize": 100,
     "batchInterval": "5s",
     "maxRetries": 3
   },
-  
+
   "buffer": {
     "enabled": true,
     "maxSize": 10000,
     "dbPath": "~/.devlog/buffer.db"
   },
-  
+
   "agents": {
     "copilot": {
       "enabled": true,
@@ -179,7 +191,6 @@ Example `~/.devlog/collector.json`:
 1. **Additional Adapters** (Day 1)
    - Claude Desktop log parser
    - Cursor log parser
-   
 2. **Integration Tests** (Day 2)
    - E2E tests with real log files
    - Offline/online transition tests
