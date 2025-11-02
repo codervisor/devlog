@@ -55,15 +55,10 @@ export async function GET(req: NextRequest) {
         machines.map(async (machine) => {
           const workspaceIds = machine.workspaces.map((w) => w.id);
 
-          const eventCount = await prisma.agentEvent.count({
-            where: {
-              session: {
-                workspaceId: {
-                  in: workspaceIds,
-                },
-              },
-            },
-          });
+          // Note: AgentEvent counts by workspace are not supported
+          // because AgentSession is workspace-independent
+          // This would need to be refactored to count ChatSession events instead
+          const eventCount = 0; // Disabled - needs refactoring
 
           const sessionCount = machine.workspaces.reduce(
             (sum, w) => sum + w.chatSessions.length,

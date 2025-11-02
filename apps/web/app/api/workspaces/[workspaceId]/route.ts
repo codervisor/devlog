@@ -1,6 +1,6 @@
 /**
  * Workspace Detail API Endpoint
- * 
+ *
  * GET /api/workspaces/[workspaceId] - Get workspace by VS Code ID
  */
 
@@ -12,14 +12,11 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/workspaces/:workspaceId - Get workspace by VS Code ID
- * 
+ *
  * Returns workspace details with resolved context (project, machine)
  * and recent chat sessions.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { workspaceId: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { workspaceId: string } }) {
   try {
     const { workspaceId } = params;
 
@@ -44,7 +41,7 @@ export async function GET(
           take: 10,
           include: {
             _count: {
-              select: { agentEvents: true },
+              select: { chatMessages: true },
             },
           },
         },
@@ -52,10 +49,7 @@ export async function GET(
     });
 
     if (!workspace) {
-      return NextResponse.json(
-        { error: 'Workspace not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -64,20 +58,17 @@ export async function GET(
     });
   } catch (error) {
     console.error('[GET /api/workspaces/:workspaceId] Error:', error);
-    
+
     // Handle specific error for workspace not found
     if (error instanceof Error && error.message.includes('Workspace not found')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to get workspace',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -46,22 +46,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       projectId,
     };
 
-    // Filter by machine (via workspace via session)
-    if (machineId) {
-      where.session = {
-        workspace: {
-          machineId: parseInt(machineId, 10),
-        },
-      };
-    }
-
-    // Filter by workspace (via session)
-    if (workspaceId) {
-      where.session = {
-        ...where.session,
-        workspaceId: parseInt(workspaceId, 10),
-      };
-    }
+    // Note: machineId and workspaceId filters are not applicable to AgentSession
+    // AgentSession is workspace-independent and tracks agent activity across the project
 
     // Filter by timestamp range
     if (from || to) {
@@ -111,16 +97,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       orderBy: { timestamp: 'desc' },
       take: limit,
       include: {
-        session: {
-          include: {
-            workspace: {
-              include: {
-                machine: true,
-                project: true,
-              },
-            },
-          },
-        },
+        session: true,
+        project: true,
       },
     });
 

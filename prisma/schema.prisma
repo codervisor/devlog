@@ -268,8 +268,8 @@ model ChatSession {
 
   // Relations
   workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  agentEvents  AgentEvent[]
   chatMessages ChatMessage[]
+  AgentEvent   AgentEvent[]
 
   @@index([sessionId])
   @@index([workspaceId])

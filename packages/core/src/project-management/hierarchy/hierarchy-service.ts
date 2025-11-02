@@ -1,9 +1,9 @@
 /**
  * Hierarchy Service
- * 
+ *
  * Manages the project-machine-workspace hierarchy and provides
  * resolution and navigation capabilities across the organizational structure.
- * 
+ *
  * @module project-management/hierarchy/hierarchy-service
  * @category Project Management
  */
@@ -110,7 +110,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Resolve workspace to full context
-   * 
+   *
    * @param workspaceId - VS Code workspace ID
    * @returns Full workspace context with hierarchy information
    * @throws Error if workspace not found
@@ -145,7 +145,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Get full hierarchy tree for a project
-   * 
+   *
    * @param projectId - Project ID
    * @returns Project hierarchy with machines and workspaces
    * @throws Error if project not found
@@ -166,7 +166,7 @@ export class HierarchyService extends PrismaServiceBase {
             chatSessions: {
               include: {
                 _count: {
-                  select: { agentEvents: true },
+                  select: { chatMessages: true },
                 },
               },
             },
@@ -195,10 +195,7 @@ export class HierarchyService extends PrismaServiceBase {
       workspaces: workspaces.map((ws) => ({
         workspace: ws,
         sessions: ws.chatSessions,
-        eventCount: ws.chatSessions.reduce(
-          (sum, s) => sum + s._count.agentEvents,
-          0
-        ),
+        eventCount: ws.chatSessions.reduce((sum, s) => sum + s._count.chatMessages, 0),
       })),
     }));
 
@@ -207,7 +204,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Upsert machine
-   * 
+   *
    * @param data - Machine creation data
    * @returns Upserted machine
    */
@@ -241,7 +238,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Upsert workspace
-   * 
+   *
    * @param data - Workspace creation data
    * @returns Upserted workspace
    */
@@ -273,7 +270,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Resolve or create project from git URL
-   * 
+   *
    * @param repoUrl - Git repository URL
    * @returns Resolved or created project
    */
@@ -304,7 +301,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Get machine by ID
-   * 
+   *
    * @param id - Machine ID
    * @returns Machine or null if not found
    */
@@ -322,7 +319,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * List all machines
-   * 
+   *
    * @returns Array of machines
    */
   async listMachines(): Promise<Machine[]> {
@@ -339,7 +336,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Get workspace by VS Code workspace ID
-   * 
+   *
    * @param workspaceId - VS Code workspace ID
    * @returns Workspace or null if not found
    */
@@ -357,7 +354,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Normalize git URL to standard format
-   * 
+   *
    * @param url - Git URL
    * @returns Normalized URL
    */
@@ -370,7 +367,7 @@ export class HierarchyService extends PrismaServiceBase {
 
   /**
    * Parse git URL to extract owner and repo
-   * 
+   *
    * @param url - Normalized git URL
    * @returns Owner and repo name
    * @throws Error if URL is invalid

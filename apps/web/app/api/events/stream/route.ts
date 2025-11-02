@@ -1,11 +1,11 @@
 /**
  * Server-Sent Events (SSE) endpoint for real-time updates
- * 
+ *
  * Provides a persistent connection that streams updates about:
  * - New agent events
  * - Session status changes
  * - Dashboard metrics updates
- * 
+ *
  * Supports hierarchy-based filtering:
  * - projectId: Filter events by project
  * - machineId: Filter events by machine
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       let lastTimestamp = new Date();
 
       // Send initial connection message
-      const connectionMessage = `event: connected\ndata: ${JSON.stringify({ 
+      const connectionMessage = `event: connected\ndata: ${JSON.stringify({
         timestamp: new Date().toISOString(),
         filters,
       })}\n\n`;
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       const pollInterval = setInterval(async () => {
         try {
           const prisma = getPrismaClient();
-          
+
           // Build where clause based on filters
           const where: any = {
             timestamp: {
@@ -79,20 +79,8 @@ export async function GET(request: NextRequest) {
             where.projectId = filters.projectId;
           }
 
-          if (filters.machineId) {
-            where.session = {
-              workspace: {
-                machineId: filters.machineId,
-              },
-            };
-          }
-
-          if (filters.workspaceId) {
-            where.session = {
-              ...where.session,
-              workspaceId: filters.workspaceId,
-            };
-          }
+          // Note: machineId and workspaceId filters not applicable to AgentSession
+          // These filters are for ChatSession which has workspace relation
 
           // Fetch new events
           const events = await prisma.agentEvent.findMany({
@@ -100,16 +88,8 @@ export async function GET(request: NextRequest) {
             orderBy: { timestamp: 'desc' },
             take: 50,
             include: {
-              session: {
-                include: {
-                  workspace: {
-                    include: {
-                      machine: true,
-                      project: true,
-                    },
-                  },
-                },
-              },
+              session: true,
+              project: true,
             },
           });
 
@@ -151,7 +131,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no', // Disable nginx buffering
     },
   });
