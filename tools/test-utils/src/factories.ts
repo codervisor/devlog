@@ -170,3 +170,182 @@ export function createMockAgentEvents(
 ): AgentEvent[] {
   return Array.from({ length: count }, () => createMockAgentEvent(overrides));
 }
+
+// ============================================================================
+// DATABASE FACTORIES (Prisma-based)
+// ============================================================================
+
+import type { PrismaClient, Project as PrismaProject, User as PrismaUser, Machine as PrismaMachine } from '@prisma/client';
+
+/**
+ * Factory for creating test data in the database
+ * Uses PrismaClient to create actual database records
+ */
+export class TestDataFactory {
+  constructor(private prisma: PrismaClient) {}
+
+  /**
+   * Create a test project
+   */
+  async createProject(data?: Partial<Omit<PrismaProject, 'id' | 'createdAt' | 'updatedAt'>>): Promise<PrismaProject> {
+    const timestamp = Date.now();
+    return this.prisma.project.create({
+      data: {
+        name: data?.name || `test-project-${timestamp}`,
+        fullName: data?.fullName || `test/project-${timestamp}`,
+        repoUrl: data?.repoUrl || `git@github.com:test/project-${timestamp}.git`,
+        repoOwner: data?.repoOwner || 'test',
+        repoName: data?.repoName || `project-${timestamp}`,
+        description: data?.description || 'Test project',
+      },
+    });
+  }
+
+  /**
+   * Create a test user
+   */
+  async createUser(data?: Partial<Omit<PrismaUser, 'id' | 'createdAt' | 'updatedAt'>>): Promise<PrismaUser> {
+    const timestamp = Date.now();
+    return this.prisma.user.create({
+      data: {
+        email: data?.email || `test-${timestamp}@example.com`,
+        name: data?.name || `Test User ${timestamp}`,
+        passwordHash: data?.passwordHash || '$2a$10$test.hash.value',
+        isEmailVerified: data?.isEmailVerified ?? true,
+        avatarUrl: data?.avatarUrl,
+        lastLoginAt: data?.lastLoginAt,
+      },
+    });
+  }
+
+  /**
+   * Create a test machine
+   */
+  async createMachine(data?: Partial<Omit<PrismaMachine, 'id' | 'createdAt' | 'lastSeenAt'>>): Promise<PrismaMachine> {
+    const timestamp = Date.now();
+    return this.prisma.machine.create({
+      data: {
+        machineId: data?.machineId || `test-machine-${timestamp}`,
+        hostname: data?.hostname || `test-host-${timestamp}`,
+        username: data?.username || 'testuser',
+        osType: data?.osType || 'linux',
+        machineType: data?.machineType || 'local',
+        ...(data?.osVersion && { osVersion: data.osVersion }),
+        ...(data?.ipAddress && { ipAddress: data.ipAddress }),
+        ...(data?.metadata && { metadata: data.metadata as any }),
+      },
+    });
+  }
+
+  /**
+   * Create a test workspace
+   */
+  async createWorkspace(projectId: number, machineId: number, data?: {
+    workspaceId?: string;
+    workspacePath?: string;
+    workspaceType?: string;
+    branch?: string;
+    commit?: string;
+  }) {
+    const timestamp = Date.now();
+    return this.prisma.workspace.create({
+      data: {
+        projectId,
+        machineId,
+        workspaceId: data?.workspaceId || `test-workspace-${timestamp}`,
+        workspacePath: data?.workspacePath || `/test/workspace-${timestamp}`,
+        workspaceType: data?.workspaceType || 'folder',
+        branch: data?.branch || 'main',
+        commit: data?.commit || 'abc123',
+        ...data,
+      },
+    });
+  }
+
+  /**
+   * Create a test devlog entry
+   */
+  async createDevlogEntry(projectId: number, data?: {
+    key?: string;
+    title?: string;
+    type?: string;
+    description?: string;
+    status?: string;
+    priority?: string;
+    assignee?: string;
+  }) {
+    const id = nextId();
+    return this.prisma.devlogEntry.create({
+      data: {
+        projectId,
+        key: data?.key || `DEVLOG-${id}`,
+        title: data?.title || `Test Devlog Entry ${id}`,
+        type: data?.type || 'task',
+        description: data?.description || 'Test devlog entry',
+        status: data?.status || 'new',
+        priority: data?.priority || 'medium',
+        assignee: data?.assignee,
+        ...data,
+      },
+    });
+  }
+
+  /**
+   * Create a test chat session
+   */
+  async createChatSession(workspaceId: number, data?: {
+    sessionId?: string;
+    agentType?: string;
+    modelId?: string;
+    startedAt?: Date;
+    endedAt?: Date;
+  }) {
+    return this.prisma.chatSession.create({
+      data: {
+        workspaceId,
+        sessionId: data?.sessionId || crypto.randomUUID(),
+        agentType: data?.agentType || 'copilot',
+        modelId: data?.modelId || 'gpt-4',
+        startedAt: data?.startedAt || new Date(),
+        endedAt: data?.endedAt,
+        ...data,
+      },
+    });
+  }
+
+  /**
+   * Create a test agent session
+   */
+  async createAgentSession(projectId: number, data?: {
+    id?: string;
+    agentId?: string;
+    agentVersion?: string;
+    startTime?: Date;
+    endTime?: Date;
+    outcome?: string;
+  }) {
+    return this.prisma.agentSession.create({
+      data: {
+        projectId,
+        id: data?.id || crypto.randomUUID(),
+        agentId: data?.agentId || 'github-copilot',
+        agentVersion: data?.agentVersion || '1.0.0',
+        startTime: data?.startTime || new Date(),
+        endTime: data?.endTime,
+        outcome: data?.outcome,
+        ...data,
+      },
+    });
+  }
+
+  /**
+   * Create a complete test setup with project, machine, and workspace
+   */
+  async createCompleteSetup() {
+    const project = await this.createProject();
+    const machine = await this.createMachine();
+    const workspace = await this.createWorkspace(project.id, machine.id);
+
+    return { project, machine, workspace };
+  }
+}

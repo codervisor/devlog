@@ -12,3 +12,6 @@ export * from './mocks.js';
 
 // Export setup utilities
 export * from './setup.js';
+
+// Export database utilities
+export * from './database.js';
