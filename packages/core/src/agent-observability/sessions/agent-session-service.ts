@@ -1,33 +1,33 @@
 /**
  * Agent Session Service
- * 
+ *
  * **PRIMARY SERVICE - Core agent observability functionality**
- * 
+ *
  * Manages AI agent session lifecycle including creation, updates, completion,
  * and querying. Sessions group related events into complete, analyzable workflows,
  * enabling teams to understand agent behavior in context.
- * 
+ *
  * **Key Responsibilities:**
  * - Session lifecycle: Create, update, and complete agent sessions
  * - Context management: Track session objectives and outcomes
  * - Metrics aggregation: Calculate session-level performance metrics
  * - Analytics: Provide insights into session patterns and success rates
- * 
+ *
  * **Session Workflow:**
  * 1. Start session: Create with objective and context
  * 2. Log events: Related events reference the session ID
  * 3. End session: Mark complete with outcome and summary
  * 4. Analyze: Query metrics and patterns across sessions
- * 
+ *
  * @module services/agent-session-service
  * @category Agent Observability
  * @see {@link AgentEventService} for event management
- * 
+ *
  * @example
  * ```typescript
  * const service = AgentSessionService.getInstance(projectId);
  * await service.initialize();
- * 
+ *
  * // Start a session
  * const session = await service.create({
  *   agentId: 'github-copilot',
@@ -35,7 +35,7 @@
  *   objective: 'Implement authentication',
  *   workItemId: 42  // Optional
  * });
- * 
+ *
  * // End the session
  * await service.end(session.id, {
  *   outcome: 'success',
@@ -53,6 +53,8 @@ import type {
   SessionStats,
   SessionOutcome,
   ObservabilityAgentType,
+  SessionDailyStats,
+  TimeBucketInterval,
 } from '../../types/index.js';
 import type { PrismaClient, AgentSession as PrismaAgentSession } from '@prisma/client';
 
@@ -80,7 +82,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   static getInstance(projectId?: number): AgentSessionService {
     const key = projectId ? `project-${projectId}` : 'default';
-    
+
     // Clean up expired instances
     const now = Date.now();
     for (const [k, instance] of AgentSessionService.instances.entries()) {
@@ -124,7 +126,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async startSession(input: CreateAgentSessionInput): Promise<AgentSession> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       throw new Error('Prisma client not initialized - cannot start session in fallback mode');
     }
@@ -166,7 +168,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async endSession(sessionId: string, outcome: SessionOutcome): Promise<AgentSession> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       throw new Error('Prisma client not initialized - cannot end session in fallback mode');
     }
@@ -199,7 +201,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async updateSession(sessionId: string, updates: UpdateAgentSessionInput): Promise<AgentSession> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       throw new Error('Prisma client not initialized - cannot update session in fallback mode');
     }
@@ -219,7 +221,7 @@ export class AgentSessionService extends PrismaServiceBase {
       const session = await this.prisma.agentSession.findUnique({
         where: { id: sessionId },
       });
-      
+
       if (session) {
         updateData.context = {
           ...(session.context as any),
@@ -233,7 +235,7 @@ export class AgentSessionService extends PrismaServiceBase {
       const session = await this.prisma.agentSession.findUnique({
         where: { id: sessionId },
       });
-      
+
       if (session) {
         updateData.metrics = {
           ...(session.metrics as any),
@@ -263,7 +265,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async getSession(sessionId: string): Promise<AgentSession | null> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return null;
     }
@@ -280,7 +282,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async listSessions(filter: SessionFilter): Promise<AgentSession[]> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return [];
     }
@@ -334,7 +336,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async getActiveSessions(): Promise<AgentSession[]> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return [];
     }
@@ -352,7 +354,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async getSessionStats(filter: SessionFilter): Promise<SessionStats> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return this.getEmptyStats();
     }
@@ -395,7 +397,7 @@ export class AgentSessionService extends PrismaServiceBase {
    */
   async calculateQualityScore(sessionId: string): Promise<number> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return 0;
     }
@@ -409,28 +411,169 @@ export class AgentSessionService extends PrismaServiceBase {
     }
 
     const metrics = session.metrics as any;
-    
+
     // Simple quality score calculation (can be enhanced)
     let score = 100;
-    
+
     // Deduct for errors
     if (metrics.errorsEncountered > 0) {
       score -= Math.min(metrics.errorsEncountered * 5, 30);
     }
-    
+
     // Deduct for failed tests
     if (metrics.testsRun > 0) {
       const testSuccessRate = metrics.testsPassed / metrics.testsRun;
       score -= (1 - testSuccessRate) * 20;
     }
-    
+
     // Deduct for failed builds
     if (metrics.buildAttempts > 0) {
       const buildSuccessRate = metrics.buildSuccesses / metrics.buildAttempts;
       score -= (1 - buildSuccessRate) * 20;
     }
-    
+
     return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Get time-bucketed session statistics using TimescaleDB
+   *
+   * Leverages TimescaleDB's time_bucket function for efficient session aggregations.
+   * Groups sessions by time intervals for trend analysis.
+   *
+   * @param interval - Time bucket interval (e.g., '1 hour', '1 day')
+   * @param projectId - Filter by project ID
+   * @param agentId - Optional: Filter by agent ID
+   * @param startTime - Optional: Start time for the query range
+   * @param endTime - Optional: End time for the query range
+   * @returns Array of time-bucketed session statistics
+   *
+   * @example
+   * ```typescript
+   * // Get daily session counts for last 30 days
+   * const stats = await service.getSessionTimeBucketStats('1 day', 1,
+   *   undefined,
+   *   new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   * ```
+   */
+  async getSessionTimeBucketStats(
+    interval: TimeBucketInterval,
+    projectId: number,
+    agentId?: ObservabilityAgentType,
+    startTime?: Date,
+    endTime?: Date,
+  ): Promise<SessionDailyStats[]> {
+    await this.initialize();
+
+    if (!this.prisma) {
+      return [];
+    }
+
+    // Build WHERE clause with dynamic parameter indexing
+    // Parameter order: projectId (always $1), agentId?, startTime?, endTime?, interval (last)
+    const whereConditions: string[] = ['project_id = $1'];
+    const whereParams: any[] = [projectId];
+    let paramIndex = 2;
+
+    if (agentId) {
+      whereConditions.push(`agent_id = $${paramIndex++}`);
+      whereParams.push(agentId);
+    }
+
+    if (startTime) {
+      whereConditions.push(`start_time >= $${paramIndex++}`);
+      whereParams.push(startTime);
+    }
+
+    if (endTime) {
+      whereConditions.push(`start_time <= $${paramIndex++}`);
+      whereParams.push(endTime);
+    }
+
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
+
+    // Execute time_bucket query
+    // Final parameter is the interval for time_bucket function
+    const query = `
+      SELECT 
+        time_bucket($${paramIndex}, start_time) AS bucket,
+        project_id,
+        agent_id,
+        COUNT(*) as session_count,
+        AVG(duration) as avg_duration,
+        SUM((metrics->>'tokensUsed')::numeric) as total_tokens,
+        AVG(quality_score) as avg_quality_score
+      FROM agent_sessions
+      ${whereClause}
+      GROUP BY bucket, project_id, agent_id
+      ORDER BY bucket DESC
+    `;
+
+    whereParams.push(`${interval}`);
+
+    const results = await this.prisma.$queryRawUnsafe(query, ...whereParams);
+
+    return (results as any[]).map((row) => ({
+      bucket: new Date(row.bucket),
+      projectId: Number(row.project_id),
+      agentId: row.agent_id,
+      sessionCount: Number(row.session_count),
+      avgDuration: row.avg_duration ? Number(row.avg_duration) : 0,
+      totalTokens: row.total_tokens ? Number(row.total_tokens) : 0,
+      avgQualityScore: row.avg_quality_score ? Number(row.avg_quality_score) : undefined,
+    }));
+  }
+
+  /**
+   * Get sessions with efficient time-range queries
+   *
+   * Uses the composite index (project_id, start_time DESC) for optimal performance.
+   * This method is preferred over listSessions for time-range queries.
+   *
+   * @param projectId - Project identifier
+   * @param startTimeFrom - Start of time range
+   * @param startTimeTo - End of time range
+   * @param limit - Optional: Maximum number of results (default: 100)
+   * @returns Array of sessions within the time range
+   *
+   * @example
+   * ```typescript
+   * // Get all sessions from last 24 hours
+   * const sessions = await service.getSessionsByTimeRange(1,
+   *   new Date(Date.now() - 24 * 60 * 60 * 1000),
+   *   new Date()
+   * );
+   * ```
+   */
+  async getSessionsByTimeRange(
+    projectId: number,
+    startTimeFrom: Date,
+    startTimeTo: Date,
+    limit: number = 100,
+  ): Promise<AgentSession[]> {
+    await this.initialize();
+
+    if (!this.prisma) {
+      return [];
+    }
+
+    // This query leverages the composite index (project_id, start_time DESC)
+    // for optimal performance on time-range queries
+    const sessions = await this.prisma.agentSession.findMany({
+      where: {
+        projectId,
+        startTime: {
+          gte: startTimeFrom,
+          lte: startTimeTo,
+        },
+      },
+      orderBy: { startTime: 'desc' },
+      take: limit,
+    });
+
+    return sessions.map((s) => this.toDomainSession(s));
   }
 
   /**
@@ -448,9 +591,7 @@ export class AgentSessionService extends PrismaServiceBase {
       context: prismaSession.context as any,
       metrics: prismaSession.metrics as any,
       outcome: prismaSession.outcome as SessionOutcome | undefined,
-      qualityScore: prismaSession.qualityScore 
-        ? Number(prismaSession.qualityScore) 
-        : undefined,
+      qualityScore: prismaSession.qualityScore ? Number(prismaSession.qualityScore) : undefined,
     };
   }
 
@@ -508,9 +649,7 @@ export class AgentSessionService extends PrismaServiceBase {
    * Calculate average duration from sessions
    */
   private calculateAverageDuration(sessions: any[]): number {
-    const durations = sessions
-      .map((s) => s.duration || 0)
-      .filter((d) => d > 0);
+    const durations = sessions.map((s) => s.duration || 0).filter((d) => d > 0);
 
     if (durations.length === 0) return 0;
     return durations.reduce((sum, d) => sum + d, 0) / durations.length;
