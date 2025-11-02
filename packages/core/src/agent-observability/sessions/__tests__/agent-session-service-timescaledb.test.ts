@@ -207,16 +207,16 @@ describe('AgentSessionService - TimescaleDB Optimizations', () => {
       const mockFindMany = vi.fn().mockResolvedValue([
         {
           id: 'session-1',
-          agent_id: 'github-copilot',
-          agent_version: '1.0.0',
-          project_id: 1,
-          start_time: new Date('2025-11-01T12:00:00Z'),
-          end_time: new Date('2025-11-01T13:00:00Z'),
+          agentId: 'github-copilot',
+          agentVersion: '1.0.0',
+          projectId: 1,
+          startTime: new Date('2025-11-01T12:00:00Z'),
+          endTime: new Date('2025-11-01T13:00:00Z'),
           duration: 3600,
           context: { branch: 'main', triggeredBy: 'user' },
           metrics: { eventsCount: 50, tokensUsed: 1000 },
           outcome: 'success',
-          quality_score: 85.5,
+          qualityScore: 85.5,
         },
       ]);
 
