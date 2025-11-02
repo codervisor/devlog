@@ -1,33 +1,33 @@
 /**
  * Agent Event Service
- * 
+ *
  * **PRIMARY SERVICE - Core agent observability functionality**
- * 
+ *
  * Manages the lifecycle of AI agent events including creation, querying,
  * and aggregation for analytics. This service handles high-volume event
  * ingestion and efficient time-series queries.
- * 
+ *
  * **Key Responsibilities:**
  * - Event ingestion: Capture and store agent activity events
  * - Query operations: Retrieve events with filtering and pagination
  * - Analytics: Aggregate metrics for performance analysis
  * - Timeline reconstruction: Build complete activity timelines
- * 
+ *
  * **Performance Characteristics:**
  * - Optimized for write-heavy workloads (event ingestion)
  * - Uses PostgreSQL with TimescaleDB for time-series data
  * - Supports efficient time-range and filter queries
  * - Implements TTL-based instance management for resource efficiency
- * 
+ *
  * @module services/agent-event-service
  * @category Agent Observability
  * @see {@link AgentSessionService} for session management
- * 
+ *
  * @example
  * ```typescript
  * const service = AgentEventService.getInstance(projectId);
  * await service.initialize();
- * 
+ *
  * // Log an event
  * const event = await service.logEvent({
  *   type: 'file_write',
@@ -37,7 +37,7 @@
  *   context: { workingDirectory: '/app', filePath: 'src/main.ts' },
  *   data: { content: '...' }
  * });
- * 
+ *
  * // Query events
  * const events = await service.queryEvents({
  *   sessionId: 'session-123',
@@ -56,6 +56,8 @@ import type {
   AgentEventType,
   EventSeverity,
   ObservabilityAgentType,
+  TimeBucketQueryParams,
+  EventTimeBucketStats,
 } from '../../types/index.js';
 import type { PrismaClient, AgentEvent as PrismaAgentEvent } from '@prisma/client';
 
@@ -83,7 +85,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   static getInstance(projectId?: number): AgentEventService {
     const key = projectId ? `project-${projectId}` : 'default';
-    
+
     // Clean up expired instances
     const now = Date.now();
     for (const [k, instance] of AgentEventService.instances.entries()) {
@@ -127,7 +129,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async collectEvent(input: CreateAgentEventInput): Promise<AgentEvent> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       throw new Error('Prisma client not initialized - cannot collect event in fallback mode');
     }
@@ -162,7 +164,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async collectEventBatch(inputs: CreateAgentEventInput[]): Promise<AgentEvent[]> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       throw new Error('Prisma client not initialized - cannot collect events in fallback mode');
     }
@@ -203,7 +205,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async getEvents(filter: EventFilter): Promise<AgentEvent[]> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return [];
     }
@@ -259,7 +261,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async getEventById(id: string): Promise<AgentEvent | null> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return null;
     }
@@ -283,7 +285,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async getEventStats(filter: EventFilter): Promise<EventStats> {
     await this.initialize();
-    
+
     if (!this.prisma) {
       return this.getEmptyStats();
     }
@@ -329,7 +331,7 @@ export class AgentEventService extends PrismaServiceBase {
    */
   async getEventTimeline(sessionId: string): Promise<TimelineEvent[]> {
     const events = await this.getEventsBySession(sessionId);
-    
+
     return events.map((e) => ({
       id: e.id,
       timestamp: e.timestamp,
@@ -338,6 +340,287 @@ export class AgentEventService extends PrismaServiceBase {
       severity: e.severity,
       data: e.data,
     }));
+  }
+
+  /**
+   * Get time-bucketed event statistics using TimescaleDB
+   *
+   * Leverages TimescaleDB's time_bucket function for efficient time-series aggregations.
+   * This method is optimized for dashboard queries and analytics.
+   *
+   * @param params - Query parameters including interval and filters
+   * @returns Array of time-bucketed statistics
+   *
+   * @example
+   * ```typescript
+   * // Get hourly event counts for last 24 hours
+   * const stats = await service.getTimeBucketStats({
+   *   interval: '1 hour',
+   *   projectId: 1,
+   *   startTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
+   *   endTime: new Date()
+   * });
+   * ```
+   */
+  async getTimeBucketStats(params: TimeBucketQueryParams): Promise<EventTimeBucketStats[]> {
+    await this.initialize();
+
+    if (!this.prisma) {
+      return [];
+    }
+
+    const { interval, projectId, agentId, eventType, startTime, endTime } = params;
+
+    // Build WHERE clause
+    const whereConditions: string[] = [];
+    const whereParams: any[] = [];
+    let paramIndex = 1;
+
+    if (projectId !== undefined) {
+      whereConditions.push(`project_id = $${paramIndex++}`);
+      whereParams.push(projectId);
+    }
+
+    if (agentId) {
+      whereConditions.push(`agent_id = $${paramIndex++}`);
+      whereParams.push(agentId);
+    }
+
+    if (eventType) {
+      whereConditions.push(`event_type = $${paramIndex++}`);
+      whereParams.push(eventType);
+    }
+
+    if (startTime) {
+      whereConditions.push(`timestamp >= $${paramIndex++}`);
+      whereParams.push(startTime);
+    }
+
+    if (endTime) {
+      whereConditions.push(`timestamp <= $${paramIndex++}`);
+      whereParams.push(endTime);
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Execute time_bucket query
+    const query = `
+      SELECT 
+        time_bucket($${paramIndex}, timestamp) AS bucket,
+        project_id,
+        agent_id,
+        ${eventType ? `event_type,` : ''}
+        COUNT(*) as event_count,
+        AVG((metrics->>'duration')::numeric) as avg_duration,
+        SUM((metrics->>'tokenCount')::numeric) as total_tokens,
+        AVG((metrics->>'promptTokens')::numeric) as avg_prompt_tokens,
+        AVG((metrics->>'responseTokens')::numeric) as avg_response_tokens
+      FROM agent_events
+      ${whereClause}
+      GROUP BY bucket, project_id, agent_id${eventType ? ', event_type' : ''}
+      ORDER BY bucket DESC
+    `;
+
+    whereParams.push(`${interval}`);
+
+    const results = await this.prisma.$queryRawUnsafe(query, ...whereParams);
+
+    return (results as any[]).map((row) => ({
+      bucket: new Date(row.bucket),
+      projectId: Number(row.project_id),
+      agentId: row.agent_id,
+      eventType: row.event_type,
+      eventCount: Number(row.event_count),
+      avgDuration: row.avg_duration ? Number(row.avg_duration) : undefined,
+      totalTokens: row.total_tokens ? Number(row.total_tokens) : undefined,
+      avgPromptTokens: row.avg_prompt_tokens ? Number(row.avg_prompt_tokens) : undefined,
+      avgResponseTokens: row.avg_response_tokens ? Number(row.avg_response_tokens) : undefined,
+    }));
+  }
+
+  /**
+   * Get hourly event statistics from continuous aggregates
+   *
+   * Queries the pre-computed agent_events_hourly materialized view for fast dashboard queries.
+   * This is much faster than computing aggregations on-the-fly.
+   *
+   * @param projectId - Filter by project ID
+   * @param agentId - Optional: Filter by agent ID
+   * @param startTime - Optional: Start time for the query range
+   * @param endTime - Optional: End time for the query range
+   * @returns Array of hourly statistics
+   *
+   * @example
+   * ```typescript
+   * // Get last 7 days of hourly stats
+   * const stats = await service.getHourlyStats(1, 'github-copilot',
+   *   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+   * ```
+   */
+  async getHourlyStats(
+    projectId: number,
+    agentId?: ObservabilityAgentType,
+    startTime?: Date,
+    endTime?: Date,
+  ): Promise<EventTimeBucketStats[]> {
+    await this.initialize();
+
+    if (!this.prisma) {
+      return [];
+    }
+
+    // Build WHERE clause
+    const whereConditions: string[] = ['project_id = $1'];
+    const whereParams: any[] = [projectId];
+    let paramIndex = 2;
+
+    if (agentId) {
+      whereConditions.push(`agent_id = $${paramIndex++}`);
+      whereParams.push(agentId);
+    }
+
+    if (startTime) {
+      whereConditions.push(`bucket >= $${paramIndex++}`);
+      whereParams.push(startTime);
+    }
+
+    if (endTime) {
+      whereConditions.push(`bucket <= $${paramIndex++}`);
+      whereParams.push(endTime);
+    }
+
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
+
+    // Query continuous aggregate
+    const query = `
+      SELECT 
+        bucket,
+        project_id,
+        agent_id,
+        event_type,
+        event_count,
+        avg_duration
+      FROM agent_events_hourly
+      ${whereClause}
+      ORDER BY bucket DESC
+    `;
+
+    try {
+      const results = await this.prisma.$queryRawUnsafe(query, ...whereParams);
+
+      return (results as any[]).map((row) => ({
+        bucket: new Date(row.bucket),
+        projectId: Number(row.project_id),
+        agentId: row.agent_id,
+        eventType: row.event_type,
+        eventCount: Number(row.event_count),
+        avgDuration: row.avg_duration ? Number(row.avg_duration) : undefined,
+      }));
+    } catch (error) {
+      // Continuous aggregate might not exist yet, fall back to regular query
+      console.warn('Could not query agent_events_hourly, falling back to regular query:', error);
+      return this.getTimeBucketStats({
+        interval: '1 hour',
+        projectId,
+        agentId,
+        startTime,
+        endTime,
+      });
+    }
+  }
+
+  /**
+   * Get daily event statistics from continuous aggregates
+   *
+   * Queries the pre-computed agent_events_daily materialized view for long-term analytics.
+   * Ideal for displaying trends over weeks or months.
+   *
+   * @param projectId - Filter by project ID
+   * @param agentId - Optional: Filter by agent ID
+   * @param startDate - Optional: Start date for the query range
+   * @param endDate - Optional: End date for the query range
+   * @returns Array of daily statistics
+   *
+   * @example
+   * ```typescript
+   * // Get last 30 days of daily stats
+   * const stats = await service.getDailyStats(1, undefined,
+   *   new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+   * ```
+   */
+  async getDailyStats(
+    projectId: number,
+    agentId?: ObservabilityAgentType,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<EventTimeBucketStats[]> {
+    await this.initialize();
+
+    if (!this.prisma) {
+      return [];
+    }
+
+    // Build WHERE clause
+    const whereConditions: string[] = ['project_id = $1'];
+    const whereParams: any[] = [projectId];
+    let paramIndex = 2;
+
+    if (agentId) {
+      whereConditions.push(`agent_id = $${paramIndex++}`);
+      whereParams.push(agentId);
+    }
+
+    if (startDate) {
+      whereConditions.push(`bucket >= $${paramIndex++}`);
+      whereParams.push(startDate);
+    }
+
+    if (endDate) {
+      whereConditions.push(`bucket <= $${paramIndex++}`);
+      whereParams.push(endDate);
+    }
+
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
+
+    // Query continuous aggregate
+    const query = `
+      SELECT 
+        bucket,
+        project_id,
+        agent_id,
+        event_count,
+        session_count,
+        avg_prompt_tokens,
+        avg_response_tokens,
+        total_duration
+      FROM agent_events_daily
+      ${whereClause}
+      ORDER BY bucket DESC
+    `;
+
+    try {
+      const results = await this.prisma.$queryRawUnsafe(query, ...whereParams);
+
+      return (results as any[]).map((row) => ({
+        bucket: new Date(row.bucket),
+        projectId: Number(row.project_id),
+        agentId: row.agent_id,
+        eventCount: Number(row.event_count),
+        avgPromptTokens: row.avg_prompt_tokens ? Number(row.avg_prompt_tokens) : undefined,
+        avgResponseTokens: row.avg_response_tokens ? Number(row.avg_response_tokens) : undefined,
+        totalDuration: row.total_duration ? Number(row.total_duration) : undefined,
+      }));
+    } catch (error) {
+      // Continuous aggregate might not exist yet, fall back to regular query
+      console.warn('Could not query agent_events_daily, falling back to regular query:', error);
+      return this.getTimeBucketStats({
+        interval: '1 day',
+        projectId,
+        agentId,
+        startTime: startDate,
+        endTime: endDate,
+      });
+    }
   }
 
   /**
