@@ -344,8 +344,10 @@ model AgentEvent {
   severity String? // "info", "warning", "error"
 
   // Relations
-  session ChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
-  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  session       AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ChatSession   ChatSession? @relation(fields: [chatSessionId], references: [id])
+  chatSessionId Int?
 
   // Indexes optimized for TimescaleDB time-series queries
   @@index([timestamp(sort: Desc)]) // Primary time-series index
@@ -380,7 +382,8 @@ model AgentSession {
   qualityScore Decimal? @map("quality_score") @db.Decimal(5, 2) // 0-100
 
   // Relations
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  events  AgentEvent[]
 
   @@index([startTime(sort: Desc)])
   @@index([agentId])
