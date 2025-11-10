@@ -1,12 +1,15 @@
 ---
 status: complete
-created: 2025-07-21T00:00:00.000Z
+created: '2025-07-21T00:00:00.000Z'
 tags:
   - evaluation
   - ai-quality
   - metrics
 priority: medium
 completed: '2025-11-02'
+created_at: '2025-11-02T13:14:26+08:00'
+updated_at: '2025-11-10T02:59:33.834Z'
+updated: '2025-11-10'
 ---
 
 # AI Evaluation System

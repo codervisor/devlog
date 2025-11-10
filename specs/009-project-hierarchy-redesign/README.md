@@ -1,12 +1,15 @@
 ---
 status: complete
-created: 2025-10-31T00:00:00.000Z
+created: '2025-10-31T00:00:00.000Z'
 tags:
   - hierarchy
   - architecture
   - project-management
 priority: high
 completed: '2025-11-02'
+created_at: '2025-10-31T11:14:10+08:00'
+updated_at: '2025-11-10T02:59:33.561Z'
+updated: '2025-11-10'
 ---
 
 # Project Management Hierarchy Redesign

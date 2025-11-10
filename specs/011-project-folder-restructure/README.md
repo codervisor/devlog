@@ -1,11 +1,20 @@
 ---
 status: planned
-created: 2025-11-01
-tags: [refactor, testing, tooling, organization]
+created: '2025-11-01'
+tags:
+  - refactor
+  - testing
+  - tooling
+  - organization
 priority: medium
+created_at: '2025-11-01T15:04:04+08:00'
+updated_at: '2025-11-10T02:59:33.493Z'
+updated: '2025-11-10'
 ---
 
 # Project Folder Restructure & Organization
+
+> **Status**: 🗓️ Planned · **Priority**: Medium · **Created**: 2025-11-01 · **Tags**: refactor, testing, tooling, organization
 
 **Status**: 📅 Planned  
 **Created**: 2025-11-01  

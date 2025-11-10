@@ -1,11 +1,19 @@
 ---
 status: in-progress
-created: 2025-10-31
-tags: [mvp, launch, planning]
+created: '2025-10-31'
+tags:
+  - mvp
+  - launch
+  - planning
 priority: high
+created_at: '2025-10-31T13:21:56+08:00'
+updated_at: '2025-11-10T02:59:33.596Z'
+updated: '2025-11-10'
 ---
 
 # AI Agent Observability Platform - MVP Launch Plan
+
+> **Status**: ⏳ In progress · **Priority**: High · **Created**: 2025-10-31 · **Tags**: mvp, launch, planning
 
 **Created**: October 31, 2025  
 **Updated**: November 2, 2025 (Evening)  

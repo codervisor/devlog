@@ -1,6 +1,6 @@
 ---
 status: complete
-created: 2025-10-31T00:00:00.000Z
+created: '2025-10-31T00:00:00.000Z'
 tags:
   - database
   - architecture
@@ -8,6 +8,9 @@ tags:
   - postgresql
 priority: high
 completed: '2025-11-02'
+created_at: '2025-10-31T11:24:33+08:00'
+updated_at: '2025-11-10T02:59:33.627Z'
+updated: '2025-11-10'
 ---
 
 # Database Architecture - PostgreSQL + TimescaleDB

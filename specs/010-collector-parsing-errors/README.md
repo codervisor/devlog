@@ -1,11 +1,19 @@
 ---
 status: complete
-created: 2025-10-31
-tags: [go-collector, bugfix, parser]
+created: '2025-10-31'
+tags:
+  - go-collector
+  - bugfix
+  - parser
 priority: high
+created_at: '2025-10-31T22:03:57+08:00'
+updated_at: '2025-11-10T02:59:33.526Z'
+updated: '2025-11-10'
 ---
 
 # Fix Collector Backfill Parsing Errors
+
+> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-10-31 · **Tags**: go-collector, bugfix, parser
 
 **Status**: ✅ Complete  
 **Created**: 2025-10-31  

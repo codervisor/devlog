@@ -1,11 +1,19 @@
 ---
 status: complete
-created: 2025-10-30
-tags: [go-collector, parser, copilot]
+created: '2025-10-30'
+tags:
+  - go-collector
+  - parser
+  - copilot
 priority: high
+created_at: '2025-10-30T17:30:09+08:00'
+updated_at: '2025-11-10T02:59:33.664Z'
+updated: '2025-11-10'
 ---
 
 # Go Collector - Next Phase Implementation
+
+> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-10-30 · **Tags**: go-collector, parser, copilot
 
 **Created**: October 30, 2025  
 **Updated**: October 31, 2025  

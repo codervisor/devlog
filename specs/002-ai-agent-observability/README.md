@@ -1,11 +1,19 @@
 ---
 status: in-progress
-created: 2025-01-15
-tags: [observability, architecture, go-collector]
+created: '2025-01-15'
+tags:
+  - observability
+  - architecture
+  - go-collector
 priority: high
+created_at: '2025-10-21T10:10:26+08:00'
+updated_at: '2025-11-10T02:59:33.809Z'
+updated: '2025-11-10'
 ---
 
 # AI Agent Observability - Project Overview
+
+> **Status**: ⏳ In progress · **Priority**: High · **Created**: 2025-01-15 · **Tags**: observability, architecture, go-collector
 
 **Started**: January 15, 2025  
 **Current Status**: Backend & Frontend complete, database FK constraint issue found  

@@ -1,11 +1,14 @@
 ---
 status: complete
-created: 2025-11-02T00:00:00.000Z
+created: '2025-11-02T00:00:00.000Z'
 tags:
   - collector
   - copilot
   - bug
 priority: high
+created_at: '2025-11-02T23:05:40+08:00'
+updated_at: '2025-11-10T02:59:33.419Z'
+updated: '2025-11-10'
 ---
 
 # Copilot Collector Array Value Support
