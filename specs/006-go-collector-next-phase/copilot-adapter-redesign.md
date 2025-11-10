@@ -15,6 +15,7 @@ The Copilot adapter has been successfully redesigned and implemented. The parser
 ### Achievement Summary
 
 **Implementation Results:**
+
 - ✅ 844 events extracted from 10 sample files
 - ✅ 88.7% test coverage (exceeds 70% target)
 - ✅ 100% success rate on real data
@@ -22,6 +23,7 @@ The Copilot adapter has been successfully redesigned and implemented. The parser
 - ✅ All tests passing
 
 **Event Types Extracted:**
+
 - LLM Request: 35 events (4.1%)
 - LLM Response: 35 events (4.1%)
 - Tool Use: 474 events (56.2%) - **Dominant category**
@@ -29,6 +31,7 @@ The Copilot adapter has been successfully redesigned and implemented. The parser
 - File Modify: 171 events (20.3%)
 
 **Key Features:**
+
 - Parses complete chat session JSON structure
 - Extracts rich metadata (timestamps, IDs, models)
 - Concatenates response text from streaming chunks
@@ -46,11 +49,13 @@ The Copilot adapter has been successfully redesigned and implemented. The parser
 The current Copilot adapter **cannot extract any meaningful data** from real Copilot logs, making the collector completely non-functional.
 
 **Current State**:
+
 - ❌ Adapter expects line-based JSON logs (one event per line)
 - ❌ Processes 24.20 MB of data but extracts 0 events
 - ❌ Backfill infrastructure works but produces no useful data
 
 **Actual Reality**:
+
 - ✅ Copilot stores chat sessions as structured JSON files
 - ✅ Each workspace has its own `chatSessions/` directory
 - ✅ 657 chat session files totaling 1.4 GB on this machine
@@ -78,12 +83,12 @@ The current Copilot adapter **cannot extract any meaningful data** from real Cop
 
 ### Volume Statistics
 
-| Metric | Value |
-|--------|-------|
-| Total workspace directories | 11 |
-| Total chat session files | 657 |
-| Total data volume | 1.4 GB |
-| Per-file size | ~2-5 MB typical |
+| Metric                      | Value           |
+| --------------------------- | --------------- |
+| Total workspace directories | 11              |
+| Total chat session files    | 657             |
+| Total data volume           | 1.4 GB          |
+| Per-file size               | ~2-5 MB typical |
 
 ### File Structure Analysis
 
@@ -111,7 +116,7 @@ Each element in the `requests[]` array contains:
   "timestamp": "2025-10-30T10:15:30.123Z",
   "modelId": "gpt-4o",
   "agent": {...},
-  
+
   // User's message
   "message": {
     "text": "user's full question...",
@@ -124,7 +129,7 @@ Each element in the `requests[]` array contains:
       }
     ]
   },
-  
+
   // Context variables (files, workspace context)
   "variableData": {
     "variables": [
@@ -139,7 +144,7 @@ Each element in the `requests[]` array contains:
       }
     ]
   },
-  
+
   // AI's response stream
   "response": [
     {
@@ -180,7 +185,7 @@ Each element in the `requests[]` array contains:
       "kind": "undoStop"
     }
   ],
-  
+
   "responseId": "response_abc123",
   "codeCitations": [],
   "contentReferences": [],
@@ -194,16 +199,16 @@ Each element in the `requests[]` array contains:
 
 Based on analysis of real data:
 
-| Kind | Description | Frequency |
-|------|-------------|-----------|
-| `null` | Plain text response chunks | Very High |
-| `toolInvocationSerialized` | Tool/command execution | High |
-| `prepareToolInvocation` | Before tool execution | High |
-| `codeblockUri` | Code references/links | Medium |
-| `textEditGroup` | File edits/changes | Medium |
-| `mcpServersStarting` | MCP server initialization | Low |
-| `inlineReference` | Inline code references | Medium |
-| `undoStop` | Undo boundaries | Low |
+| Kind                       | Description                | Frequency |
+| -------------------------- | -------------------------- | --------- |
+| `null`                     | Plain text response chunks | Very High |
+| `toolInvocationSerialized` | Tool/command execution     | High      |
+| `prepareToolInvocation`    | Before tool execution      | High      |
+| `codeblockUri`             | Code references/links      | Medium    |
+| `textEditGroup`            | File edits/changes         | Medium    |
+| `mcpServersStarting`       | MCP server initialization  | Low       |
+| `inlineReference`          | Inline code references     | Medium    |
+| `undoStop`                 | Undo boundaries            | Low       |
 
 ---
 
@@ -341,10 +346,13 @@ Event {
 ### Phase 1: Core Structure (1.5 hours)
 
 **Files to modify**:
+
 - `internal/adapters/copilot_adapter.go`
 
 **Tasks**:
+
 1. Add chat session type definitions
+
 ```go
 type CopilotChatSession struct {
     Version              int                    `json:"version"`
@@ -397,6 +405,7 @@ type CopilotVariable struct {
 ```
 
 2. Simplify ParseLogFile (remove old line-based logic)
+
 ```go
 func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, error) {
     // Copilot stores logs as chat session JSON files
@@ -407,80 +416,84 @@ func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, err
 ### Phase 2: Chat Session Parser (2-3 hours)
 
 **Tasks**:
+
 1. Implement `parseChatSessionFile()`
+
 ```go
 func (a *CopilotAdapter) parseChatSessionFile(filePath string) ([]*types.AgentEvent, error) {
     data, err := os.ReadFile(filePath)
     if err != nil {
         return nil, err
     }
-    
+
     var session CopilotChatSession
     if err := json.Unmarshal(data, &session); err != nil {
         return nil, fmt.Errorf("failed to parse chat session: %w", err)
     }
-    
+
     var events []*types.AgentEvent
-    
+
     // Extract session ID from filename
     sessionID := extractSessionID(filePath)
     a.sessionID = sessionID
-    
+
     for _, request := range session.Requests {
         // Skip canceled requests
         if request.IsCanceled {
             continue
         }
-        
+
         // Extract all events from this request
         requestEvents, err := a.extractEventsFromRequest(&session, &request)
         if err != nil {
             // Log error but continue processing
             continue
         }
-        
+
         events = append(events, requestEvents...)
     }
-    
+
     return events, nil
 }
 ```
 
 2. Implement `extractEventsFromRequest()`
+
 ```go
 func (a *CopilotAdapter) extractEventsFromRequest(
     session *CopilotChatSession,
     request *CopilotRequest,
 ) ([]*types.AgentEvent, error) {
     var events []*types.AgentEvent
-    
+
     timestamp, err := time.Parse(time.RFC3339, request.Timestamp)
     if err != nil {
         timestamp = time.Now()
     }
-    
+
     // 1. LLM Request Event
     events = append(events, a.createLLMRequestEvent(session, request, timestamp))
-    
+
     // 2. File Reference Events (from variables)
     for _, variable := range request.VariableData.Variables {
         if event := a.createFileReferenceEvent(request, &variable, timestamp); event != nil {
             events = append(events, event)
         }
     }
-    
+
     // 3. Tool Invocation Events + Response Text
     toolEvents, responseText := a.extractToolAndResponseEvents(request, timestamp)
     events = append(events, toolEvents...)
-    
+
     // 4. LLM Response Event
     events = append(events, a.createLLMResponseEvent(request, responseText, timestamp))
-    
+
     return events, nil
 }
 ```
 
 3. Implement helper methods for each event type
+
 ```go
 func (a *CopilotAdapter) createLLMRequestEvent(...) *types.AgentEvent
 func (a *CopilotAdapter) createLLMResponseEvent(...) *types.AgentEvent
@@ -491,10 +504,12 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(...) ([]*types.AgentEvent,
 ### Phase 3: Testing (2-3 hours)
 
 **Test Files**:
+
 - `internal/adapters/copilot_adapter_test.go`
 - `internal/adapters/copilot_chat_session_test.go` (new)
 
 **Test Cases**:
+
 1. Format detection
    - Detect chat session format correctly
    - Detect line-based format correctly
@@ -539,25 +554,33 @@ func (a *CopilotAdapter) extractToolAndResponseEvents(...) ([]*types.AgentEvent,
 - [ ] No duplicate events
 
 **Test Cases**:
+
 1. Chat session parsingcally
 
 ### Step 2: Testing (2-3 hours)
+
 - Test with real 657 chat session files
 - Verify extracted events make sense
 - Fix any parsing issues
 
 ### Step 3: Integration (1 hour)
+
 - Update backfill command to use new adapter
 - Test end-to-end backfill workflow
 - Verify events reach backend correctly
+
 2. Event extraction
+
 ### Step 4: Documentation (30 min)
+
 - Update README with new capabilities
 - Document chat session format
 - Update progress tracking
 
 ---
+
 3. Integration testing
+
 ## 🔄 Backward Compatibility
 
 The new adapter will support both formats:
@@ -579,20 +602,23 @@ Detection is automatic based on file content.
 ## 📝 Open Questions
 
 ### Q1: How to handle timestamps?
+
 **Answer**: Use `request.timestamp` for request event, estimate response timing based on sequence order (add small increments for tool calls).
 
 ### Q2: How to estimate token counts?
+
 **Answer**: Simple heuristic: `tokens ≈ words * 1.3` or use a proper tokenizer library if available in Go.
 
 ### Q3: Should we extract MCP server events?
-**Answer**: Yes, when `kind == "mcpServersStarting"`, create a `EventTypeToolUse` or new `EventTypeMCPServer` type.
----
+
+## **Answer**: Yes, when `kind == "mcpServersStarting"`, create a `EventTypeToolUse` or new `EventTypeMCPServer` type.
 
 ## 📊 Final Implementation Results
 
 ### Test Results
 
 All tests passing with excellent coverage:
+
 ```bash
 $ go test -v ./internal/adapters/... -run TestCopilot
 === RUN   TestCopilotAdapter_ParseLogFile
@@ -612,6 +638,7 @@ ok      ...     0.352s  coverage: 88.7% of statements
 ### Real-World Testing
 
 Tested with actual Copilot chat session files:
+
 ```bash
 $ go run cmd/test-parser/main.go "<path-to-chatSessions>" --preview
 
@@ -636,6 +663,7 @@ Found 11 chat session files
 ### Sample Event Preview
 
 **LLM Request Event:**
+
 ```json
 {
   "type": "llm_request",
@@ -660,6 +688,7 @@ Found 11 chat session files
 ```
 
 **Tool Use Event:**
+
 ```json
 {
   "type": "tool_use",
@@ -683,11 +712,13 @@ Found 11 chat session files
 ### Implementation Files
 
 **Core Implementation:**
+
 - ✅ `internal/adapters/copilot_adapter.go` - Complete chat session parser (460 lines)
 - ✅ `internal/adapters/copilot_adapter_test.go` - Comprehensive test suite (420 lines)
 - ✅ `cmd/test-parser/main.go` - Manual testing utility with preview mode
 
 **Key Functions:**
+
 - `ParseLogFile()` - Entry point, reads and parses chat session JSON
 - `extractEventsFromRequest()` - Extracts all events from a request-response turn
 - `createLLMRequestEvent()` - Creates request events with context
@@ -701,6 +732,7 @@ Found 11 chat session files
 ### Type Definitions
 
 **Chat Session Structure:**
+
 ```go
 type CopilotChatSession struct {
     Version           int
@@ -760,10 +792,13 @@ The core parser successfully extracts rich, meaningful data from Copilot chat se
 Below is the original design that guided the implementation:
 
 ### Original Problem Statement
+
 ### Q4: How to handle file URIs?
+
 **Answer**: Parse VS Code URI format `{ "$mid": 1, "path": "...", "scheme": "file" }` and extract the path.
 
 ### Q5: Should we store full conversation context?
+
 **Answer**: No for now—extract discrete events. Future enhancement could link events as conversation threads.
 
 ---
@@ -771,20 +806,25 @@ Below is the original design that guided the implementation:
 ## 📚 References
 
 ### Sample Files
+
 - `/tmp/copilot-investigation/*.json` - Real chat session samples for testing
 
 ### Code References
+
 - `internal/adapters/copilot_adapter.go` - Current (broken) implementation
 - `internal/adapters/base_adapter.go` - Base adapter interface
 - `pkg/types/types.go` - Event type definitions
 
 ### External Resources
+
 - VS Code Copilot extension source (for reference)
+
 ## 🔄 Breaking Change
 
 The redesigned adapter will **only** support the chat session format:
 
 **Rationale**:
+
 - No evidence that line-based format exists in real Copilot installations
 - Simplifies implementation and maintenance
 - Focuses on actual user data format
@@ -799,6 +839,6 @@ The redesigned adapter will **only** support the chat session format:
 **Date Completed**: October 31, 2025  
 **Implementation Time**: ~4 hours  
 **Test Coverage**: 88.7%  
-**Production Ready**: Yes  
+**Production Ready**: Yes
 
 The Copilot adapter redesign is complete and successfully extracts meaningful events from real Copilot chat sessions. All design goals have been achieved.

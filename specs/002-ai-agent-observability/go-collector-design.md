@@ -5,6 +5,7 @@
 The Go Client Collector is a lightweight, cross-platform binary that runs on developer machines to capture AI agent activities in real-time and forward them to the devlog backend.
 
 **Why Go?**
+
 - Small binary size (~10-20MB) - minimal footprint on developer machines
 - Cross-platform support - single codebase for Windows, macOS, Linux
 - Efficient resource usage - low CPU/memory impact
@@ -21,7 +22,7 @@ graph TB
         direction LR
         Copilot["Copilot"] ~~~ Claude["Claude"] ~~~ Cursor["Cursor"]
     end
-    
+
     subgraph Collector["Go Collector Process"]
         Watcher["Watcher"] --> Registry["Adapter<br/>Registry"]
         Registry --> Parser["Event<br/>Parser"]
@@ -29,7 +30,7 @@ graph TB
         Buffer --> Batch["Batch<br/>Manager"]
         Batch --> Client["HTTP<br/>Client"]
     end
-    
+
     Agents -.->|monitors| Watcher
     Client -->|TLS| Backend["Backend<br/>(Cloud)"]
 ```
@@ -43,6 +44,7 @@ graph TB
 The collector follows a **single entrypoint design** where all functionality is accessed through one main command (`devlog-collector`) with subcommands. This design decision provides several benefits:
 
 **Benefits**:
+
 - **Simplicity**: Users only need to remember one command name
 - **Discoverability**: All features are organized under one namespace
 - **Consistency**: Uniform argument parsing and help system
@@ -109,6 +111,7 @@ func main() {
 ```
 
 **Design Principles**:
+
 1. **No separate binaries**: Avoid creating `devlog-start`, `devlog-stop`, etc.
 2. **Clear command hierarchy**: Group related functionality under subcommands
 3. **Consistent flags**: Global flags (like `--config`, `--verbose`) work for all commands
@@ -118,6 +121,7 @@ func main() {
 **Historical Context & Backfill**:
 
 The collector currently monitors logs in **real-time only**. When the collector starts:
+
 - It discovers log file locations
 - It watches files for future changes (via fsnotify)
 - It does NOT read existing historical logs
@@ -137,6 +141,7 @@ devlog-collector start --backfill --backfill-days=7
 ```
 
 This would enable:
+
 - Initial setup with existing context
 - Gap recovery after collector downtime
 - Historical analysis of past agent activity
@@ -152,20 +157,20 @@ This would enable:
   "backendUrl": "https://api.devlog.io",
   "apiKey": "${DEVLOG_API_KEY}",
   "projectId": "my-project",
-  
+
   "collection": {
     "batchSize": 100,
     "batchInterval": "5s",
     "maxRetries": 3,
     "retryBackoff": "exponential"
   },
-  
+
   "buffer": {
     "enabled": true,
     "maxSize": 10000,
     "dbPath": "~/.devlog/buffer.db"
   },
-  
+
   "agents": {
     "copilot": {
       "enabled": true,
@@ -180,7 +185,7 @@ This would enable:
       "logPath": "auto"
     }
   },
-  
+
   "logging": {
     "level": "info",
     "file": "~/.devlog/collector.log"
@@ -189,28 +194,29 @@ This would enable:
 ```
 
 **Go Implementation**:
+
 ```go
 type Config struct {
     Version    string `json:"version"`
     BackendURL string `json:"backendUrl"`
     APIKey     string `json:"apiKey"`
     ProjectID  string `json:"projectId"`
-    
+
     Collection struct {
         BatchSize      int    `json:"batchSize"`
         BatchInterval  string `json:"batchInterval"`
         MaxRetries     int    `json:"maxRetries"`
         RetryBackoff   string `json:"retryBackoff"`
     } `json:"collection"`
-    
+
     Buffer struct {
         Enabled bool   `json:"enabled"`
         MaxSize int    `json:"maxSize"`
         DBPath  string `json:"dbPath"`
     } `json:"buffer"`
-    
+
     Agents map[string]AgentConfig `json:"agents"`
-    
+
     Logging struct {
         Level string `json:"level"`
         File  string `json:"file"`
@@ -261,21 +267,21 @@ var AgentLogLocations = map[string]map[string][]string{
 func DiscoverAgentLogs(agentName string) ([]string, error) {
     os := runtime.GOOS
     patterns := AgentLogLocations[agentName][os]
-    
+
     var foundPaths []string
     for _, pattern := range patterns {
         // Expand home directory and env variables
         expanded := expandPath(pattern)
-        
+
         // Handle glob patterns
         matches, err := filepath.Glob(expanded)
         if err != nil {
             continue
         }
-        
+
         foundPaths = append(foundPaths, matches...)
     }
-    
+
     return foundPaths, nil
 }
 ```
@@ -307,7 +313,7 @@ func NewLogWatcher() (*LogWatcher, error) {
     if err != nil {
         return nil, err
     }
-    
+
     return &LogWatcher{
         watcher: w,
         paths:   make(map[string]string),
@@ -356,13 +362,13 @@ package adapters
 type AgentAdapter interface {
     // AgentID returns the unique identifier for this agent
     AgentID() string
-    
+
     // CanHandle checks if this adapter can parse the given log entry
     CanHandle(rawLog []byte) bool
-    
+
     // ParseEvent converts raw log to standard AgentEvent
     ParseEvent(rawLog []byte) (*AgentEvent, error)
-    
+
     // ExtractSessionInfo derives session information from logs
     ExtractSessionInfo(logs [][]byte) (*SessionInfo, error)
 }
@@ -418,11 +424,11 @@ func (a *CopilotAdapter) ParseEvent(rawLog []byte) (*AgentEvent, error) {
         Message   string                 `json:"message"`
         Data      map[string]interface{} `json:"data"`
     }
-    
+
     if err := json.Unmarshal(rawLog, &logEntry); err != nil {
         return nil, err
     }
-    
+
     // Transform to standard format
     event := &AgentEvent{
         ID:        generateEventID(),
@@ -432,14 +438,14 @@ func (a *CopilotAdapter) ParseEvent(rawLog []byte) (*AgentEvent, error) {
         SessionID: a.sessionID,
         Data:      logEntry.Data,
     }
-    
+
     // Extract metrics if available
     if tokenCount, ok := logEntry.Data["tokenCount"].(float64); ok {
         event.Metrics = &EventMetrics{
             TokenCount: int(tokenCount),
         }
     }
-    
+
     return event, nil
 }
 
@@ -503,12 +509,12 @@ func NewBuffer(dbPath string, maxSize int) (*Buffer, error) {
     if err != nil {
         return nil, err
     }
-    
+
     // Initialize schema
     if err := initSchema(db); err != nil {
         return nil, err
     }
-    
+
     return &Buffer{db: db, maxSize: maxSize}, nil
 }
 
@@ -517,46 +523,46 @@ func (b *Buffer) Store(event *AgentEvent) error {
     if err != nil {
         return err
     }
-    
+
     _, err = b.db.Exec(`
         INSERT INTO events (id, timestamp, agent_id, session_id, event_type, data, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, event.ID, event.Timestamp.Unix(), event.AgentID, event.SessionID, 
+    `, event.ID, event.Timestamp.Unix(), event.AgentID, event.SessionID,
        event.Type, data, time.Now().Unix())
-    
+
     // Enforce max size
     b.cleanup()
-    
+
     return err
 }
 
 func (b *Buffer) GetUnsent(limit int) ([]*AgentEvent, error) {
     rows, err := b.db.Query(`
-        SELECT data FROM events 
-        WHERE sent = 0 
-        ORDER BY timestamp 
+        SELECT data FROM events
+        WHERE sent = 0
+        ORDER BY timestamp
         LIMIT ?
     `, limit)
     if err != nil {
         return nil, err
     }
     defer rows.Close()
-    
+
     var events []*AgentEvent
     for rows.Next() {
         var data []byte
         if err := rows.Scan(&data); err != nil {
             continue
         }
-        
+
         var event AgentEvent
         if err := json.Unmarshal(data, &event); err != nil {
             continue
         }
-        
+
         events = append(events, &event)
     }
-    
+
     return events, nil
 }
 
@@ -565,7 +571,7 @@ func (b *Buffer) MarkSent(eventIDs []string) error {
     _, err := b.db.Exec(`
         DELETE FROM events WHERE id IN (?)
     `, strings.Join(eventIDs, ","))
-    
+
     return err
 }
 ```
@@ -587,7 +593,7 @@ type BatchManager struct {
     events        chan *AgentEvent
 }
 
-func NewBatchManager(batchSize int, interval time.Duration, 
+func NewBatchManager(batchSize int, interval time.Duration,
                       buffer *Buffer, client *BackendClient) *BatchManager {
     return &BatchManager{
         batchSize:     batchSize,
@@ -608,7 +614,7 @@ func (bm *BatchManager) Add(event *AgentEvent) {
         log.Printf("Failed to buffer event: %v", err)
         return
     }
-    
+
     bm.events <- event
 }
 
@@ -616,7 +622,7 @@ func (bm *BatchManager) processBatches() {
     batch := make([]*AgentEvent, 0, bm.batchSize)
     ticker := time.NewTicker(bm.batchInterval)
     defer ticker.Stop()
-    
+
     for {
         select {
         case event := <-bm.events:
@@ -625,7 +631,7 @@ func (bm *BatchManager) processBatches() {
                 bm.sendBatch(batch)
                 batch = batch[:0]
             }
-            
+
         case <-ticker.C:
             if len(batch) > 0 {
                 bm.sendBatch(batch)
@@ -641,7 +647,7 @@ func (bm *BatchManager) sendBatch(batch []*AgentEvent) {
         // Events remain in buffer for retry
         return
     }
-    
+
     // Mark as sent in buffer
     eventIDs := make([]string, len(batch))
     for i, e := range batch {
@@ -693,7 +699,7 @@ func (c *BackendClient) SendBatch(events []*AgentEvent) error {
     if err != nil {
         return err
     }
-    
+
     // Compress with gzip
     var compressed bytes.Buffer
     gzWriter := gzip.NewWriter(&compressed)
@@ -701,47 +707,47 @@ func (c *BackendClient) SendBatch(events []*AgentEvent) error {
         return err
     }
     gzWriter.Close()
-    
+
     // Send to backend
-    req, err := http.NewRequest("POST", 
-        c.baseURL+"/api/agent/events/batch", 
+    req, err := http.NewRequest("POST",
+        c.baseURL+"/api/agent/events/batch",
         &compressed)
     if err != nil {
         return err
     }
-    
+
     req.Header.Set("Authorization", "Bearer "+c.apiKey)
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("Content-Encoding", "gzip")
-    
+
     resp, err := c.httpClient.Do(req)
     if err != nil {
         return err
     }
     defer resp.Body.Close()
-    
+
     if resp.StatusCode != http.StatusOK {
         return fmt.Errorf("backend returned status %d", resp.StatusCode)
     }
-    
+
     return nil
 }
 
 func (c *BackendClient) SendBatchWithRetry(events []*AgentEvent, maxRetries int) error {
     var err error
     backoff := time.Second
-    
+
     for i := 0; i < maxRetries; i++ {
         err = c.SendBatch(events)
         if err == nil {
             return nil
         }
-        
+
         log.Printf("Retry %d/%d after error: %v", i+1, maxRetries, err)
         time.Sleep(backoff)
         backoff *= 2 // Exponential backoff
     }
-    
+
     return err
 }
 ```
@@ -775,10 +781,7 @@ GOOS=windows GOARCH=amd64 go build -o bin/devlog-collector-windows-amd64.exe cmd
   "scripts": {
     "postinstall": "node scripts/install.js"
   },
-  "files": [
-    "bin/",
-    "scripts/"
-  ]
+  "files": ["bin/", "scripts/"]
 }
 ```
 
@@ -796,7 +799,7 @@ const binaryMap = {
   'darwin-x64': 'devlog-collector-darwin-amd64',
   'darwin-arm64': 'devlog-collector-darwin-arm64',
   'linux-x64': 'devlog-collector-linux-amd64',
-  'win32-x64': 'devlog-collector-windows-amd64.exe'
+  'win32-x64': 'devlog-collector-windows-amd64.exe',
 };
 
 const binaryName = binaryMap[`${platform}-${arch}`];
@@ -862,16 +865,16 @@ WantedBy=default.target
 
 ## Performance Characteristics
 
-| Metric | Target | Typical |
-|--------|--------|---------|
-| **Binary Size** | < 20MB | ~15MB |
-| **Memory Usage** | < 50MB | ~30MB |
-| **CPU Usage (idle)** | < 1% | ~0.5% |
-| **CPU Usage (active)** | < 5% | ~2% |
-| **Event Processing** | > 1K events/sec | ~5K events/sec |
-| **Startup Time** | < 1s | ~300ms |
-| **Latency (event → buffer)** | < 10ms | ~2ms |
-| **Network Bandwidth** | Varies | ~10KB/s (compressed) |
+| Metric                       | Target          | Typical              |
+| ---------------------------- | --------------- | -------------------- |
+| **Binary Size**              | < 20MB          | ~15MB                |
+| **Memory Usage**             | < 50MB          | ~30MB                |
+| **CPU Usage (idle)**         | < 1%            | ~0.5%                |
+| **CPU Usage (active)**       | < 5%            | ~2%                  |
+| **Event Processing**         | > 1K events/sec | ~5K events/sec       |
+| **Startup Time**             | < 1s            | ~300ms               |
+| **Latency (event → buffer)** | < 10ms          | ~2ms                 |
+| **Network Bandwidth**        | Varies          | ~10KB/s (compressed) |
 
 ## Security Considerations
 

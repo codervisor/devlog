@@ -18,11 +18,7 @@
     "start:web": "pnpm --filter @codervisor/devlog-web start",
     "preview:web": "pnpm --filter @codervisor/devlog-web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "prepare": "husky",
-    "spec": "node scripts/specs/spec.js",
-    "spec:create": "node scripts/specs/spec.js create",
-    "spec:list": "node scripts/specs/spec.js list",
-    "spec:archive": "node scripts/specs/spec.js archive"
+    "prepare": "husky"
   },
   "keywords": [
     "monorepo",

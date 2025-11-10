@@ -2,7 +2,7 @@
 
 **Timeline**: November 23-30, 2025  
 **Focus**: Web UI with hierarchy navigation + production deployment  
-**Status**: 📋 Planned  
+**Status**: 📋 Planned
 
 ---
 
@@ -26,12 +26,13 @@
 #### Tasks
 
 - [ ] **Project Hierarchy Page** (8 hours)
+
   ```typescript
   // apps/web/app/projects/[id]/hierarchy/page.tsx
-  
+
   import { HierarchyTree } from '@/components/hierarchy/hierarchy-tree';
   import { hierarchyService } from '@/lib/services';
-  
+
   export default async function ProjectHierarchyPage({
     params,
   }: {
@@ -40,14 +41,14 @@
     const hierarchy = await hierarchyService.getProjectHierarchy(
       parseInt(params.id)
     );
-    
+
     return (
       <div className="container mx-auto py-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">{hierarchy.project.fullName}</h1>
           <p className="text-muted-foreground">{hierarchy.project.description}</p>
         </div>
-        
+
         <HierarchyTree hierarchy={hierarchy} />
       </div>
     );
@@ -55,19 +56,20 @@
   ```
 
 - [ ] **Hierarchy Tree Component** (6 hours)
+
   ```typescript
   // apps/web/components/hierarchy/hierarchy-tree.tsx
-  
+
   'use client';
-  
+
   import { useState } from 'react';
   import { ChevronRight, ChevronDown, Monitor, Folder, MessageSquare } from 'lucide-react';
   import { ProjectHierarchy } from '@codervisor/devlog-core';
-  
+
   export function HierarchyTree({ hierarchy }: { hierarchy: ProjectHierarchy }) {
     const [expandedMachines, setExpandedMachines] = useState<Set<number>>(new Set());
     const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<number>>(new Set());
-    
+
     const toggleMachine = (machineId: number) => {
       setExpandedMachines(prev => {
         const next = new Set(prev);
@@ -79,7 +81,7 @@
         return next;
       });
     };
-    
+
     const toggleWorkspace = (workspaceId: number) => {
       setExpandedWorkspaces(prev => {
         const next = new Set(prev);
@@ -91,7 +93,7 @@
         return next;
       });
     };
-    
+
     return (
       <div className="space-y-2">
         {hierarchy.machines.map(({ machine, workspaces }) => {
@@ -99,7 +101,7 @@
           const totalWorkspaces = workspaces.length;
           const totalSessions = workspaces.reduce((sum, w) => sum + w.sessions.length, 0);
           const totalEvents = workspaces.reduce((sum, w) => sum + w.eventCount, 0);
-          
+
           return (
             <div key={machine.id} className="border rounded-lg p-4">
               <button
@@ -122,12 +124,12 @@
                   {totalWorkspaces} workspaces • {totalSessions} sessions • {totalEvents} events
                 </div>
               </button>
-              
+
               {isExpanded && (
                 <div className="ml-8 mt-2 space-y-2">
                   {workspaces.map(({ workspace, sessions, eventCount }) => {
                     const isWsExpanded = expandedWorkspaces.has(workspace.id);
-                    
+
                     return (
                       <div key={workspace.id} className="border-l-2 pl-4">
                         <button
@@ -150,7 +152,7 @@
                             {sessions.length} sessions • {eventCount} events
                           </div>
                         </button>
-                        
+
                         {isWsExpanded && (
                           <div className="ml-6 mt-2 space-y-1">
                             {sessions.map(session => (
@@ -206,34 +208,35 @@
 #### Tasks
 
 - [ ] **Filter Component** (4 hours)
+
   ```typescript
   // apps/web/components/hierarchy/hierarchy-filter.tsx
-  
+
   'use client';
-  
+
   import { useEffect, useState } from 'react';
   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
   import { useRouter, useSearchParams } from 'next/navigation';
-  
+
   export function HierarchyFilter() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    
+
     const [projects, setProjects] = useState([]);
     const [machines, setMachines] = useState([]);
     const [workspaces, setWorkspaces] = useState([]);
-    
+
     const selectedProject = searchParams.get('projectId');
     const selectedMachine = searchParams.get('machineId');
     const selectedWorkspace = searchParams.get('workspaceId');
-    
+
     // Load projects on mount
     useEffect(() => {
       fetch('/api/projects')
         .then(res => res.json())
         .then(setProjects);
     }, []);
-    
+
     // Load machines when project selected
     useEffect(() => {
       if (selectedProject) {
@@ -244,7 +247,7 @@
         setMachines([]);
       }
     }, [selectedProject]);
-    
+
     // Load workspaces when machine selected
     useEffect(() => {
       if (selectedMachine) {
@@ -255,16 +258,16 @@
         setWorkspaces([]);
       }
     }, [selectedMachine]);
-    
+
     const updateFilter = (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams);
-      
+
       if (value) {
         params.set(key, value);
       } else {
         params.delete(key);
       }
-      
+
       // Clear child filters when parent changes
       if (key === 'projectId') {
         params.delete('machineId');
@@ -272,10 +275,10 @@
       } else if (key === 'machineId') {
         params.delete('workspaceId');
       }
-      
+
       router.push(`?${params.toString()}`);
     };
-    
+
     return (
       <div className="flex gap-2">
         <Select
@@ -293,7 +296,7 @@
             ))}
           </SelectContent>
         </Select>
-        
+
         {selectedProject && (
           <Select
             value={selectedMachine || undefined}
@@ -311,7 +314,7 @@
             </SelectContent>
           </Select>
         )}
-        
+
         {selectedMachine && (
           <Select
             value={selectedWorkspace || undefined}
@@ -362,25 +365,26 @@
 #### Tasks
 
 - [ ] **Activity by Machine Widget** (3 hours)
+
   ```typescript
   // apps/web/components/dashboard/machine-activity-widget.tsx
-  
+
   'use client';
-  
+
   import { useEffect, useState } from 'react';
   import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
-  
+
   export function MachineActivityWidget({ projectId }: { projectId?: number }) {
     const [data, setData] = useState([]);
-    
+
     useEffect(() => {
       const query = projectId ? `?projectId=${projectId}` : '';
-      
+
       fetch(`/api/stats/machine-activity${query}`)
         .then(res => res.json())
         .then(setData);
     }, [projectId]);
-    
+
     return (
       <div className="border rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Activity by Machine</h3>
@@ -437,18 +441,19 @@
   - Configure CDN
 
 - [ ] **Collector Distribution** (3 hours)
+
   ```bash
   # Build for all platforms
   cd packages/collector-go
   make build-all
-  
+
   # Outputs:
   # bin/devlog-collector-darwin-amd64
   # bin/devlog-collector-darwin-arm64
   # bin/devlog-collector-linux-amd64
   # bin/devlog-collector-linux-arm64
   # bin/devlog-collector-windows-amd64.exe
-  
+
   # Create npm package
   cd ../collector-npm
   npm version 1.0.0
@@ -525,11 +530,11 @@
 #### Evening (6:00 PM)
 
 - [ ] **Day 0 Review**
-  - Total users: ___
-  - Total events: ___
-  - Error rate: ___%
-  - P95 latency: ___ms
-  - Critical issues: ___
+  - Total users: \_\_\_
+  - Total events: \_\_\_
+  - Error rate: \_\_\_%
+  - P95 latency: \_\_\_ms
+  - Critical issues: \_\_\_
 
 - [ ] **🎉 Celebrate!**
   - Team acknowledgment
@@ -580,6 +585,7 @@
 ## 📊 Week 4 Success Metrics
 
 ### Functionality
+
 - ✅ Hierarchy navigation working
 - ✅ Filtering working at all levels
 - ✅ Dashboard widgets functional
@@ -587,18 +593,21 @@
 - ✅ Real-time updates working
 
 ### Performance
+
 - ✅ Dashboard load: <2s
 - ✅ API latency: <200ms P95
 - ✅ Hierarchy tree: smooth with 100+ nodes
 - ✅ Real-time updates: <5s latency
 
 ### Quality
+
 - ✅ All features tested
 - ✅ Zero critical bugs at launch
 - ✅ Documentation complete
 - ✅ Monitoring configured
 
 ### Launch
+
 - ✅ 10+ users in first week
 - ✅ 1000+ events collected
 - ✅ Error rate <0.1%
@@ -611,22 +620,26 @@
 Launch is considered successful if (Day 7):
 
 **Adoption**:
+
 - ✅ 10+ users installed collector
 - ✅ 1000+ events collected
 - ✅ 3+ projects tracked
 
 **Stability**:
+
 - ✅ Error rate <0.1% average
 - ✅ Zero critical bugs
 - ✅ Zero data loss incidents
 - ✅ Uptime >99.9%
 
 **Performance**:
+
 - ✅ API latency <200ms P95
 - ✅ Dashboard load <2s
 - ✅ Event processing >500 events/sec
 
 **User Satisfaction**:
+
 - ✅ Positive feedback >80%
 - ✅ Support response time <4 hours
 - ✅ Feature requests documented

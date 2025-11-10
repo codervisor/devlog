@@ -8,10 +8,12 @@
 ## 🎯 Problem Statement
 
 When collecting Copilot chat sessions, we have:
+
 - **Chat session files** organized by workspace ID (e.g., `487fd76abf5d5f8744f78317893cc477`)
 - **Need to know**: Which project/repository does each workspace belong to?
 
 This is essential for:
+
 1. Associating events with the correct project in the database
 2. Providing context about which codebase was being worked on
 3. Filtering and analyzing events by project
@@ -76,7 +78,7 @@ func readWorkspaceMetadata(workspaceID string) (*WorkspaceMetadata, error) {
     if err != nil {
         return nil, err
     }
-    
+
     var meta WorkspaceMetadata
     err = json.Unmarshal(data, &meta)
     return &meta, err
@@ -99,11 +101,11 @@ func getProjectPath(meta *WorkspaceMetadata) string {
 func cleanURI(uri string) string {
     // Remove file:// prefix
     uri = strings.TrimPrefix(uri, "file://")
-    
+
     // Decode URL encoding
     uri = strings.ReplaceAll(uri, "%20", " ")
     // Add more decodings as needed
-    
+
     return uri
 }
 ```
@@ -120,14 +122,14 @@ func getGitInfo(projectPath string) (*GitInfo, error) {
     if err != nil {
         return nil, err
     }
-    
+
     remoteURL := strings.TrimSpace(string(output))
-    
+
     // Parse owner/repo from URL
     // git@github.com:owner/repo.git -> owner/repo
     // https://github.com/owner/repo.git -> owner/repo
     owner, repo := parseGitURL(remoteURL)
-    
+
     return &GitInfo{
         RemoteURL: remoteURL,
         Owner:     owner,
@@ -144,10 +146,10 @@ When parsing chat sessions:
 func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, error) {
     // Extract workspace ID from file path
     workspaceID := extractWorkspaceID(filePath)
-    
+
     // Get project info
     projectInfo := getProjectInfo(workspaceID)
-    
+
     // Parse events and add project context
     events, err := a.parseChatSessionFile(filePath)
     for _, event := range events {
@@ -156,7 +158,7 @@ func (a *CopilotAdapter) ParseLogFile(filePath string) ([]*types.AgentEvent, err
         event.Context["repoName"] = projectInfo.RepoName
         event.Context["repoOwner"] = projectInfo.Owner
     }
-    
+
     return events, nil
 }
 ```
@@ -190,10 +192,10 @@ Workspace ID                      | Type       | Project Name              | Pat
 func (c *Collector) Initialize() error {
     // Build workspace ID -> project mapping
     c.workspaceMap = buildWorkspaceMap()
-    
+
     // Watch for new workspaces
     c.watchWorkspaces()
-    
+
     return nil
 }
 ```
@@ -208,7 +210,7 @@ func getProjectInfo(workspaceID string) *ProjectInfo {
     if info, ok := workspaceCache[workspaceID]; ok {
         return info
     }
-    
+
     info := readWorkspaceInfo(workspaceID)
     workspaceCache[workspaceID] = info
     return info
@@ -221,7 +223,7 @@ func getProjectInfo(workspaceID string) *ProjectInfo {
 // Periodically scan all workspaces
 func (c *Collector) indexWorkspaces() {
     workspaces := scanAllWorkspaces()
-    
+
     for _, ws := range workspaces {
         c.database.UpsertProject(&Project{
             WorkspaceID: ws.ID,
@@ -270,6 +272,7 @@ go run cmd/workspace-mapper/main.go
 ```
 
 This shows:
+
 - All discovered workspaces
 - Their types (folder vs multi-root)
 - Project paths

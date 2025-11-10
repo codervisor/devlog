@@ -2,7 +2,7 @@
 
 **Timeline**: November 9-15, 2025  
 **Focus**: Complete collector with all adapters + hierarchy integration  
-**Status**: 📋 Planned  
+**Status**: 📋 Planned
 
 ---
 
@@ -25,41 +25,42 @@
 #### Tasks
 
 - [ ] **Integrate Hierarchy Resolution** (4 hours)
+
   ```go
   // internal/adapters/copilot_adapter.go
-  
+
   type CopilotAdapter struct {
       registry  *adapters.Registry
       hierarchy *hierarchy.HierarchyCache
       log       *logrus.Logger
   }
-  
+
   func (ca *CopilotAdapter) ParseLogFile(path string) ([]AgentEvent, error) {
       // 1. Extract workspace ID from file path
       // Path: .../workspaceStorage/{workspace-id}/chatSessions/{session-id}.json
       workspaceID := extractWorkspaceIDFromPath(path)
-      
+
       // 2. Resolve hierarchy
       ctx, err := ca.hierarchy.Resolve(workspaceID)
       if err != nil {
           ca.log.Warnf("Failed to resolve workspace %s: %v", workspaceID, err)
           return nil, fmt.Errorf("workspace not found: %w", err)
       }
-      
+
       // 3. Parse chat session file (existing logic)
       events := ca.parseChatSession(path)
-      
+
       // 4. Add hierarchy context to all events
       for i := range events {
           events[i].ProjectID = ctx.ProjectID
           events[i].MachineID = ctx.MachineID
           events[i].WorkspaceID = ctx.WorkspaceID
-          
+
           // Add to context for querying
           events[i].Context["projectName"] = ctx.ProjectName
           events[i].Context["machineName"] = ctx.MachineName
       }
-      
+
       return events, nil
   }
   ```
@@ -71,18 +72,19 @@
   - Add metrics for unresolved workspaces
 
 - [ ] **Update Event Structure** (2 hours)
+
   ```go
   type AgentEvent struct {
       ID        string    `json:"id"`
       Timestamp time.Time `json:"timestamp"`
       EventType string    `json:"eventType"`
-      
+
       // Hierarchy context (NEW)
       SessionID   string `json:"sessionId"`   // Chat session UUID
       ProjectID   int    `json:"projectId"`   // Resolved project
       MachineID   int    `json:"machineId"`   // Current machine
       WorkspaceID int    `json:"workspaceId"` // VS Code workspace
-      
+
       // Existing fields
       AgentID      string          `json:"agentId"`
       AgentVersion string          `json:"agentVersion"`
@@ -125,32 +127,33 @@
   - Identify event types
 
 - [ ] **Implement Claude Adapter** (8 hours)
+
   ```go
   // internal/adapters/claude_adapter.go
-  
+
   type ClaudeAdapter struct {
       registry  *adapters.Registry
       hierarchy *hierarchy.HierarchyCache
       log       *logrus.Logger
   }
-  
+
   func (ca *ClaudeAdapter) ParseLogFile(path string) ([]AgentEvent, error) {
       // 1. Extract workspace ID
       workspaceID := extractWorkspaceIDFromPath(path)
-      
+
       // 2. Resolve hierarchy
       ctx, err := ca.hierarchy.Resolve(workspaceID)
       if err != nil {
           return nil, fmt.Errorf("failed to resolve hierarchy: %w", err)
       }
-      
+
       // 3. Parse Claude format
       file, _ := os.Open(path)
       defer file.Close()
-      
+
       var events []AgentEvent
       scanner := bufio.NewScanner(file)
-      
+
       for scanner.Scan() {
           line := scanner.Text()
           event, err := ca.parseClaudeLine(line, ctx)
@@ -160,20 +163,20 @@
           }
           events = append(events, event)
       }
-      
+
       return events, nil
   }
-  
+
   func (ca *ClaudeAdapter) parseClaudeLine(line string, ctx *hierarchy.WorkspaceContext) (AgentEvent, error) {
       // Parse Claude-specific JSON format
       var raw map[string]interface{}
       if err := json.Unmarshal([]byte(line), &raw); err != nil {
           return AgentEvent{}, err
       }
-      
+
       // Extract event type
       eventType := ca.detectEventType(raw)
-      
+
       // Map to standard event structure
       event := AgentEvent{
           ID:          uuid.New().String(),
@@ -187,10 +190,10 @@
           Data:        extractData(raw),
           Metrics:     extractMetrics(raw),
       }
-      
+
       return event, nil
   }
-  
+
   func (ca *ClaudeAdapter) detectEventType(raw map[string]interface{}) string {
       // Map Claude events to standard types
       if raw["type"] == "message_request" {
@@ -205,10 +208,10 @@
       // ... more mappings
       return "unknown"
   }
-  
+
   func (ca *ClaudeAdapter) SupportsFormat(path string) bool {
       // Check if file is Claude format
-      return strings.Contains(path, "Claude") || 
+      return strings.Contains(path, "Claude") ||
              strings.Contains(path, "claude")
   }
   ```
@@ -221,18 +224,19 @@
   - Integration tests
 
 - [ ] **Register Adapter** (1 hour)
+
   ```go
   // internal/adapters/registry.go
-  
+
   func NewRegistry(hierarchy *hierarchy.HierarchyCache) *Registry {
       registry := &Registry{
           adapters: make(map[string]Adapter),
       }
-      
+
       // Register all adapters
       registry.Register("copilot", NewCopilotAdapter(registry, hierarchy))
       registry.Register("claude", NewClaudeAdapter(registry, hierarchy))
-      
+
       return registry
   }
   ```
@@ -286,9 +290,10 @@
 #### Tasks
 
 - [ ] **Update Backfill Manager** (4 hours)
+
   ```go
   // internal/backfill/backfill.go
-  
+
   type BackfillManager struct {
       registry   *adapters.Registry
       buffer     *buffer.Buffer
@@ -297,28 +302,28 @@
       stateStore *StateStore
       log        *logrus.Logger
   }
-  
+
   func (bm *BackfillManager) Backfill(config BackfillConfig) (*BackfillResult, error) {
       // 1. Refresh hierarchy cache
       if err := bm.hierarchy.Refresh(); err != nil {
           return nil, fmt.Errorf("failed to refresh hierarchy: %w", err)
       }
-      
+
       // 2. Find log files
       files, err := bm.findLogFiles(config.LogPath, config.FromDate, config.ToDate)
       if err != nil {
           return nil, err
       }
-      
+
       result := &BackfillResult{
           TotalFiles: len(files),
       }
-      
+
       // 3. Process each file
       for _, file := range files {
           // Extract workspace ID
           workspaceID := extractWorkspaceIDFromPath(file)
-          
+
           // Check if workspace is known
           _, err := bm.hierarchy.Resolve(workspaceID)
           if err != nil {
@@ -326,7 +331,7 @@
               result.SkippedFiles++
               continue
           }
-          
+
           // Process file (adapter automatically adds hierarchy context)
           events, err := bm.processFile(file)
           if err != nil {
@@ -334,11 +339,11 @@
               result.ErrorFiles++
               continue
           }
-          
+
           result.ProcessedEvents += len(events)
           result.ProcessedFiles++
       }
-      
+
       return result, nil
   }
   ```
@@ -350,6 +355,7 @@
   - Skip unresolvable files
 
 - [ ] **Update CLI Commands** (1 hour)
+
   ```bash
   # Show hierarchy info in dry-run
   devlog-collector backfill run --days 7 --dry-run
@@ -360,10 +366,10 @@
   #     - Workspace: 7231726a (10 files, 200 events)
   #   - Machine: marv-codespace
   #     - Workspace: ea4583cb (5 files, 120 events)
-  
+
   # Filter by project
   devlog-collector backfill run --project "codervisor/devlog"
-  
+
   # Filter by machine
   devlog-collector backfill run --machine "marv-macbook-pro"
   ```
@@ -419,7 +425,7 @@ devlog-collector backfill run --days 30
 # 3. Verify in database
 psql $DATABASE_URL <<EOF
 -- Count events by hierarchy level
-SELECT 
+SELECT
   p.full_name as project,
   m.hostname as machine,
   COUNT(DISTINCT w.id) as workspaces,
@@ -436,7 +442,7 @@ GROUP BY p.id, m.id
 ORDER BY events DESC;
 
 -- Check for orphaned records
-SELECT 'Orphaned Events' as issue, COUNT(*) 
+SELECT 'Orphaned Events' as issue, COUNT(*)
 FROM agent_events ae
 LEFT JOIN chat_sessions cs ON cs.session_id = ae.session_id
 WHERE cs.id IS NULL;
@@ -457,6 +463,7 @@ EOF
 ## 📊 Week 2 Success Metrics
 
 ### Functionality
+
 - ✅ Copilot adapter integrated with hierarchy
 - ✅ Claude adapter implemented and tested
 - ✅ Cursor adapter implemented and tested
@@ -464,12 +471,14 @@ EOF
 - ✅ All events properly linked to hierarchy
 
 ### Performance
+
 - ✅ Event processing: >500 events/sec
 - ✅ Memory usage: <100MB collector
 - ✅ Backfill throughput: >1000 events/sec batch
 - ✅ Hierarchy resolution: <1ms cached, <50ms uncached
 
 ### Quality
+
 - ✅ Test coverage: >70% all adapters
 - ✅ Integration tests passing
 - ✅ No memory leaks

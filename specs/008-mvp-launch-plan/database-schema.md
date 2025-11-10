@@ -2,7 +2,7 @@
 
 **Part of**: MVP Launch Plan  
 **Status**: Design Complete  
-**Priority**: CRITICAL - Week 1  
+**Priority**: CRITICAL - Week 1
 
 ---
 
@@ -82,10 +82,10 @@ model Machine {
 model MachineProject {
   machineId Int
   projectId Int
-  
+
   machine Machine @relation("MachineProjects", fields: [machineId], references: [id], onDelete: Cascade)
   project Project @relation("MachineProjects", fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   @@id([machineId, projectId])
   @@map("machine_projects")
 }
@@ -415,7 +415,7 @@ SELECT add_retention_policy('agent_events', INTERVAL '1 year');
 -- Create continuous aggregate for hourly stats
 CREATE MATERIALIZED VIEW agent_events_hourly
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
   time_bucket('1 hour', timestamp) AS bucket,
   project_id,
   agent_id,
@@ -438,6 +438,7 @@ SELECT add_continuous_aggregate_policy('agent_events_hourly',
 ## 📋 Migration Steps
 
 1. **Backup current database**
+
    ```bash
    pg_dump -Fc devlog > backup_$(date +%Y%m%d).dump
    ```
@@ -446,11 +447,13 @@ SELECT add_continuous_aggregate_policy('agent_events_hourly',
    - Replace `prisma/schema.prisma` with schema above
 
 3. **Generate migration**
+
    ```bash
    npx prisma migrate dev --name add_hierarchy_support
    ```
 
 4. **Enable TimescaleDB**
+
    ```bash
    psql $DATABASE_URL -f scripts/enable-timescaledb.sql
    ```

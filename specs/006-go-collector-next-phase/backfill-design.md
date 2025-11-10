@@ -11,6 +11,7 @@
 The backfill feature enables processing of historical agent logs that were created before the collector started running. This is essential for capturing past development activity and providing a complete historical record.
 
 ### Goals
+
 - Process historical log files from any date range
 - Resume interrupted backfill operations
 - Prevent duplicate events
@@ -18,6 +19,7 @@ The backfill feature enables processing of historical agent logs that were creat
 - Provide clear progress reporting
 
 ### Non-Goals
+
 - Real-time log monitoring (handled by watcher)
 - Log rotation or cleanup
 - Data migration or transformation
@@ -85,9 +87,9 @@ CREATE TABLE IF NOT EXISTS backfill_state (
     UNIQUE(agent_name, log_file_path)
 );
 
-CREATE INDEX IF NOT EXISTS idx_backfill_status 
+CREATE INDEX IF NOT EXISTS idx_backfill_status
     ON backfill_state(status);
-CREATE INDEX IF NOT EXISTS idx_backfill_agent 
+CREATE INDEX IF NOT EXISTS idx_backfill_agent
     ON backfill_state(agent_name);
 ```
 
@@ -114,6 +116,7 @@ CREATE INDEX IF NOT EXISTS idx_backfill_agent
 ### 4.1 Event Identity
 
 Events are identified by combination of:
+
 - Agent ID
 - Timestamp
 - Event Type
@@ -138,8 +141,8 @@ func eventHash(event *types.AgentEvent) string {
 
 ```sql
 -- Check if event hash exists before inserting
-SELECT COUNT(*) FROM events 
-WHERE event_hash = ? 
+SELECT COUNT(*) FROM events
+WHERE event_hash = ?
 LIMIT 1
 ```
 
@@ -210,60 +213,60 @@ type Progress struct {
 func (bm *BackfillManager) processFile(ctx context.Context, config BackfillConfig) error {
     // 1. Load last position from state
     state, err := bm.stateStore.Load(config.AgentName, config.LogPath)
-    
+
     // 2. Open file and seek to position
     file, err := os.Open(config.LogPath)
     defer file.Close()
-    
+
     if state.LastByteOffset > 0 {
         file.Seek(state.LastByteOffset, 0)
     }
-    
+
     // 3. Stream lines with buffering
     scanner := bufio.NewScanner(file)
     const maxCapacity = 512 * 1024 // 512KB lines
     buf := make([]byte, maxCapacity)
     scanner.Buffer(buf, maxCapacity)
-    
+
     currentOffset := state.LastByteOffset
     batch := []*types.AgentEvent{}
-    
+
     for scanner.Scan() {
         line := scanner.Text()
         currentOffset += int64(len(line)) + 1 // +1 for newline
-        
+
         // Parse event
         event, err := adapter.ParseLogLine(line)
         if err != nil || event == nil {
             continue
         }
-        
+
         // Filter by date range
-        if !event.Timestamp.After(config.FromDate) || 
+        if !event.Timestamp.After(config.FromDate) ||
            !event.Timestamp.Before(config.ToDate) {
             continue
         }
-        
+
         // Check for duplicate
         if bm.isDuplicate(event) {
             result.SkippedEvents++
             continue
         }
-        
+
         batch = append(batch, event)
-        
+
         // Process batch
         if len(batch) >= config.BatchSize {
             if err := bm.processBatch(ctx, batch); err != nil {
                 return err
             }
-            
+
             // Save progress
             bm.stateStore.Save(state.Update(currentOffset, len(batch)))
-            
+
             batch = []*types.AgentEvent{}
         }
-        
+
         // Check context cancellation
         select {
         case <-ctx.Done():
@@ -271,12 +274,12 @@ func (bm *BackfillManager) processFile(ctx context.Context, config BackfillConfi
         default:
         }
     }
-    
+
     // Process remaining batch
     if len(batch) > 0 {
         bm.processBatch(ctx, batch)
     }
-    
+
     return scanner.Err()
 }
 ```
@@ -335,14 +338,14 @@ Throughput: 5.5 events/sec
 
 ### 7.1 Error Categories
 
-| Error Type | Strategy | Recovery |
-|-----------|----------|----------|
-| File not found | Fail fast | User must provide valid path |
-| Permission denied | Fail fast | User must fix permissions |
-| Corrupt log line | Skip & log | Continue processing |
-| Network error | Retry | Buffer locally, retry later |
-| Context canceled | Save state | Resume from last position |
-| Disk full | Fail | User must free space |
+| Error Type        | Strategy   | Recovery                     |
+| ----------------- | ---------- | ---------------------------- |
+| File not found    | Fail fast  | User must provide valid path |
+| Permission denied | Fail fast  | User must fix permissions    |
+| Corrupt log line  | Skip & log | Continue processing          |
+| Network error     | Retry      | Buffer locally, retry later  |
+| Context canceled  | Save state | Resume from last position    |
+| Disk full         | Fail       | User must free space         |
 
 ### 7.2 Retry Policy
 
@@ -402,16 +405,16 @@ Total Estimate     | ~2-5 MB
 func TestBackfillManager_FullWorkflow(t *testing.T) {
     // Create test log file with 1000 events
     logFile := createTestLogFile(1000)
-    
+
     // Run backfill
     result, err := manager.Backfill(ctx, config)
     assert.NoError(t, err)
     assert.Equal(t, 1000, result.ProcessedEvents)
-    
+
     // Verify events in buffer
     count, _ := buffer.Count()
     assert.Equal(t, 1000, count)
-    
+
     // Run again - should skip duplicates
     result2, _ := manager.Backfill(ctx, config)
     assert.Equal(t, 1000, result2.SkippedEvents)
@@ -420,14 +423,14 @@ func TestBackfillManager_FullWorkflow(t *testing.T) {
 func TestBackfillManager_Resumption(t *testing.T) {
     // Start backfill
     ctx, cancel := context.WithCancel(context.Background())
-    
+
     go func() {
         time.Sleep(100 * time.Millisecond)
         cancel() // Interrupt
     }()
-    
+
     manager.Backfill(ctx, config)
-    
+
     // Resume
     result, _ := manager.Resume(context.Background(), "copilot")
     assert.Greater(t, result.ProcessedEvents, 0)
@@ -463,30 +466,37 @@ go test -bench=BenchmarkBackfill -benchmem
 ## 11. Decision Log
 
 ### Decision 1: State Storage
+
 **Date**: 2025-10-30  
 **Decision**: Use SQLite for state persistence  
-**Rationale**: 
+**Rationale**:
+
 - Consistent with buffer implementation
 - ACID properties for reliable resumption
 - Efficient queries for duplicate detection
 - Low operational overhead
 
 **Alternatives Considered**:
+
 - JSON file: Simpler but lacks ACID, inefficient for large datasets
 - In-memory: Fast but loses state on crash
 
 ### Decision 2: Position Tracking
+
 **Date**: 2025-10-30  
 **Decision**: Track byte offset instead of line number  
 **Rationale**:
+
 - More precise resumption
 - Works with any line length
 - Standard approach in log processing
 
 ### Decision 3: Deduplication Method
+
 **Date**: 2025-10-30  
 **Decision**: Hash-based deduplication with event_hash field  
 **Rationale**:
+
 - Fast lookups with index
 - Deterministic (same event = same hash)
 - Scales to millions of events
@@ -496,10 +506,12 @@ go test -bench=BenchmarkBackfill -benchmem
 ## 12. References
 
 ### Internal Docs
+
 - [Go Collector Design](../20251021-ai-agent-observability/go-collector-design.md)
 - [Implementation Roadmap](README.md)
 
 ### External Resources
+
 - [bufio.Scanner docs](https://pkg.go.dev/bufio#Scanner)
 - [SQLite performance](https://www.sqlite.org/fasterthanfs.html)
 - [Context cancellation patterns](https://go.dev/blog/context)

@@ -13,6 +13,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 ### 1. Database Schema Migration (Day 1-2) ✅
 
 **Implemented:**
+
 - Complete Prisma schema redesign with 5-level hierarchy:
   - `Projects` - Git repositories with full metadata (fullName, repoUrl, repoOwner, repoName)
   - `Machines` - Development environments (local, remote, cloud, CI)
@@ -22,6 +23,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
   - `AgentSessions` - High-level session metadata
 
 **Files Created:**
+
 - `prisma/schema.prisma` - Updated with complete hierarchy
 - `prisma/migrations/20251031000000_add_hierarchy_support/migration.sql`
 - `prisma/migrations/20251031000000_add_hierarchy_support/rollback.sql`
@@ -29,6 +31,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 - `scripts/test-hierarchy.sql` - Validation queries
 
 **Key Changes:**
+
 - Removed `lastAccessedAt` from Projects, added `updatedAt`
 - Removed `ChatDevlogLink` table (superseded by hierarchy)
 - Updated all table names for consistency (`devlog_*` → clean names)
@@ -37,12 +40,14 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 ### 2. Go Collector - Machine Detection (Day 3-4) ✅
 
 **Implemented:**
+
 - `MachineDetector` service with comprehensive detection
 - Platform-specific OS version detection (Darwin, Linux, Windows)
 - Environment classification (GitHub Actions, Codespaces, Gitpod, SSH)
 - Stable machine ID generation (SHA256-based)
 
 **Files Created:**
+
 - `internal/hierarchy/machine.go` - Core detection logic
 - `internal/hierarchy/os_darwin.go` - macOS version detection
 - `internal/hierarchy/os_linux.go` - Linux version detection
@@ -51,6 +56,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 - `internal/client/hierarchy.go` - HTTP client methods
 
 **Features:**
+
 - Detects hostname, username, OS type/version
 - Classifies machine type (local, remote, cloud, CI)
 - Generates unique, stable machine IDs
@@ -59,17 +65,20 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 ### 3. Go Collector - Workspace Discovery (Day 5-6) ✅
 
 **Implemented:**
+
 - `WorkspaceDiscovery` service for VS Code workspace scanning
 - Git integration for repository information
 - Support for multiple editors (VS Code, VS Code Insiders, Cursor)
 
 **Files Created:**
+
 - `internal/hierarchy/workspace.go` - Workspace discovery logic
 - `internal/hierarchy/git.go` - Git integration
 - `internal/hierarchy/git_test.go` - Git tests
 - `pkg/models/hierarchy.go` - Shared types (Machine, Workspace, Project)
 
 **Features:**
+
 - Platform-specific VS Code storage paths
 - Workspace.json parsing for project resolution
 - Git remote URL extraction and normalization
@@ -77,20 +86,24 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 - Graceful handling of non-Git projects
 
 **Dependencies Added:**
+
 - `github.com/go-git/go-git/v5` v5.16.3
 
 ### 4. Go Collector - Hierarchy Cache (Day 7) ✅
 
 **Implemented:**
+
 - `HierarchyCache` for fast O(1) workspace lookups
 - Thread-safe concurrent access with RWMutex
 - Lazy loading from backend on cache misses
 
 **Files Created:**
+
 - `internal/hierarchy/cache.go` - Cache implementation
 - `internal/hierarchy/cache_test.go` - Comprehensive cache tests
 
 **Features:**
+
 - Initialize cache from workspace list
 - Fast workspace context resolution
 - Lazy loading on cache miss
@@ -101,6 +114,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 ## Test Results
 
 **All tests passing:**
+
 - Machine detection: 8/8 tests pass
 - Git integration: 6/6 tests pass (1 skipped - requires Git repo)
 - Hierarchy cache: 8/8 tests pass
@@ -126,7 +140,7 @@ Week 1 focused on establishing the foundational infrastructure for the AI Agent 
 ✅ All tests passing  
 ✅ Test coverage >70%  
 ✅ No memory leaks  
-✅ Clean error handling  
+✅ Clean error handling
 
 ## Performance
 
@@ -169,6 +183,7 @@ As outlined in `docs/dev/20251031-mvp-launch-plan/week2-collector.md`:
 ## Files Changed/Created
 
 ### Prisma/Database
+
 - `prisma/schema.prisma` (modified - major redesign)
 - `prisma/migrations/20251031000000_add_hierarchy_support/migration.sql` (new)
 - `prisma/migrations/20251031000000_add_hierarchy_support/rollback.sql` (new)
@@ -176,6 +191,7 @@ As outlined in `docs/dev/20251031-mvp-launch-plan/week2-collector.md`:
 - `scripts/test-hierarchy.sql` (new)
 
 ### Go Collector
+
 - `packages/collector-go/internal/hierarchy/machine.go` (new)
 - `packages/collector-go/internal/hierarchy/os_darwin.go` (new)
 - `packages/collector-go/internal/hierarchy/os_linux.go` (new)
@@ -187,11 +203,13 @@ As outlined in `docs/dev/20251031-mvp-launch-plan/week2-collector.md`:
 - `packages/collector-go/pkg/models/hierarchy.go` (new - refactored from internal)
 
 ### Tests
+
 - `packages/collector-go/internal/hierarchy/machine_test.go` (new)
 - `packages/collector-go/internal/hierarchy/git_test.go` (new)
 - `packages/collector-go/internal/hierarchy/cache_test.go` (new)
 
 ### Configuration
+
 - `packages/collector-go/go.mod` (modified - added go-git)
 - `packages/collector-go/go.sum` (modified)
 

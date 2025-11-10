@@ -67,42 +67,31 @@
 - Self-explanatory refactors
 - Simple one-file changes
 
-### Directory Structure
-
-**Multi-tier hierarchy**: `specs/YYYYMMDD/NNN-short-name/`
-
-```
-specs/
-├── 20251031/
-│   ├── 001-database-architecture/
-│   ├── 002-project-hierarchy/
-│   └── 003-api-refactor/
-└── 20251101/
-    └── 001-auth-system/
-```
-
-### Discovery Commands
+### Discovery
 
 Before starting work, understand project context:
 
 ```bash
-# View work distribution
-lspec stats
-
-# See specs by status
+# View Kanban board (best starting point)
 lspec board
 
+# Show statistics and velocity
+lspec stats
+
 # Find specs by tag
-lspec list --tag=api
+lspec list --tag api
 
 # Full-text search
 lspec search "<query>"
 
+# View a spec
+lspec view NNN
+
 # Check dependencies
-lspec deps <spec>
+lspec deps NNN
 ```
 
-These commands help you understand what exists, what's in progress, and what depends on what.
+Use `lspec` commands to quickly understand what exists, what's in progress, and what depends on what.
 
 ### Spec Frontmatter
 
@@ -110,7 +99,7 @@ Include YAML frontmatter at the top of spec markdown files:
 
 ```yaml
 ---
-status: planned|in-progress|complete
+status: planned|in-progress|complete|archived
 created: YYYY-MM-DD
 tags: [tag1, tag2] # helps with discovery
 priority: low|medium|high # helps with planning
@@ -119,33 +108,25 @@ assignee: username # for team coordination
 ```
 
 **Required fields**: `status`, `created`  
-**Helpful fields**: `tags` (discovery), `priority` (planning), `assignee` (coordination)
+**Helpful fields**: `tags` (discovery), `priority` (planning)
 
-**Update status with:**
+**Update status**:
 
 ```bash
-lspec update <spec> --status in-progress --assignee yourname
-# or edit frontmatter directly
+lspec update NNN --status in-progress
+lspec update NNN --priority high
+lspec update NNN --assignee yourname
 ```
 
 ### Workflow
 
-1. **Discover context** - Run `lspec stats` or `lspec board` to see current state
+1. **Discover context** - Run `lspec board` to see current state
 2. **Search existing specs** - Use `lspec search` or `lspec list` to find relevant work
-3. **Check dependencies** - Run `lspec deps <spec>` if working on existing spec
-4. **Create or update spec** - Add frontmatter with required fields and helpful metadata
+3. **Check dependencies** - Run `lspec deps NNN` if working on existing spec
+4. **Create or update spec** - Use `lspec create` or `lspec update`
 5. **Implement changes** - Keep spec in sync as you learn
-6. **Update status** - Mark progress: `draft` → `in-progress` → `complete`
-7. **Archive when done** - `lspec archive <spec>` moves to archive
-
-### Spec Content (Recommended Structure)
-
-Not mandatory, but helpful:
-
-- `design.md` - Full technical design specification
-- `README.md` or `summary.md` - Quick overview
-- `implementation.md` or `checklist.md` - Implementation tasks
-- `reference.md` - Quick reference for completed features
+6. **Update status** - `lspec update NNN --status in-progress` then `--status complete`
+7. **Archive when done** - `lspec archive NNN` moves to archive
 
 ### Quality Standards
 

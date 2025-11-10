@@ -2,7 +2,7 @@
 
 **Timeline**: November 1-8, 2025  
 **Focus**: Database Schema + Core Collector Architecture  
-**Status**: 📋 Planned  
+**Status**: 📋 Planned
 
 ---
 
@@ -90,23 +90,24 @@ scripts/
 #### Tasks
 
 - [ ] **Machine Detection Service** (6 hours)
+
   ```go
   // internal/hierarchy/machine.go
-  
+
   type MachineDetector struct {
       config Config
       client *client.Client
       log    *logrus.Logger
   }
-  
+
   func (md *MachineDetector) Detect() (*Machine, error) {
       // Get system info
       hostname, _ := os.Hostname()
       user, _ := user.Current()
-      
+
       // Generate unique machine ID
       machineID := generateMachineID(hostname, user.Username, runtime.GOOS)
-      
+
       machine := &Machine{
           MachineID:   machineID,
           Hostname:    hostname,
@@ -115,11 +116,11 @@ scripts/
           OSVersion:   detectOSVersion(),
           MachineType: detectMachineType(),
       }
-      
+
       // Register with backend (upsert)
       return md.client.UpsertMachine(machine)
   }
-  
+
   func detectOSVersion() string {
       // Platform-specific version detection
       switch runtime.GOOS {
@@ -132,7 +133,7 @@ scripts/
       }
       return "unknown"
   }
-  
+
   func detectMachineType() string {
       // Heuristics to determine machine type
       if isGitHubActions() {
@@ -149,17 +150,18 @@ scripts/
   ```
 
 - [ ] **HTTP Client Methods** (4 hours)
+
   ```go
   // internal/client/machine.go
-  
+
   func (c *Client) UpsertMachine(machine *Machine) (*Machine, error) {
       body, _ := json.Marshal(machine)
-      
+
       resp, err := c.post("/api/machines", body)
       if err != nil {
           return nil, err
       }
-      
+
       var result Machine
       json.Unmarshal(resp, &result)
       return &result, nil
@@ -211,20 +213,21 @@ internal/client/
 #### Tasks
 
 - [ ] **Workspace Discovery Service** (8 hours)
+
   ```go
   // internal/hierarchy/workspace.go
-  
+
   type WorkspaceDiscovery struct {
       config    Config
       client    *client.Client
       machineID int
       log       *logrus.Logger
   }
-  
+
   func (wd *WorkspaceDiscovery) DiscoverAll() ([]Workspace, error) {
       // 1. Scan VS Code workspace storage
       workspacePaths := wd.findVSCodeWorkspaces()
-      
+
       var workspaces []Workspace
       for _, path := range workspacePaths {
           ws, err := wd.processWorkspace(path)
@@ -234,26 +237,26 @@ internal/client/
           }
           workspaces = append(workspaces, ws)
       }
-      
+
       return workspaces, nil
   }
-  
+
   func (wd *WorkspaceDiscovery) processWorkspace(path string) (Workspace, error) {
       // 1. Extract workspace ID from directory name
       workspaceID := extractWorkspaceID(path)
-      
+
       // 2. Find actual project path from storage.json
       projectPath := wd.resolveProjectPath(path)
-      
+
       // 3. Get git info
       gitInfo := wd.getGitInfo(projectPath)
-      
+
       // 4. Resolve project from git remote
       project, err := wd.client.ResolveProject(gitInfo.RemoteURL)
       if err != nil {
           return Workspace{}, err
       }
-      
+
       // 5. Create workspace record
       workspace := Workspace{
           ProjectID:     project.ID,
@@ -264,11 +267,11 @@ internal/client/
           Branch:        gitInfo.Branch,
           Commit:        gitInfo.Commit,
       }
-      
+
       // 6. Register with backend
       return wd.client.UpsertWorkspace(workspace)
   }
-  
+
   func (wd *WorkspaceDiscovery) findVSCodeWorkspaces() []string {
       // Platform-specific paths
       var basePaths []string
@@ -289,45 +292,46 @@ internal/client/
               "%APPDATA%/Code - Insiders/User/workspaceStorage",
           }
       }
-      
+
       // Scan directories
       var workspaces []string
       for _, base := range basePaths {
           dirs, _ := filepath.Glob(filepath.Join(base, "*"))
           workspaces = append(workspaces, dirs...)
       }
-      
+
       return workspaces
   }
   ```
 
 - [ ] **Git Integration** (4 hours)
+
   ```go
   // internal/hierarchy/git.go
-  
+
   type GitInfo struct {
       RemoteURL string
       Branch    string
       Commit    string
   }
-  
+
   func getGitInfo(path string) (*GitInfo, error) {
       repo, err := git.PlainOpen(path)
       if err != nil {
           return nil, err
       }
-      
+
       // Get remote URL
       remote, _ := repo.Remote("origin")
       remoteURL := remote.Config().URLs[0]
-      
+
       // Get current branch
       head, _ := repo.Head()
       branch := head.Name().Short()
-      
+
       // Get current commit
       commit := head.Hash().String()
-      
+
       return &GitInfo{
           RemoteURL: normalizeGitURL(remoteURL),
           Branch:    branch,
@@ -381,16 +385,17 @@ docs/
 #### Tasks
 
 - [ ] **Cache Implementation** (5 hours)
+
   ```go
   // internal/hierarchy/cache.go
-  
+
   type HierarchyCache struct {
       workspaces map[string]*WorkspaceContext
       mu         sync.RWMutex
       client     *client.Client
       log        *logrus.Logger
   }
-  
+
   type WorkspaceContext struct {
       ProjectID   int
       MachineID   int
@@ -398,18 +403,18 @@ docs/
       ProjectName string
       MachineName string
   }
-  
+
   func NewHierarchyCache(client *client.Client) *HierarchyCache {
       return &HierarchyCache{
           workspaces: make(map[string]*WorkspaceContext),
           client:     client,
       }
   }
-  
+
   func (hc *HierarchyCache) Initialize(workspaces []Workspace) {
       hc.mu.Lock()
       defer hc.mu.Unlock()
-      
+
       for _, ws := range workspaces {
           ctx := &WorkspaceContext{
               ProjectID:   ws.ProjectID,
@@ -419,23 +424,23 @@ docs/
           hc.workspaces[ws.WorkspaceID] = ctx
       }
   }
-  
+
   func (hc *HierarchyCache) Resolve(workspaceID string) (*WorkspaceContext, error) {
       // Try cache first
       hc.mu.RLock()
       ctx, ok := hc.workspaces[workspaceID]
       hc.mu.RUnlock()
-      
+
       if ok {
           return ctx, nil
       }
-      
+
       // Lazy load from backend
       workspace, err := hc.client.GetWorkspace(workspaceID)
       if err != nil {
           return nil, fmt.Errorf("workspace not found: %w", err)
       }
-      
+
       ctx = &WorkspaceContext{
           ProjectID:   workspace.ProjectID,
           MachineID:   workspace.MachineID,
@@ -443,22 +448,22 @@ docs/
           ProjectName: workspace.Project.FullName,
           MachineName: workspace.Machine.Hostname,
       }
-      
+
       // Cache it
       hc.mu.Lock()
       hc.workspaces[workspaceID] = ctx
       hc.mu.Unlock()
-      
+
       return ctx, nil
   }
-  
+
   func (hc *HierarchyCache) Refresh() error {
       // Re-fetch all workspaces from backend
       workspaces, err := hc.client.ListWorkspaces()
       if err != nil {
           return err
       }
-      
+
       hc.Initialize(workspaces)
       return nil
   }
@@ -487,6 +492,7 @@ docs/
 ## 📊 Week 1 Success Metrics
 
 ### Functionality
+
 - ✅ Database schema migrated successfully
 - ✅ TimescaleDB enabled and configured
 - ✅ Machine detected automatically
@@ -494,12 +500,14 @@ docs/
 - ✅ Hierarchy cache working
 
 ### Performance
+
 - ✅ Hierarchy queries <50ms P95
 - ✅ Cache lookups <1ms
 - ✅ Workspace discovery <5 seconds
 - ✅ Time-series inserts >1000/sec
 
 ### Quality
+
 - ✅ All tests passing
 - ✅ Test coverage >70%
 - ✅ No memory leaks

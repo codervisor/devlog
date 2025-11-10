@@ -7,6 +7,7 @@
 ## 📊 Current Progress Summary
 
 ### ✅ Completed (Phase 1)
+
 - [x] Dashboard with real-time metrics (active sessions, events today, avg duration, events/min)
 - [x] Sessions page with active and recent history views
 - [x] Backend API routes (`/api/dashboard/stats`, `/api/dashboard/activity`, `/api/sessions`)
@@ -22,11 +23,13 @@
 ### Phase 2: Interactive Features (Immediate - 1-2 weeks)
 
 #### 1. Real-Time Updates via Server-Sent Events (SSE)
+
 **Priority**: 🔴 Critical  
 **Effort**: Medium (2-3 days)  
 **Value**: High - Makes dashboard feel alive
 
 **What to Build:**
+
 - [ ] Create `/api/events/stream` endpoint for SSE
 - [ ] Implement event broadcasting when new sessions/events are created
 - [ ] Update dashboard components to use client-side SSE subscription
@@ -35,6 +38,7 @@
 - [ ] Add fallback to polling if SSE unavailable
 
 **Technical Approach:**
+
 ```typescript
 // New API route: apps/web/app/api/events/stream/route.ts
 export async function GET(request: NextRequest) {
@@ -42,7 +46,7 @@ export async function GET(request: NextRequest) {
     start(controller) {
       // Subscribe to database changes
       // Broadcast events to controller
-    }
+    },
   });
   return new Response(stream, {
     headers: {
@@ -54,7 +58,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Client component: apps/web/components/agent-observability/dashboard/live-stats.tsx
-'use client';
+('use client');
 export function LiveStats() {
   useEffect(() => {
     const eventSource = new EventSource('/api/events/stream');
@@ -67,6 +71,7 @@ export function LiveStats() {
 ```
 
 **Files to Modify:**
+
 - `apps/web/app/api/events/stream/route.ts` (NEW)
 - `apps/web/components/agent-observability/dashboard/dashboard-stats.tsx` (convert to client component)
 - `apps/web/components/agent-observability/dashboard/recent-activity.tsx` (add live updates)
@@ -75,11 +80,13 @@ export function LiveStats() {
 ---
 
 #### 2. Session Details Page
+
 **Priority**: 🔴 Critical  
 **Effort**: Medium (2-3 days)  
 **Value**: High - Essential for debugging and analysis
 
 **What to Build:**
+
 - [ ] Create `/sessions/[id]` route with detailed session view
 - [ ] Display complete event timeline for the session
 - [ ] Show metrics: tokens used, files modified, duration breakdown
@@ -88,6 +95,7 @@ export function LiveStats() {
 - [ ] Show related work items if applicable
 
 **Page Structure:**
+
 ```
 /sessions/[id]
 ├── Session Header (objective, status, duration, outcome)
@@ -100,23 +108,27 @@ export function LiveStats() {
 ```
 
 **Files to Create:**
+
 - `apps/web/app/sessions/[id]/page.tsx` (NEW)
 - `apps/web/components/agent-observability/sessions/session-details.tsx` (NEW)
 - `apps/web/components/agent-observability/sessions/event-timeline.tsx` (NEW)
 - `apps/web/components/agent-observability/sessions/session-metrics.tsx` (NEW)
 
 **API Enhancement:**
+
 - Update `/api/sessions/[id]/route.ts` to return detailed session data
 - Add `/api/sessions/[id]/events/route.ts` for session event timeline
 
 ---
 
 #### 3. Multi-Project Support
+
 **Priority**: 🟡 High  
 **Effort**: Medium (2-3 days)  
 **Value**: High - Removes major limitation
 
 **What to Build:**
+
 - [ ] Update API routes to query all user's projects instead of hardcoded `projectId: 1`
 - [ ] Add project filter dropdown to dashboard
 - [ ] Add project filter dropdown to sessions page
@@ -125,12 +137,14 @@ export function LiveStats() {
 - [ ] Update service layer to handle multi-project queries
 
 **Implementation Steps:**
+
 1. Create `/api/projects/me` endpoint to list user's projects
 2. Update dashboard API routes to accept `projectId` query param (optional)
 3. Add project selector component
 4. Update service calls to aggregate across projects when no filter selected
 
 **Files to Modify:**
+
 - `apps/web/app/api/dashboard/stats/route.ts` (support projectId param)
 - `apps/web/app/api/dashboard/activity/route.ts` (support projectId param)
 - `apps/web/app/api/sessions/route.ts` (support projectId param)
@@ -143,11 +157,13 @@ export function LiveStats() {
 ### Phase 3: Enhanced Filtering & Search (2-3 weeks)
 
 #### 4. Advanced Filtering UI
+
 **Priority**: 🟡 High  
 **Effort**: Medium-High (4-5 days)  
 **Value**: Medium - Improves usability
 
 **What to Build:**
+
 - [ ] Filter panel component for sessions page
 - [ ] Agent type dropdown filter
 - [ ] Outcome status filter (success/failure/partial/cancelled)
@@ -158,6 +174,7 @@ export function LiveStats() {
 - [ ] Filter result count display
 
 **UI Components:**
+
 ```
 ┌─────────────────────────────────────────┐
 │  🔍 Search sessions...                  │
@@ -170,6 +187,7 @@ export function LiveStats() {
 ```
 
 **Files to Create:**
+
 - `apps/web/components/agent-observability/sessions/filter-panel.tsx` (NEW)
 - `apps/web/components/agent-observability/sessions/search-input.tsx` (NEW)
 - `apps/web/components/agent-observability/sessions/date-range-picker.tsx` (NEW)
@@ -177,11 +195,13 @@ export function LiveStats() {
 ---
 
 #### 5. Session Search & Pagination
+
 **Priority**: 🟢 Medium  
 **Effort**: Medium (3-4 days)  
 **Value**: Medium - Scales to large datasets
 
 **What to Build:**
+
 - [ ] Full-text search across session objectives and summaries
 - [ ] Pagination controls (Previous/Next, Page numbers)
 - [ ] Items per page selector (10, 25, 50, 100)
@@ -190,6 +210,7 @@ export function LiveStats() {
 - [ ] Preserve filters during pagination
 
 **Files to Create:**
+
 - `apps/web/components/agent-observability/sessions/pagination-controls.tsx` (NEW)
 - Update `apps/web/app/api/sessions/route.ts` to support full-text search
 
@@ -198,11 +219,13 @@ export function LiveStats() {
 ### Phase 4: Analytics & Insights (3-4 weeks)
 
 #### 6. Analytics Dashboard
+
 **Priority**: 🟢 Medium  
 **Effort**: High (5-7 days)  
 **Value**: High - Provides insights
 
 **What to Build:**
+
 - [ ] Create `/analytics` route
 - [ ] Session success rate chart (line chart over time)
 - [ ] Agent activity heatmap (by day/hour)
@@ -215,6 +238,7 @@ export function LiveStats() {
 **Visualization Library**: Use Recharts (already in Next.js ecosystem)
 
 **Files to Create:**
+
 - `apps/web/app/analytics/page.tsx` (NEW)
 - `apps/web/components/agent-observability/analytics/success-rate-chart.tsx` (NEW)
 - `apps/web/components/agent-observability/analytics/activity-heatmap.tsx` (NEW)
@@ -224,11 +248,13 @@ export function LiveStats() {
 ---
 
 #### 7. Go Collector Integration
+
 **Priority**: 🟢 Medium  
 **Effort**: High (5-7 days)  
 **Value**: High - Enables real data collection
 
 **What to Build:**
+
 - [ ] Complete Go collector implementation (currently 20% done)
 - [ ] Add event buffering and batch sending
 - [ ] Implement retry logic with exponential backoff
@@ -238,6 +264,7 @@ export function LiveStats() {
 - [ ] Create example collector configurations
 
 **Files to Work On:**
+
 - `packages/collector-go/` (complete implementation)
 - Create integration tests
 - Add documentation in `docs/`
@@ -247,11 +274,13 @@ export function LiveStats() {
 ### Phase 5: Performance & Quality (Ongoing)
 
 #### 8. Performance Optimizations
+
 **Priority**: 🟢 Medium  
 **Effort**: Medium (3-4 days)  
 **Value**: Medium - Improves user experience at scale
 
 **What to Build:**
+
 - [ ] Add Redis caching for dashboard stats (5-minute TTL)
 - [ ] Implement Incremental Static Regeneration (ISR) for static content
 - [ ] Add database indexes on frequently queried fields
@@ -262,11 +291,13 @@ export function LiveStats() {
 ---
 
 #### 9. Testing & Quality Assurance
+
 **Priority**: 🟡 High  
 **Effort**: High (7-10 days)  
 **Value**: High - Ensures reliability
 
 **What to Build:**
+
 - [ ] E2E tests with Playwright for critical workflows
   - Dashboard loads and displays metrics
   - Sessions page filtering
@@ -278,6 +309,7 @@ export function LiveStats() {
 - [ ] Performance regression tests
 
 **Testing Structure:**
+
 ```
 tests/
 ├── e2e/
@@ -298,18 +330,21 @@ tests/
 ## 📋 Implementation Strategy
 
 ### Recommended Order
+
 1. **Week 1-2**: Phase 2 items #1-3 (Real-time updates, Session details, Multi-project)
 2. **Week 3-4**: Phase 3 items #4-5 (Advanced filtering, Search & pagination)
 3. **Week 5-7**: Phase 4 items #6-7 (Analytics dashboard, Go collector)
 4. **Week 8-9**: Phase 5 items #8-9 (Performance, Testing)
 
 ### Dependencies
+
 - Real-time updates (#1) should be done before analytics (#6)
 - Session details page (#2) is independent and can be done in parallel
 - Multi-project support (#3) is a prerequisite for advanced filtering (#4)
 - Go collector (#7) can be developed in parallel with UI work
 
 ### Success Metrics
+
 - **User Engagement**: Time spent on dashboard increases by 50%
 - **Feature Adoption**: 80% of sessions viewed in detail within first week
 - **Performance**: Dashboard loads in <2 seconds with 1000+ sessions
@@ -332,12 +367,14 @@ These smaller improvements can be done opportunistically:
 ## 📚 Resources Needed
 
 ### External Libraries (evaluate/add as needed)
+
 - **Recharts** (v2.x) - For analytics charts
 - **date-fns** (already included) - Date manipulation
 - **react-hot-toast** - Better notification system for real-time updates
 - **@tanstack/react-query** - For client-side data fetching and caching (if moving to client components)
 
 ### Documentation to Create
+
 - [ ] Real-time events API documentation
 - [ ] Session details page user guide
 - [ ] Multi-project setup guide
@@ -348,6 +385,7 @@ These smaller improvements can be done opportunistically:
 ## 🔄 Review & Iteration
 
 **Review Cadence**: After each phase
+
 - Validate with users
 - Gather feedback
 - Adjust priorities

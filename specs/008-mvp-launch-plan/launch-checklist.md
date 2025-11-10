@@ -1,7 +1,7 @@
 # Launch Checklist
 
 **Part of**: MVP Launch Plan  
-**Target**: November 30, 2025  
+**Target**: November 30, 2025
 
 ---
 
@@ -161,11 +161,11 @@
 ### Evening (6:00 PM)
 
 - [ ] **Day 0 Review**
-  - [ ] Total users signed up: ___
-  - [ ] Total events collected: ___
-  - [ ] Error rate: ___%
-  - [ ] P95 latency: ___ms
-  - [ ] Critical issues: ___
+  - [ ] Total users signed up: \_\_\_
+  - [ ] Total events collected: \_\_\_
+  - [ ] Error rate: \_\_\_%
+  - [ ] P95 latency: \_\_\_ms
+  - [ ] Critical issues: \_\_\_
   - [ ] User satisfaction (informal poll)
 
 - [ ] **Celebrate! 🎉**
@@ -224,6 +224,7 @@
 ### When to Rollback
 
 Rollback immediately if:
+
 - Critical data loss detected
 - Error rate >5% sustained for >15 minutes
 - Complete service outage >30 minutes
@@ -232,25 +233,28 @@ Rollback immediately if:
 ### Rollback Steps
 
 1. **Stop Incoming Traffic**
+
    ```bash
    # Disable collector installations
    npm unpublish @codervisor/devlog-collector
-   
+
    # Redirect web traffic to maintenance page
    vercel alias set devlog.codervisor.com maintenance-page
    ```
 
 2. **Revert Database**
+
    ```bash
    # Restore from pre-migration backup
    pg_restore -d devlog backup_20251129.dump
    ```
 
 3. **Revert Code**
+
    ```bash
    # Revert web app deployment
    vercel rollback
-   
+
    # Revert API to previous version
    git revert HEAD
    git push
@@ -275,22 +279,26 @@ Rollback immediately if:
 ### Launch is successful if (Day 7):
 
 **Adoption**:
+
 - ✅ 10+ users installed collector
 - ✅ 1000+ events collected
 - ✅ 3+ projects tracked
 
 **Stability**:
+
 - ✅ Error rate <0.1% average
 - ✅ Zero critical bugs
 - ✅ Zero data loss incidents
 - ✅ Uptime >99.9%
 
 **Performance**:
+
 - ✅ API latency <200ms P95
 - ✅ Dashboard load <2s
 - ✅ Event processing >500 events/sec
 
 **User Satisfaction**:
+
 - ✅ Positive feedback >80%
 - ✅ Support response time <4 hours
 - ✅ Feature requests documented

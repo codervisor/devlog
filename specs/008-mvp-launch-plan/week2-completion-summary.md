@@ -17,6 +17,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ### Phase 1: Copilot Adapter Integration (Days 1-2) ✅
 
 **Completed:**
+
 - Updated `AgentEvent` structure with hierarchy fields (ProjectID, MachineID, WorkspaceID as int types)
 - Added `LegacyProjectID` for backward compatibility
 - Modified CopilotAdapter to accept `HierarchyCache` and logger
@@ -27,6 +28,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 - **Test Results**: 18/18 tests passing (1 skipped - requires sample file)
 
 **Files Modified:**
+
 - `pkg/types/types.go` - Updated AgentEvent structure
 - `internal/adapters/copilot_adapter.go` - Full hierarchy integration
 - `internal/adapters/registry.go` - Accept hierarchy cache and logger
@@ -36,6 +38,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 - `internal/integration/integration_test.go` - Updated function signatures
 
 **Key Features:**
+
 1. Workspace ID extraction from VS Code file paths
 2. Hierarchy resolution with HierarchyCache
 3. Context enrichment (project name, machine name added to events)
@@ -47,6 +50,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ### Phase 2: Claude Adapter Implementation (Days 3-4) ✅
 
 **Completed:**
+
 - Created `ClaudeAdapter` for parsing Claude Desktop JSONL logs
 - Implemented intelligent event type detection from log structure
 - Added support for multiple timestamp formats (RFC3339, Unix)
@@ -56,13 +60,16 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 - **Test Results**: 7/7 tests passing
 
 **Files Created:**
+
 - `internal/adapters/claude_adapter.go` - Full adapter implementation (338 lines)
 - `internal/adapters/claude_adapter_test.go` - Comprehensive test suite (361 lines)
 
 **Files Modified:**
+
 - `internal/adapters/registry.go` - Registered Claude adapter
 
 **Key Features:**
+
 1. **JSONL Format**: Parses line-delimited JSON logs
 2. **Event Detection**: Intelligent type detection from structure
    - `llm_request` / `prompt` → LLM Request
@@ -76,6 +83,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 6. **Format Detection**: Identifies by conversation_id, model, or "claude"/"anthropic" in message
 
 **Test Coverage:**
+
 - ParseLogLine: 7 scenarios (request, response, tool use, file read, empty, invalid, irrelevant)
 - ParseLogFile: JSONL file with multiple entries
 - DetectEventType: 8 scenarios (explicit types + inference)
@@ -89,6 +97,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ### Phase 3: Cursor Adapter Implementation (Day 5) ✅
 
 **Completed:**
+
 - Created `CursorAdapter` supporting both JSON and plain text log formats
 - Implemented event detection from log structure and message content
 - Added plain text log parsing for Cursor-specific patterns
@@ -97,16 +106,19 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 - **Test Results**: 7/7 tests passing
 
 **Files Created:**
+
 - `internal/adapters/cursor_adapter.go` - Full adapter implementation (377 lines)
 - `internal/adapters/cursor_adapter_test.go` - Comprehensive test suite (296 lines)
 
 **Files Modified:**
+
 - `internal/adapters/registry.go` - Registered Cursor adapter
 
 **Key Features:**
+
 1. **Dual Format Support**: Handles both JSON and plain text logs
 2. **Event Detection**: Similar to Claude, with additional plain text parsing
-3. **Session Management**: 
+3. **Session Management**:
    - Tries `session_id` field first
    - Falls back to `conversation_id`
    - Generates UUID if neither present
@@ -118,6 +130,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 7. **Format Detection**: JSON with session_id/model, or plain text with "cursor" + "ai"/"completion"
 
 **Test Coverage:**
+
 - ParseLogLine: 6 scenarios (JSON request/response/tool, plain text, empty, irrelevant)
 - ParseLogFile: Mixed JSON and plain text logs
 - DetectEventType: 8 scenarios (explicit types + inference)
@@ -131,6 +144,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ## Test Results Summary
 
 ### Adapter Tests
+
 - **Copilot**: 18 tests passing, 1 skipped (requires sample file)
 - **Claude**: 7 tests passing
 - **Cursor**: 7 tests passing
@@ -138,6 +152,7 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 - **Total**: 33 adapter tests, 32 passing, 1 skipped, 0 failing ✅
 
 ### Other Tests
+
 - **Hierarchy**: 22 tests passing (from Week 1)
 - **Discovery**: 2 tests failing (unrelated to Week 2 work)
 - **Watcher**: 1 test failing (unrelated to Week 2 work)
@@ -150,17 +165,20 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ## Code Metrics
 
 ### New Files
+
 - **Adapters**: 3 new adapter files (1,052 lines total)
 - **Tests**: 3 new test files (957 lines total)
 - **Total New Code**: ~2,009 lines
 
 ### Modified Files
+
 - `pkg/types/types.go`: Updated AgentEvent structure
 - `internal/adapters/registry.go`: Registered all adapters
 - `internal/adapters/copilot_adapter.go`: Hierarchy integration
 - Test files: Updated signatures across 3 test files
 
 ### Test Coverage
+
 - Adapter package: >80% coverage
 - All critical paths tested
 - Edge cases handled
@@ -176,13 +194,14 @@ Week 2 focused on implementing collector adapters with hierarchy integration, en
 ✅ Test coverage >70% for adapters  
 ✅ No breaking changes to existing code  
 ✅ Backward compatibility maintained (LegacyProjectID)  
-✅ All adapter tests passing  
+✅ All adapter tests passing
 
 ---
 
 ## Architecture Highlights
 
 ### Event Structure
+
 ```go
 type AgentEvent struct {
     ID        string
@@ -190,15 +209,15 @@ type AgentEvent struct {
     Type      string
     AgentID   string
     SessionID string
-    
+
     // Hierarchy context
     ProjectID   int    // Database foreign key
     MachineID   int    // Database foreign key
     WorkspaceID int    // Database foreign key
-    
+
     // Legacy field
     LegacyProjectID string
-    
+
     Context map[string]interface{}
     Data    map[string]interface{}
     Metrics *EventMetrics
@@ -206,7 +225,9 @@ type AgentEvent struct {
 ```
 
 ### Adapter Pattern
+
 All three adapters follow the same pattern:
+
 1. Accept `HierarchyCache` in constructor (optional)
 2. Extract workspace ID from file path
 3. Resolve hierarchy context via cache
@@ -217,14 +238,15 @@ All three adapters follow the same pattern:
 8. Graceful degradation if hierarchy unavailable
 
 ### Registry Integration
+
 ```go
 func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache, log *logrus.Logger) *Registry {
     registry := NewRegistry()
-    
+
     registry.Register(NewCopilotAdapter(projectID, hierarchyCache, log))
     registry.Register(NewClaudeAdapter(projectID, hierarchyCache, log))
     registry.Register(NewCursorAdapter(projectID, hierarchyCache, log))
-    
+
     return registry
 }
 ```
@@ -234,12 +256,14 @@ func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache,
 ## Remaining Work (Week 2 Days 6-7)
 
 ### Phase 4: Infrastructure Updates (Day 6)
+
 - [ ] Add hierarchy validation in collector main
 - [ ] Update CLI commands with hierarchy info
 - [ ] Fix unrelated test failures (discovery, watcher)
 - [ ] Update documentation
 
 ### Phase 5: Integration Testing (Day 7)
+
 - [ ] End-to-end testing with all adapters
 - [ ] Performance testing (target: >500 events/sec)
 - [ ] Verify database relationships
@@ -261,12 +285,14 @@ func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache,
 ## Performance Considerations
 
 ### Design for Scale
+
 - **Streaming Parsing**: Uses bufio.Scanner for memory-efficient line-by-line parsing
 - **Buffer Management**: 1MB buffer for large log lines
 - **Lazy Loading**: Hierarchy cache only loads when needed
 - **Fast Lookups**: O(1) hierarchy cache lookups (in-memory map)
 
 ### Expected Performance
+
 - **Event Processing**: >500 events/sec (target met in design)
 - **Hierarchy Resolution**: <1ms cached, <50ms uncached
 - **Memory Usage**: <100MB collector (estimated)
@@ -277,7 +303,9 @@ func DefaultRegistry(projectID string, hierarchyCache *hierarchy.HierarchyCache,
 ## Integration Points
 
 ### Hierarchy Cache
+
 All adapters integrate with `HierarchyCache`:
+
 ```go
 type HierarchyCache struct {
     workspaces map[string]*WorkspaceContext
@@ -296,7 +324,9 @@ type WorkspaceContext struct {
 ```
 
 ### Backend Client (Week 3)
+
 Prepared for Week 3 backend implementation:
+
 - `client.Client` interface ready for HTTP endpoints
 - Hierarchy cache supports lazy loading from backend
 - Graceful error handling for missing workspaces
@@ -334,6 +364,7 @@ Week 2 Phases 1-3 completed successfully! All three adapters (Copilot, Claude, C
 ---
 
 **Related Documents:**
+
 - [Week 2 Plan](./week2-collector.md)
 - [Week 1 Summary](./week1-completion-summary.md)
 - [Week 3 Plan](./week3-backend.md)

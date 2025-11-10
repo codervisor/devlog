@@ -11,30 +11,35 @@ Comprehensive restructuring of the devlog monorepo to improve maintainability, t
 ## Current Problems
 
 ### 1. Testing Crisis
+
 - **Web app**: Only 4 test files for 212 source files (~2% coverage)
 - **No testing infrastructure**: Missing test utilities, fixtures, mocks
 - **No E2E tests**: Critical user flows untested
 - **Inconsistent patterns**: Tests scattered across packages
 
 ### 2. Code Quality Gaps
+
 - **No ESLint**: No linting enforcement across the codebase
 - **Console.logs in production**: 20+ instances of debug logs
 - **No pre-commit hooks**: Quality gates not enforced
 - **Untracked TODOs**: 4+ TODO comments without tracking
 
 ### 3. Package Organization Issues
+
 - **Core package overloaded**: Mixing auth, services, types, utils
 - **No shared types package**: Types duplicated across packages
 - **Unclear boundaries**: Hard to know what depends on what
 - **Go collector isolated**: Not integrated into monorepo tooling
 
 ### 4. Web App Structure
+
 - **Flat component hierarchy**: All components mixed together
 - **No feature organization**: Hard to find related components
 - **Mixed concerns in lib/**: Services, hooks, utils all together
 - **No clear patterns**: Inconsistent import/export patterns
 
 ### 5. Documentation & Tooling
+
 - **Missing architecture docs**: No clear system design
 - **No API documentation**: 30+ API routes undocumented
 - **Build complexity**: Webpack config overly complex
@@ -102,6 +107,7 @@ packages/shared/
 ```
 
 **Key principles**:
+
 - Zero dependencies (except TypeScript & dev tools)
 - All functions are pure (no side effects)
 - Comprehensive tests for all utilities
@@ -155,6 +161,7 @@ packages/core/
 ```
 
 **Changes**:
+
 - Remove auth logic → move to `@codervisor/devlog-auth`
 - Extract types → move to `@codervisor/devlog-shared`
 - Add repository pattern for data access
@@ -196,6 +203,7 @@ packages/auth/
 ```
 
 **Benefits**:
+
 - Clear separation of concerns
 - Reusable across packages
 - Easier to test in isolation
@@ -239,6 +247,7 @@ packages/collector/
 ```
 
 **Changes**:
+
 - Add `package.json` for pnpm integration
 - Implement backfill feature
 - Better test organization
@@ -349,6 +358,7 @@ apps/web/
 ```
 
 **Key improvements**:
+
 - Route groups for better organization
 - Feature-based component organization
 - Clear separation: ui / features / layouts
@@ -385,6 +395,7 @@ tools/
 ```
 
 **Benefits**:
+
 - Consistent tooling across packages
 - Easy to update and maintain
 - Reusable test utilities
@@ -418,6 +429,7 @@ tools/
    - Update documentation
 
 **Deliverables**:
+
 - ✅ `@codervisor/devlog-shared` package published
 - ✅ `@codervisor/eslint-config` package created
 - ✅ ESLint running on all packages
@@ -445,6 +457,7 @@ tools/
    - Update import paths
 
 **Deliverables**:
+
 - ✅ `@codervisor/devlog-auth` package published
 - ✅ Core package refactored
 - ✅ All packages updated
@@ -473,6 +486,7 @@ tools/
    - Add E2E testing
 
 **Deliverables**:
+
 - ✅ Component hierarchy reorganized
 - ✅ Lib directory organized
 - ✅ Testing infrastructure ready
@@ -503,6 +517,7 @@ tools/
    - Code review guidelines
 
 **Deliverables**:
+
 - ✅ 50%+ test coverage
 - ✅ E2E tests for critical flows
 - ✅ CI/CD pipeline with quality gates
@@ -534,6 +549,7 @@ tools/
    - Troubleshooting guide
 
 **Deliverables**:
+
 - ✅ Complete API documentation
 - ✅ Architecture documentation
 - ✅ Optimized build pipeline
@@ -546,6 +562,7 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 ## Success Metrics
 
 ### Code Quality
+
 - [ ] ESLint enabled on all packages (0 errors)
 - [ ] Test coverage ≥ 50% for core packages
 - [ ] Test coverage ≥ 70% for web app
@@ -553,18 +570,21 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 - [ ] All TODO comments tracked in issues
 
 ### Build & Performance
+
 - [ ] Build time reduced by 20%
 - [ ] Bundle size reduced by 15%
 - [ ] Hot reload time < 2 seconds
 - [ ] CI/CD pipeline < 10 minutes
 
 ### Developer Experience
+
 - [ ] Clear onboarding guide (< 15 minutes setup)
 - [ ] Component documentation for all UI components
 - [ ] API documentation for all endpoints
 - [ ] Contribution guide with examples
 
 ### Testing
+
 - [ ] Unit tests for all pure functions
 - [ ] Integration tests for all services
 - [ ] Component tests for all UI components
@@ -578,6 +598,7 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 **Risk**: Refactoring may break existing functionality.
 
 **Mitigation**:
+
 - Comprehensive test suite before refactoring
 - Feature flags for gradual rollout
 - Keep old structure until new one is stable
@@ -588,6 +609,7 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 **Risk**: Updating import paths across 200+ files prone to errors.
 
 **Mitigation**:
+
 - Use automated refactoring tools (TypeScript LSP)
 - Create barrel exports (`index.ts`) for clean imports
 - Document import patterns
@@ -598,6 +620,7 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 **Risk**: Go package doesn't fit TypeScript monorepo patterns.
 
 **Mitigation**:
+
 - Keep Go code independent
 - Add package.json for minimal integration
 - Use Makefile for Go-specific tasks
@@ -608,6 +631,7 @@ See [implementation.md](./implementation.md) for detailed task breakdown.
 **Risk**: 5-week timeline may be optimistic.
 
 **Mitigation**:
+
 - Prioritize critical improvements (Phase 1-3)
 - Make Phase 4-5 optional/parallel
 - Regular progress checkpoints
