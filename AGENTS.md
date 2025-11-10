@@ -53,6 +53,7 @@
 **Create specs for:**
 
 - Features requiring design/planning (>2 days work)
+- Features that affect multiple parts of the system
 - Architectural decisions affecting multiple components
 - Breaking changes or significant refactors
 - Design decisions needing team alignment
@@ -101,41 +102,41 @@ lspec search "<query>"
 lspec deps <spec>
 ```
 
+These commands help you understand what exists, what's in progress, and what depends on what.
+
 ### Spec Frontmatter
 
 Include YAML frontmatter at the top of spec markdown files:
 
 ```yaml
 ---
-status: draft|planned|in-progress|complete|blocked|cancelled
+status: planned|in-progress|complete
 created: YYYY-MM-DD
-tags: [tag1, tag2]
-priority: low|medium|high
-assignee: username
+tags: [tag1, tag2] # helps with discovery
+priority: low|medium|high # helps with planning
+assignee: username # for team coordination
 ---
 ```
 
 **Required fields**: `status`, `created`  
 **Helpful fields**: `tags` (discovery), `priority` (planning), `assignee` (coordination)
 
-### Workflow
-
-1. **Discover** - `lspec stats` or `lspec board` to see current state
-2. **Search** - `lspec search` or `lspec list` to find relevant work
-3. **Check dependencies** - `lspec deps <spec>` if working on existing spec
-4. **Create/update spec** - Add frontmatter with required fields
-5. **Implement** - Keep spec in sync as you learn
-6. **Update status** - Mark progress: `draft` → `in-progress` → `complete`
-7. **Archive** - `lspec archive <spec>` when done
-
-### Update Commands
+**Update status with:**
 
 ```bash
-# Update spec status
 lspec update <spec> --status in-progress --assignee yourname
-
-# Or edit frontmatter directly in the markdown file
+# or edit frontmatter directly
 ```
+
+### Workflow
+
+1. **Discover context** - Run `lspec stats` or `lspec board` to see current state
+2. **Search existing specs** - Use `lspec search` or `lspec list` to find relevant work
+3. **Check dependencies** - Run `lspec deps <spec>` if working on existing spec
+4. **Create or update spec** - Add frontmatter with required fields and helpful metadata
+5. **Implement changes** - Keep spec in sync as you learn
+6. **Update status** - Mark progress: `draft` → `in-progress` → `complete`
+7. **Archive when done** - `lspec archive <spec>` moves to archive
 
 ### Spec Content (Recommended Structure)
 
@@ -153,7 +154,3 @@ Not mandatory, but helpful:
 - No unnecessary complexity
 - Documentation where needed (not everywhere)
 - Specs stay in sync with implementation
-
----
-
-**Remember**: LeanSpec is a mindset. Adapt these guidelines to what actually helps.

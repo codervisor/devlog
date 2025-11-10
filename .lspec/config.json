@@ -2,7 +2,8 @@
   "template": "spec-template.md",
   "specsDir": "specs",
   "structure": {
-    "pattern": "{date}/{seq}-{name}/",
+    "pattern": "flat",
+    "prefix": "",
     "dateFormat": "YYYYMMDD",
     "sequenceDigits": 3,
     "defaultFile": "README.md"
