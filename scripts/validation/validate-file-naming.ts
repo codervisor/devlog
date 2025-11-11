@@ -199,10 +199,10 @@ function validateDirectory(dirPath: string): void {
 function validateFileNaming(): void {
   console.log('🔍 Validating file naming conventions for web directory...');
 
-  const webDir = path.join(process.cwd(), 'apps/web');
+  const webDir = path.join(process.cwd(), 'packages/web');
   
   if (!fs.existsSync(webDir)) {
-    console.log('❌ Web directory not found at apps/web');
+    console.log('❌ Web directory not found at packages/web');
     process.exit(1);
   }
 

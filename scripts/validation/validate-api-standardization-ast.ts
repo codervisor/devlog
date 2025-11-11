@@ -525,7 +525,7 @@ function findValidationFiles(): string[] {
   }
 
   // Find TypeScript files in web package
-  const webAppDir = path.join(process.cwd(), 'apps/web/app');
+  const webAppDir = path.join(process.cwd(), 'packages/web/app');
   if (fs.existsSync(webAppDir)) {
     findFilesRecursive(
       webAppDir,

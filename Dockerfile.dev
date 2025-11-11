@@ -18,7 +18,7 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 # Copy package files for web application dependencies only
 COPY packages/ai/package.json ./packages/ai/
 COPY packages/core/package.json ./packages/core/
-COPY apps/web/package.json ./apps/web/
+COPY packages/web/package.json ./packages/web/
 
 # Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install

@@ -54,9 +54,6 @@
     "packages/**/*.{ts,tsx}": [
       "prettier --write"
     ],
-    "apps/**/*.{ts,tsx}": [
-      "prettier --write"
-    ],
     "**/*.{js,jsx,json,md}": [
       "prettier --write"
     ]

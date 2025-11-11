@@ -53,7 +53,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/apps/web/.next
+      - /app/packages/web/.next
       - './scripts:/app/scripts'
     env_file:
       - .env

@@ -64,8 +64,8 @@ function validateFile(filePath: string): void {
 
     // Rule 2: Avoid self-referencing @/ aliases within same package
     if (importPath.startsWith('@/')) {
-      // Check if we're in apps/web (where @/ is allowed for Next.js)
-      if (!filePath.includes('apps/web/')) {
+      // Check if we're in packages/web (where @/ is allowed for Next.js)
+      if (!filePath.includes('packages/web/')) {
         ERRORS.push({
           file: filePath,
           line: lineNum,

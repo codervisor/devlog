@@ -15,46 +15,61 @@ This directory contains reusable shell scripts to optimize and simplify GitHub A
 ### Core Build & Test Scripts
 
 #### `setup-node.sh`
+
 Sets up Node.js environment and installs dependencies with pnpm.
+
 ```bash
 ./.github/scripts/setup-node.sh [node_version] [pnpm_version]
 ```
+
 - **Default**: Node.js 20, pnpm 10.15.0
 - **Used in**: All workflows that need Node.js
 
 #### `build-packages.sh`
+
 Builds all packages in dependency order (core → ai → mcp → web).
+
 ```bash
 ./.github/scripts/build-packages.sh
 ```
+
 - **Dependencies**: Requires pnpm workspace setup
-- **Output**: Build artifacts in `packages/*/build` and `apps/web/.next-build`
+- **Output**: Build artifacts in `packages/*/build` and `packages/web/.next-build`
 
 #### `verify-build.sh`
+
 Verifies that all expected build artifacts exist.
+
 ```bash
 ./.github/scripts/verify-build.sh
 ```
-- **Checks**: 
+
+- **Checks**:
   - Core, AI, MCP, CLI packages: `build/index.js` and `build/index.d.ts`
   - Web package: `.next-build/` directory
 - **Exit codes**: 0 = success, 1 = missing artifacts
 
 #### `run-tests.sh`
+
 Runs tests for all packages with coverage.
+
 ```bash
 ./.github/scripts/run-tests.sh
 ```
+
 - **Command**: `pnpm -r test:coverage`
 - **Requirements**: All packages must have `test:coverage` script
 
 ### NPM Publishing Scripts
 
 #### `check-versions.sh`
+
 Determines which packages need to be published based on version comparison.
+
 ```bash
 ./.github/scripts/check-versions.sh [force_publish] [package_filter]
 ```
+
 - **Parameters**:
   - `force_publish`: "true" to force publish regardless of versions
   - `package_filter`: Comma-separated list (e.g., "core,mcp")
@@ -62,10 +77,13 @@ Determines which packages need to be published based on version comparison.
 - **Environment**: Requires `NODE_AUTH_TOKEN` for NPM registry access
 
 #### `publish-packages.sh`
+
 Publishes specified packages to NPM registry.
+
 ```bash
 ./.github/scripts/publish-packages.sh "mcp,core,ai"
 ```
+
 - **Input**: Comma-separated package list
 - **Environment**: Requires `NODE_AUTH_TOKEN`
 - **Output**: Sets `published_packages` GitHub Actions output
@@ -73,10 +91,13 @@ Publishes specified packages to NPM registry.
 ### Docker & Validation Scripts
 
 #### `test-docker.sh`
+
 Tests Docker image functionality by starting container and checking endpoints.
+
 ```bash
 ./.github/scripts/test-docker.sh "image:tag"
 ```
+
 - **Tests**:
   - Container starts successfully
   - HTTP endpoint responds (port 3000)
@@ -84,10 +105,13 @@ Tests Docker image functionality by starting container and checking endpoints.
 - **Cleanup**: Automatically stops test container
 
 #### `validate-pr.sh`
+
 Runs lightweight validation checks for pull requests.
+
 ```bash
 ./.github/scripts/validate-pr.sh
 ```
+
 - **Checks**:
   - TypeScript compilation
   - Quick build test (core, ai, mcp packages)
@@ -97,6 +121,7 @@ Runs lightweight validation checks for pull requests.
 ## 🔧 Usage in Workflows
 
 ### Before (Workflow with inline scripts)
+
 ```yaml
 - name: Build packages
   run: |
@@ -107,6 +132,7 @@ Runs lightweight validation checks for pull requests.
 ```
 
 ### After (Workflow with script)
+
 ```yaml
 - name: Build packages
   run: ./.github/scripts/build-packages.sh
@@ -132,20 +158,23 @@ All scripts can be tested locally:
 ## 🔍 Script Standards
 
 ### Error Handling
+
 - All scripts use `set -euo pipefail` for strict error handling
 - Exit codes: 0 = success, 1 = failure
 - Clear error messages with emojis for visibility
 
 ### GitHub Actions Integration
+
 - Scripts write to `$GITHUB_OUTPUT` when available
 - Fallback to stdout for local testing
 - Support both CI and local environments
 
 ### Logging
+
 - Consistent emoji prefixes for different operations:
   - 🔧 Setup/configuration
   - 🔨 Building
-  - 🧪 Testing  
+  - 🧪 Testing
   - 📦 Packaging/publishing
   - 🐳 Docker operations
   - ✅ Success
@@ -153,6 +182,7 @@ All scripts can be tested locally:
   - ⚠️ Warning
 
 ### Parameters
+
 - Support both required and optional parameters
 - Provide sensible defaults
 - Document parameter usage in script comments
@@ -160,11 +190,13 @@ All scripts can be tested locally:
 ## 📊 Performance Impact
 
 ### Before Refactoring
+
 - **Duplicated logic**: ~150 lines across 3 workflows
 - **Maintenance**: Changes needed in multiple files
 - **Testing**: Difficult to test workflow logic locally
 
-### After Refactoring  
+### After Refactoring
+
 - **Centralized logic**: ~50 lines per workflow (70% reduction)
 - **Maintenance**: Changes in single script files
 - **Testing**: Scripts testable locally and in CI
@@ -172,8 +204,9 @@ All scripts can be tested locally:
 ## 🚀 Future Enhancements
 
 Potential improvements:
+
 - **Script parameters**: More configurable options
 - **Parallel execution**: Where safe and beneficial
-- **Advanced caching**: More granular cache strategies  
+- **Advanced caching**: More granular cache strategies
 - **Integration testing**: End-to-end workflow testing
 - **Monitoring**: Script execution metrics

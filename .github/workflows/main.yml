@@ -77,7 +77,7 @@ jobs:
         with:
           path: |
             packages/*/build
-            apps/web/.next-build
+            packages/web/.next-build
           key: build-${{ github.sha }}-${{ matrix.node-version }}
 
       - name: Verify build artifacts
@@ -191,7 +191,7 @@ jobs:
         with:
           path: |
             packages/*/build
-            apps/web/.next-build
+            packages/web/.next-build
           key: build-${{ github.sha }}-20
 
       - name: Check versions and determine what to publish
@@ -275,7 +275,7 @@ jobs:
         with:
           path: |
             packages/*/build
-            apps/web/.next-build
+            packages/web/.next-build
           key: build-${{ github.sha }}-20
 
       - name: Bump to dev prerelease versions
