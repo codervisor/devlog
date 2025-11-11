@@ -166,9 +166,9 @@ export interface DevlogNote {
 /**
  * Document types supported by the devlog system
  */
-export type DocumentType = 
+export type DocumentType =
   | 'text' // Plain text files
-  | 'markdown' // Markdown files  
+  | 'markdown' // Markdown files
   | 'image' // Images (png, jpg, gif, etc.)
   | 'pdf' // PDF documents
   | 'code' // Source code files
@@ -223,16 +223,16 @@ export interface DevlogEntry {
 
 /**
  * Work Item - Industry-standard terminology for trackable work
- * 
+ *
  * This is an alias for DevlogEntry to support migration to more intuitive terminology.
  * "Work item" is widely recognized in the industry (used by Azure DevOps, GitHub Projects)
  * and clearly communicates the purpose: tracking units of work like features, bugs, and tasks.
- * 
+ *
  * **Migration Strategy:**
  * - New code should prefer using `WorkItem` over `DevlogEntry`
  * - Both types are fully interchangeable and backward compatible
  * - The internal implementation and database tables remain unchanged
- * 
+ *
  * @example
  * ```typescript
  * // New code - preferred
@@ -241,7 +241,7 @@ export interface DevlogEntry {
  *   type: "feature",
  *   // ...
  * };
- * 
+ *
  * // Legacy code - still supported
  * const entry: DevlogEntry = item; // Fully compatible
  * ```

@@ -1,8 +1,8 @@
 /**
  * Documents Module
- * 
+ *
  * Provides document management for work items.
- * 
+ *
  * @module project-management/documents
  */
 

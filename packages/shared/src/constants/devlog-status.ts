@@ -2,7 +2,12 @@
  * Devlog status constants
  */
 
-import type { DevlogStatus, DevlogType, DevlogPriority, DevlogNoteCategory } from '../types/devlog.js';
+import type {
+  DevlogStatus,
+  DevlogType,
+  DevlogPriority,
+  DevlogNoteCategory,
+} from '../types/devlog.js';
 
 /**
  * All possible devlog statuses
@@ -31,10 +36,7 @@ export const OPEN_STATUSES: readonly DevlogStatus[] = [
 /**
  * Closed statuses (work completed or abandoned)
  */
-export const CLOSED_STATUSES: readonly DevlogStatus[] = [
-  'done',
-  'cancelled',
-] as const;
+export const CLOSED_STATUSES: readonly DevlogStatus[] = ['done', 'cancelled'] as const;
 
 /**
  * All possible devlog types

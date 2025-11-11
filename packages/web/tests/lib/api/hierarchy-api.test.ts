@@ -560,6 +560,74 @@ describe.skipIf(!runIntegrationTests)('Hierarchy API Integration Tests', () => {
       const result = await client.post('/events/batch', { not: 'array' }, 400);
       expect(result.data).toHaveProperty('error');
     });
+
+    it('should handle batch events with existing workspace (upsert)', async () => {
+      if (!testProjectId) {
+        console.log('Skipping: requires project');
+        return;
+      }
+
+      // Generate unique workspace ID to test upsert
+      const testWorkspaceUuid = `test-ws-upsert-${crypto.randomUUID()}`;
+      const sessionId1 = crypto.randomUUID();
+      const sessionId2 = crypto.randomUUID();
+
+      // First batch - should create the workspace
+      const events1 = [
+        {
+          timestamp: new Date().toISOString(),
+          eventType: 'llm_request',
+          agentId: 'test-agent',
+          agentVersion: '1.0.0',
+          sessionId: sessionId1,
+          projectId: testProjectId,
+          context: {
+            workspaceId: testWorkspaceUuid,
+            workspacePath: '/test/path/v1',
+            machineId: 'test-machine-1',
+            hostname: 'test-host',
+            username: 'testuser',
+          },
+          data: { message: 'first batch' },
+        },
+      ];
+
+      const result1 = await client.post('/events/batch', events1, 201);
+      expect(result1.status).toBe(201);
+      expect(result1.data).toHaveProperty('created');
+      expect(result1.data.created).toBeGreaterThan(0);
+
+      // Second batch - should upsert the same workspace (not fail)
+      const events2 = [
+        {
+          timestamp: new Date().toISOString(),
+          eventType: 'llm_response',
+          agentId: 'test-agent',
+          agentVersion: '1.0.0',
+          sessionId: sessionId2,
+          projectId: testProjectId,
+          context: {
+            workspaceId: testWorkspaceUuid, // Same workspace ID
+            workspacePath: '/test/path/v2', // Updated path
+            machineId: 'test-machine-1',
+            hostname: 'test-host',
+            username: 'testuser',
+          },
+          data: { response: 'second batch' },
+        },
+      ];
+
+      const result2 = await client.post('/events/batch', events2, 201);
+      expect(result2.status).toBe(201);
+      expect(result2.data).toHaveProperty('created');
+      expect(result2.data.created).toBeGreaterThan(0);
+
+      // Verify workspace exists and was updated
+      const workspaceResult = await client.get(`/workspaces/${testWorkspaceUuid}`);
+      expect(workspaceResult.status).toBe(200);
+      expect(workspaceResult.data.workspace).toHaveProperty('workspaceId', testWorkspaceUuid);
+      expect(workspaceResult.data.workspace).toHaveProperty('workspacePath', '/test/path/v2');
+    });
   });
 
   describe('Health Check', () => {

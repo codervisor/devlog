@@ -1,8 +1,8 @@
 /**
  * Projects Module
- * 
+ *
  * Provides project organization and metadata management.
- * 
+ *
  * @module project-management/projects
  */
 

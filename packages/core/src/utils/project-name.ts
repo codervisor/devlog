@@ -34,12 +34,12 @@ export function generateSlugFromName(name: string): string {
   }
 
   const normalized = normalizeProjectName(name);
-  
+
   // If normalization results in empty string, use fallback
   if (!normalized) {
     return 'untitled-project';
   }
-  
+
   return normalized;
 }
 
@@ -134,18 +134,15 @@ export function validateProjectSlug(slug: string): boolean {
  * Generate a unique project name by appending numbers if needed
  * This handles case-insensitive collisions and works with display names
  */
-export function generateUniqueProjectName(
-  baseName: string,
-  existingNames: string[]
-): string {
+export function generateUniqueProjectName(baseName: string, existingNames: string[]): string {
   if (!validateProjectDisplayName(baseName)) {
     throw new Error(`Base name "${baseName}" does not follow project naming conventions`);
   }
-  
+
   // Convert existing names to lowercase for case-insensitive comparison
-  const existingLowercase = existingNames.map(name => name.toLowerCase());
+  const existingLowercase = existingNames.map((name) => name.toLowerCase());
   const baseLowercase = baseName.toLowerCase();
-  
+
   if (!existingLowercase.includes(baseLowercase)) {
     return baseName;
   }
@@ -153,7 +150,7 @@ export function generateUniqueProjectName(
   // Try appending numbers until we find a unique name
   let counter = 1;
   let uniqueName: string;
-  
+
   do {
     uniqueName = `${baseName} ${counter}`;
     counter++;

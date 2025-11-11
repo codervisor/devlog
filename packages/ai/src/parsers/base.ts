@@ -7,7 +7,14 @@
  * Supports four-level hierarchy: Application → Workspace → Session → Turn → Message
  */
 
-import type { ChatSession, ChatTurn, ChatMessage, Application, Workspace, ParserType } from '../types/index.js';
+import type {
+  ChatSession,
+  ChatTurn,
+  ChatMessage,
+  Application,
+  Workspace,
+  ParserType,
+} from '../types/index.js';
 
 /**
  * Abstract base class for AI assistant parsers

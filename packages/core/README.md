@@ -9,18 +9,21 @@ This package provides the foundational services for monitoring, analyzing, and o
 ### 🔍 Agent Observability (Primary)
 
 **Event Collection & Storage:**
+
 - Capture all AI agent activities (file operations, LLM requests, commands)
 - High-performance event ingestion with TimescaleDB
 - Complete, immutable audit trail of agent behavior
 - Efficient time-series queries and filtering
 
 **Session Management:**
+
 - Track complete agent working sessions from start to finish
 - Link events into analyzable workflows
 - Record session objectives and outcomes
 - Calculate session-level performance metrics
 
 **Analytics Engine:**
+
 - Aggregate metrics across events and sessions
 - Performance analysis (speed, efficiency, token usage)
 - Pattern detection for success and failure modes
@@ -29,6 +32,7 @@ This package provides the foundational services for monitoring, analyzing, and o
 ### 📊 Project Management (Supporting)
 
 **Optional features for organizing agent sessions:**
+
 - Project organization for multi-codebase teams
 - Work item tracking (features, bugs, tasks)
 - Document attachments and note-taking
@@ -57,7 +61,7 @@ const session = await sessionService.create({
   agentId: 'github-copilot',
   projectId: 1,
   objective: 'Implement user authentication',
-  workItemId: 42  // Optional: link to work item
+  workItemId: 42, // Optional: link to work item
 });
 
 // Log agent events
@@ -73,39 +77,43 @@ await eventService.logEvent({
   context: {
     workingDirectory: '/app',
     filePath: 'src/auth/login.ts',
-    branch: 'feature/auth'
+    branch: 'feature/auth',
   },
   data: {
     content: '// Implementation...',
-    linesAdded: 45
+    linesAdded: 45,
   },
   metrics: {
     duration: 1500,
-    tokenCount: 1200
-  }
+    tokenCount: 1200,
+  },
 });
 
 // End the session
 await sessionService.end(session.id, {
   outcome: 'success',
-  summary: 'JWT authentication implemented with tests'
+  summary: 'JWT authentication implemented with tests',
 });
 
 // Query and analyze
 const events = await eventService.queryEvents({
   sessionId: session.id,
-  eventType: 'file_write'
+  eventType: 'file_write',
 });
 
 const stats = await eventService.getEventStats({
-  sessionId: session.id
+  sessionId: session.id,
 });
 ```
 
 ### Project Management (Optional)
 
 ```typescript
-import { PrismaProjectService, PrismaDevlogService, WorkItem } from '@codervisor/devlog-core/server';
+import {
+  PrismaProjectService,
+  PrismaDevlogService,
+  WorkItem,
+} from '@codervisor/devlog-core/server';
 
 // Create a project
 const projectService = PrismaProjectService.getInstance();
@@ -114,7 +122,7 @@ await projectService.initialize();
 const project = await projectService.create({
   name: 'my-app',
   description: 'Main application',
-  repositoryUrl: 'https://github.com/org/repo'
+  repositoryUrl: 'https://github.com/org/repo',
 });
 
 // Create a work item (optional - for organizing agent sessions)
@@ -127,18 +135,18 @@ const item: WorkItem = await workItemService.create({
   description: 'Add JWT-based authentication',
   status: 'new',
   priority: 'high',
-  projectId: project.id
+  projectId: project.id,
 });
 
 // Update work item status
 await workItemService.update(item.id!, {
-  status: 'in-progress'
+  status: 'in-progress',
 });
 
 // Add progress note
 await workItemService.addNote(item.id!, {
   category: 'progress',
-  content: 'Completed login endpoint implementation'
+  content: 'Completed login endpoint implementation',
 });
 ```
 
@@ -149,11 +157,13 @@ await workItemService.addNote(item.id!, {
 The package is organized into two main feature domains:
 
 #### `agent-observability/` - PRIMARY FEATURE
+
 - `AgentEventService` - Event collection and querying
 - `AgentSessionService` - Session lifecycle management
 - Agent observability types and interfaces
 
 #### `project-management/` - SUPPORTING FEATURE
+
 - `PrismaProjectService` - Project organization
 - `PrismaDevlogService` - Work item tracking (legacy: "devlog entries")
 - `PrismaDocumentService` - Document attachments
@@ -187,21 +197,21 @@ await llmService.initialize();
 
 // Simple completion
 const response = await llmService.simpleCompletion(
-  'Explain what a devlog is in software development.'
+  'Explain what a devlog is in software development.',
 );
 
 // Advanced completion with custom configuration
 const completion = await llmService.generateCompletion({
   messages: [
     { role: 'system', content: 'You are a helpful assistant.' },
-    { role: 'user', content: 'What are the benefits of TypeScript?' }
+    { role: 'user', content: 'What are the benefits of TypeScript?' },
   ],
   model: {
     provider: 'openai',
     model: 'gpt-4',
     maxTokens: 500,
     temperature: 0.3,
-  }
+  },
 });
 
 // Streaming completion
@@ -217,22 +227,20 @@ for await (const chunk of llmService.generateStreamingCompletion(request)) {
 
 ```typescript
 // Single text embedding
-const embedding = await llmService.simpleEmbed(
-  'Text to convert to vector embedding'
-);
+const embedding = await llmService.simpleEmbed('Text to convert to vector embedding');
 
 // Multiple text embeddings
 const embeddings = await llmService.simpleEmbedMany([
   'First text to embed',
   'Second text to embed',
-  'Third text to embed'
+  'Third text to embed',
 ]);
 
 // Advanced embedding with custom model
 const response = await llmService.embed({
   text: 'Advanced text for embedding',
   model: 'text-embedding-3-large',
-  metadata: { source: 'documentation' }
+  metadata: { source: 'documentation' },
 });
 
 // Calculate similarity between embeddings
@@ -240,13 +248,13 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0;
   let normA = 0;
   let normB = 0;
-  
+
   for (let i = 0; i < vecA.length; i++) {
     dotProduct += vecA[i] * vecB[i];
     normA += vecA[i] * vecA[i];
     normB += vecB[i] * vecB[i];
   }
-  
+
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
@@ -289,7 +297,7 @@ const service = new LLMService({
   defaultModelConfig: {
     maxTokens: 1000,
     temperature: 0.7,
-  }
+  },
 });
 ```
 

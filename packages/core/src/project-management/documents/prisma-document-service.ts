@@ -3,7 +3,7 @@
  *
  * Manages document attachments for devlog entries
  * Handles file uploads, type detection, content extraction, and storage
- * 
+ *
  * Features:
  * - File upload and storage
  * - Document type detection and classification
@@ -36,7 +36,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
    */
   static getInstance(): PrismaDocumentService {
     const key = 'default';
-    
+
     return this.getOrCreateInstance(this.instances, key, () => new PrismaDocumentService());
   }
 
@@ -79,13 +79,15 @@ export class PrismaDocumentService extends PrismaServiceBase {
       content: Buffer | string;
     },
     metadata?: Record<string, any>,
-    uploadedBy?: string
+    uploadedBy?: string,
   ): Promise<DevlogDocument> {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] uploadDocument() called in fallback mode - returning mock document');
-      
+      console.warn(
+        '[DocumentService] uploadDocument() called in fallback mode - returning mock document',
+      );
+
       const documentId = `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const documentType = this.determineDocumentType(file.mimeType, file.originalName);
       const textContent = this.extractTextContent(file.content, documentType);
@@ -111,7 +113,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
       const textContent = this.extractTextContent(file.content, documentType);
 
       // Prepare binary content
-      const binaryContent = Buffer.isBuffer(file.content) 
+      const binaryContent = Buffer.isBuffer(file.content)
         ? file.content
         : Buffer.from(file.content, 'utf-8');
 
@@ -134,7 +136,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       return this.mapPrismaToDocument(document);
     } catch (error) {
       console.error('[DocumentService] Failed to upload document:', error);
-      throw new Error(`Failed to upload document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to upload document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -157,7 +161,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       return document ? this.mapPrismaToDocument(document) : null;
     } catch (error) {
       console.error('[DocumentService] Failed to get document:', error);
-      throw new Error(`Failed to get document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -168,7 +174,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] getDevlogDocuments() called in fallback mode - returning empty array');
+      console.warn(
+        '[DocumentService] getDevlogDocuments() called in fallback mode - returning empty array',
+      );
       return [];
     }
 
@@ -178,10 +186,12 @@ export class PrismaDocumentService extends PrismaServiceBase {
         orderBy: { createdAt: 'desc' },
       });
 
-      return documents.map(doc => this.mapPrismaToDocument(doc));
+      return documents.map((doc) => this.mapPrismaToDocument(doc));
     } catch (error) {
       console.error('[DocumentService] Failed to get devlog documents:', error);
-      throw new Error(`Failed to get devlog documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get devlog documents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -192,7 +202,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] getDocumentContent() called in fallback mode - returning null');
+      console.warn(
+        '[DocumentService] getDocumentContent() called in fallback mode - returning null',
+      );
       return null;
     }
 
@@ -205,7 +217,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       return document?.binaryContent ? Buffer.from(document.binaryContent) : null;
     } catch (error) {
       console.error('[DocumentService] Failed to get document content:', error);
-      throw new Error(`Failed to get document content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get document content: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -220,12 +234,14 @@ export class PrismaDocumentService extends PrismaServiceBase {
       mimeType?: string;
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<{ documents: DevlogDocument[]; total: number }> {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] searchDocuments() called in fallback mode - returning empty result');
+      console.warn(
+        '[DocumentService] searchDocuments() called in fallback mode - returning empty result',
+      );
       return { documents: [], total: 0 };
     }
 
@@ -252,12 +268,14 @@ export class PrismaDocumentService extends PrismaServiceBase {
       ]);
 
       return {
-        documents: documents.map(doc => this.mapPrismaToDocument(doc)),
+        documents: documents.map((doc) => this.mapPrismaToDocument(doc)),
         total,
       };
     } catch (error) {
       console.error('[DocumentService] Failed to search documents:', error);
-      throw new Error(`Failed to search documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to search documents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -266,17 +284,19 @@ export class PrismaDocumentService extends PrismaServiceBase {
    */
   async updateDocumentMetadata(
     documentId: string,
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
   ): Promise<DevlogDocument> {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] updateDocumentMetadata() called in fallback mode - returning mock document');
+      console.warn(
+        '[DocumentService] updateDocumentMetadata() called in fallback mode - returning mock document',
+      );
       const existing = await this.getDocument(documentId);
       if (!existing) {
         throw new Error('Document not found');
       }
-      
+
       return {
         ...existing,
         metadata,
@@ -294,7 +314,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
       }
 
       // Merge with existing metadata
-      const existingMetadata = existingDoc.metadata as Record<string, any> || {};
+      const existingMetadata = (existingDoc.metadata as Record<string, any>) || {};
       const updatedMetadata = { ...existingMetadata, ...metadata };
 
       const document = await this.prismaClient!.devlogDocument.update({
@@ -305,7 +325,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       return this.mapPrismaToDocument(document);
     } catch (error) {
       console.error('[DocumentService] Failed to update document metadata:', error);
-      throw new Error(`Failed to update document metadata: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to update document metadata: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -316,7 +338,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] deleteDocument() called in fallback mode - operation ignored');
+      console.warn(
+        '[DocumentService] deleteDocument() called in fallback mode - operation ignored',
+      );
       return;
     }
 
@@ -326,7 +350,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       });
     } catch (error) {
       console.error('[DocumentService] Failed to delete document:', error);
-      throw new Error(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -337,7 +363,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] deleteDevlogDocuments() called in fallback mode - operation ignored');
+      console.warn(
+        '[DocumentService] deleteDevlogDocuments() called in fallback mode - operation ignored',
+      );
       return;
     }
 
@@ -347,7 +375,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       });
     } catch (error) {
       console.error('[DocumentService] Failed to delete devlog documents:', error);
-      throw new Error(`Failed to delete devlog documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete devlog documents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -362,7 +392,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[DocumentService] getDocumentStats() called in fallback mode - returning empty stats');
+      console.warn(
+        '[DocumentService] getDocumentStats() called in fallback mode - returning empty stats',
+      );
       return {
         totalDocuments: 0,
         totalSize: 0,
@@ -380,7 +412,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
       let totalSize = 0;
       const typeBreakdown: Record<string, number> = {};
 
-      documents.forEach(doc => {
+      documents.forEach((doc) => {
         totalSize += doc.size;
         const documentType = doc.type as DocumentType;
         typeBreakdown[documentType] = (typeBreakdown[documentType] || 0) + 1;
@@ -393,7 +425,9 @@ export class PrismaDocumentService extends PrismaServiceBase {
       };
     } catch (error) {
       console.error('[DocumentService] Failed to get document stats:', error);
-      throw new Error(`Failed to get document stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get document stats: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -402,10 +436,52 @@ export class PrismaDocumentService extends PrismaServiceBase {
    */
   private determineDocumentType(mimeType: string, filename: string): DocumentType {
     const extension = filename.toLowerCase().split('.').pop() || '';
-    
+
     // Check by file extension first (more specific than MIME type)
-    const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'h', 'hpp', 'cs', 'php', 'rb', 'go', 'rs', 'kt', 'swift', 'scala', 'sh', 'bash', 'ps1', 'sql', 'r', 'matlab', 'm', 'vb', 'pl', 'dart', 'lua'];
-    const configExtensions = ['json', 'yaml', 'yml', 'toml', 'ini', 'cfg', 'conf', 'config', 'properties', 'env', 'dockerfile'];
+    const codeExtensions = [
+      'js',
+      'ts',
+      'jsx',
+      'tsx',
+      'py',
+      'java',
+      'cpp',
+      'c',
+      'h',
+      'hpp',
+      'cs',
+      'php',
+      'rb',
+      'go',
+      'rs',
+      'kt',
+      'swift',
+      'scala',
+      'sh',
+      'bash',
+      'ps1',
+      'sql',
+      'r',
+      'matlab',
+      'm',
+      'vb',
+      'pl',
+      'dart',
+      'lua',
+    ];
+    const configExtensions = [
+      'json',
+      'yaml',
+      'yml',
+      'toml',
+      'ini',
+      'cfg',
+      'conf',
+      'config',
+      'properties',
+      'env',
+      'dockerfile',
+    ];
     const logExtensions = ['log', 'logs', 'out', 'err'];
 
     if (extension === 'md' || extension === 'markdown') return 'markdown';
@@ -445,13 +521,11 @@ export class PrismaDocumentService extends PrismaServiceBase {
     }
 
     try {
-      const textContent = Buffer.isBuffer(content) 
-        ? content.toString('utf-8')
-        : content;
-      
+      const textContent = Buffer.isBuffer(content) ? content.toString('utf-8') : content;
+
       // Limit text content size to avoid database issues
       const maxTextSize = 64 * 1024; // 64KB limit
-      return textContent.length > maxTextSize 
+      return textContent.length > maxTextSize
         ? textContent.substring(0, maxTextSize) + '...[truncated]'
         : textContent;
     } catch (error) {
@@ -473,7 +547,7 @@ export class PrismaDocumentService extends PrismaServiceBase {
       size: prismaDoc.size,
       type: prismaDoc.type as DocumentType,
       content: prismaDoc.textContent || undefined,
-      metadata: prismaDoc.metadata as Record<string, any> || {},
+      metadata: (prismaDoc.metadata as Record<string, any>) || {},
       uploadedAt: prismaDoc.createdAt?.toISOString() || new Date().toISOString(),
       uploadedBy: prismaDoc.uploadedBy || undefined,
     };

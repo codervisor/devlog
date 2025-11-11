@@ -103,11 +103,7 @@ export async function POST(request: NextRequest) {
     for (const [_, workspaceData] of uniqueWorkspaces.entries()) {
       await prisma.workspace.upsert({
         where: {
-          projectId_machineId_workspaceId: {
-            projectId: workspaceData.projectId,
-            machineId: workspaceData.machineDbId,
-            workspaceId: workspaceData.workspaceId,
-          },
+          workspaceId: workspaceData.workspaceId,
         },
         create: {
           projectId: workspaceData.projectId,
@@ -116,7 +112,10 @@ export async function POST(request: NextRequest) {
           workspacePath: workspaceData.workspacePath,
           workspaceType: 'folder',
         },
-        update: {},
+        update: {
+          workspacePath: workspaceData.workspacePath,
+          lastSeenAt: new Date(),
+        },
       });
     }
 

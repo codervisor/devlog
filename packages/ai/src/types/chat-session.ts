@@ -3,7 +3,7 @@
  * Hierarchy: Application → Workspace → Chat Session → Chat Turn → Chat Message
  */
 
-import type { ChatTurn } from "./chat-turn.js";
+import type { ChatTurn } from './chat-turn.js';
 
 // Session-level metadata based on actual Copilot data structure
 export interface ChatSessionMetadata {

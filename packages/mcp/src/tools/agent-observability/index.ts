@@ -1,6 +1,6 @@
 /**
  * Agent Observability Tools
- * 
+ *
  * Tools for monitoring and analyzing AI coding agent activities.
  * This is the PRIMARY feature of the platform.
  */

@@ -1,12 +1,12 @@
 /**
  * Base class for Prisma services
- * 
+ *
  * Provides common functionality for all Prisma-based services:
  * - Singleton pattern with TTL-based cleanup
  * - Prisma client initialization with fallback mode
  * - Common initialization lifecycle
  * - Resource management and disposal
- * 
+ *
  * This eliminates code duplication across PrismaDevlogService, PrismaAuthService,
  * PrismaChatService, and other Prisma-based services.
  */
@@ -27,7 +27,7 @@ interface ServiceInstance<T> {
 export abstract class PrismaServiceBase {
   // Static properties for singleton management
   protected static readonly TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
-  
+
   // Instance properties
   protected prisma: PrismaClient | null = null;
   protected initPromise: Promise<void> | null = null;
@@ -47,7 +47,7 @@ export abstract class PrismaServiceBase {
       // Try to import Prisma client - will fail if not generated
       const prismaModule = await import('@prisma/client');
       const configModule = await import('../utils/prisma-config.js');
-      
+
       if (prismaModule.PrismaClient && configModule.getPrismaClient) {
         this.prisma = configModule.getPrismaClient();
         this.fallbackMode = false;
@@ -55,7 +55,10 @@ export abstract class PrismaServiceBase {
       }
     } catch (error) {
       // Prisma client not available - service will operate in fallback mode
-      console.warn(`[${this.constructor.name}] Prisma client not available, operating in fallback mode:`, (error as Error).message);
+      console.warn(
+        `[${this.constructor.name}] Prisma client not available, operating in fallback mode:`,
+        (error as Error).message,
+      );
       this.fallbackMode = true;
     }
   }
@@ -78,10 +81,10 @@ export abstract class PrismaServiceBase {
   protected static getOrCreateInstance<T extends PrismaServiceBase>(
     instances: Map<any, ServiceInstance<T>>,
     key: any,
-    factory: () => T
+    factory: () => T,
   ): T {
     const now = Date.now();
-    
+
     // Clean up expired instances
     this.cleanupInstances(instances);
 
@@ -166,7 +169,7 @@ export abstract class PrismaServiceBase {
   async dispose(): Promise<void> {
     try {
       await this.prisma?.$disconnect();
-      
+
       // Subclasses should override to remove from their static instances map
       await this.onDispose();
     } catch (error) {

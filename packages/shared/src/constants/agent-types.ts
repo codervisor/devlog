@@ -2,7 +2,12 @@
  * Agent observability constants
  */
 
-import type { ObservabilityAgentType, AgentEventType, SessionOutcome, EventSeverity } from '../types/agent.js';
+import type {
+  ObservabilityAgentType,
+  AgentEventType,
+  SessionOutcome,
+  EventSeverity,
+} from '../types/agent.js';
 
 /**
  * All supported agent types

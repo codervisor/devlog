@@ -1,6 +1,6 @@
 /**
  * Structured logging utility
- * 
+ *
  * Provides a consistent logging interface across the application.
  * In production, integrates with proper logging services.
  */
@@ -29,7 +29,7 @@ function formatMessage(level: LogLevel, message: string, context?: LogContext): 
 
 /**
  * Create a console logger
- * 
+ *
  * This is a simple implementation using console methods.
  * In production, this should be replaced with a proper logging service.
  */

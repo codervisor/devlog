@@ -105,7 +105,7 @@ describe('String Utilities', () => {
   describe('escapeHtml', () => {
     it('escapes HTML special characters', () => {
       expect(escapeHtml('<div>Test & "quote"</div>')).toBe(
-        '&lt;div&gt;Test &amp; &quot;quote&quot;&lt;&#x2F;div&gt;'
+        '&lt;div&gt;Test &amp; &quot;quote&quot;&lt;&#x2F;div&gt;',
       );
     });
 

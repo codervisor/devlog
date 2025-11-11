@@ -54,7 +54,8 @@ export class SSOService {
       config.github = {
         clientId: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        redirectUri: process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/github',
+        redirectUri:
+          process.env.GITHUB_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/github',
       };
     }
 
@@ -63,7 +64,8 @@ export class SSOService {
       config.google = {
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/google',
+        redirectUri:
+          process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/google',
       };
     }
 
@@ -72,7 +74,8 @@ export class SSOService {
       config.wechat = {
         appId: process.env.WECHAT_APP_ID,
         appSecret: process.env.WECHAT_APP_SECRET,
-        redirectUri: process.env.WECHAT_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/wechat',
+        redirectUri:
+          process.env.WECHAT_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/wechat',
       };
     }
 
@@ -98,7 +101,11 @@ export class SSOService {
   /**
    * Exchange authorization code for access token and user info
    */
-  async exchangeCodeForUser(provider: SSOProvider, code: string, state?: string): Promise<SSOUserInfo> {
+  async exchangeCodeForUser(
+    provider: SSOProvider,
+    code: string,
+    state?: string,
+  ): Promise<SSOUserInfo> {
     switch (provider) {
       case 'github':
         return this.exchangeGitHubCode(code);
@@ -147,7 +154,7 @@ export class SSOService {
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -161,13 +168,13 @@ export class SSOService {
       throw new Error('Failed to exchange GitHub code for token');
     }
 
-    const tokenData = await tokenResponse.json() as OAuthTokenResponse;
+    const tokenData = (await tokenResponse.json()) as OAuthTokenResponse;
 
     // Get user info
     const userResponse = await fetch('https://api.github.com/user', {
       headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${tokenData.access_token}`,
+        Accept: 'application/json',
       },
     });
 
@@ -175,20 +182,20 @@ export class SSOService {
       throw new Error('Failed to fetch GitHub user info');
     }
 
-    const userData = await userResponse.json() as OAuthUserInfo;
+    const userData = (await userResponse.json()) as OAuthUserInfo;
 
     // Get user email if not public
     let email = userData.email;
     if (!email) {
       const emailResponse = await fetch('https://api.github.com/user/emails', {
         headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${tokenData.access_token}`,
+          Accept: 'application/json',
         },
       });
 
       if (emailResponse.ok) {
-        const emails = await emailResponse.json() as Array<{ email: string; primary: boolean }>;
+        const emails = (await emailResponse.json()) as Array<{ email: string; primary: boolean }>;
         const primaryEmail = emails.find((e) => e.primary) || emails[0];
         email = primaryEmail?.email;
       }
@@ -248,12 +255,12 @@ export class SSOService {
       throw new Error('Failed to exchange Google code for token');
     }
 
-    const tokenData = await tokenResponse.json() as OAuthTokenResponse;
+    const tokenData = (await tokenResponse.json()) as OAuthTokenResponse;
 
     // Get user info
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`,
+        Authorization: `Bearer ${tokenData.access_token}`,
       },
     });
 
@@ -261,7 +268,7 @@ export class SSOService {
       throw new Error('Failed to fetch Google user info');
     }
 
-    const userData = await userResponse.json() as OAuthUserInfo;
+    const userData = (await userResponse.json()) as OAuthUserInfo;
 
     return {
       provider: 'google',
@@ -296,14 +303,14 @@ export class SSOService {
 
     // Exchange code for access token
     const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${this.config.wechat.appId}&secret=${this.config.wechat.appSecret}&code=${code}&grant_type=authorization_code`;
-    
+
     const tokenResponseFetch = await fetch(tokenUrl);
 
     if (!tokenResponseFetch.ok) {
       throw new Error('Failed to exchange WeChat code for token');
     }
 
-    const tokenData = await tokenResponseFetch.json() as OAuthTokenResponse & { openid?: string };
+    const tokenData = (await tokenResponseFetch.json()) as OAuthTokenResponse & { openid?: string };
 
     if (!tokenData.access_token || !tokenData.openid) {
       throw new Error('Invalid WeChat token response');
@@ -317,7 +324,7 @@ export class SSOService {
       throw new Error('Failed to fetch WeChat user info');
     }
 
-    const userData = await userResponse.json() as OAuthUserInfo & { openid?: string };
+    const userData = (await userResponse.json()) as OAuthUserInfo & { openid?: string };
 
     return {
       provider: 'wechat',

@@ -188,7 +188,7 @@ export class LLMError extends Error {
     public code?: string,
     public provider?: LLMProvider,
     public statusCode?: number,
-    public cause?: Error
+    public cause?: Error,
   ) {
     super(message);
     this.name = 'LLMError';
@@ -209,12 +209,7 @@ export class LLMConfigError extends LLMError {
  * LLM API error
  */
 export class LLMAPIError extends LLMError {
-  constructor(
-    message: string,
-    statusCode: number,
-    provider: LLMProvider,
-    cause?: Error
-  ) {
+  constructor(message: string, statusCode: number, provider: LLMProvider, cause?: Error) {
     super(message, 'API_ERROR', provider, statusCode, cause);
     this.name = 'LLMAPIError';
   }
@@ -224,11 +219,7 @@ export class LLMAPIError extends LLMError {
  * LLM rate limit error
  */
 export class LLMRateLimitError extends LLMError {
-  constructor(
-    message: string,
-    provider: LLMProvider,
-    retryAfter?: number
-  ) {
+  constructor(message: string, provider: LLMProvider, retryAfter?: number) {
     super(message, 'RATE_LIMIT', provider);
     this.name = 'LLMRateLimitError';
     if (retryAfter) {

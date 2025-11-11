@@ -51,12 +51,7 @@ if (isOpenStatus('in-progress')) {
 ### Utilities
 
 ```typescript
-import {
-  toKebabCase,
-  formatDate,
-  isValidEmail,
-  formatBytes,
-} from '@codervisor/devlog-shared';
+import { toKebabCase, formatDate, isValidEmail, formatBytes } from '@codervisor/devlog-shared';
 
 // String utilities
 toKebabCase('HelloWorld'); // 'hello-world'

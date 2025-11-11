@@ -1,8 +1,8 @@
 /**
  * Agent Events Module
- * 
+ *
  * Provides event collection and storage for AI coding agent monitoring.
- * 
+ *
  * @module agent-observability/events
  */
 

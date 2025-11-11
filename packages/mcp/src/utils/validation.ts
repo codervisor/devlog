@@ -1,6 +1,6 @@
 /**
  * MCP Tool validation utilities
- * 
+ *
  * This module provides utilities for validating MCP tool arguments
  * using Zod schemas and generating proper error responses.
  */
@@ -14,16 +14,16 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 export function validateToolArgs<T>(
   schema: z.ZodSchema<T>,
   args: unknown,
-  toolName: string
+  toolName: string,
 ): { success: true; data: T } | { success: false; result: CallToolResult } {
   const result = schema.safeParse(args);
-  
+
   if (result.success) {
     return { success: true, data: result.data };
   }
 
-  const errors = result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`);
-  
+  const errors = result.error.errors.map((err) => `${err.path.join('.')}: ${err.message}`);
+
   return {
     success: false,
     result: {
@@ -41,15 +41,12 @@ export function validateToolArgs<T>(
 /**
  * Create a standardized error response for tool validation failures
  */
-export function createValidationErrorResponse(
-  toolName: string,
-  errors: string[]
-): CallToolResult {
+export function createValidationErrorResponse(toolName: string, errors: string[]): CallToolResult {
   return {
     content: [
       {
         type: 'text',
-        text: `❌ Validation failed for ${toolName}:\n\n${errors.map(err => `• ${err}`).join('\n')}\n\nPlease check your arguments and try again.`,
+        text: `❌ Validation failed for ${toolName}:\n\n${errors.map((err) => `• ${err}`).join('\n')}\n\nPlease check your arguments and try again.`,
       },
     ],
     isError: true,
@@ -76,7 +73,7 @@ export function createSuccessResponse(message: string): CallToolResult {
 export function createErrorResponse(message: string, error?: unknown): CallToolResult {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const fullMessage = error ? `${message}: ${errorMessage}` : message;
-  
+
   return {
     content: [
       {
