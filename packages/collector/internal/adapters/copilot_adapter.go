@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,8 +30,12 @@ func NewCopilotAdapter(projectID string, hierarchyCache *hierarchy.HierarchyCach
 	if log == nil {
 		log = logrus.New()
 	}
-	// Parse projectID string to int, default to 215 for testing
-	projID := 215
+	// Parse projectID string to int
+	projID, err := strconv.Atoi(projectID)
+	if err != nil {
+		log.Warnf("Failed to parse projectID '%s' as integer, defaulting to 1: %v", projectID, err)
+		projID = 1
+	}
 
 	return &CopilotAdapter{
 		BaseAdapter:  NewBaseAdapter("github-copilot", projectID),

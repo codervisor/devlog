@@ -1,5 +1,5 @@
 ---
-status: planned
+status: complete
 created: '2025-11-11'
 tags:
   - bug
@@ -8,11 +8,17 @@ tags:
   - database
 priority: high
 created_at: '2025-11-11T15:06:38.494Z'
+updated_at: '2025-11-11T15:54:12.320Z'
+completed_at: '2025-11-11T15:54:12.320Z'
+completed: '2025-11-11'
+transitions:
+  - status: complete
+    at: '2025-11-11T15:54:12.320Z'
 ---
 
 # Fix Workspace Upsert Bug Blocking Backfill
 
-> **Status**: 📅 Planned · **Priority**: High · **Created**: 2025-11-11
+> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-11-11 · **Tags**: bug, backfill, api, database
 
 ## Overview
 
