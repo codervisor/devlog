@@ -8,6 +8,9 @@
 // Core devlog types and interfaces
 export * from './core.js';
 
+// Export WorkItem type alias explicitly for discoverability
+export type { WorkItem } from './core.js';
+
 // API request and response types
 export * from './requests.js';
 
@@ -31,3 +34,6 @@ export * from './auth.js';
 
 // LLM (Large Language Model) types and interfaces
 export * from './llm.js';
+
+// AI Agent Observability types and interfaces
+export * from './agent.js';

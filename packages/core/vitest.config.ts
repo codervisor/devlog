@@ -5,6 +5,8 @@ export default defineConfig(
   mergeConfig(baseConfig, {
     // Core-specific overrides
     test: {
+      // Database lifecycle management
+      setupFiles: ['./vitest.setup.ts'],
       // Handle dynamic imports better for core package
       deps: {
         external: ['better-sqlite3'],

@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Boxes, Home, Settings, SquareKanban } from 'lucide-react';
+import { Boxes, Home, Settings, SquareKanban, Activity, Zap } from 'lucide-react';
 
 interface SidebarItem {
   key: string;
@@ -43,6 +43,18 @@ export function NavigationSidebar() {
 
   const projectsMenuItems = [
     {
+      key: 'dashboard',
+      label: 'Dashboard',
+      icon: <Activity />,
+      onClick: () => router.push('/dashboard'),
+    },
+    {
+      key: 'sessions',
+      label: 'Agent Sessions',
+      icon: <Zap />,
+      onClick: () => router.push('/sessions'),
+    },
+    {
       key: 'projects',
       label: 'Projects',
       icon: <Boxes />,
@@ -57,8 +69,14 @@ export function NavigationSidebar() {
       onClick: () => router.push(`/projects/${getProjectId()}`),
     },
     {
-      key: 'list',
-      label: 'Devlogs',
+      key: 'agent-sessions',
+      label: 'Agent Sessions',
+      icon: <Zap />,
+      onClick: () => router.push(`/projects/${getProjectId()}/agent-sessions`),
+    },
+    {
+      key: 'work-items',
+      label: 'Work Items',
       icon: <SquareKanban />,
       onClick: () => router.push(`/projects/${getProjectId()}/devlogs`),
     },
@@ -85,16 +103,19 @@ export function NavigationSidebar() {
 
   // Determine selected key based on current pathname and menu items
   const getSelectedKey = () => {
-    if (!mounted) return 'overview';
+    if (!mounted) return 'dashboard';
 
     const pathParts = pathname.split('/').filter(Boolean);
 
-    if (pathname === '/' || pathname === '/projects') return 'projects';
+    if (pathname === '/' || pathname === '/dashboard') return 'dashboard';
+    if (pathname === '/sessions') return 'sessions';
+    if (pathname === '/projects') return 'projects';
     if (pathParts.length === 2 && pathParts[0] === 'projects') return 'overview';
-    if (pathParts.length >= 3 && pathParts[2] === 'devlogs') return 'list';
+    if (pathParts.length >= 3 && pathParts[2] === 'agent-sessions') return 'agent-sessions';
+    if (pathParts.length >= 3 && pathParts[2] === 'devlogs') return 'work-items';
     if (pathParts.length >= 3 && pathParts[2] === 'settings') return 'settings';
 
-    return 'overview';
+    return 'dashboard';
   };  // Don't render menu items until mounted to prevent hydration issues
   if (!mounted) {
     return null;

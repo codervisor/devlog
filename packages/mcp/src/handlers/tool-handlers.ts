@@ -9,22 +9,32 @@ import {
   AddDevlogNoteSchema,
   type CreateDevlogArgs,
   CreateDevlogSchema,
+  type DeleteDocumentArgs,
+  DeleteDocumentSchema,
   type FindRelatedDevlogsArgs,
   FindRelatedDevlogsSchema,
   type GetCurrentProjectArgs,
   GetCurrentProjectSchema,
   type GetDevlogArgs,
   GetDevlogSchema,
+  type GetDocumentArgs,
+  GetDocumentSchema,
   type ListDevlogArgs,
   ListDevlogNotesArgs,
   ListDevlogNotesSchema,
   ListDevlogSchema,
+  type ListDocumentsArgs,
+  ListDocumentsSchema,
   type ListProjectsArgs,
   ListProjectsSchema,
+  type SearchDocumentsArgs,
+  SearchDocumentsSchema,
   type SwitchProjectArgs,
   SwitchProjectSchema,
   type UpdateDevlogArgs,
   UpdateDevlogSchema,
+  type UploadDocumentArgs,
+  UploadDocumentSchema,
 } from '../schemas/index.js';
 
 /**
@@ -118,5 +128,46 @@ export const toolHandlers = {
   switch_project: (adapter: MCPAdapter, args: unknown) =>
     validateAndHandle<SwitchProjectArgs>(SwitchProjectSchema, args, 'switch_project', (validArgs) =>
       adapter.switchProject(validArgs),
+    ),
+
+  // Document operations
+  upload_devlog_document: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<UploadDocumentArgs>(
+      UploadDocumentSchema,
+      args,
+      'upload_devlog_document',
+      (validArgs) => adapter.uploadDocument(validArgs),
+    ),
+
+  list_devlog_documents: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<ListDocumentsArgs>(
+      ListDocumentsSchema,
+      args,
+      'list_devlog_documents',
+      (validArgs) => adapter.listDocuments(validArgs),
+    ),
+
+  get_devlog_document: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<GetDocumentArgs>(
+      GetDocumentSchema,
+      args,
+      'get_devlog_document',
+      (validArgs) => adapter.getDocument(validArgs),
+    ),
+
+  delete_devlog_document: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<DeleteDocumentArgs>(
+      DeleteDocumentSchema,
+      args,
+      'delete_devlog_document',
+      (validArgs) => adapter.deleteDocument(validArgs),
+    ),
+
+  search_devlog_documents: (adapter: MCPAdapter, args: unknown) =>
+    validateAndHandle<SearchDocumentsArgs>(
+      SearchDocumentsSchema,
+      args,
+      'search_devlog_documents',
+      (validArgs) => adapter.searchDocuments(validArgs),
     ),
 };

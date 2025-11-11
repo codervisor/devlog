@@ -50,8 +50,8 @@ export const GET = withErrorHandling(
     };
 
     // Get devlog service and time series stats
-    const devlogService = await ServiceHelper.getDevlogService(project.id);
-    const stats = await devlogService.getTimeSeriesStats(project.id, timeSeriesRequest);
+    const devlogService = await ServiceHelper.getPrismaDevlogService(project.id);
+    const stats = await devlogService.getTimeSeries(timeSeriesRequest);
 
     return createSuccessResponse(stats);
   },

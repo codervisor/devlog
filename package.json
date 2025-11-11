@@ -18,15 +18,6 @@
     "start:web": "pnpm --filter @codervisor/devlog-web start",
     "preview:web": "pnpm --filter @codervisor/devlog-web preview",
     "format": "prettier --write packages/**/*.{ts,tsx,js,jsx,json,md}",
-    "validate": "pnpm exec tsx scripts/validation/validate-all.ts",
-    "validate:list": "pnpm exec tsx scripts/validation/validate-all.ts --list",
-    "validate:quick": "pnpm exec tsx scripts/validation/validate-all.ts --quick",
-    "validate:imports": "pnpm exec tsx scripts/validation/validate-imports.ts",
-    "validate:naming": "pnpm exec tsx scripts/validation/validate-file-naming.ts",
-    "validate:api": "pnpm exec tsx scripts/validation/validate-api-standardization-ast.ts",
-    "validate:envelopes": "pnpm exec tsx scripts/validation/validate-response-envelopes-ast.ts",
-    "validate:architecture": "pnpm exec tsx scripts/validation/validate-architecture-patterns-ast.ts",
-    "pre-commit": "lint-staged && pnpm exec tsx scripts/validation/validate-imports.ts",
     "prepare": "husky"
   },
   "keywords": [
@@ -50,6 +41,7 @@
     "husky": "9.1.7",
     "lint-staged": "16.1.2",
     "prettier": "3.6.1",
+    "prisma": "6.15.0",
     "semver": "^7.6.3",
     "turbo": "2.5.5",
     "typescript": "^5.0.0",
@@ -62,11 +54,15 @@
     "packages/**/*.{ts,tsx}": [
       "prettier --write"
     ],
-    "packages/**/*.{js,jsx,json,md}": [
+    "apps/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "**/*.{js,jsx,json,md}": [
       "prettier --write"
     ]
   },
   "dependencies": {
+    "@prisma/client": "6.15.0",
     "better-sqlite3": "^11.10.0",
     "dotenv": "16.5.0",
     "tsx": "^4.0.0"

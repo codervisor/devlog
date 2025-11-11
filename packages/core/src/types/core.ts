@@ -163,6 +163,38 @@ export interface DevlogNote {
   content: string;
 }
 
+/**
+ * Document types supported by the devlog system
+ */
+export type DocumentType = 
+  | 'text' // Plain text files
+  | 'markdown' // Markdown files  
+  | 'image' // Images (png, jpg, gif, etc.)
+  | 'pdf' // PDF documents
+  | 'code' // Source code files
+  | 'json' // JSON data files
+  | 'csv' // CSV data files
+  | 'log' // Log files
+  | 'config' // Configuration files
+  | 'other'; // Other file types
+
+/**
+ * Document interface for files attached to devlog entries
+ */
+export interface DevlogDocument {
+  id: string;
+  devlogId: number;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number; // Size in bytes
+  type: DocumentType;
+  content?: string; // Text content for searchable documents
+  metadata?: Record<string, any>; // Additional file metadata
+  uploadedAt: string; // ISO timestamp
+  uploadedBy?: string; // User who uploaded the document
+}
+
 export interface DevlogEntry {
   id?: DevlogId;
   key?: string; // Semantic key (e.g., "web-ui-issues-investigation")
@@ -186,7 +218,35 @@ export interface DevlogEntry {
   // Related entities (loaded separately, not stored as JSON)
   notes?: DevlogNote[];
   dependencies?: Dependency[];
+  documents?: DevlogDocument[];
 }
+
+/**
+ * Work Item - Industry-standard terminology for trackable work
+ * 
+ * This is an alias for DevlogEntry to support migration to more intuitive terminology.
+ * "Work item" is widely recognized in the industry (used by Azure DevOps, GitHub Projects)
+ * and clearly communicates the purpose: tracking units of work like features, bugs, and tasks.
+ * 
+ * **Migration Strategy:**
+ * - New code should prefer using `WorkItem` over `DevlogEntry`
+ * - Both types are fully interchangeable and backward compatible
+ * - The internal implementation and database tables remain unchanged
+ * 
+ * @example
+ * ```typescript
+ * // New code - preferred
+ * const item: WorkItem = {
+ *   title: "Implement user authentication",
+ *   type: "feature",
+ *   // ...
+ * };
+ * 
+ * // Legacy code - still supported
+ * const entry: DevlogEntry = item; // Fully compatible
+ * ```
+ */
+export type WorkItem = DevlogEntry;
 
 export interface Dependency {
   id: string;

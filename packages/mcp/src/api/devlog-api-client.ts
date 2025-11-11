@@ -355,6 +355,44 @@ export class DevlogApiClient {
     return this.unwrapApiResponse(response);
   }
 
+  // Document Operations
+  async uploadDocument(
+    devlogId: number,
+    formData: FormData,
+  ): Promise<any> {
+    // Use axios to upload form data directly
+    const response = await this.axiosInstance.post(
+      `${this.getProjectEndpoint()}/devlogs/${devlogId}/documents`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return this.unwrapApiResponse(response.data);
+  }
+
+  async listDocuments(devlogId: number): Promise<any[]> {
+    const response = await this.get(`${this.getProjectEndpoint()}/devlogs/${devlogId}/documents`);
+    const result = this.unwrapApiResponse(response);
+    return (result as any)?.items || result || [];
+  }
+
+  async getDocument(devlogId: number, documentId: string): Promise<any> {
+    const response = await this.get(
+      `${this.getProjectEndpoint()}/devlogs/${devlogId}/documents/${documentId}`
+    );
+    return this.unwrapApiResponse(response);
+  }
+
+  async deleteDocument(devlogId: number, documentId: string): Promise<void> {
+    const response = await this.delete(
+      `${this.getProjectEndpoint()}/devlogs/${devlogId}/documents/${documentId}`
+    );
+    return this.unwrapApiResponse<void>(response);
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {

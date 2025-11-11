@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
     const validatedData = refreshSchema.parse(body);
 
     // Dynamic import to keep server-only
-    const { AuthService } = await import('@codervisor/devlog-core/auth');
-    const authService = AuthService.getInstance();
+    const { PrismaAuthService } = await import('@codervisor/devlog-core/server');
+    const authService = PrismaAuthService.getInstance();
     const newTokens = await authService.refreshToken(validatedData.refreshToken);
 
     return NextResponse.json({

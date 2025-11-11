@@ -79,37 +79,40 @@ export function ProjectSettingsPage() {
     fetchCurrentProject();
   }, [currentProjectName]);
 
-  const handleUpdateProject = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateProject = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!formData.name.trim()) {
-      toast.error('Project name is required');
-      return;
-    }
+      if (!formData.name.trim()) {
+        toast.error('Project name is required');
+        return;
+      }
 
-    if (!project) {
-      toast.error('Project not found');
-      return;
-    }
+      if (!project) {
+        toast.error('Project not found');
+        return;
+      }
 
-    try {
-      setIsUpdating(true);
+      try {
+        setIsUpdating(true);
 
-      const updates: Partial<Project> = {
-        name: formData.name.trim(),
-        description: formData.description?.trim() || undefined,
-      };
+        const updates: Partial<Project> = {
+          name: formData.name.trim(),
+          description: formData.description?.trim() || undefined,
+        };
 
-      await updateProject(project.name, updates);
-      toast.success('Project updated successfully');
-      setHasChanges(false);
-    } catch (error) {
-      console.error('Error updating project:', error);
-      toast.error('Failed to update project');
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [formData, project, updateProject]);
+        await updateProject(project.name, updates);
+        toast.success('Project updated successfully');
+        setHasChanges(false);
+      } catch (error) {
+        console.error('Error updating project:', error);
+        toast.error('Failed to update project');
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [formData, project, updateProject],
+  );
 
   const handleDeleteProject = useCallback(async () => {
     if (!project) {
@@ -143,7 +146,7 @@ export function ProjectSettingsPage() {
   }, [project]);
 
   const handleFormChange = useCallback((field: keyof ProjectFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   }, []);
 
@@ -320,8 +323,8 @@ export function ProjectSettingsPage() {
                 <p className="text-sm">{new Date(project.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground">Last Accessed</Label>
-                <p className="text-sm">{new Date(project.lastAccessedAt).toLocaleDateString()}</p>
+                <Label className="text-sm text-muted-foreground">Last Updated</Label>
+                <p className="text-sm">{new Date(project.updatedAt).toLocaleDateString()}</p>
               </div>
             </div>
           </CardContent>

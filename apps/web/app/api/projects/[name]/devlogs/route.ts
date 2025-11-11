@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server';
 import { PaginationMeta, SortOptions } from '@codervisor/devlog-core';
-import { DevlogService } from '@codervisor/devlog-core/server';
-import { ApiValidator, CreateDevlogBodySchema, DevlogListQuerySchema, BatchDeleteDevlogsBodySchema } from '@/schemas';
+import { PrismaProjectService, PrismaDevlogService } from '@codervisor/devlog-core/server';
+import {
+  ApiValidator,
+  CreateDevlogBodySchema,
+  DevlogListQuerySchema,
+  BatchDeleteDevlogsBodySchema,
+} from '@/schemas';
 import {
   ApiErrors,
   createCollectionResponse,
@@ -41,8 +46,9 @@ export async function GET(request: NextRequest, { params }: { params: { name: st
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.ensureInitialized();
 
     const queryData = queryValidation.data;
     const filter: any = {};
@@ -118,33 +124,21 @@ export async function POST(request: NextRequest, { params }: { params: { name: s
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.ensureInitialized();
 
-    // Add required fields and get next ID
-    const now = new Date().toISOString();
-    const nextId = await devlogService.getNextId();
-
+    // Prepare entry for creation
     const entry = {
       ...bodyValidation.data,
-      id: nextId,
-      createdAt: now,
-      updatedAt: now,
       projectId: project.id, // Ensure project context
     };
 
-    // Save the entry
-    await devlogService.save(entry);
+    // Create the entry
+    const result = await devlogService.create(entry);
 
-    // Retrieve the actual saved entry to ensure we have the correct ID
-    const savedEntry = await devlogService.get(nextId, false); // Don't include notes for performance
-
-    if (!savedEntry) {
-      throw new Error('Failed to retrieve saved devlog entry');
-    }
-
-    // Transform and return the actual saved devlog
-    return createSuccessResponse(savedEntry, {
+    // Transform and return the created devlog
+    return createSuccessResponse(result, {
       status: 201,
       sseEventType: RealtimeEventType.DEVLOG_CREATED,
     });
@@ -166,7 +160,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
     const { projectName } = paramResult.data;
 
     // Validate request body
-    const bodyValidation = await ApiValidator.validateJsonBody(request, BatchDeleteDevlogsBodySchema);
+    const bodyValidation = await ApiValidator.validateJsonBody(
+      request,
+      BatchDeleteDevlogsBodySchema,
+    );
     if (!bodyValidation.success) {
       return bodyValidation.response;
     }
@@ -181,8 +178,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
 
     const project = projectResult.data.project;
 
-    // Create project-aware devlog service
-    const devlogService = DevlogService.getInstance(project.id);
+    // Create project-aware devlog service using Prisma
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.ensureInitialized();
 
     // Track successful and failed deletions
     const results = {
@@ -212,12 +210,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
         {
           status: 200,
           sseEventType: RealtimeEventType.DEVLOG_DELETED,
-        }
+        },
       );
     } else if (results.deleted.length === 0) {
       // All deletions failed
-      return ApiErrors.badRequest('Failed to delete any devlogs', { 
-        failures: results.failed 
+      return ApiErrors.badRequest('Failed to delete any devlogs', {
+        failures: results.failed,
       });
     } else {
       // Partial success
@@ -231,7 +229,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { name:
         {
           status: 207, // Multi-status for partial success
           sseEventType: RealtimeEventType.DEVLOG_DELETED,
-        }
+        },
       );
     }
   } catch (error) {

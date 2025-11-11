@@ -1,73 +1,188 @@
 # @codervisor/devlog-mcp
 
-Model Context Protocol (MCP) server for managing development logs and working notes.
+Model Context Protocol (MCP) server for the **AI Coding Agent Observability Platform**.
 
-## Features
+This package provides MCP tools for AI assistants to monitor, log, and analyze their own activities, enabling complete visibility into AI-assisted development workflows.
 
-- **Task Management**: Create and track features, bugfixes, tasks, refactoring, and documentation work
-- **Structured Notes**: Timestamped notes with categories (progress, issues, solutions, ideas, reminders)
-- **Status Tracking**: Track work through new → in-progress → blocked/in-review → testing → done
-- **Priority Management**: Assign and filter by priority levels (low, medium, high, critical)
-- **Search & Filter**: Find devlogs by keywords, status, type, or priority
-- **Active Context**: Get a summary of current work for AI context
-- **File Tracking**: Keep track of which files were modified
-- **Code Change Summaries**: Document what code changes were made
+## 🎯 Features
 
-## Installation
+### 🔍 Agent Observability (Primary)
+
+**Session Tracking:**
+- Start and end agent sessions with clear objectives
+- Track session outcomes (success, partial, failure, abandoned)
+- Link sessions to projects and optional work items
+- Get active session information in real-time
+
+**Event Logging:**
+- Log all agent activities (file operations, LLM requests, commands, etc.)
+- Capture event context (working directory, git branch, file paths)
+- Record performance metrics (duration, token count, lines changed)
+- Support for event relationships and causality
+
+**Analytics & Insights:**
+- Query events with flexible filters
+- Aggregate event statistics by type and severity
+- Calculate session performance metrics
+- Identify patterns and trends
+
+### 📊 Project Management (Supporting)
+
+**Optional tools for organization:**
+- Project context switching
+- Work item creation and tracking
+- Document attachments
+- Progress notes and status updates
+
+## 📦 Installation
 
 ```bash
-npm install
-npm run build
+pnpm install @codervisor/devlog-mcp
+pnpm build
 ```
 
-## Usage
+## 🚀 Usage
+
+### Starting the Server
 
 ```bash
-# Start the MCP server
-npm run start
+# Production mode
+pnpm start
 
-# Start in development mode
-npm run dev
+# Development mode (auto-rebuild)
+pnpm dev
 
-# Run tests
-npm run test
+# With default project
+pnpm start --project 1
 ```
 
-## Available Tools
+### MCP Client Configuration
 
-### `create_devlog`
+Add to your MCP client configuration (e.g., Claude Desktop, Cursor):
 
-Create a new devlog entry for a task, feature, or bugfix.
+```json
+{
+  "mcpServers": {
+    "devlog": {
+      "command": "node",
+      "args": [
+        "/path/to/devlog/packages/mcp/build/index.js"
+      ],
+      "env": {
+        "DEVLOG_DEFAULT_PROJECT": "1"
+      }
+    }
+  }
+}
+```
 
-### `update_devlog`
+## 🛠️ Available Tools
 
-Update an existing devlog entry with progress, notes, or status changes.
+### Agent Observability Tools (PRIMARY)
 
-### `get_devlog`
+#### Session Management
 
-Retrieve a specific devlog entry by ID.
+**`agent_start_session`** - Start tracking an AI agent session
+```typescript
+{
+  agentId: "github-copilot",
+  projectId: 1,
+  objective: "Implement user authentication",
+  workItemId: 42  // Optional: link to work item
+}
+```
 
-### `list_devlogs`
+**`agent_end_session`** - Complete a session with outcome
+```typescript
+{
+  sessionId: "session-uuid",
+  outcome: "success",
+  summary: "JWT auth implemented with tests"
+}
+```
 
-List devlog entries with optional filtering by status, type, or priority.
+**`agent_get_session`** - Retrieve session details
 
-### `search_devlogs`
+**`agent_query_sessions`** - Search sessions with filters
 
-Search devlog entries by keywords in title, description, or notes.
+**`agent_get_active_sessions`** - List currently running sessions
 
-### `get_active_context`
+#### Event Tracking
 
-Get a summary of current active work for AI context.
+**`agent_log_event`** - Record an agent activity
+```typescript
+{
+  type: "file_write",
+  agentId: "github-copilot",
+  sessionId: "session-uuid",
+  context: {
+    filePath: "src/auth/login.ts",
+    workingDirectory: "/app"
+  },
+  data: { content: "..." },
+  metrics: { duration: 1500, tokenCount: 1200 }
+}
+```
 
-### `archive_devlog`
+**`agent_query_events`** - Search events with filters
 
-Archive a completed devlog entry.
+#### Analytics
 
-### `get_devlog_stats`
+**`agent_get_event_stats`** - Event metrics and aggregations
 
-Get statistics about devlog entries.
+**`agent_get_session_stats`** - Session performance metrics
 
-## Configuration
+### Project Management Tools (SUPPORTING)
 
-The MCP server stores all data locally in a `.devlog` directory within your project. No external configuration is
-required.
+#### Project Context
+
+**`list_projects`** - List all projects
+
+**`get_current_project`** - Get active project
+
+**`switch_project`** - Change active project context
+
+#### Work Item Tracking
+
+**`create_devlog`** - Create a work item (feature, bug, task)
+
+**`update_devlog`** - Update work item status/progress
+
+**`list_devlogs`** - List work items with filters
+
+**`add_devlog_note`** - Add progress note
+
+**`complete_devlog`** - Mark work item as complete
+
+**`find_related_devlogs`** - Find similar work items
+
+#### Document Management
+
+**`upload_devlog_document`** - Attach file to work item
+
+**`list_devlog_documents`** - List attachments
+
+**`get_devlog_document`** - Retrieve document
+
+**`delete_devlog_document`** - Remove attachment
+
+**`search_devlog_documents`** - Search documents
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/devlog
+
+# Default project
+DEVLOG_DEFAULT_PROJECT=1
+
+# Optional: LLM for AI analysis
+OPENAI_API_KEY=your_key_here
+```
+
+### Storage
+
+The server uses PostgreSQL with TimescaleDB for efficient time-series event storage. Configure via `DATABASE_URL` environment variable.

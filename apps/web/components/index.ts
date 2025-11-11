@@ -13,9 +13,12 @@ export * from './custom';
 // Form Components
 export * from './forms';
 
-// Feature Components
-export * from './feature/dashboard';
-export * from './feature/devlog';
+// Agent Observability Components (PRIMARY)
+export * from './agent-observability/agent-sessions';
+
+// Project Management Components (SECONDARY)
+export * from './project-management/dashboard';
+export * from './project-management/devlog';
 
 // Project Components
 // Note: ProjectResolver is not exported as it's only used server-side in layout.tsx

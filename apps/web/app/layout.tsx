@@ -6,8 +6,8 @@ import { AppLayout } from '@/components/layout/app-layout';
 import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
-  title: 'Devlog Management',
-  description: 'Development log tracking and management dashboard',
+  title: 'Devlog - AI Agent Observability Platform',
+  description: 'Monitor, analyze, and improve AI coding agent performance. Track sessions, events, and work items in real-time.',
   icons: {
     icon: '/devlog-logo.svg',
   },

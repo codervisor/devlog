@@ -3,23 +3,19 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["build/**", ".next/**"],
-      "env": [
-        "DEVLOG_STORAGE_TYPE",
-        "POSTGRES_URL_NON_POOLING",
-        "POSTGRES_URL",
-        "POSTGRES_SSL", 
-        "MYSQL_URL",
-        "MYSQL_HOST",
-        "MYSQL_PORT",
-        "MYSQL_USERNAME",
-        "MYSQL_PASSWORD",
-        "MYSQL_DATABASE",
-        "SQLITE_PATH",
-        "NODE_ENV",
-        "NEXT_BUILD_MODE",
-        "npm_package_version"
-      ]
+      "outputs": ["build/**", "dist/**", ".next/**", "bin/**"],
+      "env": ["DATABASE_URL", "NODE_ENV", "NEXT_BUILD_MODE", "npm_package_version"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

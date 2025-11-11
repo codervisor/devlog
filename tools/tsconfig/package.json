@@ -1,0 +1,24 @@
+{
+  "name": "@codervisor/tsconfig",
+  "version": "0.0.1",
+  "description": "Shared TypeScript configurations for the devlog monorepo",
+  "type": "module",
+  "files": [
+    "base.json",
+    "react.json",
+    "node.json"
+  ],
+  "scripts": {
+    "test": "echo \"No tests for tsconfig\" && exit 0"
+  },
+  "keywords": [
+    "typescript",
+    "tsconfig",
+    "devlog"
+  ],
+  "author": {
+    "name": "Marvin Zhang",
+    "email": "tikazyq@163.com"
+  },
+  "license": "Apache-2.0"
+}

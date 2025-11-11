@@ -171,3 +171,7 @@ tmp/
 
 # Playwright
 .playwright-mcp
+
+# SQLite database files
+*.db# Temporary files
+/tmp/

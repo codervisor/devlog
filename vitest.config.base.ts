@@ -11,6 +11,14 @@ export const baseConfig: UserConfig = {
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     exclude: ['node_modules', 'build', 'dist'],
     testTimeout: 30000,
+    // Better test isolation
+    isolate: true,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: false,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

@@ -6,7 +6,7 @@ import { useDevlogEvents } from '@/hooks/use-realtime';
 import { DevlogEntry, DevlogId } from '@codervisor/devlog-core';
 import { useRouter } from 'next/navigation';
 import { useProjectName } from '@/components/provider/project-provider';
-import { DevlogList } from '@/components/feature/devlog/devlog-list';
+import { DevlogList } from '@/components/project-management/devlog/devlog-list';
 
 export function DevlogListPage() {
   const projectName = useProjectName();
@@ -62,7 +62,7 @@ export function DevlogListPage() {
     try {
       await deleteDevlog(id);
     } catch (error) {
-      console.error('Failed to delete devlog:', error);
+      console.error('Failed to delete work item:', error);
     }
   };
 
@@ -70,7 +70,7 @@ export function DevlogListPage() {
     try {
       await batchUpdate(ids, updates);
     } catch (error) {
-      console.error('Failed to batch update devlog:', error);
+      console.error('Failed to batch update work items:', error);
       throw error;
     }
   };
@@ -79,7 +79,7 @@ export function DevlogListPage() {
     try {
       await batchDelete(ids);
     } catch (error) {
-      console.error('Failed to batch delete devlog:', error);
+      console.error('Failed to batch delete work items:', error);
       throw error;
     }
   };

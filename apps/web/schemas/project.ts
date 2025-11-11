@@ -17,7 +17,7 @@ export const ProjectIdParamSchema = z
   })
   .refine(
     (data) => isValidProjectIdentifier(data.id).valid,
-    'Project name must follow GitHub naming conventions'
+    'Project name must follow GitHub naming conventions',
   );
 
 /**
@@ -27,7 +27,10 @@ export const CreateProjectBodySchema = z.object({
   name: z
     .string()
     .min(1, 'Project name is required')
-    .refine(validateProjectDisplayName, 'The repository name can only contain ASCII letters, digits, and the characters -, ., and _.'),
+    .refine(
+      validateProjectDisplayName,
+      'The repository name can only contain ASCII letters, digits, and the characters -, ., and _.',
+    ),
   description: z.string().optional(),
   repositoryUrl: z.string().optional(),
   settings: z
@@ -53,6 +56,6 @@ export const ProjectListQuerySchema = z.object({
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
   offset: z.string().regex(/^\d+$/).transform(Number).optional(),
   search: z.string().optional(),
-  sortBy: z.enum(['name', 'createdAt', 'lastAccessedAt']).optional(),
+  sortBy: z.enum(['name', 'createdAt', 'updatedAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });

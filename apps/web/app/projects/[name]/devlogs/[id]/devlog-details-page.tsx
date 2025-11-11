@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { DevlogEntry } from '@codervisor/devlog-core';
 import { useProjectName } from '@/components/provider/project-provider';
 import { useDevlogId } from '@/components/provider/devlog-provider';
-import { DevlogDetails } from '@/components/feature/devlog/devlog-details';
+import { DevlogDetails } from '@/components/project-management/devlog/devlog-details';
 
 export function DevlogDetailsPage() {
   const projectName = useProjectName();
@@ -95,7 +95,7 @@ export function DevlogDetailsPage() {
       fetchCurrentDevlog();
       fetchCurrentDevlogNotes();
     } catch (error) {
-      console.warn('Failed to fetch devlog:', error);
+      console.warn('Failed to fetch work item:', error);
     }
 
     // Clear selected devlog when component unmounts
@@ -110,7 +110,7 @@ export function DevlogDetailsPage() {
       await updateSelectedDevlog({ ...data, id: devlogId });
       toast.success('Changes saved successfully');
     } catch (error) {
-      console.error('Failed to update devlog:', error);
+      console.error('Failed to update work item:', error);
       throw error; // Re-throw so the component can handle the error
     } finally {
       setIsSaving(false);
@@ -134,8 +134,8 @@ export function DevlogDetailsPage() {
 
       router.push(`/projects/${projectName}/devlogs`);
     } catch (error) {
-      console.error('Failed to delete devlog:', error);
-      toast.error('Failed to delete devlog');
+      console.error('Failed to delete work item:', error);
+      toast.error('Failed to delete work item');
     }
   };
 

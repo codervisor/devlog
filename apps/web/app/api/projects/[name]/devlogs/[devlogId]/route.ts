@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { DevlogService, ProjectService } from '@codervisor/devlog-core/server';
+import { PrismaDevlogService, PrismaProjectService } from '@codervisor/devlog-core/server';
 import { ApiErrors, createSuccessResponse, RouteParams, ServiceHelper } from '@/lib/api/api-utils';
 import { RealtimeEventType } from '@/lib/realtime';
 
@@ -35,8 +35,9 @@ export async function GET(
 
     const project = projectResult.data.project;
 
-    const devlogService = DevlogService.getInstance(project.id);
-    const entry = await devlogService.get(devlogId, includeNotes);
+    const devlogService = PrismaDevlogService.getInstance(project.id);
+    await devlogService.ensureInitialized();
+    const entry = await devlogService.get(devlogId);
 
     if (!entry) {
       return ApiErrors.devlogNotFound();
@@ -78,7 +79,7 @@ export async function PUT(
 
     const data = await request.json();
 
-    const devlogService = DevlogService.getInstance(project.id);
+    const devlogService = PrismaDevlogService.getInstance(project.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(devlogId);
@@ -106,10 +107,10 @@ export async function PUT(
       updatedEntry.closedAt = null;
     }
 
-    await devlogService.save(updatedEntry);
+    const result = await devlogService.update(devlogId, updatedEntry);
 
     // Transform and return updated entry
-    return createSuccessResponse(updatedEntry, { sseEventType: RealtimeEventType.DEVLOG_UPDATED });
+    return createSuccessResponse(result, { sseEventType: RealtimeEventType.DEVLOG_UPDATED });
   } catch (error) {
     console.error('Error updating devlog:', error);
     const message = error instanceof Error ? error.message : 'Failed to update devlog';
@@ -138,7 +139,7 @@ export async function DELETE(
 
     const project = projectResult.data.project;
 
-    const devlogService = DevlogService.getInstance(project.id);
+    const devlogService = PrismaDevlogService.getInstance(project.id);
 
     // Verify entry exists and belongs to project
     const existingEntry = await devlogService.get(devlogId);

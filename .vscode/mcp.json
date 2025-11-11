@@ -1,30 +1,24 @@
 {
-	"servers": {
-		"playwright": {
-			"command": "npx",
-			"args": [
-				"@playwright/mcp@latest",
-				"--isolated"
-			],
-			"type": "stdio"
-		},
-		"devlog": {
-			"command": "npx",
-			"args": [
-				"@codervisor/devlog-mcp@dev"
-			],
-			"type": "stdio",
-			"env": {
-				// "DEVLOG_API_URL": "http://localhost:3200/api"
-			},
-		},
-	},
-	"inputs": [
-		{
-			"type": "promptString",
-			"id": "github-pat",
-			"description": "GitHub Personal Access Token",
-			"password": true
-		}
-	]
+  "servers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--isolated"],
+      "type": "stdio"
+    },
+    "lean-spec": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["lean-spec", "mcp"],
+      "cwd": "${workspaceFolder}",
+      "env": {}
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github-pat",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
 }

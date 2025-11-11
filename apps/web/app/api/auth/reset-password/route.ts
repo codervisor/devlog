@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
     const action = searchParams.get('action');
 
     // Dynamic import to keep server-only
-    const { AuthService } = await import('@codervisor/devlog-core/auth');
-    const authService = AuthService.getInstance();
+    const { PrismaAuthService } = await import('@codervisor/devlog-core/server');
+    const authService = PrismaAuthService.getInstance();
 
     if (action === 'request') {
       const validatedData = requestResetSchema.parse(body);
