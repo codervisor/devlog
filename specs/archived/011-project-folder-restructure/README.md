@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: archived
 created: '2025-11-01'
 tags:
   - refactor
@@ -8,16 +8,18 @@ tags:
   - organization
 priority: medium
 created_at: '2025-11-01T15:04:04+08:00'
-updated_at: '2025-11-11T14:06:28.061Z'
+updated_at: '2025-11-11T14:24:33.372Z'
 updated: '2025-11-11'
 transitions:
   - status: in-progress
     at: '2025-11-11T14:06:28.061Z'
+  - status: archived
+    at: '2025-11-11T14:24:33.372Z'
 ---
 
 # Project Folder Restructure & Organization
 
-> **Status**: ⏳ In progress · **Priority**: Medium · **Created**: 2025-11-01 · **Updated**: 2025-11-11 · **Tags**: refactor, testing, tooling, organization
+> **Status**: 📦 Archived · **Priority**: Medium · **Created**: 2025-11-01 · **Tags**: refactor, testing, tooling, organization
 
 ## Overview
 
@@ -179,3 +181,4 @@ Each phase has detailed checklists with specific tasks.
 - [Project Analysis](./design.md#current-problems) - Detailed problem analysis
 - [CONTRIBUTING.md](../../../CONTRIBUTING.md) - Contribution guidelines
 - Related specs in `specs/20251031/` - Database and project hierarchy specs
+  ecs in `specs/20251031/` - Database and project hierarchy specs
