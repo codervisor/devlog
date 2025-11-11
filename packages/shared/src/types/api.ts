@@ -2,12 +2,7 @@
  * API request and response types
  */
 
-import type {
-  DevlogId,
-  DevlogPriority,
-  DevlogStatus,
-  DevlogType,
-} from './devlog.js';
+import type { DevlogId, DevlogPriority, DevlogStatus, DevlogType } from './devlog.js';
 
 export interface CreateDevlogRequest {
   title: string;

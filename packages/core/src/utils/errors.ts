@@ -15,7 +15,7 @@ export class DevlogError extends Error {
     this.name = this.constructor.name;
     this.timestamp = new Date().toISOString();
     this.context = context;
-    
+
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
@@ -90,11 +90,11 @@ export class DevlogAPIError extends DevlogError {
   public readonly responseBody?: unknown;
 
   constructor(
-    service: string, 
-    message: string, 
-    statusCode?: number, 
+    service: string,
+    message: string,
+    statusCode?: number,
     responseBody?: unknown,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ) {
     super(`API Error (${service}): ${message}`, context);
     this.service = service;
@@ -157,7 +157,7 @@ export const logger: Logger = new ConsoleLogger();
 export async function handleAsyncOperation<T>(
   operation: () => Promise<T>,
   operationName: string,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): Promise<T> {
   try {
     return await operation();
@@ -173,7 +173,10 @@ export async function handleAsyncOperation<T>(
       throw error;
     } else {
       logger.error(`${operationName} failed with unexpected error`, errorContext);
-      throw new DevlogError(`${operationName} failed: ${error instanceof Error ? error.message : String(error)}`, errorContext);
+      throw new DevlogError(
+        `${operationName} failed: ${error instanceof Error ? error.message : String(error)}`,
+        errorContext,
+      );
     }
   }
 }
@@ -184,14 +187,14 @@ export async function handleAsyncOperation<T>(
 export function wrapError<T>(
   operation: () => T,
   errorMessage: string,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): T {
   try {
     return operation();
   } catch (error) {
     throw new DevlogError(
       `${errorMessage}: ${error instanceof Error ? error.message : String(error)}`,
-      { ...context, originalError: error }
+      { ...context, originalError: error },
     );
   }
 }

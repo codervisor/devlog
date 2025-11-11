@@ -1,6 +1,6 @@
 /**
  * @codervisor/devlog-shared
- * 
+ *
  * Shared types, constants, and utilities for the devlog system.
  * This package has zero dependencies and can be used by all other packages.
  */

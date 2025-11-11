@@ -24,4 +24,3 @@ export * from './validation/index.js';
 //   - Or use: PrismaProjectService, PrismaDevlogService (project management)
 //
 // See server.ts for organized module exports (agent-observability, project-management)
-

@@ -1,6 +1,6 @@
 /**
  * Tests for PrismaAuthService
- * 
+ *
  * Comprehensive test suite for the Prisma-based authentication service
  * Tests authentication flows, token management, and user operations
  */
@@ -86,19 +86,19 @@ describe('PrismaAuthService', () => {
     it('should handle initialization errors', async () => {
       const mockError = new Error('Init failed');
       vi.spyOn(authService as any, '_initialize').mockRejectedValueOnce(mockError);
-      
+
       await expect(authService.initialize()).rejects.toThrow('Init failed');
     });
 
     it('should only initialize once', async () => {
       const initSpy = vi.spyOn(authService as any, '_initialize');
-      
+
       await Promise.all([
         authService.initialize(),
         authService.initialize(),
         authService.initialize(),
       ]);
-      
+
       expect(initSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -113,7 +113,7 @@ describe('PrismaAuthService', () => {
 
     it('should register a new user successfully', async () => {
       const result = await authService.register(mockRegistration);
-      
+
       expect(result).toHaveProperty('user');
       expect(result).toHaveProperty('tokens');
       expect(result.user.email).toBe(mockRegistration.email);
@@ -127,7 +127,7 @@ describe('PrismaAuthService', () => {
         ...mockRegistration,
         requireEmailVerification: true,
       };
-      
+
       const result = await authService.register(registrationWithVerification);
       expect(result.emailVerificationToken).toBeDefined();
     });
@@ -140,7 +140,7 @@ describe('PrismaAuthService', () => {
     it('should handle registration errors', async () => {
       const mockError = new Error('User already exists');
       vi.spyOn(authService as any, '_initialize').mockResolvedValueOnce(undefined);
-      
+
       // Since we're mocking, we'd need to mock the internal implementation
       // For now, we'll test that errors are properly wrapped
       await expect(authService.register(mockRegistration)).resolves.toBeDefined();
@@ -155,7 +155,7 @@ describe('PrismaAuthService', () => {
 
     it('should login user successfully', async () => {
       const result = await authService.login(mockCredentials);
-      
+
       expect(result).toHaveProperty('user');
       expect(result).toHaveProperty('tokens');
       expect(result.user.email).toBe(mockCredentials.email);
@@ -182,7 +182,7 @@ describe('PrismaAuthService', () => {
     describe('refreshToken', () => {
       it('should refresh tokens successfully', async () => {
         const result = await authService.refreshToken(mockRefreshToken);
-        
+
         expect(result).toHaveProperty('accessToken');
         expect(result).toHaveProperty('refreshToken');
         expect(result).toHaveProperty('expiresIn');
@@ -193,7 +193,7 @@ describe('PrismaAuthService', () => {
         vi.mocked(jwt.verify).mockImplementationOnce(() => {
           throw new Error('Invalid token');
         });
-        
+
         await expect(authService.refreshToken('invalid-token')).rejects.toThrow();
       });
     });
@@ -201,7 +201,7 @@ describe('PrismaAuthService', () => {
     describe('validateToken', () => {
       it('should validate access token successfully', async () => {
         const result = await authService.validateToken(mockAccessToken);
-        
+
         expect(result).toHaveProperty('id');
         expect(result).toHaveProperty('email');
         expect(result).toHaveProperty('name');
@@ -213,19 +213,21 @@ describe('PrismaAuthService', () => {
         vi.mocked(jwt.verify).mockImplementationOnce(() => {
           throw new Error('Invalid token');
         });
-        
+
         await expect(authService.validateToken('invalid-token')).rejects.toThrow();
       });
 
       it('should reject wrong token type', async () => {
         const jwt = await import('jsonwebtoken');
-        vi.mocked(jwt.verify).mockReturnValueOnce({ 
-          userId: 1, 
-          email: 'test@example.com', 
-          type: 'refresh' 
+        vi.mocked(jwt.verify).mockReturnValueOnce({
+          userId: 1,
+          email: 'test@example.com',
+          type: 'refresh',
         });
-        
-        await expect(authService.validateToken(mockAccessToken)).rejects.toThrow('Invalid token type');
+
+        await expect(authService.validateToken(mockAccessToken)).rejects.toThrow(
+          'Invalid token type',
+        );
       });
     });
 
@@ -239,7 +241,7 @@ describe('PrismaAuthService', () => {
         vi.mocked(jwt.verify).mockImplementationOnce(() => {
           throw new Error('Invalid token');
         });
-        
+
         await expect(authService.logout('invalid-token')).rejects.toThrow();
       });
     });
@@ -254,7 +256,7 @@ describe('PrismaAuthService', () => {
 
     it('should verify email successfully', async () => {
       const result = await authService.verifyEmail('mock-token');
-      
+
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('email');
       expect(result.isEmailVerified).toBe(true);
@@ -281,7 +283,9 @@ describe('PrismaAuthService', () => {
     it('should handle invalid reset token', async () => {
       // In real implementation, this would check the database
       // Since we're mocking, we'll test the structure
-      await expect(authService.resetPassword('invalid-token', 'new-password')).resolves.not.toThrow();
+      await expect(
+        authService.resetPassword('invalid-token', 'new-password'),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -296,7 +300,7 @@ describe('PrismaAuthService', () => {
 
     it('should create user from SSO info', async () => {
       const result = await authService.createOrUpdateUserFromSSO(mockSSOInfo);
-      
+
       expect(result).toHaveProperty('id');
       expect(result.email).toBe(mockSSOInfo.email);
       expect(result.name).toBe(mockSSOInfo.name);
@@ -322,7 +326,7 @@ describe('PrismaAuthService', () => {
         name: 'Updated Name',
         avatarUrl: 'https://example.com/new-avatar.jpg',
       };
-      
+
       const result = await authService.updateProfile(1, updates);
       expect(result.name).toBe(updates.name);
       expect(result.avatarUrl).toBe(updates.avatarUrl);
@@ -338,22 +342,24 @@ describe('PrismaAuthService', () => {
     it('should use environment JWT secret', () => {
       const originalSecret = process.env.JWT_SECRET;
       process.env.JWT_SECRET = 'test-secret';
-      
+
       const service = PrismaAuthService.getInstance('test-url');
       expect(service).toBeDefined();
-      
+
       process.env.JWT_SECRET = originalSecret;
     });
 
     it('should require JWT secret in production', () => {
       const originalEnv = process.env.NODE_ENV;
       const originalSecret = process.env.JWT_SECRET;
-      
+
       process.env.NODE_ENV = 'production';
       delete process.env.JWT_SECRET;
-      
-      expect(() => PrismaAuthService.getInstance('production-url')).toThrow('JWT_SECRET environment variable is required in production');
-      
+
+      expect(() => PrismaAuthService.getInstance('production-url')).toThrow(
+        'JWT_SECRET environment variable is required in production',
+      );
+
       process.env.NODE_ENV = originalEnv;
       process.env.JWT_SECRET = originalSecret;
     });
@@ -366,7 +372,7 @@ describe('PrismaAuthService', () => {
 
     it('should handle disposal errors', async () => {
       vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       // Mock disposal error
       // Since dispose catches errors internally, it should not throw
       await expect(authService.dispose()).resolves.not.toThrow();

@@ -1,8 +1,8 @@
 /**
  * Hierarchy Service Module
- * 
+ *
  * Exports hierarchy management functionality
- * 
+ *
  * @module project-management/hierarchy
  */
 

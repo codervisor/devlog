@@ -22,7 +22,7 @@ describe('LLMService', () => {
   beforeEach(() => {
     // Reset singleton
     (LLMService as any).instance = null;
-    
+
     mockConfig = {
       apiKey: 'test-api-key',
       baseURL: 'https://api.openai.com/v1',
@@ -42,12 +42,14 @@ describe('LLMService', () => {
     it('should create a singleton instance', () => {
       const instance1 = LLMService.getInstance(mockConfig);
       const instance2 = LLMService.getInstance();
-      
+
       expect(instance1).toBe(instance2);
     });
 
     it('should throw error if no config provided on first call', () => {
-      expect(() => LLMService.getInstance()).toThrow('LLMService requires configuration on first initialization');
+      expect(() => LLMService.getInstance()).toThrow(
+        'LLMService requires configuration on first initialization',
+      );
     });
   });
 
@@ -55,7 +57,7 @@ describe('LLMService', () => {
     it('should update configuration', () => {
       const newConfig = { defaultModel: 'gpt-3.5-turbo' };
       service.updateConfig(newConfig);
-      
+
       const config = service.getConfig();
       expect(config.defaultModel).toBe('gpt-3.5-turbo');
     });
@@ -110,7 +112,9 @@ describe('LLMService', () => {
       delete process.env.OPENAI_API_KEY;
       delete process.env.AZURE_OPENAI_API_KEY;
 
-      expect(() => createLLMServiceFromEnv()).toThrow('No OpenAI API key found in environment variables');
+      expect(() => createLLMServiceFromEnv()).toThrow(
+        'No OpenAI API key found in environment variables',
+      );
     });
   });
 
@@ -176,13 +180,19 @@ describe('LLMService', () => {
 
     it('should generate multiple embeddings', async () => {
       const mockEmbedMany = vi.spyOn(service, 'embedMany').mockResolvedValue({
-        embeddings: [[0.1, 0.2], [0.3, 0.4]],
+        embeddings: [
+          [0.1, 0.2],
+          [0.3, 0.4],
+        ],
         usage: { tokens: 20 },
       });
 
       const result = await service.simpleEmbedMany(['Text 1', 'Text 2']);
 
-      expect(result).toEqual([[0.1, 0.2], [0.3, 0.4]]);
+      expect(result).toEqual([
+        [0.1, 0.2],
+        [0.3, 0.4],
+      ]);
       expect(mockEmbedMany).toHaveBeenCalledWith({
         texts: ['Text 1', 'Text 2'],
         model: undefined,
@@ -208,9 +218,11 @@ describe('LLMService', () => {
     it('should clean up resources', async () => {
       const instance = LLMService.getInstance(mockConfig);
       await instance.dispose();
-      
+
       // After dispose, getInstance should require config again
-      expect(() => LLMService.getInstance()).toThrow('LLMService requires configuration on first initialization');
+      expect(() => LLMService.getInstance()).toThrow(
+        'LLMService requires configuration on first initialization',
+      );
     });
   });
 });

@@ -66,11 +66,13 @@ devlog-collector status
 ### Real-Time Monitoring Only
 
 The collector currently operates in **real-time mode only**. When started:
+
 - ✅ Discovers agent log file locations automatically
 - ✅ Watches files for future changes (using fsnotify)
 - ❌ Does NOT read existing historical log data
 
 This means:
+
 - Events are captured from the moment the collector starts
 - Historical agent activity before collector startup is not captured
 - If the collector is stopped, events during downtime are not recovered
@@ -84,7 +86,7 @@ A backfill feature is planned for future releases to address these limitations:
 devlog-collector backfill [options]
   --agent <name>        # Specific agent (copilot, claude, cursor)
   --from <date>         # Start date for historical collection
-  --to <date>           # End date for historical collection  
+  --to <date>           # End date for historical collection
   --dry-run             # Preview what would be collected
 
 # Or as a startup flag
@@ -92,6 +94,7 @@ devlog-collector start --backfill --backfill-days=7
 ```
 
 **Use cases for historical collection:**
+
 - Initial setup with existing context from past sessions
 - Gap recovery after collector downtime or system restarts
 - Historical analysis of past AI agent activities
@@ -113,20 +116,20 @@ Example configuration:
   "backendUrl": "https://api.devlog.io",
   "apiKey": "${DEVLOG_API_KEY}",
   "projectId": "my-project",
-  
+
   "collection": {
     "batchSize": 100,
     "batchInterval": "5s",
     "maxRetries": 3,
     "retryBackoff": "exponential"
   },
-  
+
   "buffer": {
     "enabled": true,
     "maxSize": 10000,
     "dbPath": "~/.devlog/buffer.db"
   },
-  
+
   "agents": {
     "copilot": {
       "enabled": true,
@@ -141,7 +144,7 @@ Example configuration:
       "logPath": "auto"
     }
   },
-  
+
   "logging": {
     "level": "info",
     "file": "~/.devlog/collector.log"

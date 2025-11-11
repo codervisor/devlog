@@ -1,6 +1,6 @@
 /**
  * Core devlog types and interfaces
- * 
+ *
  * These types define the structure of devlog entries (work items),
  * which are the primary units of work tracking in the system.
  */

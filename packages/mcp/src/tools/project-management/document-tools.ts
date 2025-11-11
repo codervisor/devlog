@@ -20,7 +20,8 @@ import {
 export const documentTools: Tool[] = [
   {
     name: 'upload_devlog_document',
-    description: 'Upload and attach a document to a devlog entry (supports text, images, PDFs, code files, etc.)',
+    description:
+      'Upload and attach a document to a devlog entry (supports text, images, PDFs, code files, etc.)',
     inputSchema: zodToJsonSchema(UploadDocumentSchema),
   },
 
@@ -32,7 +33,8 @@ export const documentTools: Tool[] = [
 
   {
     name: 'get_devlog_document',
-    description: 'Get detailed information about a specific document including content if available',
+    description:
+      'Get detailed information about a specific document including content if available',
     inputSchema: zodToJsonSchema(GetDocumentSchema),
   },
 

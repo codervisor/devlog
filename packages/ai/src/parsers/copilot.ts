@@ -67,7 +67,11 @@ export class CopilotParser extends BaseParser {
 
     if (applications.length > 0) {
       const totalWorkspaces = applications.reduce((sum, app) => sum + (app.workspaceCount || 0), 0);
-      console.log(chalk.green(`✓ Found ${applications.length} VS Code installation(s) with ${totalWorkspaces} total workspaces`));
+      console.log(
+        chalk.green(
+          `✓ Found ${applications.length} VS Code installation(s) with ${totalWorkspaces} total workspaces`,
+        ),
+      );
     }
 
     return applications;
@@ -227,7 +231,10 @@ export class CopilotParser extends BaseParser {
 
       return session;
     } catch (error) {
-      console.error(chalk.red(`Error parsing chat session ${sessionId}:`), error instanceof Error ? error.message : String(error));
+      console.error(
+        chalk.red(`Error parsing chat session ${sessionId}:`),
+        error instanceof Error ? error.message : String(error),
+      );
       return null;
     }
   }

@@ -9,18 +9,21 @@ This package provides MCP tools for AI assistants to monitor, log, and analyze t
 ### 🔍 Agent Observability (Primary)
 
 **Session Tracking:**
+
 - Start and end agent sessions with clear objectives
 - Track session outcomes (success, partial, failure, abandoned)
 - Link sessions to projects and optional work items
 - Get active session information in real-time
 
 **Event Logging:**
+
 - Log all agent activities (file operations, LLM requests, commands, etc.)
 - Capture event context (working directory, git branch, file paths)
 - Record performance metrics (duration, token count, lines changed)
 - Support for event relationships and causality
 
 **Analytics & Insights:**
+
 - Query events with flexible filters
 - Aggregate event statistics by type and severity
 - Calculate session performance metrics
@@ -29,6 +32,7 @@ This package provides MCP tools for AI assistants to monitor, log, and analyze t
 ### 📊 Project Management (Supporting)
 
 **Optional tools for organization:**
+
 - Project context switching
 - Work item creation and tracking
 - Document attachments
@@ -65,9 +69,7 @@ Add to your MCP client configuration (e.g., Claude Desktop, Cursor):
   "mcpServers": {
     "devlog": {
       "command": "node",
-      "args": [
-        "/path/to/devlog/packages/mcp/build/index.js"
-      ],
+      "args": ["/path/to/devlog/packages/mcp/build/index.js"],
       "env": {
         "DEVLOG_DEFAULT_PROJECT": "1"
       }
@@ -83,6 +85,7 @@ Add to your MCP client configuration (e.g., Claude Desktop, Cursor):
 #### Session Management
 
 **`agent_start_session`** - Start tracking an AI agent session
+
 ```typescript
 {
   agentId: "github-copilot",
@@ -93,6 +96,7 @@ Add to your MCP client configuration (e.g., Claude Desktop, Cursor):
 ```
 
 **`agent_end_session`** - Complete a session with outcome
+
 ```typescript
 {
   sessionId: "session-uuid",
@@ -110,6 +114,7 @@ Add to your MCP client configuration (e.g., Claude Desktop, Cursor):
 #### Event Tracking
 
 **`agent_log_event`** - Record an agent activity
+
 ```typescript
 {
   type: "file_write",

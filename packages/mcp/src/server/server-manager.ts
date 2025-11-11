@@ -50,9 +50,9 @@ export class ServerManager {
   private sendLog(level: LoggingLevel, message: string, data?: any): void {
     if (this.server) {
       try {
-        this.server.sendLoggingMessage({ 
-          level, 
-          data: data ? `${message} ${JSON.stringify(data)}` : message 
+        this.server.sendLoggingMessage({
+          level,
+          data: data ? `${message} ${JSON.stringify(data)}` : message,
         });
       } catch (error) {
         console.error(`Failed to send log to MCP client: ${error}`);

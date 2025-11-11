@@ -58,11 +58,7 @@ export function formatPercent(value: number, decimals = 1): string {
 /**
  * Format currency
  */
-export function formatCurrency(
-  amount: number,
-  currency = 'USD',
-  locale = 'en-US'
-): string {
+export function formatCurrency(amount: number, currency = 'USD', locale = 'en-US'): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
