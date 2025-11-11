@@ -1,20 +1,24 @@
 {
-	"servers": {
-		"playwright": {
-			"command": "npx",
-			"args": [
-				"@playwright/mcp@latest",
-				"--isolated"
-			],
-			"type": "stdio"
-		},
-	},
-	"inputs": [
-		{
-			"type": "promptString",
-			"id": "github-pat",
-			"description": "GitHub Personal Access Token",
-			"password": true
-		}
-	]
+  "servers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--isolated"],
+      "type": "stdio"
+    },
+    "lean-spec": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["lean-spec", "mcp"],
+      "cwd": "${workspaceFolder}",
+      "env": {}
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github-pat",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
 }

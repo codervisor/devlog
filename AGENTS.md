@@ -86,20 +86,22 @@ Before starting work, understand project context:
 
 ```bash
 # View work distribution
-lspec stats
+lean-spec stats
 
 # See specs by status
-lspec board
+lean-spec board
 
 # Find specs by tag
-lspec list --tag=api
+lean-spec list --tag=api
 
 # Full-text search
-lspec search "<query>"
+lean-spec search "<query>"
 
 # Check dependencies
-lspec deps <spec>
+lean-spec deps <spec>
 ```
+
+These commands help you understand what exists, what's in progress, and what depends on what.
 
 ### Spec Frontmatter
 
@@ -115,36 +117,31 @@ assignee: username
 ---
 ```
 
-**Required fields**: `status`, `created`  
-**Helpful fields**: `tags` (discovery), `priority` (planning), `assignee` (coordination)
+**Core fields:**
+
+- `status` and `created` are required
+- `tags` help with discovery and organization
+- `priority` helps teams plan work
+- `assignee` shows who's working on what
 
 ### Workflow
 
-1. **Discover** - `lspec stats` or `lspec board` to see current state
-2. **Search** - `lspec search` or `lspec list` to find relevant work
-3. **Check dependencies** - `lspec deps <spec>` if working on existing spec
-4. **Create/update spec** - Add frontmatter with required fields
-5. **Implement** - Keep spec in sync as you learn
+1. **Discover context** - Run `lean-spec stats` or `lean-spec board` to see current state
+2. **Search existing specs** - Use `lean-spec search` or `lean-spec list` to find relevant work
+3. **Check dependencies** - Run `lean-spec deps <spec>` if working on existing spec
+4. **Create or update spec** - Add frontmatter with required fields and helpful metadata
+5. **Implement changes** - Keep spec in sync as you learn
 6. **Update status** - Mark progress: `draft` → `in-progress` → `complete`
-7. **Archive** - `lspec archive <spec>` when done
+7. **Archive when done** - `lean-spec archive <spec>` moves to archive
 
 ### Update Commands
 
 ```bash
 # Update spec status
-lspec update <spec> --status in-progress --assignee yourname
+lean-spec update <spec> --status in-progress --assignee yourname
 
 # Or edit frontmatter directly in the markdown file
 ```
-
-### Spec Content (Recommended Structure)
-
-Not mandatory, but helpful:
-
-- `design.md` - Full technical design specification
-- `README.md` or `summary.md` - Quick overview
-- `implementation.md` or `checklist.md` - Implementation tasks
-- `reference.md` - Quick reference for completed features
 
 ### Quality Standards
 
