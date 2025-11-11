@@ -6,35 +6,35 @@
  * Manages "work items" (also known as "devlog entries") for organizing and
  * tracking development work. This is an optional feature that complements
  * the primary agent observability functionality.
- * 
+ *
  * **Work Items vs Devlog Entries:**
  * - Both terms refer to the same entity (backward compatible)
  * - "Work item" is the preferred terminology (industry standard)
  * - Types: features, bugs, tasks, refactors, docs
- * 
+ *
  * **Key Responsibilities:**
  * - CRUD operations for work items
  * - Status workflow management
  * - Notes and document management
  * - Statistics and analytics
  * - Advanced search and filtering
- * 
+ *
  * **Relationship to Agent Observability:**
  * Work items provide optional structure for organizing agent sessions.
  * Sessions can reference a workItemId to link AI work to planned tasks.
  *
  * Migrated from TypeORM to Prisma for better Next.js integration.
  * Manages devlog entries using Prisma Client with improved type safety.
- * 
+ *
  * This service provides comprehensive devlog management functionality:
  * - CRUD operations for devlog entries
  * - Advanced search and filtering
  * - Statistics and analytics
  * - Notes and document management
- * 
+ *
  * NOTE: This service requires Prisma Client to be generated first:
  * Run `npx prisma generate` after setting up the database connection
- * 
+ *
  * @module services/prisma-devlog-service
  * @category Project Management
  * @see {@link WorkItem} type alias for new code
@@ -84,7 +84,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
    */
   static getInstance(projectId?: number): PrismaDevlogService {
     const id = projectId || 0;
-    
+
     return this.getOrCreateInstance(this.instances, id, () => new PrismaDevlogService(projectId));
   }
 
@@ -101,7 +101,10 @@ export class PrismaDevlogService extends PrismaServiceBase {
    * Hook called when service is running in fallback mode
    */
   protected async onFallbackMode(): Promise<void> {
-    console.log('[PrismaDevlogService] Service initialized in fallback mode for project:', this.projectId);
+    console.log(
+      '[PrismaDevlogService] Service initialized in fallback mode for project:',
+      this.projectId,
+    );
   }
 
   /**
@@ -132,9 +135,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
           SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm'
         ) as installed;
       `;
-      
+
       this.pgTrgmAvailable = result[0]?.installed || false;
-      
+
       // Try to create extension if not available (requires superuser)
       if (!this.pgTrgmAvailable) {
         try {
@@ -155,7 +158,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
    */
   async create(entry: Omit<DevlogEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<DevlogEntry> {
     await this.ensureInitialized();
-    
+
     // Validate input
     const validatedEntry = DevlogValidator.validateDevlogEntry({
       ...entry,
@@ -171,7 +174,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
     try {
       // Generate unique key if not provided
       const key = entry.key || generateDevlogKey(entry.title, entry.type, entry.description);
-      
+
       const created = await this.prismaClient!.devlogEntry.create({
         data: {
           key,
@@ -197,7 +200,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       return this.mapPrismaToDevlogEntry(created);
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to create devlog entry:', error);
-      throw new Error(`Failed to create devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -220,7 +225,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       return entry ? this.mapPrismaToDevlogEntry(entry) : null;
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get devlog entry:', error);
-      throw new Error(`Failed to get devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -243,7 +250,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       return entry ? this.mapPrismaToDevlogEntry(entry) : null;
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get devlog entry by key:', error);
-      throw new Error(`Failed to get devlog entry by key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get devlog entry by key: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -266,13 +275,17 @@ export class PrismaDevlogService extends PrismaServiceBase {
       if (updates.status !== undefined) updateData.status = updates.status;
       if (updates.priority !== undefined) updateData.priority = updates.priority;
       if (updates.assignee !== undefined) updateData.assignee = updates.assignee;
-      if (updates.closedAt !== undefined) updateData.closedAt = updates.closedAt ? new Date(updates.closedAt) : null;
+      if (updates.closedAt !== undefined)
+        updateData.closedAt = updates.closedAt ? new Date(updates.closedAt) : null;
       if (updates.archived !== undefined) updateData.archived = updates.archived;
 
       // Handle context updates
-      if (updates.businessContext !== undefined) updateData.businessContext = updates.businessContext;
-      if (updates.technicalContext !== undefined) updateData.technicalContext = updates.technicalContext;
-      if (updates.acceptanceCriteria !== undefined) updateData.tags = JSON.stringify(updates.acceptanceCriteria);
+      if (updates.businessContext !== undefined)
+        updateData.businessContext = updates.businessContext;
+      if (updates.technicalContext !== undefined)
+        updateData.technicalContext = updates.technicalContext;
+      if (updates.acceptanceCriteria !== undefined)
+        updateData.tags = JSON.stringify(updates.acceptanceCriteria);
 
       const updated = await this.prismaClient!.devlogEntry.update({
         where: { id: Number(id) },
@@ -287,7 +300,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       return this.mapPrismaToDevlogEntry(updated);
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to update devlog entry:', error);
-      throw new Error(`Failed to update devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to update devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -303,20 +318,26 @@ export class PrismaDevlogService extends PrismaServiceBase {
       });
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to delete devlog entry:', error);
-      throw new Error(`Failed to delete devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete devlog entry: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
   /**
    * List devlog entries with filtering and pagination
    */
-  async list(filter?: DevlogFilter, pagination?: { limit?: number; offset?: number }, sort?: SortOptions): Promise<PaginatedResult<DevlogEntry>> {
+  async list(
+    filter?: DevlogFilter,
+    pagination?: { limit?: number; offset?: number },
+    sort?: SortOptions,
+  ): Promise<PaginatedResult<DevlogEntry>> {
     await this.ensureInitialized();
 
     try {
       // Build where clause
       const where: any = {};
-      
+
       // Add project filter
       if (this.projectId) {
         where.projectId = this.projectId;
@@ -328,7 +349,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
       if (filter?.priority) where.priority = { in: filter.priority };
       if (filter?.assignee) where.assignee = filter.assignee;
       if (filter?.archived !== undefined) where.archived = filter.archived;
-      
+
       // Date range filters
       if (filter?.fromDate) where.createdAt = { gte: new Date(filter.fromDate) };
       if (filter?.toDate) {
@@ -359,8 +380,8 @@ export class PrismaDevlogService extends PrismaServiceBase {
         this.prismaClient!.devlogEntry.count({ where }),
       ]);
 
-      const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
-      
+      const mappedEntries = entries.map((entry) => this.mapPrismaToDevlogEntry(entry));
+
       return {
         items: mappedEntries,
         pagination: {
@@ -372,7 +393,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       };
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to list devlog entries:', error);
-      throw new Error(`Failed to list devlog entries: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to list devlog entries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -390,7 +413,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
     try {
       // Build search conditions
       const where: any = {};
-      
+
       // Add project filter
       if (this.projectId) {
         where.projectId = this.projectId;
@@ -446,8 +469,8 @@ export class PrismaDevlogService extends PrismaServiceBase {
         this.prismaClient!.devlogEntry.count({ where }),
       ]);
 
-      const mappedEntries = entries.map(entry => this.mapPrismaToDevlogEntry(entry));
-      
+      const mappedEntries = entries.map((entry) => this.mapPrismaToDevlogEntry(entry));
+
       return {
         items: mappedEntries,
         pagination: {
@@ -459,7 +482,9 @@ export class PrismaDevlogService extends PrismaServiceBase {
       };
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to search devlog entries:', error);
-      throw new Error(`Failed to search devlog entries: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to search devlog entries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -480,12 +505,7 @@ export class PrismaDevlogService extends PrismaServiceBase {
       if (filter?.archived !== undefined) where.archived = filter.archived;
 
       // Get aggregated statistics
-      const [
-        total,
-        statusCounts,
-        typeCounts,
-        priorityCounts,
-      ] = await Promise.all([
+      const [total, statusCounts, typeCounts, priorityCounts] = await Promise.all([
         this.prismaClient!.devlogEntry.count({ where }),
         this.prismaClient!.devlogEntry.groupBy({
           by: ['status'],
@@ -507,27 +527,36 @@ export class PrismaDevlogService extends PrismaServiceBase {
       // Calculate open/closed counts
       const openStatuses = ['new', 'in-progress', 'blocked', 'in-review', 'testing'];
       const closedStatuses = ['done', 'cancelled'];
-      
+
       const openCount = statusCounts
-        .filter(s => openStatuses.includes(s.status))
+        .filter((s) => openStatuses.includes(s.status))
         .reduce((sum, s) => sum + s._count.status, 0);
-      
+
       const closedCount = statusCounts
-        .filter(s => closedStatuses.includes(s.status))
+        .filter((s) => closedStatuses.includes(s.status))
         .reduce((sum, s) => sum + s._count.status, 0);
 
       return {
         totalEntries: total,
         openEntries: openCount,
         closedEntries: closedCount,
-        byStatus: Object.fromEntries(statusCounts.map(s => [s.status, s._count.status])) as Record<DevlogStatus, number>,
-        byType: Object.fromEntries(typeCounts.map(t => [t.type, t._count.type])) as Record<DevlogType, number>,
-        byPriority: Object.fromEntries(priorityCounts.map(p => [p.priority, p._count.priority])) as Record<DevlogPriority, number>,
+        byStatus: Object.fromEntries(
+          statusCounts.map((s) => [s.status, s._count.status]),
+        ) as Record<DevlogStatus, number>,
+        byType: Object.fromEntries(typeCounts.map((t) => [t.type, t._count.type])) as Record<
+          DevlogType,
+          number
+        >,
+        byPriority: Object.fromEntries(
+          priorityCounts.map((p) => [p.priority, p._count.priority]),
+        ) as Record<DevlogPriority, number>,
         averageCompletionTime: undefined, // TODO: Calculate based on createdAt and closedAt
       };
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get stats:', error);
-      throw new Error(`Failed to get devlog stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get devlog stats: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -540,18 +569,22 @@ export class PrismaDevlogService extends PrismaServiceBase {
     try {
       // TODO: Implement time series aggregation with Prisma
       // This will require complex date grouping queries
-      
+
       // Temporary mock return for development
       return {
         dataPoints: [],
         dateRange: {
-          from: request.from || new Date(Date.now() - (request.days || 30) * 24 * 60 * 60 * 1000).toISOString(),
+          from:
+            request.from ||
+            new Date(Date.now() - (request.days || 30) * 24 * 60 * 60 * 1000).toISOString(),
           to: request.to || new Date().toISOString(),
         },
       };
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to get time series:', error);
-      throw new Error(`Failed to get time series: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get time series: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -573,29 +606,33 @@ export class PrismaDevlogService extends PrismaServiceBase {
       });
     } catch (error) {
       console.error('[PrismaDevlogService] Failed to add note:', error);
-      throw new Error(`Failed to add note: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to add note: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
   /**
    * Map Prisma entity to DevlogEntry type
    */
-  private mapPrismaToDevlogEntry(prismaEntry: PrismaDevlogEntry & {
-    notes?: Array<{ id: string; timestamp: Date; category: string; content: string }>;
-    documents?: Array<{ 
-      id: string; 
-      filename: string;
-      originalName: string;
-      mimeType: string;
-      size: number;
-      type: string;
-      textContent: string | null;
-      metadata: any;
-      uploadedBy: string | null;
-      createdAt: Date; 
-      updatedAt: Date;
-    }>;
-  }): DevlogEntry {
+  private mapPrismaToDevlogEntry(
+    prismaEntry: PrismaDevlogEntry & {
+      notes?: Array<{ id: string; timestamp: Date; category: string; content: string }>;
+      documents?: Array<{
+        id: string;
+        filename: string;
+        originalName: string;
+        mimeType: string;
+        size: number;
+        type: string;
+        textContent: string | null;
+        metadata: any;
+        uploadedBy: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+      }>;
+    },
+  ): DevlogEntry {
     return {
       id: prismaEntry.id,
       key: prismaEntry.key,
@@ -613,25 +650,27 @@ export class PrismaDevlogService extends PrismaServiceBase {
       acceptanceCriteria: prismaEntry.tags ? JSON.parse(prismaEntry.tags) : undefined,
       businessContext: prismaEntry.businessContext,
       technicalContext: prismaEntry.technicalContext,
-      notes: prismaEntry.notes?.map((note) => ({
-        id: note.id,
-        timestamp: note.timestamp.toISOString(),
-        category: note.category as any,
-        content: note.content,
-      })) || [],
-      documents: prismaEntry.documents?.map((doc) => ({
-        id: doc.id,
-        devlogId: prismaEntry.id,
-        filename: doc.filename,
-        originalName: doc.originalName,
-        mimeType: doc.mimeType,
-        size: doc.size,
-        type: doc.type as any,
-        content: doc.textContent || undefined,
-        metadata: doc.metadata || {},
-        uploadedAt: doc.createdAt.toISOString(),
-        uploadedBy: doc.uploadedBy || undefined,
-      })) || [],
+      notes:
+        prismaEntry.notes?.map((note) => ({
+          id: note.id,
+          timestamp: note.timestamp.toISOString(),
+          category: note.category as any,
+          content: note.content,
+        })) || [],
+      documents:
+        prismaEntry.documents?.map((doc) => ({
+          id: doc.id,
+          devlogId: prismaEntry.id,
+          filename: doc.filename,
+          originalName: doc.originalName,
+          mimeType: doc.mimeType,
+          size: doc.size,
+          type: doc.type as any,
+          content: doc.textContent || undefined,
+          metadata: doc.metadata || {},
+          uploadedAt: doc.createdAt.toISOString(),
+          uploadedBy: doc.uploadedBy || undefined,
+        })) || [],
     };
   }
 }

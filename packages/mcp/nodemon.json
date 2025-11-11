@@ -1,15 +1,7 @@
 {
-  "watch": [
-    "src",
-    "../core/src",
-    "../core/build"
-  ],
+  "watch": ["src", "../core/src", "../core/build"],
   "ext": "ts,js,json",
-  "ignore": [
-    "node_modules",
-    "build",
-    "*.test.ts"
-  ],
+  "ignore": ["node_modules", "build", "*.test.ts"],
   "exec": "tsx src/index.ts",
   "env": {
     "NODE_ENV": "development"

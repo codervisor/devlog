@@ -3,7 +3,7 @@
  *
  * Simple configuration that uses DATABASE_URL as the single source of truth
  * for database connections. Supports PostgreSQL, MySQL, and SQLite.
- * 
+ *
  * Examples:
  * - PostgreSQL: DATABASE_URL="postgresql://user:password@localhost:5432/devlog"
  * - MySQL: DATABASE_URL="mysql://user:password@localhost:3306/devlog"
@@ -36,19 +36,19 @@ let prisma: PrismaClient | null = null;
  */
 export function parsePrismaConfig(): PrismaConfig {
   const databaseUrl = process.env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     throw new Error(
-      'DATABASE_URL environment variable is required. Please set DATABASE_URL in your .env file.'
+      'DATABASE_URL environment variable is required. Please set DATABASE_URL in your .env file.',
     );
   }
 
   // Configure logging based on environment
   const logLevel: ('info' | 'query' | 'warn' | 'error')[] = [];
-  
+
   if (process.env.NODE_ENV === 'development') {
     logLevel.push('warn', 'error');
-    
+
     // Enable query logging in development if explicitly requested
     if (process.env.PRISMA_QUERY_LOG === 'true') {
       logLevel.push('query');
@@ -132,10 +132,10 @@ export async function checkDatabaseConnection(): Promise<boolean> {
  */
 export function getDatabaseUrl(): string {
   const databaseUrl = process.env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     throw new Error('DATABASE_URL environment variable is required');
   }
-  
+
   return databaseUrl;
 }

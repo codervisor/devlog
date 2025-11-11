@@ -397,7 +397,7 @@ export class MCPAdapter {
       const formData = new FormData();
       const file = new Blob([content], { type: args.mimeType });
       formData.append('file', file, args.filename);
-      
+
       if (args.metadata) {
         formData.append('metadata', JSON.stringify(args.metadata));
       }
@@ -441,11 +441,11 @@ export class MCPAdapter {
       // For getDocument, we need to find which devlog contains the document
       // This is a limitation of the current API design - we'll try a simple approach
       // by searching through recent devlogs
-      const devlogs = await this.apiClient.listDevlogs({ 
-        page: 1, 
+      const devlogs = await this.apiClient.listDevlogs({
+        page: 1,
         limit: 20,
         sortBy: 'updatedAt',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       let document = null;
@@ -478,11 +478,11 @@ export class MCPAdapter {
 
     try {
       // Similar to getDocument, search through devlogs to find the document
-      const devlogs = await this.apiClient.listDevlogs({ 
-        page: 1, 
+      const devlogs = await this.apiClient.listDevlogs({
+        page: 1,
         limit: 20,
         sortBy: 'updatedAt',
-        sortOrder: 'desc'
+        sortOrder: 'desc',
       });
 
       let deleted = false;
@@ -520,30 +520,32 @@ export class MCPAdapter {
       if (args.devlogId) {
         // Search within specific devlog
         const allDocuments = await this.apiClient.listDocuments(args.devlogId);
-        
+
         // Filter documents by query
-        documents = allDocuments.filter((doc: any) =>
-          doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
-          (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
-          doc.filename?.toLowerCase().includes(args.query.toLowerCase())
+        documents = allDocuments.filter(
+          (doc: any) =>
+            doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
+            (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
+            doc.filename?.toLowerCase().includes(args.query.toLowerCase()),
         );
       } else {
         // Search across all recent devlogs
-        const devlogs = await this.apiClient.listDevlogs({ 
-          page: 1, 
+        const devlogs = await this.apiClient.listDevlogs({
+          page: 1,
           limit: 10,
           sortBy: 'updatedAt',
-          sortOrder: 'desc'
+          sortOrder: 'desc',
         });
 
         for (const devlog of devlogs.items || []) {
           try {
             const devlogDocuments = await this.apiClient.listDocuments(devlog.id!);
-            
-            const matchingDocs = devlogDocuments.filter((doc: any) =>
-              doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
-              (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
-              doc.filename?.toLowerCase().includes(args.query.toLowerCase())
+
+            const matchingDocs = devlogDocuments.filter(
+              (doc: any) =>
+                doc.originalName?.toLowerCase().includes(args.query.toLowerCase()) ||
+                (doc.content && doc.content.toLowerCase().includes(args.query.toLowerCase())) ||
+                doc.filename?.toLowerCase().includes(args.query.toLowerCase()),
             );
 
             documents.push(...matchingDocs);

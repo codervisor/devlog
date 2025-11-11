@@ -3,7 +3,7 @@
  *
  * Migrated from TypeORM to Prisma for better Next.js integration
  * Manages user authentication, registration, and session handling using Prisma Client
- * 
+ *
  * Features:
  * - User registration and login
  * - Password hashing and verification
@@ -11,7 +11,7 @@
  * - Email verification
  * - Password reset functionality
  * - OAuth provider integration
- * 
+ *
  * NOTE: This service requires Prisma Client to be generated first:
  * Run `npx prisma generate` after setting up the database connection
  */
@@ -50,7 +50,7 @@ export class PrismaAuthService extends PrismaServiceBase {
   private constructor(databaseUrl?: string) {
     super();
     this.JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-development';
-    
+
     if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
       throw new Error('JWT_SECRET environment variable is required in production');
     }
@@ -62,7 +62,7 @@ export class PrismaAuthService extends PrismaServiceBase {
    */
   static getInstance(databaseUrl?: string): PrismaAuthService {
     const key = databaseUrl || 'default';
-    
+
     return this.getOrCreateInstance(this.instances, key, () => new PrismaAuthService(databaseUrl));
   }
 
@@ -101,8 +101,10 @@ export class PrismaAuthService extends PrismaServiceBase {
 
     if (this.fallbackMode) {
       // Fallback mock implementation
-      console.warn('[PrismaAuthService] register() called in fallback mode - returning mock response');
-      
+      console.warn(
+        '[PrismaAuthService] register() called in fallback mode - returning mock response',
+      );
+
       const mockUser: User = {
         id: Math.floor(Math.random() * 10000),
         email: registration.email,
@@ -165,7 +167,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       };
     } catch (error) {
       console.error('[PrismaAuthService] Registration failed:', error);
-      throw new Error(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -194,7 +198,7 @@ export class PrismaAuthService extends PrismaServiceBase {
     if (this.fallbackMode) {
       // Fallback mock implementation
       console.warn('[PrismaAuthService] login() called in fallback mode - returning mock response');
-      
+
       const mockUser: User = {
         id: 1,
         email: credentials.email,
@@ -261,7 +265,9 @@ export class PrismaAuthService extends PrismaServiceBase {
 
     if (this.isFallbackMode) {
       // Fallback mock implementation
-      console.warn('[PrismaAuthService] refreshToken() called in fallback mode - returning mock response');
+      console.warn(
+        '[PrismaAuthService] refreshToken() called in fallback mode - returning mock response',
+      );
       return {
         accessToken: 'new-mock-access-token',
         refreshToken: 'new-mock-refresh-token',
@@ -272,7 +278,7 @@ export class PrismaAuthService extends PrismaServiceBase {
     try {
       // Verify refresh token
       const payload = jwt.verify(refreshToken, this.JWT_SECRET) as JWTPayload;
-      
+
       if (payload.type !== 'refresh') {
         throw new Error('Invalid token type');
       }
@@ -290,7 +296,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       return this.generateTokens(user);
     } catch (error) {
       console.error('[PrismaAuthService] Token refresh failed:', error);
-      throw new Error(`Token refresh failed: ${error instanceof Error ? error.message : 'Invalid token'}`);
+      throw new Error(
+        `Token refresh failed: ${error instanceof Error ? error.message : 'Invalid token'}`,
+      );
     }
   }
 
@@ -300,11 +308,13 @@ export class PrismaAuthService extends PrismaServiceBase {
   async validateToken(accessToken: string): Promise<SessionUser> {
     if (this.isFallbackMode) {
       // Fallback mock implementation
-      console.warn('[PrismaAuthService] validateToken() called in fallback mode - returning mock session');
-      
+      console.warn(
+        '[PrismaAuthService] validateToken() called in fallback mode - returning mock session',
+      );
+
       try {
         const payload = jwt.verify(accessToken, this.JWT_SECRET) as JWTPayload;
-        
+
         if (payload.type !== 'access') {
           throw new Error('Invalid token type');
         }
@@ -318,13 +328,15 @@ export class PrismaAuthService extends PrismaServiceBase {
         };
       } catch (error) {
         console.error('[PrismaAuthService] Token validation failed:', error);
-        throw new Error(`Token validation failed: ${error instanceof Error ? error.message : 'Invalid token'}`);
+        throw new Error(
+          `Token validation failed: ${error instanceof Error ? error.message : 'Invalid token'}`,
+        );
       }
     }
 
     try {
       const payload = jwt.verify(accessToken, this.JWT_SECRET) as JWTPayload;
-      
+
       if (payload.type !== 'access') {
         throw new Error('Invalid token type');
       }
@@ -346,7 +358,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       };
     } catch (error) {
       console.error('[PrismaAuthService] Token validation failed:', error);
-      throw new Error(`Token validation failed: ${error instanceof Error ? error.message : 'Invalid token'}`);
+      throw new Error(
+        `Token validation failed: ${error instanceof Error ? error.message : 'Invalid token'}`,
+      );
     }
   }
 
@@ -360,7 +374,7 @@ export class PrismaAuthService extends PrismaServiceBase {
       // In a production system, you might want to maintain a blacklist of tokens
       // For now, we'll just verify the token is valid
       jwt.verify(refreshToken, this.JWT_SECRET);
-      
+
       // TODO: Implement token blacklisting if needed
       console.log('[PrismaAuthService] User logged out successfully');
     } catch (error) {
@@ -376,7 +390,9 @@ export class PrismaAuthService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] generateEmailVerificationToken() called in fallback mode - returning mock token');
+      console.warn(
+        '[PrismaAuthService] generateEmailVerificationToken() called in fallback mode - returning mock token',
+      );
       return 'mock-verification-token';
     }
 
@@ -407,7 +423,9 @@ export class PrismaAuthService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] verifyEmail() called in fallback mode - returning mock user');
+      console.warn(
+        '[PrismaAuthService] verifyEmail() called in fallback mode - returning mock user',
+      );
       return {
         id: 1,
         email: 'mock@example.com',
@@ -426,7 +444,11 @@ export class PrismaAuthService extends PrismaServiceBase {
         include: { user: true },
       });
 
-      if (!verificationToken || verificationToken.used || verificationToken.expiresAt < new Date()) {
+      if (
+        !verificationToken ||
+        verificationToken.used ||
+        verificationToken.expiresAt < new Date()
+      ) {
         throw new Error('Invalid or expired verification token');
       }
 
@@ -445,7 +467,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       return this.convertPrismaUserToUser(verificationToken.user);
     } catch (error) {
       console.error('[PrismaAuthService] Email verification failed:', error);
-      throw new Error(`Email verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Email verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -456,7 +480,9 @@ export class PrismaAuthService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] generatePasswordResetToken() called in fallback mode - returning mock token');
+      console.warn(
+        '[PrismaAuthService] generatePasswordResetToken() called in fallback mode - returning mock token',
+      );
       return 'mock-reset-token';
     }
 
@@ -497,7 +523,9 @@ export class PrismaAuthService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] resetPassword() called in fallback mode - operation ignored');
+      console.warn(
+        '[PrismaAuthService] resetPassword() called in fallback mode - operation ignored',
+      );
       return;
     }
 
@@ -529,7 +557,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       console.log('[PrismaAuthService] Password reset successful');
     } catch (error) {
       console.error('[PrismaAuthService] Password reset failed:', error);
-      throw new Error(`Password reset failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Password reset failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -540,7 +570,9 @@ export class PrismaAuthService extends PrismaServiceBase {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] createOrUpdateUserFromSSO() called in fallback mode - returning mock user');
+      console.warn(
+        '[PrismaAuthService] createOrUpdateUserFromSSO() called in fallback mode - returning mock user',
+      );
       return {
         id: Math.floor(Math.random() * 10000),
         email: ssoInfo.email,
@@ -615,7 +647,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       return this.convertPrismaUserToUser(user);
     } catch (error) {
       console.error('[PrismaAuthService] SSO user creation failed:', error);
-      throw new Error(`SSO user creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `SSO user creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -645,11 +679,16 @@ export class PrismaAuthService extends PrismaServiceBase {
   /**
    * Update user profile
    */
-  async updateProfile(userId: number, updates: Partial<Pick<User, 'name' | 'avatarUrl'>>): Promise<User> {
+  async updateProfile(
+    userId: number,
+    updates: Partial<Pick<User, 'name' | 'avatarUrl'>>,
+  ): Promise<User> {
     await this.ensureInitialized();
 
     if (this.isFallbackMode) {
-      console.warn('[PrismaAuthService] updateProfile() called in fallback mode - returning mock user');
+      console.warn(
+        '[PrismaAuthService] updateProfile() called in fallback mode - returning mock user',
+      );
       return {
         id: userId,
         email: 'mock@example.com',
@@ -671,7 +710,9 @@ export class PrismaAuthService extends PrismaServiceBase {
       return this.convertPrismaUserToUser(user);
     } catch (error) {
       console.error('[PrismaAuthService] Profile update failed:', error);
-      throw new Error(`Profile update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Profile update failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 

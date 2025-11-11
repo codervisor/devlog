@@ -1,13 +1,13 @@
 /**
  * ChatTurn model for grouping related messages in AI Chat processing
  * Hierarchy: Application → Workspace → Chat Session → Chat Turn → Chat Message
- * 
+ *
  * A ChatTurn represents one complete request-response cycle:
  * - User makes a request (user message)
  * - Assistant responds with multiple actions (assistant messages)
  */
 
-import type { ChatMessage } from "./chat-message.js";
+import type { ChatMessage } from './chat-message.js';
 
 // Turn-level metadata based on actual Copilot data structure
 export interface ChatTurnMetadata {

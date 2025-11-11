@@ -141,9 +141,71 @@ Failed to send batch (attempt 1/4): unexpected status 500:
 "Unique constraint failed on the fields: (`workspace_id`)"
 ```
 
-### Next Steps
+## Implementation Summary (2025-11-11)
 
-1. Find the batch insert API endpoint code
-2. Examine the Prisma upsert query
-3. Fix the upsert logic
-4. Re-test backfill
+### Changes Made
+
+**File: `/packages/web/app/api/events/batch/route.ts`**
+
+Fixed the workspace upsert logic to use the correct unique constraint:
+
+**Before:**
+
+```typescript
+await prisma.workspace.upsert({
+  where: {
+    projectId_machineId_workspaceId: {
+      projectId: workspaceData.projectId,
+      machineId: workspaceData.machineDbId,
+      workspaceId: workspaceData.workspaceId,
+    },
+  },
+  create: {
+    /* ... */
+  },
+  update: {},
+});
+```
+
+**After:**
+
+```typescript
+await prisma.workspace.upsert({
+  where: {
+    workspaceId: workspaceData.workspaceId,
+  },
+  create: {
+    /* ... */
+  },
+  update: {
+    workspacePath: workspaceData.workspacePath,
+    lastSeenAt: new Date(),
+  },
+});
+```
+
+### Why This Fix Works
+
+1. **Correct Unique Constraint**: The Prisma schema has `@unique` on `workspaceId` field, which creates a single-column unique constraint. The composite constraint `@@unique([projectId, machineId, workspaceId])` is secondary.
+
+2. **Proper Update**: When a workspace already exists, we now update the `workspacePath` and `lastSeenAt` fields instead of leaving the update empty.
+
+3. **Idempotent**: The fix makes the endpoint idempotent - multiple batches with the same workspace will succeed, with the workspace being updated on subsequent calls.
+
+### Testing
+
+- Added integration test case `should handle batch events with existing workspace (upsert)` in `hierarchy-api.test.ts`
+- Test verifies that:
+  - First batch creates workspace successfully
+  - Second batch with same workspaceId but updated path succeeds
+  - Workspace is updated with new path
+- Build passes successfully
+- CodeQL security check shows no vulnerabilities
+
+### Impact
+
+This fix unblocks:
+
+- Backfill feature for importing historical Copilot chat sessions
+- Batch event processing when workspaces already exist
+- Collector auto-creation of workspaces during event ingestion

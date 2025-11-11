@@ -1,6 +1,6 @@
 /**
  * Project Management Tools
- * 
+ *
  * Tools for organizing agent sessions by project and tracking work items.
  * This is a SUPPORTING feature for providing context to agent observability.
  */

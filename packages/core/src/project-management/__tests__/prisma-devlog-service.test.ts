@@ -1,6 +1,6 @@
 /**
  * Tests for PrismaDevlogService
- * 
+ *
  * Comprehensive test suite for the Prisma-based DevlogService
  * Tests both the service functionality and migration compatibility
  */
@@ -72,19 +72,19 @@ describe('PrismaDevlogService', () => {
     it('should handle initialization errors gracefully', async () => {
       // Mock initialization to throw error
       vi.spyOn(service as any, '_initialize').mockRejectedValueOnce(new Error('Init failed'));
-      
+
       await expect(service.ensureInitialized()).rejects.toThrow('Init failed');
     });
 
     it('should only initialize once', async () => {
       const initSpy = vi.spyOn(service as any, '_initialize');
-      
+
       await Promise.all([
         service.ensureInitialized(),
         service.ensureInitialized(),
         service.ensureInitialized(),
       ]);
-      
+
       expect(initSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -114,7 +114,7 @@ describe('PrismaDevlogService', () => {
     describe('create', () => {
       it('should create a devlog entry successfully', async () => {
         const created = await service.create(mockDevlogEntry);
-        
+
         expect(created).toMatchObject({
           title: mockDevlogEntry.title,
           type: mockDevlogEntry.type,
@@ -130,7 +130,7 @@ describe('PrismaDevlogService', () => {
       it('should generate a key if not provided', async () => {
         const entryWithoutKey = { ...mockDevlogEntry };
         delete entryWithoutKey.key;
-        
+
         const created = await service.create(entryWithoutKey);
         expect(created.key).toBeDefined();
         expect(created.key).not.toBe('');
@@ -141,7 +141,7 @@ describe('PrismaDevlogService', () => {
           ...mockDevlogEntry,
           title: '', // Invalid empty title
         };
-        
+
         await expect(service.create(invalidEntry)).rejects.toThrow();
       });
     });
@@ -186,7 +186,7 @@ describe('PrismaDevlogService', () => {
           title: 'Updated Title',
           status: 'in-progress' as const,
         };
-        
+
         const updated = await service.update(1, updates);
         expect(updated.title).toBe(updates.title);
         expect(updated.status).toBe(updates.status);
@@ -195,8 +195,10 @@ describe('PrismaDevlogService', () => {
 
       it('should throw error for non-existent entry', async () => {
         vi.spyOn(service, 'get').mockResolvedValueOnce(null);
-        
-        await expect(service.update(999, { title: 'New Title' })).rejects.toThrow('Devlog entry not found');
+
+        await expect(service.update(999, { title: 'New Title' })).rejects.toThrow(
+          'Devlog entry not found',
+        );
       });
     });
 
@@ -216,7 +218,7 @@ describe('PrismaDevlogService', () => {
     describe('list', () => {
       it('should list devlog entries with default pagination', async () => {
         const result = await service.list();
-        
+
         expect(result).toHaveProperty('data');
         expect(result).toHaveProperty('pagination');
         expect(result.pagination.limit).toBe(20);
@@ -230,7 +232,7 @@ describe('PrismaDevlogService', () => {
           type: ['task'],
           priority: ['high'],
         };
-        
+
         const result = await service.list(filter);
         expect(result).toHaveProperty('data');
         expect(Array.isArray(result.data)).toBe(true);
@@ -239,7 +241,7 @@ describe('PrismaDevlogService', () => {
       it('should apply sorting', async () => {
         const sort = { field: 'createdAt' as const, direction: 'asc' as const };
         const result = await service.list(undefined, sort);
-        
+
         expect(result).toHaveProperty('data');
         expect(Array.isArray(result.data)).toBe(true);
       });
@@ -247,7 +249,7 @@ describe('PrismaDevlogService', () => {
       it('should apply pagination', async () => {
         const pagination = { limit: 10, offset: 5 };
         const result = await service.list(undefined, undefined, pagination);
-        
+
         expect(result.pagination.limit).toBe(10);
         expect(result.pagination.offset).toBe(5);
       });
@@ -259,9 +261,9 @@ describe('PrismaDevlogService', () => {
           query: 'test search',
           pagination: { limit: 10, offset: 0 },
         };
-        
+
         const result = await service.search(options);
-        
+
         expect(result).toHaveProperty('data');
         expect(result).toHaveProperty('pagination');
         expect(result).toHaveProperty('searchMeta');
@@ -277,7 +279,7 @@ describe('PrismaDevlogService', () => {
           },
           tags: ['important'],
         };
-        
+
         const result = await service.search(options);
         expect(result).toHaveProperty('data');
         expect(Array.isArray(result.data)).toBe(true);
@@ -287,7 +289,7 @@ describe('PrismaDevlogService', () => {
         const options: SearchOptions = {
           query: '',
         };
-        
+
         const result = await service.search(options);
         expect(result.searchMeta.query).toBe('');
       });
@@ -298,7 +300,7 @@ describe('PrismaDevlogService', () => {
     describe('getStats', () => {
       it('should get devlog statistics', async () => {
         const stats = await service.getStats();
-        
+
         expect(stats).toHaveProperty('total');
         expect(stats).toHaveProperty('byStatus');
         expect(stats).toHaveProperty('byType');
@@ -311,7 +313,7 @@ describe('PrismaDevlogService', () => {
         const filter: DevlogFilter = {
           status: ['new', 'in-progress'],
         };
-        
+
         const stats = await service.getStats(filter);
         expect(stats).toHaveProperty('total');
         expect(typeof stats.total).toBe('number');
@@ -325,9 +327,9 @@ describe('PrismaDevlogService', () => {
           startDate: new Date('2024-01-01'),
           endDate: new Date('2024-01-31'),
         };
-        
+
         const result = await service.getTimeSeries(request);
-        
+
         expect(result).toHaveProperty('dataPoints');
         expect(result).toHaveProperty('period');
         expect(result).toHaveProperty('startDate');
@@ -344,7 +346,7 @@ describe('PrismaDevlogService', () => {
           category: 'progress',
           content: 'Test note content',
         };
-        
+
         await expect(service.addNote(1, note)).resolves.not.toThrow();
       });
 
@@ -353,7 +355,7 @@ describe('PrismaDevlogService', () => {
           category: 'invalid-category',
           content: '',
         };
-        
+
         // Since we're using a mock, this won't actually validate
         // In the real implementation, this should throw validation errors
         await expect(service.addNote(1, invalidNote)).resolves.not.toThrow();
@@ -370,7 +372,7 @@ describe('PrismaDevlogService', () => {
       // Mock disposal to throw error
       const mockError = new Error('Disposal failed');
       vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       // Since dispose catches errors internally, it should not throw
       await expect(service.dispose()).resolves.not.toThrow();
     });
@@ -379,15 +381,17 @@ describe('PrismaDevlogService', () => {
   describe('error handling', () => {
     it('should handle database connection errors', async () => {
       // Mock initialization failure
-      vi.spyOn(service as any, '_initialize').mockRejectedValueOnce(new Error('DB connection failed'));
-      
+      vi.spyOn(service as any, '_initialize').mockRejectedValueOnce(
+        new Error('DB connection failed'),
+      );
+
       await expect(service.ensureInitialized()).rejects.toThrow('DB connection failed');
     });
 
     it('should provide meaningful error messages', async () => {
       const error = new Error('Specific database error');
       vi.spyOn(service as any, '_initialize').mockRejectedValueOnce(error);
-      
+
       await expect(service.ensureInitialized()).rejects.toThrow('Specific database error');
     });
   });
@@ -424,7 +428,7 @@ describe('PrismaDevlogService', () => {
         createdAfter: new Date('2024-01-01'),
         createdBefore: new Date('2024-12-31'),
       };
-      
+
       await expect(service.list(complexFilter)).resolves.toBeDefined();
     });
   });

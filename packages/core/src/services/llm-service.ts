@@ -17,12 +17,7 @@ import type {
   LLMEmbedResponse,
   LLMEmbedManyResponse,
 } from '../types/llm.js';
-import {
-  LLMError,
-  LLMConfigError,
-  LLMAPIError,
-  LLMRateLimitError,
-} from '../types/llm.js';
+import { LLMError, LLMConfigError, LLMAPIError, LLMRateLimitError } from '../types/llm.js';
 
 /**
  * OpenAI/Azure OpenAI specific configuration
@@ -90,7 +85,7 @@ export class LLMService {
     } catch (error) {
       throw new LLMConfigError(
         `Failed to initialize LLM provider: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'openai'
+        'openai',
       );
     }
   }
@@ -108,7 +103,7 @@ export class LLMService {
    * Convert our message format to AI SDK format
    */
   private convertMessages(messages: LLMMessage[]) {
-    return messages.map(msg => {
+    return messages.map((msg) => {
       // Convert to AI SDK message format
       const convertedMsg: any = {
         role: msg.role === 'function' ? 'assistant' : msg.role, // Convert function to assistant
@@ -129,14 +124,10 @@ export class LLMService {
    */
   private handleError(error: any): never {
     if (error.status === 429 || error.message?.includes('rate limit')) {
-      const retryAfter = error.headers?.['retry-after'] 
-        ? parseInt(error.headers['retry-after']) 
+      const retryAfter = error.headers?.['retry-after']
+        ? parseInt(error.headers['retry-after'])
         : undefined;
-      throw new LLMRateLimitError(
-        `Rate limit exceeded for OpenAI`,
-        'openai',
-        retryAfter
-      );
+      throw new LLMRateLimitError(`Rate limit exceeded for OpenAI`, 'openai', retryAfter);
     }
 
     if (error.status) {
@@ -144,7 +135,7 @@ export class LLMService {
         error.message || `API error from OpenAI`,
         error.status,
         'openai',
-        error
+        error,
       );
     }
 
@@ -153,7 +144,7 @@ export class LLMService {
       'UNKNOWN_ERROR',
       'openai',
       undefined,
-      error
+      error,
     );
   }
 
@@ -185,11 +176,13 @@ export class LLMService {
       return {
         content: result.text,
         finishReason: result.finishReason as any,
-        usage: result.usage ? {
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
-          totalTokens: result.usage.totalTokens,
-        } : undefined,
+        usage: result.usage
+          ? {
+              promptTokens: result.usage.promptTokens,
+              completionTokens: result.usage.completionTokens,
+              totalTokens: result.usage.totalTokens,
+            }
+          : undefined,
       };
     } catch (error) {
       this.handleError(error);
@@ -199,9 +192,7 @@ export class LLMService {
   /**
    * Generate a streaming text completion
    */
-  async *generateStreamingCompletion(
-    request: LLMCompletionRequest
-  ): AsyncIterable<LLMStreamChunk> {
+  async *generateStreamingCompletion(request: LLMCompletionRequest): AsyncIterable<LLMStreamChunk> {
     await this.ensureInitialized();
 
     try {
@@ -248,7 +239,7 @@ export class LLMService {
   async generateStructuredOutput<T>(
     request: LLMCompletionRequest,
     schema: any, // Zod schema or JSON schema
-    description?: string
+    description?: string,
   ): Promise<T> {
     await this.ensureInitialized();
 
@@ -287,10 +278,10 @@ export class LLMService {
       model?: string;
       maxTokens?: number;
       temperature?: number;
-    }
+    },
   ): Promise<string> {
     const model = options?.model || this.config.defaultModel || 'gpt-4';
-    
+
     const modelConfig: LLMModelConfig = {
       provider: 'openai',
       model,
@@ -322,7 +313,7 @@ export class LLMService {
           apiKey: this.config.apiKey,
           baseURL: this.config.baseURL,
           organization: this.config.organization,
-        }
+        },
       );
 
       const result = await embed({
@@ -332,9 +323,11 @@ export class LLMService {
 
       return {
         embedding: result.embedding,
-        usage: result.usage ? {
-          tokens: result.usage.tokens,
-        } : undefined,
+        usage: result.usage
+          ? {
+              tokens: result.usage.tokens,
+            }
+          : undefined,
         metadata: request.metadata,
       };
     } catch (error) {
@@ -355,7 +348,7 @@ export class LLMService {
           apiKey: this.config.apiKey,
           baseURL: this.config.baseURL,
           organization: this.config.organization,
-        }
+        },
       );
 
       const result = await embedMany({
@@ -365,9 +358,11 @@ export class LLMService {
 
       return {
         embeddings: result.embeddings,
-        usage: result.usage ? {
-          tokens: result.usage.tokens,
-        } : undefined,
+        usage: result.usage
+          ? {
+              tokens: result.usage.tokens,
+            }
+          : undefined,
         metadata: request.metadata,
       };
     } catch (error) {
@@ -382,7 +377,7 @@ export class LLMService {
     text: string,
     options?: {
       model?: string;
-    }
+    },
   ): Promise<number[]> {
     const request: LLMEmbedRequest = {
       text,
@@ -400,7 +395,7 @@ export class LLMService {
     texts: string[],
     options?: {
       model?: string;
-    }
+    },
   ): Promise<number[][]> {
     const request: LLMEmbedManyRequest = {
       texts,
@@ -443,16 +438,22 @@ export class LLMService {
  */
 export function createLLMServiceFromEnv(): LLMService {
   const apiKey = process.env.OPENAI_API_KEY || process.env.AZURE_OPENAI_API_KEY;
-  
+
   if (!apiKey) {
-    throw new LLMConfigError('No OpenAI API key found in environment variables (OPENAI_API_KEY or AZURE_OPENAI_API_KEY)');
+    throw new LLMConfigError(
+      'No OpenAI API key found in environment variables (OPENAI_API_KEY or AZURE_OPENAI_API_KEY)',
+    );
   }
 
   const config: LLMServiceConfig = {
     apiKey,
     baseURL: process.env.OPENAI_BASE_URL || process.env.AZURE_OPENAI_ENDPOINT,
-    defaultModel: process.env.OPENAI_DEFAULT_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4.1',
-    defaultEmbeddingModel: process.env.OPENAI_EMBEDDING_MODEL || process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT || 'text-embedding-3-small',
+    defaultModel:
+      process.env.OPENAI_DEFAULT_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4.1',
+    defaultEmbeddingModel:
+      process.env.OPENAI_EMBEDDING_MODEL ||
+      process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT ||
+      'text-embedding-3-small',
     organization: process.env.OPENAI_ORGANIZATION,
     apiVersion: process.env.AZURE_OPENAI_API_VERSION,
     defaultModelConfig: {

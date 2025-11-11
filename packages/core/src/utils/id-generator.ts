@@ -13,11 +13,11 @@ import { createHash, randomBytes } from 'crypto';
 export function generateUniqueId(prefix?: string): string {
   const timestamp = Date.now().toString(36);
   const randomPart = randomBytes(8).toString('hex');
-  
+
   if (prefix) {
     return `${prefix}-${timestamp}-${randomPart}`;
   }
-  
+
   return `${timestamp}-${randomPart}`;
 }
 
@@ -29,10 +29,7 @@ export function generateUniqueId(prefix?: string): string {
  * @returns A hash-based ID
  */
 export function generateHashId(input: string, length: number = 16): string {
-  return createHash('sha256')
-    .update(input)
-    .digest('hex')
-    .substring(0, length);
+  return createHash('sha256').update(input).digest('hex').substring(0, length);
 }
 
 /**
