@@ -53,6 +53,7 @@
 **Create specs for:**
 
 - Features requiring design/planning (>2 days work)
+- Features that affect multiple parts of the system
 - Architectural decisions affecting multiple components
 - Breaking changes or significant refactors
 - Design decisions needing team alignment
@@ -66,21 +67,7 @@
 - Self-explanatory refactors
 - Simple one-file changes
 
-### Directory Structure
-
-**Multi-tier hierarchy**: `specs/YYYYMMDD/NNN-short-name/`
-
-```
-specs/
-├── 20251031/
-│   ├── 001-database-architecture/
-│   ├── 002-project-hierarchy/
-│   └── 003-api-refactor/
-└── 20251101/
-    └── 001-auth-system/
-```
-
-### Discovery Commands
+### Discovery
 
 Before starting work, understand project context:
 
@@ -91,11 +78,17 @@ lean-spec stats
 # See specs by status
 lean-spec board
 
+# Show statistics and velocity
+lean-spec stats
+
 # Find specs by tag
 lean-spec list --tag=api
 
 # Full-text search
 lean-spec search "<query>"
+
+# View a spec
+lean-spec view NNN
 
 # Check dependencies
 lean-spec deps <spec>
@@ -103,26 +96,11 @@ lean-spec deps <spec>
 
 These commands help you understand what exists, what's in progress, and what depends on what.
 
-### Spec Frontmatter
-
-Include YAML frontmatter at the top of spec markdown files:
-
-```yaml
----
-status: draft|planned|in-progress|complete|blocked|cancelled
-created: YYYY-MM-DD
-tags: [tag1, tag2]
-priority: low|medium|high
-assignee: username
----
-```
-
 **Core fields:**
 
-- `status` and `created` are required
+- `status` are required
 - `tags` help with discovery and organization
 - `priority` helps teams plan work
-- `assignee` shows who's working on what
 
 ### Workflow
 
@@ -131,14 +109,14 @@ assignee: username
 3. **Check dependencies** - Run `lean-spec deps <spec>` if working on existing spec
 4. **Create or update spec** - Add frontmatter with required fields and helpful metadata
 5. **Implement changes** - Keep spec in sync as you learn
-6. **Update status** - Mark progress: `draft` → `in-progress` → `complete`
+6. **Update status** - Mark progress: `planned` → `in-progress` → `complete`
 7. **Archive when done** - `lean-spec archive <spec>` moves to archive
 
 ### Update Commands
 
 ```bash
 # Update spec status
-lean-spec update <spec> --status in-progress --assignee yourname
+lean-spec update <spec> --status in-progress
 
 # Or edit frontmatter directly in the markdown file
 ```
@@ -150,7 +128,3 @@ lean-spec update <spec> --status in-progress --assignee yourname
 - No unnecessary complexity
 - Documentation where needed (not everywhere)
 - Specs stay in sync with implementation
-
----
-
-**Remember**: LeanSpec is a mindset. Adapt these guidelines to what actually helps.

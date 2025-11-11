@@ -1,120 +1,145 @@
 # Specifications (Specs)
 
-This directory contains **specifications** for features, designs, and technical decisions. "Specs" follows the **Spec-Driven Development (SDD)** approach, where specifications guide implementation.
-
-> **Alias**: "dev docs" or "development documentation" can be used interchangeably with "specs"
+This directory contains **specifications** for features, designs, and technical decisions following the **LeanSpec** methodology outlined in [AGENTS.md](../AGENTS.md).
 
 ## 📁 Directory Structure
 
 ```
 specs/
-├── YYYYMMDD/              # Date-based folders (e.g., 20251031/)
-│   ├── 000-short-name/    # First spec of the day
-│   ├── 001-another-spec/  # Second spec of the day
-│   └── 002-third-spec/    # Third spec of the day
+├── 001-short-name/        # First spec
+├── 002-another-spec/      # Second spec
+├── 003-third-spec/        # Third spec
 └── README.md              # This file
 ```
 
-### Multi-Tier Hierarchy
+### Flat Structure
 
-- **Level 1**: `YYYYMMDD/` - Date folder (when spec design begins)
-- **Level 2**: `NNN-short-name/` - Numbered spec folder within that date
-  - `NNN` starts from `001` within each date
+- **Format**: `NNN-short-name/` - Numbered spec folder with descriptive name
+  - `NNN` is a sequential counter (001, 002, 003...)
   - `short-name` is a brief, hyphenated identifier (e.g., `database-architecture`)
+  - Created date is stored in frontmatter, not in directory structure
 
 ### Example
 
 ```
 specs/
-├── 20251031/
-│   ├── 001-database-architecture/
-│   │   ├── design.md
-│   │   └── implementation.md
-│   ├── 002-project-hierarchy/
-│   │   └── README.md
-│   └── 003-api-refactor/
-│       ├── design.md
-│       └── checklist.md
-└── 20251101/
-    └── 001-auth-system/
-        └── design.md
+├── 001-ai-evaluation-system/
+│   └── README.md
+├── 002-ai-agent-observability/
+│   ├── README.md
+│   ├── design.md
+│   └── implementation.md
+├── 003-codebase-reorganization/
+│   └── README.md
+└── 007-database-architecture/
+    ├── README.md
+    ├── implementation-summary.md
+    └── phase2-implementation.md
 ```
 
-## 🛠️ Utility Scripts
+## 🛠️ Managing Specs
 
-Use these scripts to manage specs efficiently:
-
-### Create New Spec
+### Creating New Specs
 
 ```bash
-# Create a new spec (auto-increments NNN within today's date)
-pnpm spec create "short-name" "Optional Title"
+# Create a new spec (auto-increments number)
+lspec create "your-spec-name" --priority high --tags feature,api
 
 # Example
-pnpm spec create "database-architecture" "Database Architecture Design"
-# Creates: specs/20251031/001-database-architecture/
+lspec create "user-authentication" --priority high --tags auth,security
+# Creates: specs/014-user-authentication/
 ```
 
-### List Active Specs
+### Discovery & Navigation
 
 ```bash
-# List all non-archived specs
-pnpm spec list
+# View Kanban board (recommended starting point)
+lspec board
 
-# List specs for a specific date
-pnpm spec list 20251031
+# Show statistics and velocity
+lspec stats
+
+# List all specs
+lspec list
+
+# Filter by status
+lspec list --status in-progress
+
+# Filter by tag
+lspec list --tag architecture
+
+# Full-text search
+lspec search "database migration"
+
+# View a spec
+lspec view 007
+
+# Open in editor
+lspec open 007
 ```
 
-### Archive Completed Spec
+### Updating Specs
 
 ```bash
-# Archive a spec to specs/archive/YYYYMMDD/NNN-name/
-pnpm spec archive 20251031 001-database-architecture
+# Update spec metadata
+lspec update 014 --status in-progress
+lspec update 014 --priority high
+lspec update 014 --assignee yourname
 
-# Or archive an entire date folder
-pnpm spec archive 20251031
-```
-
-### Show Help
-
-```bash
-# Display usage information
-pnpm spec
+# Archive completed spec
+lspec archive 014
 ```
 
 ## 📝 Spec Content Guidelines
+
+### Required Frontmatter
+
+Every spec's README.md must include YAML frontmatter:
+
+```yaml
+---
+status: planned|in-progress|complete|archived
+created: YYYY-MM-DD
+tags: [tag1, tag2]
+priority: low|medium|high
+assignee: username (optional)
+---
+```
+
+**Status Values:**
+
+- `planned` 🗓️ - Design phase, not yet started
+- `in-progress` ⏳ - Currently being implemented
+- `complete` ✅ - Implementation finished
+- `archived` 📦 - Moved to archive (use `lspec archive` instead)
 
 ### Recommended Document Structure
 
 While not mandatory, consider including:
 
+- `README.md` - Overview with frontmatter and key points
 - `design.md` - Full technical design specification
-- `README.md` or `summary.md` - Quick overview and key points
-- `implementation.md` or `checklist.md` - Phase-by-phase tasks
-- `reference.md` - Quick reference guide for completed features
+- `implementation.md` - Phase-by-phase tasks and progress
+- `quick-reference.md` - Quick reference guide for completed features
 - Additional technical documents as needed
-
-### Status Indicators
-
-Include a clear status in your main document:
-
-- 📅 **Planned** - Design phase, not yet started
-- 🚧 **In Progress** - Currently being implemented
-- ✅ **Complete** - Implementation finished
-- ⏸️ **Paused** - Temporarily on hold
-- ❌ **Cancelled** - Abandoned or deprioritized
 
 ### Example Document Header
 
 ```markdown
+---
+status: complete
+created: 2025-10-31
+tags: [architecture, database]
+priority: high
+---
+
 # Database Architecture Design
 
-**Status**: ✅ Complete  
-**Created**: 2025-10-31  
 **Updated**: 2025-11-05  
-**Spec**: `20251031/000-database-architecture`
+**Spec**: `007-database-architecture`
 
 ## Overview
+
 ...
 ```
 
@@ -126,12 +151,14 @@ Create a spec when:
 - Making architectural decisions that affect multiple components
 - Implementing complex features that need documentation
 - Planning breaking changes or major refactors
+- Design decisions needing team alignment
 
 **Don't create specs for:**
 
 - Small bug fixes or minor tweaks
 - Routine maintenance tasks
 - Simple one-file changes
+- Self-explanatory refactors
 
 ## 🔄 Workflow Integration
 
@@ -140,38 +167,41 @@ Create a spec when:
 When starting work on a significant feature:
 
 ```typescript
-// 1. Check if a spec exists
-// Browse specs/ directory or use grep_search
-
-// 2. If no spec exists and work is significant, create one
-// Use pnpm spec:create or create folder manually
-
+// 1. Check if a spec exists - use lspec search or lspec list
+// 2. If no spec exists and work is significant:
+//    - Create with: lspec create "spec-name" --priority high
 // 3. Document design decisions in the spec as you work
-
-// 4. Update spec status when work completes
-
-// 5. Archive spec when project phase is done (optional)
+// 4. Update status: lspec update NNN --status in-progress
+// 5. Mark complete: lspec update NNN --status complete
 ```
 
 ### For Human Developers
 
-1. **Planning**: Create spec with `pnpm spec:create`
-2. **Design**: Write design documents in the spec folder
-3. **Implementation**: Reference spec during development
-4. **Completion**: Update status to ✅ Complete
-5. **Archive**: Move to archive when project phase ends (optional)
+1. **Discovery**: Run `lspec board` to see current state
+2. **Planning**: Create spec with `lspec create`
+3. **Design**: Write design documents with frontmatter in README.md
+4. **Implementation**: Reference spec during development, update with `lspec update`
+5. **Completion**: Mark complete with `lspec update NNN --status complete`
+6. **Archive**: Move to archive with `lspec archive NNN` when project phase ends
 
 ## 📚 Historical Context
 
-Prior to November 2025, specifications lived in `docs/dev/YYYYMMDD-feature-name/`. The new multi-tier structure (`YYYYMMDD/NNN-name/`) provides:
+**Evolution**:
 
-- Better organization when multiple specs start on the same day
-- Clearer chronological ordering
-- Easier automation and tooling
-- Simplified directory structure
+- **Pre-Nov 2025**: Specs lived in `docs/dev/YYYYMMDD-feature-name/`
+- **Nov 2025**: Migrated to multi-tier structure `YYYYMMDD/NNN-name/`
+- **Nov 10, 2025**: Flattened to `NNN-name/` for simplicity
+
+The flat structure provides:
+
+- Simpler organization and discovery
+- No date-based hierarchy complexity
+- Created dates stored in frontmatter
+- Sequential numbering shows creation order
 
 ---
 
-**See Also**: 
-- [AGENTS.md](/AGENTS.md) - AI agent guidelines and SOP
-- [.github/instructions/all.instructions.md](/.github/instructions/all.instructions.md) - Comprehensive patterns
+**See Also**:
+
+- [AGENTS.md](../AGENTS.md) - AI agent guidelines including LeanSpec methodology
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Project contribution guide
