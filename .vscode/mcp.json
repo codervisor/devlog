@@ -5,12 +5,12 @@
       "args": ["@playwright/mcp@latest", "--isolated"],
       "type": "stdio"
     },
-    "lean-spec": {
+    "leanspec": {
       "type": "stdio",
       "command": "npx",
-      "args": ["lean-spec", "mcp"],
-      "cwd": "${workspaceFolder}",
-      "env": {}
+      "args": ["@leanspec/mcp@0.2.9"],
+      "env": {},
+      "cwd": "${workspaceFolder}"
     }
   },
   "inputs": [
