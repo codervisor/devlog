@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -198,12 +199,23 @@ watching. Use --no-history to skip historical sync (for power users).`,
 
 				totalSynced := 0
 				totalSkipped := 0
+				totalSources := 0
+				currentSource := 0
+
+				// Count total sources first
+				for _, logs := range discovered {
+					totalSources += len(logs)
+				}
+
+				syncStartTime := time.Now()
 
 				for agentName, logs := range discovered {
 					adapterName := mapAgentName(agentName)
 
 					for _, logInfo := range logs {
-						log.Infof("Syncing historical data for %s: %s", agentName, logInfo.Path)
+						currentSource++
+						// Show progress
+						fmt.Printf("\r🔄 Syncing [%d/%d]: %s...", currentSource, totalSources, filepath.Base(filepath.Dir(logInfo.Path)))
 
 						bfConfig := backfill.BackfillConfig{
 							AgentName: adapterName,
@@ -224,7 +236,10 @@ watching. Use --no-history to skip historical sync (for power users).`,
 					}
 				}
 
-				log.Infof("Historical sync complete: %d events synced, %d skipped (already synced)", totalSynced, totalSkipped)
+				syncDuration := time.Since(syncStartTime)
+				fmt.Println() // New line after progress
+				log.Infof("✅ Historical sync complete in %s: %d events synced, %d skipped (already synced)", 
+					syncDuration.Round(time.Millisecond), totalSynced, totalSkipped)
 			}
 		} else {
 			log.Info("Skipping historical sync (--no-history flag)")
@@ -244,7 +259,24 @@ watching. Use --no-history to skip historical sync (for power users).`,
 					log.Warnf("Failed to watch %s: %v", logInfo.Path, err)
 				}
 			}
+
+			// Also watch parent directories for new workspace detection
+			var parentPaths []string
+			for _, logInfo := range logs {
+				parentPaths = append(parentPaths, logInfo.Path)
+			}
+			if err := fileWatcher.WatchParentDirs(parentPaths, adapterInstance); err != nil {
+				log.Warnf("Failed to watch parent dirs for %s: %v", agentName, err)
+			}
 		}
+
+		// Start dynamic workspace discovery (check every 60 seconds for new workspaces)
+		fileWatcher.StartDynamicDiscovery(60*time.Second, func(path string, adapter adapters.AgentAdapter) {
+			log.Infof("New workspace discovered: %s", path)
+			if err := fileWatcher.Watch(path, adapter); err != nil {
+				log.Warnf("Failed to watch new workspace %s: %v", path, err)
+			}
+		})
 
 		// Process events from watcher to client
 		go func() {
@@ -340,11 +372,144 @@ var versionCmd = &cobra.Command{
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Check collector status",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Checking collector status...")
-		// TODO: Connect to health check endpoint
-		fmt.Println("Status: Not implemented yet")
+	Short: "Check collector status and sync state",
+	Long: `Display the current status of the collector, including:
+- Configuration status
+- Backend connectivity
+- Sync state for all discovered agents
+- Buffer state (pending events)`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("📊 Devlog Collector Status")
+		fmt.Println("==========================")
+		fmt.Println()
+
+		// Load configuration
+		cfg, err := config.LoadConfig(configPath)
+		if err != nil {
+			fmt.Printf("⚠️  Configuration: Failed to load (%v)\n", err)
+		} else {
+			fmt.Printf("✅ Configuration: Loaded from %s\n", configPath)
+			fmt.Printf("   Backend URL: %s\n", cfg.BackendURL)
+			fmt.Printf("   Project ID: %s\n", cfg.ProjectID)
+		}
+		fmt.Println()
+
+		// Check backend connectivity
+		if cfg != nil {
+			batchInterval, _ := cfg.GetBatchInterval()
+			clientConfig := client.Config{
+				BaseURL:    cfg.BackendURL,
+				APIKey:     cfg.APIKey,
+				BatchSize:  cfg.Collection.BatchSize,
+				BatchDelay: batchInterval,
+				MaxRetries: cfg.Collection.MaxRetries,
+				Logger:     log,
+			}
+			apiClient := client.NewClient(clientConfig)
+			if err := apiClient.HealthCheck(); err != nil {
+				fmt.Printf("❌ Backend: Unreachable (%v)\n", err)
+			} else {
+				fmt.Printf("✅ Backend: Connected\n")
+			}
+		}
+		fmt.Println()
+
+		// Check buffer state
+		if cfg != nil {
+			bufferConfig := buffer.Config{
+				DBPath:  cfg.Buffer.DBPath,
+				MaxSize: cfg.Buffer.MaxSize,
+				Logger:  log,
+			}
+			buf, err := buffer.NewBuffer(bufferConfig)
+			if err == nil {
+				defer buf.Close()
+				count, _ := buf.Count()
+				if count > 0 {
+					fmt.Printf("📦 Buffer: %d events pending\n", count)
+				} else {
+					fmt.Printf("📦 Buffer: Empty (all events synced)\n")
+				}
+			}
+		}
+		fmt.Println()
+
+		// Discover all agent logs and show sync status
+		fmt.Println("🤖 Agents:")
+		discovered, err := watcher.DiscoverAllAgentLogs()
+		if err != nil {
+			fmt.Printf("   ⚠️  Failed to discover agents: %v\n", err)
+			return nil
+		}
+
+		if len(discovered) == 0 {
+			fmt.Println("   No agent logs discovered")
+			return nil
+		}
+
+		// Get sync state from backfill manager
+		var manager *backfill.BackfillManager
+		if cfg != nil {
+			backfillConfig := backfill.Config{
+				StateDBPath: cfg.Buffer.DBPath,
+				Logger:      log,
+			}
+			manager, err = backfill.NewBackfillManager(backfillConfig)
+			if err != nil {
+				log.Debugf("Failed to create backfill manager: %v", err)
+			} else {
+				defer manager.Close()
+			}
+		}
+
+		for agentName, logs := range discovered {
+			adapterName := mapAgentName(agentName)
+			fmt.Printf("\n   %s (%d log sources)\n", agentName, len(logs))
+
+			if manager == nil {
+				for _, logInfo := range logs {
+					fmt.Printf("      📁 %s\n", logInfo.Path)
+				}
+				continue
+			}
+
+			states, err := manager.Status(adapterName)
+			if err != nil {
+				continue
+			}
+
+			stateMap := make(map[string]*backfill.BackfillState)
+			for _, state := range states {
+				stateMap[state.LogFilePath] = state
+			}
+
+			for _, logInfo := range logs {
+				state, exists := stateMap[logInfo.Path]
+				if !exists {
+					fmt.Printf("      📁 %s - ⏳ pending\n", filepath.Base(filepath.Dir(logInfo.Path)))
+					continue
+				}
+
+				switch state.Status {
+				case backfill.StatusCompleted:
+					fmt.Printf("      📁 %s - ✅ synced (%d events)\n", 
+						filepath.Base(filepath.Dir(logInfo.Path)), state.TotalEventsProcessed)
+				case backfill.StatusInProgress:
+					fmt.Printf("      📁 %s - 🔄 syncing (%d events)\n", 
+						filepath.Base(filepath.Dir(logInfo.Path)), state.TotalEventsProcessed)
+				case backfill.StatusFailed:
+					fmt.Printf("      📁 %s - ❌ failed: %s\n", 
+						filepath.Base(filepath.Dir(logInfo.Path)), state.ErrorMessage)
+				default:
+					fmt.Printf("      📁 %s - ⏳ pending\n", filepath.Base(filepath.Dir(logInfo.Path)))
+				}
+			}
+		}
+
+		fmt.Println()
+		fmt.Println("💡 Tip: Run 'devlog-collector start' to begin collecting events")
+
+		return nil
 	},
 }
 

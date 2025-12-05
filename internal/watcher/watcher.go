@@ -21,7 +21,8 @@ type Watcher struct {
 	eventQueue chan *types.AgentEvent
 	log        *logrus.Logger
 	mu         sync.Mutex
-	watching   map[string]bool // tracked file paths
+	watching   map[string]bool             // tracked file paths
+	adapters   map[string]adapters.AgentAdapter // path -> adapter mapping for new file detection
 	debounce   time.Duration
 	debouncers map[string]*time.Timer
 	ctx        context.Context
@@ -63,6 +64,7 @@ func NewWatcher(config Config) (*Watcher, error) {
 		eventQueue: make(chan *types.AgentEvent, config.EventQueueSize),
 		log:        config.Logger,
 		watching:   make(map[string]bool),
+		adapters:   make(map[string]adapters.AgentAdapter),
 		debounce:   time.Duration(config.DebounceMs) * time.Millisecond,
 		debouncers: make(map[string]*time.Timer),
 		ctx:        ctx,
@@ -113,6 +115,9 @@ func (w *Watcher) Watch(path string, adapter adapters.AgentAdapter) error {
 		return fmt.Errorf("failed to stat path: %w", err)
 	}
 
+	// Store adapter for this path (for new file detection)
+	w.adapters[path] = adapter
+
 	// If it's a directory, watch recursively
 	if info.IsDir() {
 		if err := w.watchDir(path, adapter); err != nil {
@@ -145,6 +150,7 @@ func (w *Watcher) watchDir(dirPath string, adapter adapters.AgentAdapter) error 
 			continue
 		}
 		w.watching[logFile] = true
+		w.adapters[logFile] = adapter
 		w.log.Debugf("Watching file: %s", logFile)
 	}
 
@@ -152,6 +158,8 @@ func (w *Watcher) watchDir(dirPath string, adapter adapters.AgentAdapter) error 
 	if err := w.fsWatcher.Add(dirPath); err != nil {
 		return fmt.Errorf("failed to watch directory: %w", err)
 	}
+	w.watching[dirPath] = true
+	w.adapters[dirPath] = adapter
 
 	return nil
 }
@@ -186,8 +194,14 @@ func (w *Watcher) processEvents() {
 
 // handleFileEvent processes a single file system event with debouncing
 func (w *Watcher) handleFileEvent(event fsnotify.Event) {
-	// Only handle Write and Create events
-	if event.Op&fsnotify.Write == 0 && event.Op&fsnotify.Create == 0 {
+	// Handle Create events for new files (file rotation / new chat sessions)
+	if event.Op&fsnotify.Create != 0 {
+		w.handleNewFile(event.Name)
+		return
+	}
+
+	// Only handle Write events for existing files
+	if event.Op&fsnotify.Write == 0 {
 		return
 	}
 
@@ -213,6 +227,71 @@ func (w *Watcher) handleFileEvent(event fsnotify.Event) {
 		delete(w.debouncers, event.Name)
 		w.mu.Unlock()
 	})
+}
+
+// handleNewFile handles newly created files (file rotation / new chat sessions)
+func (w *Watcher) handleNewFile(filePath string) {
+	// Check if it's a log file
+	if !isLogFile(filePath) {
+		return
+	}
+
+	// Check if it's a new directory (new workspace)
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return
+	}
+
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	// Already watching this path
+	if w.watching[filePath] {
+		return
+	}
+
+	// Find the adapter for the parent directory
+	parentDir := filepath.Dir(filePath)
+	adapter, ok := w.adapters[parentDir]
+	if !ok {
+		// Try to find adapter from registry using file sample
+		sample, err := readFileSample(filePath, 1024)
+		if err != nil {
+			w.log.Debugf("Failed to read sample from new file %s: %v", filePath, err)
+			return
+		}
+		adapter, err = w.registry.DetectAdapter(sample)
+		if err != nil {
+			w.log.Debugf("No adapter found for new file %s", filePath)
+			return
+		}
+	}
+
+	if info.IsDir() {
+		// New directory (possibly new workspace)
+		w.log.Infof("New directory detected: %s", filePath)
+		// Watch it without holding lock (release and reacquire)
+		w.mu.Unlock()
+		if err := w.Watch(filePath, adapter); err != nil {
+			w.log.Warnf("Failed to watch new directory %s: %v", filePath, err)
+		}
+		w.mu.Lock()
+	} else {
+		// New file (file rotation / new chat session)
+		w.log.Infof("New log file detected: %s", filepath.Base(filePath))
+		if err := w.fsWatcher.Add(filePath); err != nil {
+			w.log.Warnf("Failed to watch new file %s: %v", filePath, err)
+			return
+		}
+		w.watching[filePath] = true
+		w.adapters[filePath] = adapter
+
+		// Process the new file after a short delay (let it finish writing)
+		go func() {
+			time.Sleep(500 * time.Millisecond)
+			w.processLogFile(filePath)
+		}()
+	}
 }
 
 // processLogFile reads and parses a log file
@@ -286,4 +365,84 @@ func (w *Watcher) GetStats() map[string]interface{} {
 		"queue_capacity":    cap(w.eventQueue),
 		"active_debouncers": len(w.debouncers),
 	}
+}
+
+// WatchParentDirs watches parent directories for new workspaces (e.g., VS Code workspaceStorage)
+// This enables detecting new workspaces when they are created (user opens new project in VS Code)
+func (w *Watcher) WatchParentDirs(paths []string, adapter adapters.AgentAdapter) error {
+	for _, path := range paths {
+		// Get the parent directory (workspaceStorage for copilot)
+		parentDir := filepath.Dir(path)
+
+		w.mu.Lock()
+		alreadyWatching := w.watching[parentDir]
+		w.mu.Unlock()
+
+		if alreadyWatching {
+			continue
+		}
+
+		// Check if parent exists
+		if _, err := os.Stat(parentDir); os.IsNotExist(err) {
+			continue
+		}
+
+		// Watch the parent directory for new workspace subdirectories
+		if err := w.fsWatcher.Add(parentDir); err != nil {
+			w.log.Warnf("Failed to watch parent directory %s: %v", parentDir, err)
+			continue
+		}
+
+		w.mu.Lock()
+		w.watching[parentDir] = true
+		w.adapters[parentDir] = adapter
+		w.mu.Unlock()
+
+		w.log.Debugf("Watching parent directory for new workspaces: %s", parentDir)
+	}
+
+	return nil
+}
+
+// StartDynamicDiscovery starts a background goroutine that periodically scans for new workspaces
+func (w *Watcher) StartDynamicDiscovery(interval time.Duration, onNewWorkspace func(string, adapters.AgentAdapter)) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-w.ctx.Done():
+				return
+			case <-ticker.C:
+				// Discover all agent logs and check for new ones
+				discovered, err := DiscoverAllAgentLogs()
+				if err != nil {
+					w.log.Warnf("Dynamic discovery error: %v", err)
+					continue
+				}
+
+				for agentName, logs := range discovered {
+					for _, logInfo := range logs {
+						w.mu.Lock()
+						isNew := !w.watching[logInfo.Path]
+						w.mu.Unlock()
+
+						if isNew {
+							w.log.Infof("Discovered new workspace: %s (%s)", logInfo.Path, agentName)
+							if onNewWorkspace != nil {
+								// Get adapter for this agent
+								adapter, err := w.registry.Get(agentName)
+								if err != nil {
+									w.log.Warnf("No adapter for %s, skipping", agentName)
+									continue
+								}
+								onNewWorkspace(logInfo.Path, adapter)
+							}
+						}
+					}
+				}
+			}
+		}
+	}()
 }

@@ -130,14 +130,14 @@ devlog-collector backfill run  # → Prints: "Deprecated. Use 'start' instead."
 ### Phase 2: Continuous Cursor Tracking
 
 - [x] Update cursor after each event batch (watcher and initial sync)
-- [ ] Handle file rotation (new chat sessions)
-- [ ] Detect new workspace directories dynamically
+- [x] Handle file rotation (new chat sessions)
+- [x] Detect new workspace directories dynamically
 
 ### Phase 3: Progress & Status UX
 
 - [x] Add `sync --status` subcommand
-- [ ] Show sync progress on startup (non-blocking spinner/bar)
-- [ ] Add sync state to `status` command output
+- [x] Show sync progress on startup (non-blocking spinner/bar)
+- [x] Add sync state to `status` command output
 
 ### Phase 4: Cleanup & Documentation
 
