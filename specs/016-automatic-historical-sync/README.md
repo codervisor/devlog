@@ -1,5 +1,5 @@
 ---
-status: planned
+status: in-progress
 created: '2025-12-05'
 tags:
   - ux
@@ -8,11 +8,15 @@ tags:
   - sync
 priority: high
 created_at: '2025-12-05T04:55:09.494Z'
+updated_at: '2025-12-05T06:32:07.677Z'
+transitions:
+  - status: in-progress
+    at: '2025-12-05T06:32:07.677Z'
 ---
 
 # Automatic Historical Data Synchronization
 
-> **Status**: 📅 Planned · **Priority**: High · **Created**: 2025-12-05
+> **Status**: ⏳ In progress · **Priority**: High · **Created**: 2025-12-05 · **Tags**: ux, workflow, collector, sync
 
 ## Problem Statement
 
@@ -118,27 +122,27 @@ devlog-collector backfill run  # → Prints: "Deprecated. Use 'start' instead."
 
 ### Phase 1: Merge Backfill into Start Command
 
-- [ ] Add sync cursor management to BackfillManager
-- [ ] Integrate historical sync into `start` command flow
-- [ ] Process history before starting watcher (or in parallel)
-- [ ] Add `--no-history` flag for power users
+- [x] Add sync cursor management to BackfillManager
+- [x] Integrate historical sync into `start` command flow
+- [x] Process history before starting watcher (or in parallel)
+- [x] Add `--no-history` flag for power users
 
 ### Phase 2: Continuous Cursor Tracking
 
-- [ ] Update cursor after each event batch (watcher and initial sync)
+- [x] Update cursor after each event batch (watcher and initial sync)
 - [ ] Handle file rotation (new chat sessions)
 - [ ] Detect new workspace directories dynamically
 
 ### Phase 3: Progress & Status UX
 
-- [ ] Add `sync --status` subcommand
+- [x] Add `sync --status` subcommand
 - [ ] Show sync progress on startup (non-blocking spinner/bar)
 - [ ] Add sync state to `status` command output
 
 ### Phase 4: Cleanup & Documentation
 
-- [ ] Deprecate `backfill` command (show migration message)
-- [ ] Update README and help text
+- [x] Deprecate `backfill` command (show migration message)
+- [x] Update README and help text
 - [ ] Test full user journey from fresh install
 
 ## Test

@@ -64,10 +64,17 @@ Supports: GitHub Copilot, Claude Code, Cursor, and more.`,
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the collector daemon",
-	Long:  "Start the collector daemon to monitor AI agent logs",
+	Long: `Start the collector daemon to monitor AI agent logs.
+
+By default, the collector will sync historical data before starting real-time
+watching. Use --no-history to skip historical sync (for power users).`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Info("Starting Devlog Collector...")
 		log.Infof("Version: %s", version)
+
+		// Parse flags
+		skipHistory, _ := cmd.Flags().GetBool("no-history")
+		initialSyncDays, _ := cmd.Flags().GetInt("initial-sync-days")
 
 		// Load configuration
 		var err error
@@ -159,6 +166,70 @@ var startCmd = &cobra.Command{
 			return fmt.Errorf("failed to discover logs: %w", err)
 		}
 
+		// Create context for graceful shutdown
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Sync historical data before starting watcher (unless --no-history)
+		if !skipHistory {
+			log.Info("Syncing historical data...")
+
+			// Initialize hierarchy cache with client for backfill
+			hierarchyCacheWithClient := hierarchy.NewHierarchyCache(apiClient, log)
+			backfillRegistry := adapters.DefaultRegistry(cfg.ProjectID, hierarchyCacheWithClient, log)
+
+			// Create backfill manager
+			backfillConfig := backfill.Config{
+				Registry:    backfillRegistry,
+				Buffer:      buf,
+				Client:      apiClient,
+				StateDBPath: cfg.Buffer.DBPath,
+				Logger:      log,
+			}
+			manager, err := backfill.NewBackfillManager(backfillConfig)
+			if err != nil {
+				log.Warnf("Failed to create backfill manager, skipping historical sync: %v", err)
+			} else {
+				defer manager.Close()
+
+				// Calculate date range for initial sync
+				fromDate := time.Now().AddDate(0, 0, -initialSyncDays)
+				toDate := time.Now()
+
+				totalSynced := 0
+				totalSkipped := 0
+
+				for agentName, logs := range discovered {
+					adapterName := mapAgentName(agentName)
+
+					for _, logInfo := range logs {
+						log.Infof("Syncing historical data for %s: %s", agentName, logInfo.Path)
+
+						bfConfig := backfill.BackfillConfig{
+							AgentName: adapterName,
+							LogPath:   logInfo.Path,
+							FromDate:  fromDate,
+							ToDate:    toDate,
+							BatchSize: 100,
+						}
+
+						result, err := manager.Backfill(ctx, bfConfig)
+						if err != nil {
+							log.Warnf("Failed to sync historical data for %s: %v", logInfo.Path, err)
+							continue
+						}
+
+						totalSynced += result.ProcessedEvents
+						totalSkipped += result.SkippedEvents
+					}
+				}
+
+				log.Infof("Historical sync complete: %d events synced, %d skipped (already synced)", totalSynced, totalSkipped)
+			}
+		} else {
+			log.Info("Skipping historical sync (--no-history flag)")
+		}
+
 		for agentName, logs := range discovered {
 			adapterName := mapAgentName(agentName)
 			adapterInstance, err := registry.Get(adapterName)
@@ -176,9 +247,6 @@ var startCmd = &cobra.Command{
 		}
 
 		// Process events from watcher to client
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		go func() {
 			for {
 				select {
@@ -289,9 +357,19 @@ This is useful for capturing development history before the collector was instal
 
 var backfillRunCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Run backfill operation",
-	Long:  "Process historical logs for the specified agent and date range",
+	Short: "Run backfill operation (deprecated)",
+	Long: `Process historical logs for the specified agent and date range.
+
+DEPRECATED: The 'start' command now automatically syncs historical data.
+Use 'devlog-collector start' instead. To skip historical sync, use 'start --no-history'.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Show deprecation warning
+		fmt.Println("⚠️  DEPRECATED: The 'backfill run' command is deprecated.")
+		fmt.Println("   The 'start' command now automatically syncs historical data.")
+		fmt.Println("   Use 'devlog-collector start' for automatic sync,")
+		fmt.Println("   or 'devlog-collector start --no-history' to skip historical sync.")
+		fmt.Println()
+
 		// Load configuration
 		var err error
 		cfg, err = config.LoadConfig(configPath)
@@ -577,6 +655,117 @@ func progressBar(percentage float64) string {
 	return bar
 }
 
+var syncCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Manage sync state",
+	Long:  "View and manage the synchronization state of agent logs",
+}
+
+var syncStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check sync status for all agents",
+	Long:  "Display the synchronization status for all discovered agent logs",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Load configuration
+		var err error
+		cfg, err = config.LoadConfig(configPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
+
+		// Create backfill manager (uses same state store)
+		backfillConfig := backfill.Config{
+			StateDBPath: cfg.Buffer.DBPath,
+			Logger:      log,
+		}
+		manager, err := backfill.NewBackfillManager(backfillConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create sync manager: %w", err)
+		}
+		defer manager.Close()
+
+		// Get agent filter
+		agentFilter, _ := cmd.Flags().GetString("agent")
+
+		// Discover all agent logs
+		discovered, err := watcher.DiscoverAllAgentLogs()
+		if err != nil {
+			return fmt.Errorf("failed to discover logs: %w", err)
+		}
+
+		fmt.Println("📊 Sync Status")
+		fmt.Println("==============")
+		fmt.Println()
+
+		totalSynced := 0
+		totalPending := 0
+		totalInProgress := 0
+
+		for agentName, logs := range discovered {
+			adapterName := mapAgentName(agentName)
+
+			// Filter by agent if specified
+			if agentFilter != "" && agentFilter != agentName && agentFilter != adapterName {
+				continue
+			}
+
+			fmt.Printf("🤖 %s (%d log sources)\n", agentName, len(logs))
+
+			states, err := manager.Status(adapterName)
+			if err != nil {
+				fmt.Printf("   ❌ Error getting status: %v\n", err)
+				continue
+			}
+
+			// Create a map for quick lookup
+			stateMap := make(map[string]*backfill.BackfillState)
+			for _, state := range states {
+				stateMap[state.LogFilePath] = state
+			}
+
+			for _, logInfo := range logs {
+				state, exists := stateMap[logInfo.Path]
+				if !exists {
+					fmt.Printf("   📁 %s\n", logInfo.Path)
+					fmt.Printf("      Status: ⏳ pending (not yet synced)\n")
+					totalPending++
+					continue
+				}
+
+				fmt.Printf("   📁 %s\n", logInfo.Path)
+				switch state.Status {
+				case backfill.StatusCompleted:
+					fmt.Printf("      Status: ✅ synced (%d events)\n", state.TotalEventsProcessed)
+					if state.CompletedAt != nil {
+						fmt.Printf("      Last sync: %s\n", state.CompletedAt.Format(time.RFC3339))
+					}
+					totalSynced++
+				case backfill.StatusInProgress:
+					fmt.Printf("      Status: 🔄 syncing (%d events so far)\n", state.TotalEventsProcessed)
+					totalInProgress++
+				case backfill.StatusPaused:
+					fmt.Printf("      Status: ⏸️  paused (%d events)\n", state.TotalEventsProcessed)
+					totalPending++
+				case backfill.StatusFailed:
+					fmt.Printf("      Status: ❌ failed: %s\n", state.ErrorMessage)
+					totalPending++
+				default:
+					fmt.Printf("      Status: ⏳ pending\n")
+					totalPending++
+				}
+			}
+			fmt.Println()
+		}
+
+		fmt.Println("Summary:")
+		fmt.Printf("  ✅ Synced:      %d\n", totalSynced)
+		fmt.Printf("  🔄 In progress: %d\n", totalInProgress)
+		fmt.Printf("  ⏳ Pending:     %d\n", totalPending)
+
+		return nil
+	},
+}
+
 func init() {
 	// Configure logging
 	log.SetFormatter(&logrus.TextFormatter{
@@ -589,10 +778,18 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(backfillCmd)
+	rootCmd.AddCommand(syncCmd)
 
 	// Add backfill subcommands
 	backfillCmd.AddCommand(backfillRunCmd)
 	backfillCmd.AddCommand(backfillStatusCmd)
+
+	// Add sync subcommands
+	syncCmd.AddCommand(syncStatusCmd)
+
+	// Start command flags
+	startCmd.Flags().Bool("no-history", false, "Skip historical sync (only watch for new events)")
+	startCmd.Flags().Int("initial-sync-days", 90, "Number of days to sync on first run")
 
 	// Backfill run flags
 	backfillRunCmd.Flags().StringP("agent", "a", "copilot", "Agent name (copilot, claude, cursor)")
@@ -605,6 +802,9 @@ func init() {
 
 	// Backfill status flags
 	backfillStatusCmd.Flags().StringP("agent", "a", "", "Agent name to check")
+
+	// Sync status flags
+	syncStatusCmd.Flags().StringP("agent", "a", "", "Filter by agent name")
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c",
