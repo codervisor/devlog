@@ -37,96 +37,102 @@
 
 ---
 
-## 📋 LeanSpec - Lightweight Specification Management
+## 📋 LeanSpec - Specification Management
 
 **Philosophy**: Lightweight spec methodology for AI-powered development. Clarity over documentation.
 
-### Core Principles
+### 🚨 CRITICAL: Before ANY Task
 
-1. **Read README.md first** - Understand project context before starting
-2. **Check specs/** - Review existing specs to avoid duplicate work
-3. **Keep it minimal** - If it doesn't add clarity, cut it
-4. **Stay in sync** - Specs evolve with implementation
+**STOP and check these first:**
+
+1. **Discover context** → Use `board` tool to see project state
+2. **Search for related work** → Use `search` tool before creating new specs
+3. **Never create files manually** → Always use `create` tool for new specs
+
+> **Why?** Skipping discovery creates duplicate work. Manual file creation breaks LeanSpec tooling.
+
+### First Principles (Priority Order)
+
+1. **Context Economy** - <2,000 tokens optimal, >3,500 needs splitting
+2. **Signal-to-Noise** - Every word must inform a decision
+3. **Intent Over Implementation** - Capture why, let how emerge
+4. **Bridge the Gap** - Both human and AI must understand
+5. **Progressive Disclosure** - Add complexity only when pain is felt
 
 ### When to Create a Spec
 
-**Create specs for:**
+| ✅ Write spec                              | ❌ Skip spec               |
+| ------------------------------------------ | -------------------------- |
+| Multi-part features (>2 days work)         | Bug fixes                  |
+| Breaking changes                           | Trivial changes            |
+| Design decisions                           | Self-explanatory refactors |
+| Architecture affecting multiple components | Simple one-file changes    |
 
-- Features requiring design/planning (>2 days work)
-- Features that affect multiple parts of the system
-- Architectural decisions affecting multiple components
-- Breaking changes or significant refactors
-- Design decisions needing team alignment
-- Complex features benefiting from upfront thinking
+### 🔧 Managing Specs
 
-**Skip specs for:**
+#### MCP Tools (Preferred) with CLI Fallback
 
-- Bug fixes
-- Trivial changes
-- Routine maintenance
-- Self-explanatory refactors
-- Simple one-file changes
+| Action         | MCP Tool | CLI Fallback                                   |
+| -------------- | -------- | ---------------------------------------------- |
+| Project status | `board`  | `lean-spec board`                              |
+| List specs     | `list`   | `lean-spec list`                               |
+| Search specs   | `search` | `lean-spec search "query"`                     |
+| View spec      | `view`   | `lean-spec view <spec>`                        |
+| Create spec    | `create` | `lean-spec create <name>`                      |
+| Update spec    | `update` | `lean-spec update <spec> --status <status>`    |
+| Link specs     | `link`   | `lean-spec link <spec> --depends-on <other>`   |
+| Unlink specs   | `unlink` | `lean-spec unlink <spec> --depends-on <other>` |
+| Dependencies   | `deps`   | `lean-spec deps <spec>`                        |
+| Token count    | `tokens` | `lean-spec tokens <spec>`                      |
 
-### Discovery
+### ⚠️ Core Rules
 
-Before starting work, understand project context:
+| Rule                                | Details                                                                                                               |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **NEVER edit frontmatter manually** | Use `update`, `link`, `unlink` for: `status`, `priority`, `tags`, `assignee`, `transitions`, timestamps, `depends_on` |
+| **ALWAYS link spec references**     | Content mentions another spec → `lean-spec link <spec> --depends-on <other>`                                          |
+| **Track status transitions**        | `planned` → `in-progress` (before coding) → `complete` (after done)                                                   |
+| **No nested code blocks**           | Use indentation instead                                                                                               |
+
+### 🚫 Common Mistakes
+
+| ❌ Don't                   | ✅ Do Instead                         |
+| -------------------------- | ------------------------------------- |
+| Create spec files manually | Use `create` tool                     |
+| Skip discovery             | Run `board` and `search` first        |
+| Leave status as "planned"  | Update to `in-progress` before coding |
+| Edit frontmatter manually  | Use `update` tool                     |
+
+### 📋 SDD Workflow
+
+```
+BEFORE: board → search → check existing specs
+DURING: update status to in-progress → code → document decisions → link dependencies
+AFTER:  update status to complete → document learnings
+```
+
+**Status tracks implementation, NOT spec writing.**
+
+### Spec Dependencies
+
+Use `depends_on` to express blocking relationships between specs:
+
+- **`depends_on`** = True blocker, work order matters, directional (A depends on B)
+
+Link dependencies when one spec builds on another:
 
 ```bash
-# View Kanban board (best starting point)
-lspec board
-
-# Show statistics and velocity
-lspec stats
-
-# Find specs by tag
-lspec list --tag api
-
-# Full-text search
-lspec search "<query>"
-
-# View a spec
-lspec view NNN
-
-# Check dependencies
-lspec deps NNN
+lean-spec link <spec> --depends-on <other-spec>
 ```
 
-Use `lspec` commands to quickly understand what exists, what's in progress, and what depends on what.
+### Token Thresholds
 
-### Spec Frontmatter
-
-Include YAML frontmatter at the top of spec markdown files:
-
-```yaml
----
-status: planned|in-progress|complete|archived
-created: YYYY-MM-DD
-tags: [tag1, tag2] # helps with discovery
-priority: low|medium|high # helps with planning
-assignee: username # for team coordination
----
-```
-
-**Required fields**: `status`, `created`  
-**Helpful fields**: `tags` (discovery), `priority` (planning)
-
-**Update status**:
-
-```bash
-lspec update NNN --status in-progress
-lspec update NNN --priority high
-lspec update NNN --assignee yourname
-```
-
-### Workflow
-
-1. **Discover context** - Run `lspec board` to see current state
-2. **Search existing specs** - Use `lspec search` or `lspec list` to find relevant work
-3. **Check dependencies** - Run `lspec deps NNN` if working on existing spec
-4. **Create or update spec** - Use `lspec create` or `lspec update`
-5. **Implement changes** - Keep spec in sync as you learn
-6. **Update status** - `lspec update NNN --status in-progress` then `--status complete`
-7. **Archive when done** - `lspec archive NNN` moves to archive
+| Tokens      | Status                |
+| ----------- | --------------------- |
+| <2,000      | ✅ Optimal            |
+| 2,000-3,500 | ✅ Good               |
+| 3,500-5,000 | ⚠️ Consider splitting |
+| >5,000      | 🔴 Must split         |
 
 ### Quality Standards
 
@@ -135,3 +141,7 @@ lspec update NNN --assignee yourname
 - No unnecessary complexity
 - Documentation where needed (not everywhere)
 - Specs stay in sync with implementation
+
+---
+
+**Remember:** LeanSpec tracks what you're building. Keep specs in sync with your work!
