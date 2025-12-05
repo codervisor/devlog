@@ -1,129 +1,128 @@
-# Contributing to Devlog Tools
+# Contributing to Devlog
 
-This is a monorepo containing development logging tools and utilities. This document explains the project structure and development workflow.
+A Go-based AI agent event collector. This document explains the project structure and development workflow.
 
 ## Project Structure
 
 ```
-/
-├── package.json                 # Root workspace configuration
-├── packages/
-│   ├── core/                   # Core devlog management + TypeScript types
-│   │   ├── package.json        # Package-specific dependencies and scripts
-│   │   ├── src/               # Source code including types/
-│   │   └── build/             # Compiled output
-│   ├── mcp/                   # MCP server for development logging
-│   │   ├── package.json        # Package-specific dependencies and scripts
-│   │   ├── src/               # Source code
-│   │   └── build/             # Compiled output
-│   ├── web/                   # Next.js web interface
-│   │   ├── package.json        # Package-specific dependencies and scripts
-│   │   ├── app/               # Next.js App Router pages
-│   │   └── build/             # Compiled output
-│   └── [future packages]/     # Space for additional packages
-├── .vscode/                   # VS Code workspace configuration
-└── README.md                  # Main documentation
+devlog/
+├── cmd/
+│   └── devlog/           # CLI entry point (Cobra)
+├── internal/
+│   ├── adapters/         # Agent-specific log parsers
+│   ├── backfill/         # Historical log processing
+│   ├── buffer/           # SQLite offline event buffer
+│   ├── client/           # HTTP client for remote endpoints
+│   ├── config/           # Configuration management
+│   ├── hierarchy/        # Workspace/project resolution
+│   ├── integration/      # Integration tests
+│   └── watcher/          # File system watching
+├── pkg/
+│   ├── models/           # Data models
+│   └── types/            # Event types and constants
+├── configs/              # Default configuration files
+├── docs/                 # Documentation
+└── specs/                # Feature specifications
 ```
 
 ## Development Workflow
 
+### Prerequisites
+
+- Go 1.24+
+- Make
+
 ### Initial Setup
 
 ```bash
-# Install all dependencies for all packages
-pnpm install
+# Clone the repository
+git clone https://github.com/codervisor/devlog.git
+cd devlog
 
-# Build all packages
-pnpm build
+# Download dependencies
+make deps
+
+# Build the binary
+make build
 ```
 
-### Working with Packages
+### Build Commands
 
 ```bash
-# Build all packages
-pnpm build
-
-# Build only the MCP server
-pnpm build:mcp
-
-# Build only the core package  
-pnpm build:core
-
-# Build only the web package
-pnpm build:web
-
-# Start the MCP server
-pnpm start
-
-# Run the MCP server in development mode
-pnpm dev
-
-# Run tests for all packages
-pnpm test
-
-# Clean build artifacts from all packages
-pnpm clean
+make build         # Build for current platform
+make build-all     # Build for macOS, Linux, Windows (all architectures)
+make clean         # Remove build artifacts
+make install       # Install to /usr/local/bin
 ```
 
-### Working with Individual Packages
-
-You can also work directly with individual packages using pnpm filters:
+### Development
 
 ```bash
-# Work on the MCP server package
-pnpm --filter @codervisor/devlog-mcp build
-pnpm --filter @codervisor/devlog-mcp dev
-
-# Work on the core package
-pnpm --filter @codervisor/devlog-core build
-pnpm --filter @codervisor/devlog-core dev
-
-# Work on the web package
-pnpm --filter @codervisor/devlog-web build
-pnpm --filter @codervisor/devlog-web dev
-
-# Install dependencies for a specific package
-pnpm --filter @codervisor/devlog-mcp add some-dependency
+make dev           # Run with live reload (requires air)
+make run           # Build and run
+make fmt           # Format code
+make lint          # Run golangci-lint
 ```
 
-## Adding New Packages
+### Testing
 
-When adding a new package to the monorepo:
+```bash
+make test          # Run all tests with race detection
+make test-coverage # Generate HTML coverage report
+```
 
-1. Create a new directory in `packages/`
-2. Add a `package.json` with a scoped name (e.g., `@codervisor/devlog-package-name`)
-3. Update the root `tsconfig.json` to include the new package reference
-4. Update this document
+## Adding a New Agent Adapter
+
+To add support for a new AI coding agent:
+
+1. Create a new file in `internal/adapters/` (e.g., `myagent_adapter.go`)
+2. Implement the `AgentAdapter` interface:
+
+```go
+type AgentAdapter interface {
+    Name() string
+    ParseLogLine(line string) (*types.AgentEvent, error)
+    ParseLogFile(filePath string) ([]*types.AgentEvent, error)
+    SupportsFormat(sample string) bool
+}
+```
+
+3. Register in `internal/adapters/registry.go`
+4. Add log discovery paths in `internal/watcher/discovery.go`
+5. Add tests in `internal/adapters/myagent_adapter_test.go`
+
+## Code Style
+
+- Follow standard Go conventions
+- Use `make fmt` before committing
+- Use `make lint` to check for issues
+- Add tests for new functionality
+- Keep functions focused and well-documented
 
 ## Architecture Decisions
 
-### Monorepo Benefits
+### Why Go?
 
-- **Shared tooling**: Common TypeScript, linting, and build configurations
-- **Code sharing**: Easy to share types and utilities between packages
-- **Atomic changes**: Changes across multiple packages can be made in single commits
-- **Simplified dependency management**: Unified dependency resolution
+- Single static binary - no runtime dependencies
+- Low memory footprint for always-on daemon
+- Excellent file watching and concurrent I/O
+- Cross-platform support (macOS, Linux, Windows)
 
-### Package Structure
+### Design Principles
 
-- `@codervisor/devlog-core`: Core devlog management functionality, file system operations, CRUD, and all shared TypeScript types
-- `@codervisor/devlog-mcp`: MCP server implementation that wraps the core functionality
-- `@codervisor/devlog-web`: Next.js web interface for browsing and managing devlogs
+- **Simplicity**: Occam's razor - simple solutions over complex ones
+- **Type safety**: Strong typing throughout
+- **Testability**: All components are testable in isolation
+- **Extensibility**: Easy to add new agent adapters
 
-## Build System
+## Pull Request Guidelines
 
-The project uses pnpm workspaces with TypeScript project references for efficient builds:
+1. Fork the repository
+2. Create a feature branch from `develop`
+3. Make your changes with tests
+4. Run `make test` and `make lint`
+5. Submit a PR with a clear description
 
-- `pnpm-workspace.yaml` defines the workspace structure
-- Root `tsconfig.json` references all packages
-- `pnpm` manages dependencies and scripts efficiently
+## License
 
-### pnpm Workspace Commands
-
-- `pnpm -r <command>` - Run command in all packages
-- `pnpm --filter <package> <command>` - Run command in specific package
-- `pnpm --filter <pattern> <command>` - Run command in packages matching pattern
-
-## Testing
-
-Each package should include its own tests. The root workspace provides commands to run tests across all packages.
+Apache 2.0 - see [LICENSE](LICENSE)

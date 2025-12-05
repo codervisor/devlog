@@ -1,96 +1,53 @@
-# Multi-stage build for the devlog web application
-FROM node:20-alpine AS base
+# Multi-stage build for the devlog collector
+FROM golang:1.24-alpine AS builder
 
-# Install necessary system dependencies
-RUN apk add --no-cache libc6-compat python3 make g++
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates
 
-# Install pnpm globally
-RUN npm install -g pnpm
+WORKDIR /build
 
-# Enable pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Set working directory
-WORKDIR /app
+# Copy source code
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY pkg/ ./pkg/
 
-# Copy workspace configuration files
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-
-# ========================================
-# Dependencies stage
-# ========================================
-FROM base AS deps
-
-# Copy package.json files for proper dependency resolution
-COPY packages/core/package.json ./packages/core/
-COPY packages/ai/package.json ./packages/ai/
-COPY packages/web/package.json ./packages/web/
-
-# Install dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o devlog ./cmd/devlog
 
 # ========================================
-# Builder stage
+# Runtime stage - minimal image
 # ========================================
-FROM base AS builder
+FROM alpine:3.20
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
-COPY --from=deps /app/packages/ai/node_modules ./packages/ai/node_modules
-COPY --from=deps /app/packages/web/node_modules ./packages/web/node_modules
-
-# Copy source code (excluding MCP package)
-COPY packages/core ./packages/core
-COPY packages/ai ./packages/ai
-COPY packages/web ./packages/web
-COPY tsconfig.json ./
-COPY vitest.config.base.ts ./
-
-# Build packages in dependency order (core packages needed for web)
-RUN pnpm --filter @codervisor/devlog-core build
-RUN pnpm --filter @codervisor/devlog-ai build
-
-# Build web app with standalone output for production
-ENV NODE_ENV=production
-ENV NEXT_BUILD_MODE=standalone
-RUN pnpm --filter @codervisor/devlog-web build
-
-# ========================================
-# Runtime stage
-# ========================================
-FROM node:20-alpine AS runner
-
-RUN apk add --no-cache libc6-compat
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+RUN apk add --no-cache ca-certificates tzdata
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup -S devlog && adduser -S devlog -G devlog
 
-# Copy the standalone build output and static files
-COPY --from=builder /app/packages/web/.next-build/standalone ./
-COPY --from=builder /app/packages/web/.next-build/static ./packages/web/.next-build/static
-COPY --from=builder /app/packages/web/public ./packages/web/public
+WORKDIR /app
 
-# Create directories that the application might need and set permissions
-RUN mkdir -p /app/packages/web/.devlog /app/.devlog && \
-    chown -R nextjs:nodejs /app
+# Copy binary from builder
+COPY --from=builder /build/devlog /app/devlog
 
-# Set correct permissions
-USER nextjs
+# Create config and data directories
+RUN mkdir -p /app/data /app/config && \
+    chown -R devlog:devlog /app
 
-EXPOSE 3000
+USER devlog
+
+# Default configuration location
+ENV DEVLOG_CONFIG=/app/config/collector.json
+ENV DEVLOG_DB_PATH=/app/data/buffer.db
+
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+  CMD ["/app/devlog", "status"]
 
-# Start the Next.js application using the standalone server
-CMD ["node", "packages/web/server.js"]
+ENTRYPOINT ["/app/devlog"]
+CMD ["start"]

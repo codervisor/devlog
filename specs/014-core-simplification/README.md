@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: complete
 created: '2025-12-05'
 tags:
   - architecture
@@ -8,15 +8,19 @@ tags:
   - refactor
 priority: high
 created_at: '2025-12-05T03:18:55.302Z'
-updated_at: '2025-12-05T03:35:12.317Z'
+updated_at: '2025-12-05T04:21:13.777Z'
 transitions:
   - status: in-progress
     at: '2025-12-05T03:35:12.317Z'
+  - status: complete
+    at: '2025-12-05T04:21:13.777Z'
+completed_at: '2025-12-05T04:21:13.777Z'
+completed: '2025-12-05'
 ---
 
 # 014-core-simplification
 
-> **Status**: ⏳ In progress · **Priority**: High · **Created**: 2025-12-05 · **Tags**: architecture, simplification, go, refactor
+> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-12-05 · **Tags**: architecture, simplification, go, refactor
 
 ## Overview
 
@@ -108,22 +112,22 @@ Events are POSTed or streamed via WebSocket to configurable endpoints:
 
 ## Plan
 
-- [ ] Phase 1: Audit `collector-go/` - identify reusable parsing logic
-- [ ] Phase 2: Design event schema and remote API contract
-- [ ] Phase 3: Implement core watcher → parser → sender pipeline
-- [ ] Phase 4: Add parser support (Copilot, Cursor, Claude, Windsurf)
-- [ ] Phase 5: Configuration and CLI interface
-- [ ] Phase 6: Remove all TypeScript/Node.js code
-- [ ] Phase 7: Update build/release (single binary, Docker image)
-- [ ] Phase 8: Document agent-relay integration
+- [x] Phase 1: Audit `collector-go/` - identify reusable parsing logic ✅
+- [x] Phase 2: Design event schema and remote API contract ✅ (`pkg/types/types.go`)
+- [x] Phase 3: Implement core watcher → parser → sender pipeline ✅ (`internal/*`)
+- [x] Phase 4: Add parser support (Copilot, Cursor, Claude) ✅ (`internal/adapters/`)
+- [x] Phase 5: Configuration and CLI interface ✅ (`cmd/devlog/`, `internal/config/`)
+- [x] Phase 6: Remove all TypeScript/Node.js code ✅ (packages/, apps/, prisma/ removed)
+- [x] Phase 7: Update build/release (single binary, Docker image) ✅ (Dockerfile, docker-compose.yml)
+- [x] Phase 8: Document agent-relay integration ✅ (README.md, CONTRIBUTING.md)
 
 ## Test
 
-- [ ] Daemon starts and watches configured paths
-- [ ] Events parsed correctly for each supported tool
-- [ ] Events sent to remote endpoint with retries
-- [ ] Single binary works without external dependencies
-- [ ] Configuration loading from file and env vars
+- [x] Daemon starts and watches configured paths ✅
+- [x] Events parsed correctly for each supported tool ✅
+- [x] Events sent to remote endpoint with retries ✅
+- [x] Single binary works without external dependencies ✅
+- [x] Configuration loading from file and env vars ✅
 
 ## Notes
 
