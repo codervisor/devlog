@@ -1,20 +1,62 @@
-# Devlog - AI Coding Agent Observability Platform
+# Devlog
 
-> **⚠️ Early Development**: This project is actively under development (~40-45% complete). Core infrastructure is in place, but not all features described below are fully implemented yet. See [Current Implementation Status](#-current-implementation-status) for details.
+A lightweight Go daemon that collects AI coding agent events and sends them to configurable remote endpoints.
 
-A comprehensive **AI coding agent observability platform** that provides complete visibility into AI-assisted development. Built as a monorepo with MCP (Model Context Protocol) integration, devlog helps developers and teams monitor, analyze, and optimize their AI coding workflows by tracking agent activities, measuring code quality, and delivering actionable insights.
+## Features
 
-## 🔍 The Vision: Complete AI Agent Transparency
+- 🔍 **Auto-discovery** - Automatically finds AI agent log locations
+- 🔄 **Real-time monitoring** - Watches log files for changes with fsnotify
+- 📦 **Offline buffering** - SQLite buffer for offline operation and retry
+- 🚀 **Single binary** - No runtime dependencies, ~15MB static binary
+- 🌍 **Cross-platform** - macOS, Linux, Windows support
+- 🔌 **Multi-agent** - GitHub Copilot, Claude Code, Cursor, and more
 
-Modern software development increasingly relies on AI coding agents, but teams face critical challenges:
+## Supported AI Agents
 
-- **Lack of visibility** into what AI agents are doing and why
-- **Quality concerns** about AI-generated code
-- **Debugging difficulties** when AI agents fail or produce incorrect results
-- **Performance blind spots** in agent efficiency and cost
-- **Compliance gaps** for audit trails and governance
+- ✅ GitHub Copilot
+- ✅ Claude Code (Anthropic)
+- ✅ Cursor
+- 🔧 Generic JSONL adapter for custom agents
 
-**Devlog provides the solution**: A complete observability platform that captures, analyzes, and visualizes AI agent behavior, enabling teams to understand, optimize, and trust their AI-assisted development workflows.
+## Quick Start
+
+### Build
+
+```bash
+# Build for current platform
+make build
+
+# Build for all platforms
+make build-all
+
+# Binary available at: bin/devlog
+```
+
+### Run
+
+```bash
+# Start the daemon
+./bin/devlog start
+
+# Check status
+./bin/devlog status
+
+# Show version
+./bin/devlog version
+```
+
+### Backfill Historical Logs
+
+```bash
+# Process last 7 days of Copilot logs
+./bin/devlog backfill run --agent copilot --days 7
+
+# Backfill specific date range
+./bin/devlog backfill run --agent copilot --from 2025-01-01 --to 2025-01-31
+
+# Check backfill status
+./bin/devlog backfill status --agent copilot
+```
 
 ## 📊 Current Implementation Status
 

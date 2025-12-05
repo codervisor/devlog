@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "requesterUsername": "testuser",
+  "responderUsername": "GitHub Copilot",
+  "initialLocation": "panel",
+  "requests": [
+    {
+      "requestId": "req_array_test",
+      "responseId": "resp_array_test",
+      "timestamp": 1730131980000,
+      "modelId": "copilot/claude-sonnet-4.5",
+      "message": {
+        "text": "Test request with array value",
+        "parts": [
+          {
+            "text": "Test request with array value",
+            "kind": "text"
+          }
+        ]
+      },
+      "response": [
+        {
+          "kind": "thinking",
+          "value": "Normal string thinking"
+        },
+        {
+          "kind": "thinking",
+          "value": [],
+          "id": "FP+sIjMEFVNWBn7fmuL5SHTF9N6zbCpNFqhvd0SnDRkWn+iRHEj4j4fUnQ1G3iSavO8+EUdqvMJe34A7hl4VzOGBEeRSbAHsdzDmIwZfzrWeyE/JBcsUFcMKaUgiq/J6JC38LivSKQWnNn5kDFUAROBG3guIBtZnJ12Cvnh81N+ruUU6bN7lu0W2wHwS2OcL+5EBFhDFaZTm5BnRzoZCqKeherDrAPxQbVlL0fvB8u4AQo+BnsUBKwOoUJg293fUSrnhvHwLpTmgLhKeCMmZN4NhMWbQqz1fEecmfTm/gox1Ld/hP0QZtfoEj6HIo8A178twu0KKT639evVrbMDPpYpsaoaW1ILLAmbDqn131JYANpt2CKznZeZlJeRDhSGfjIGd98fGordKwbQjDV1zGJSNQQ=="
+        },
+        {
+          "kind": null,
+          "value": "Here's the response text."
+        },
+        {
+          "kind": "progressTaskSerialized",
+          "content": {
+            "value": "Analyzing code...",
+            "uris": {}
+          }
+        }
+      ],
+      "variableData": {
+        "variables": []
+      },
+      "isCanceled": false
+    }
+  ]
+}

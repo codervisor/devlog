@@ -1,14 +1,22 @@
 ---
-status: planned
+status: in-progress
 created: '2025-12-05'
-tags: [architecture, simplification, go, refactor]
+tags:
+  - architecture
+  - simplification
+  - go
+  - refactor
 priority: high
 created_at: '2025-12-05T03:18:55.302Z'
+updated_at: '2025-12-05T03:35:12.317Z'
+transitions:
+  - status: in-progress
+    at: '2025-12-05T03:35:12.317Z'
 ---
 
 # 014-core-simplification
 
-> **Status**: 📅 Planned · **Priority**: High · **Created**: 2025-12-05
+> **Status**: ⏳ In progress · **Priority**: High · **Created**: 2025-12-05 · **Tags**: architecture, simplification, go, refactor
 
 ## Overview
 
