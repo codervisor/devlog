@@ -3,12 +3,13 @@ status: complete
 created: '2025-12-05'
 tags:
   - architecture
-  - simplification
   - go
-  - refactor
+  - collector
+  - parser
+  - current
 priority: high
 created_at: '2025-12-05T03:18:55.302Z'
-updated_at: '2025-12-05T04:21:13.777Z'
+updated_at: '2025-12-05T04:28:22.321Z'
 transitions:
   - status: in-progress
     at: '2025-12-05T03:35:12.317Z'
@@ -18,9 +19,9 @@ completed_at: '2025-12-05T04:21:13.777Z'
 completed: '2025-12-05'
 ---
 
-# 014-core-simplification
+# Core Simplification
 
-> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-12-05 · **Tags**: architecture, simplification, go, refactor
+> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-12-05 · **Tags**: architecture, go, collector, parser, current
 
 ## Overview
 

@@ -1,5 +1,5 @@
 ---
-status: complete
+status: archived
 created: '2025-11-11'
 tags:
   - bug
@@ -8,17 +8,19 @@ tags:
   - database
 priority: high
 created_at: '2025-11-11T15:06:38.494Z'
-updated_at: '2025-11-11T15:54:12.320Z'
+updated_at: '2025-12-05T04:28:14.213Z'
 completed_at: '2025-11-11T15:54:12.320Z'
 completed: '2025-11-11'
 transitions:
   - status: complete
     at: '2025-11-11T15:54:12.320Z'
+  - status: archived
+    at: '2025-12-05T04:28:14.213Z'
 ---
 
 # Fix Workspace Upsert Bug Blocking Backfill
 
-> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-11-11 · **Tags**: bug, backfill, api, database
+> **Status**: 📦 Archived · **Priority**: High · **Created**: 2025-11-11 · **Tags**: bug, backfill, api, database
 
 ## Overview
 

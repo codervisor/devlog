@@ -1,5 +1,5 @@
 ---
-status: complete
+status: archived
 created: '2025-10-31T00:00:00.000Z'
 tags:
   - hierarchy
@@ -8,13 +8,16 @@ tags:
 priority: high
 completed: '2025-11-02'
 created_at: '2025-10-31T11:14:10+08:00'
-updated_at: '2025-11-10T02:59:33.561Z'
-updated: '2025-11-10'
+updated_at: '2025-12-05T04:28:09.306Z'
+updated: '2025-12-05'
+transitions:
+  - status: archived
+    at: '2025-12-05T04:28:09.306Z'
 ---
 
 # Project Management Hierarchy Redesign
 
-> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-10-31 · **Tags**: hierarchy, architecture, project-management
+> **Status**: 📦 Archived · **Priority**: High · **Created**: 2025-10-31 · **Tags**: hierarchy, architecture, project-management
 
 **Created**: October 31, 2025  
 **Status**: Design Phase  

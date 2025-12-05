@@ -1,5 +1,5 @@
 ---
-status: complete
+status: archived
 created: '2025-10-22'
 tags:
   - observability
@@ -8,13 +8,16 @@ tags:
   - ui
 priority: high
 created_at: '2025-10-22T07:52:05+00:00'
-updated_at: '2025-11-10T02:59:33.727Z'
-updated: '2025-11-10'
+updated_at: '2025-12-05T04:28:09.299Z'
+updated: '2025-12-05'
+transitions:
+  - status: archived
+    at: '2025-12-05T04:28:09.299Z'
 ---
 
 # Agent Observability Core Features
 
-> **Status**: ✅ Complete · **Priority**: High · **Created**: 2025-10-22 · **Tags**: observability, api, dashboard, ui
+> **Status**: 📦 Archived · **Priority**: High · **Created**: 2025-10-22 · **Tags**: observability, api, dashboard, ui
 
 **Date**: October 22, 2025  
 **Status**: ✅ Phase 1 Complete - Foundation Built  
