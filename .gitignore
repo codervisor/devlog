@@ -62,9 +62,3 @@ tmp/
 # Playwright MCP
 # =========================
 .playwright-mcp/
-
-# =========================
-# Specs tooling
-# =========================
-.lean-spec/
-.lspec/
