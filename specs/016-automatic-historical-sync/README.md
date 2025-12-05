@@ -201,22 +201,25 @@ if cfg.Sync.BackgroundSync {
 
 ## Open Questions
 
-1. **Initial sync limit**: Should we limit first sync to N days? (Proposed: 90 days)
-2. **Progress display**: Spinner vs progress bar vs silent?
-3. **Error handling**: Continue watcher if historical sync fails?
+1. **Workspace selection**: Add `--workspaces` filter now, or defer to 017?
+2. **Initial sync limit**: 90 days reasonable? Or unlimited with progress indicator?
+3. **Progress display**: Spinner vs progress bar vs silent?
+4. **Error handling**: Continue watcher if historical sync fails?
 
 ## Notes
 
-### Prior Art
+### Industry Research Summary
 
-- **Dropbox/iCloud**: Sync is always on, no manual steps
-- **Docker Desktop**: Background processes auto-start
-- **VSCode Settings Sync**: Just enable and it works
+Researched Prometheus, OpenTelemetry Collector, Fluent Bit, Vector, and Grafana Loki. Key finding: **all major observability tools buffer locally first, then export selectively**.
 
-### Mental Model Shift
+| Tool | Pattern |
+|------|---------|
+| **Fluent Bit** | Memory + filesystem buffer → routing by tags |
+| **OpenTelemetry** | Receivers → Processors → fan-out to Exporters |
+| **Vector** | Sources → Transforms → multiple Sinks |
 
-| Old (Wrong) | New (Right) |
-|-------------|-------------|
-| "Backfill" = manual import | "Sync" = automatic, continuous |
-| Two separate operations | One unified concept |
-| User runs command | System handles everything |
+This informed the design of [017-local-first-architecture](../017-local-first-architecture/README.md).
+
+### Scope Decision
+
+This spec focuses on **UX improvement** (auto-sync on startup). The full local-first architecture with multiple remotes and workspace routing is detailed in **017-local-first-architecture**.
