@@ -1,0 +1,18 @@
+[package]
+name = "devlog-watcher"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+devlog-core = { path = "../devlog-core" }
+devlog-adapters = { path = "../devlog-adapters" }
+notify.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+log.workspace = true
+futures.workspace = true
+dirs = "5.0"
+glob = "0.3"

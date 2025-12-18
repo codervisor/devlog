@@ -1,0 +1,16 @@
+[package]
+name = "devlog-hierarchy"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+devlog-core = { path = "../devlog-core" }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+log.workspace = true
+reqwest.workspace = true
+tokio.workspace = true

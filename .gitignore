@@ -11,6 +11,12 @@ bin/
 # Go test binary
 *.test
 
+# =========================
+# Rust Build Artifacts
+# =========================
+rust/target/
+**/*.rs.bk
+
 # Go coverage
 coverage.txt
 coverage.html

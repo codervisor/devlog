@@ -1,0 +1,23 @@
+[package]
+name = "devlog-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+devlog-core = { path = "../devlog-core" }
+devlog-adapters = { path = "../devlog-adapters" }
+devlog-buffer = { path = "../devlog-buffer" }
+devlog-watcher = { path = "../devlog-watcher" }
+devlog-hierarchy = { path = "../devlog-hierarchy" }
+devlog-backfill = { path = "../devlog-backfill" }
+clap.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+log.workspace = true
+env_logger.workspace = true
+config.workspace = true
+serde.workspace = true
+chrono.workspace = true
