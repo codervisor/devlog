@@ -17,3 +17,6 @@ regex.workspace = true
 log.workspace = true
 tokio.workspace = true
 uuid.workspace = true
+
+[dev-dependencies]
+tempfile = "3.10"

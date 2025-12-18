@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
+pub mod config;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentEvent {
@@ -30,7 +32,7 @@ pub struct AgentEvent {
     pub metrics: Option<EventMetrics>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct EventMetrics {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -129,4 +131,49 @@ pub struct Workspace {
     pub project: Option<Project>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub machine: Option<Machine>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_agent_event_serialization() {
+        let event = AgentEvent {
+            id: "test-id".to_string(),
+            timestamp: Utc::now(),
+            event_type: EVENT_TYPE_LLM_REQUEST.to_string(),
+            agent_id: "test-agent".to_string(),
+            agent_version: "1.0.0".to_string(),
+            session_id: "test-session".to_string(),
+            project_id: 1,
+            machine_id: Some(2),
+            workspace_id: Some(3),
+            legacy_project_id: None,
+            context: HashMap::new(),
+            data: HashMap::from([("key".to_string(), json!("value"))]),
+            metrics: Some(EventMetrics {
+                token_count: Some(100),
+                ..Default::default()
+            }),
+        };
+
+        let serialized = serde_json::to_string(&event).unwrap();
+        let deserialized: AgentEvent = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized.id, event.id);
+        assert_eq!(deserialized.event_type, event.event_type);
+        assert_eq!(deserialized.metrics.unwrap().token_count, Some(100));
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = config::Config::default();
+        let serialized = serde_json::to_string(&config).unwrap();
+        let deserialized: config::Config = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized.version, config.version);
+        assert_eq!(deserialized.project_id, config.project_id);
+    }
 }

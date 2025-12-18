@@ -12,3 +12,5 @@ chrono.workspace = true
 uuid.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
+config.workspace = true
+regex.workspace = true

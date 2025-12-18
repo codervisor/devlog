@@ -34,3 +34,6 @@ regex = "1.10"
 uuid = { version = "1.7", features = ["v4", "serde"] }
 reqwest = { version = "0.11", features = ["json"] }
 config = "0.14"
+axum = { version = "0.7", features = ["ws"] }
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+tower = "0.4"
