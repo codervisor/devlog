@@ -14,6 +14,7 @@ pub struct Config {
     pub project_id: String,
     pub collection: CollectionConfig,
     pub buffer: BufferConfig,
+    pub backfill: BackfillConfig,
     pub agents: HashMap<String, AgentConfig>,
     pub logging: LoggingConfig,
 }
@@ -32,6 +33,12 @@ pub struct CollectionConfig {
 pub struct BufferConfig {
     pub enabled: bool,
     pub max_size: usize,
+    pub db_path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BackfillConfig {
     pub db_path: String,
 }
 
@@ -74,6 +81,9 @@ impl Default for Config {
                 enabled: true,
                 max_size: 10000,
                 db_path: devlog_dir.join("buffer.db").to_string_lossy().to_string(),
+            },
+            backfill: BackfillConfig {
+                db_path: devlog_dir.join("backfill.db").to_string_lossy().to_string(),
             },
             agents,
             logging: LoggingConfig {
@@ -122,6 +132,7 @@ impl Config {
         self.api_key = expand(&self.api_key);
         self.project_id = expand(&self.project_id);
         self.buffer.db_path = expand_path(&expand(&self.buffer.db_path));
+        self.backfill.db_path = expand_path(&expand(&self.backfill.db_path));
         self.logging.file = expand_path(&expand(&self.logging.file));
 
         Ok(())

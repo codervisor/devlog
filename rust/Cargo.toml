@@ -37,3 +37,4 @@ config = "0.14"
 axum = { version = "0.7", features = ["ws"] }
 tower-http = { version = "0.5", features = ["cors", "fs"] }
 tower = "0.4"
+walkdir = "2.4"

@@ -1,6 +1,6 @@
 use crate::AgentAdapter;
 use async_trait::async_trait;
-use devlog_core::{AgentEvent, EventMetrics, EVENT_TYPE_LLM_REQUEST, EVENT_TYPE_LLM_RESPONSE, EVENT_TYPE_TOOL_USE, EVENT_TYPE_FILE_READ, EVENT_TYPE_FILE_WRITE};
+use devlog_core::{AgentEvent, EventMetrics, EVENT_TYPE_LLM_REQUEST, EVENT_TYPE_LLM_RESPONSE, EVENT_TYPE_TOOL_USE, EVENT_TYPE_FILE_READ, EVENT_TYPE_FILE_WRITE, EVENT_TYPE_USER_INTERACTION};
 use std::path::Path;
 use anyhow::{Result, Context};
 use serde::{Deserialize, Serialize};
@@ -11,24 +11,24 @@ use uuid::Uuid;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
-pub struct ClaudeAdapter {
+pub struct CursorAdapter {
     name: String,
     project_id: String,
 }
 
-impl ClaudeAdapter {
+impl CursorAdapter {
     pub fn new(project_id: String) -> Self {
         Self {
-            name: "claude".to_string(),
+            name: "cursor".to_string(),
             project_id,
         }
     }
 
-    fn detect_event_type(&self, entry: &ClaudeLogEntry) -> Option<String> {
+    fn detect_event_type(&self, entry: &CursorLogEntry) -> Option<String> {
         if let Some(ref t) = entry.event_type {
             match t.as_str() {
-                "llm_request" | "prompt" => return Some(EVENT_TYPE_LLM_REQUEST.to_string()),
-                "llm_response" | "completion" => return Some(EVENT_TYPE_LLM_RESPONSE.to_string()),
+                "llm_request" | "prompt" | "completion_request" => return Some(EVENT_TYPE_LLM_REQUEST.to_string()),
+                "llm_response" | "completion" | "completion_response" => return Some(EVENT_TYPE_LLM_RESPONSE.to_string()),
                 "tool_use" | "tool_call" => return Some(EVENT_TYPE_TOOL_USE.to_string()),
                 "file_read" => return Some(EVENT_TYPE_FILE_READ.to_string()),
                 "file_write" | "file_modify" => return Some(EVENT_TYPE_FILE_WRITE.to_string()),
@@ -37,21 +37,25 @@ impl ClaudeAdapter {
         }
 
         let msg_lower = entry.message.to_lowercase();
+        
         if entry.prompt.is_some() || msg_lower.contains("prompt") || msg_lower.contains("request") {
             return Some(EVENT_TYPE_LLM_REQUEST.to_string());
         }
+        
         if entry.response.is_some() || msg_lower.contains("response") || msg_lower.contains("completion") {
             return Some(EVENT_TYPE_LLM_RESPONSE.to_string());
         }
-        if entry.tool_name.is_some() || msg_lower.contains("tool") {
+        
+        if entry.tool.is_some() || msg_lower.contains("tool") {
             return Some(EVENT_TYPE_TOOL_USE.to_string());
         }
-        if let Some(ref _file_path) = entry.file_path {
-            if let Some(ref action) = entry.action {
-                if action == "read" || msg_lower.contains("read") {
+        
+        if let Some(ref _file) = entry.file {
+            if let Some(ref op) = entry.operation {
+                if op == "read" || msg_lower.contains("read") {
                     return Some(EVENT_TYPE_FILE_READ.to_string());
                 }
-                if action == "write" || msg_lower.contains("write") || msg_lower.contains("modify") {
+                if op == "write" || msg_lower.contains("write") {
                     return Some(EVENT_TYPE_FILE_WRITE.to_string());
                 }
             }
@@ -63,10 +67,19 @@ impl ClaudeAdapter {
     fn parse_timestamp(&self, ts: &Value) -> DateTime<Utc> {
         match ts {
             Value::String(s) => {
-                if let Ok(t) = DateTime::parse_from_rfc3339(s) {
-                    return t.with_timezone(&Utc);
+                let formats = [
+                    "%Y-%m-%dT%H:%M:%S%.fZ",
+                    "%Y-%m-%dT%H:%M:%SZ",
+                    "%Y-%m-%d %H:%M:%S",
+                ];
+                for format in formats {
+                    if let Ok(t) = DateTime::parse_from_rfc3339(s) {
+                        return t.with_timezone(&Utc);
+                    }
+                    if let Ok(t) = Utc.datetime_from_str(s, format) {
+                        return t;
+                    }
                 }
-                // Fallback to other formats if needed
                 Utc::now()
             }
             Value::Number(n) => {
@@ -79,26 +92,31 @@ impl ClaudeAdapter {
         }
     }
 
-    fn extract_context(&self, entry: &ClaudeLogEntry) -> HashMap<String, Value> {
+    fn extract_context(&self, entry: &CursorLogEntry) -> HashMap<String, Value> {
         let mut ctx = HashMap::new();
+        
         if let Some(ref level) = entry.level {
             ctx.insert("logLevel".to_string(), Value::String(level.clone()));
         }
+        
         if let Some(ref model) = entry.model {
             ctx.insert("model".to_string(), Value::String(model.clone()));
         }
+        
         if let Some(ref metadata) = entry.metadata {
             for (k, v) in metadata {
                 ctx.insert(k.clone(), v.clone());
             }
         }
+        
         ctx
     }
 
-    fn extract_data(&self, entry: &ClaudeLogEntry, event_type: &str) -> HashMap<String, Value> {
+    fn extract_data(&self, entry: &CursorLogEntry, event_type: &str) -> HashMap<String, Value> {
         let mut data = HashMap::new();
+        
         data.insert("message".to_string(), Value::String(entry.message.clone()));
-
+        
         match event_type {
             EVENT_TYPE_LLM_REQUEST => {
                 if let Some(ref prompt) = entry.prompt {
@@ -113,51 +131,73 @@ impl ClaudeAdapter {
                 }
             }
             EVENT_TYPE_TOOL_USE => {
-                if let Some(ref tool_name) = entry.tool_name {
-                    data.insert("toolName".to_string(), Value::String(tool_name.clone()));
+                if let Some(ref tool) = entry.tool {
+                    data.insert("toolName".to_string(), Value::String(tool.clone()));
                 }
-                if let Some(ref tool_input) = entry.tool_input {
-                    data.insert("toolInput".to_string(), tool_input.clone());
-                }
-                if let Some(ref tool_output) = entry.tool_output {
-                    data.insert("toolOutput".to_string(), tool_output.clone());
+                if let Some(ref tool_args) = entry.tool_args {
+                    data.insert("toolArgs".to_string(), tool_args.clone());
                 }
             }
             EVENT_TYPE_FILE_READ | EVENT_TYPE_FILE_WRITE => {
-                if let Some(ref file_path) = entry.file_path {
-                    data.insert("filePath".to_string(), Value::String(file_path.clone()));
+                if let Some(ref file) = entry.file {
+                    data.insert("filePath".to_string(), Value::String(file.clone()));
                 }
-                if let Some(ref action) = entry.action {
-                    data.insert("action".to_string(), Value::String(action.clone()));
+                if let Some(ref operation) = entry.operation {
+                    data.insert("operation".to_string(), Value::String(operation.clone()));
                 }
             }
             _ => {}
         }
-
-        if let Some(ref conversation_id) = entry.conversation_id {
-            data.insert("conversationId".to_string(), Value::String(conversation_id.clone()));
-        }
-
+        
         data
     }
 
-    fn extract_metrics(&self, entry: &ClaudeLogEntry) -> Option<EventMetrics> {
-        if entry.tokens_used.is_none() && entry.prompt_tokens.is_none() && entry.response_tokens.is_none() {
+    fn extract_metrics(&self, entry: &CursorLogEntry) -> Option<EventMetrics> {
+        if entry.tokens.is_none() && entry.prompt_tokens.is_none() && entry.completion_tokens.is_none() {
+            return None;
+        }
+        
+        Some(EventMetrics {
+            token_count: entry.tokens,
+            duration_ms: None,
+            prompt_tokens: entry.prompt_tokens,
+            response_tokens: entry.completion_tokens,
+            cost: None,
+        })
+    }
+
+    fn parse_plain_text_line(&self, line: &str) -> Option<AgentEvent> {
+        let lower = line.to_lowercase();
+        if !lower.contains("ai") && 
+           !lower.contains("completion") && 
+           !lower.contains("prompt") &&
+           !lower.contains("tool") {
             return None;
         }
 
-        Some(EventMetrics {
-            token_count: entry.tokens_used,
-            duration_ms: None,
-            prompt_tokens: entry.prompt_tokens,
-            response_tokens: entry.response_tokens,
-            cost: None,
+        let mut data = HashMap::new();
+        data.insert("rawLog".to_string(), Value::String(line.to_string()));
+
+        Some(AgentEvent {
+            id: Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            event_type: EVENT_TYPE_USER_INTERACTION.to_string(),
+            agent_id: self.name.clone(),
+            agent_version: "".to_string(),
+            session_id: Uuid::new_v4().to_string(),
+            project_id: 0,
+            machine_id: None,
+            workspace_id: None,
+            legacy_project_id: Some(self.project_id.clone()),
+            context: HashMap::new(),
+            data,
+            metrics: None,
         })
     }
 }
 
 #[async_trait]
-impl AgentAdapter for ClaudeAdapter {
+impl AgentAdapter for CursorAdapter {
     fn name(&self) -> &str {
         &self.name
     }
@@ -168,9 +208,9 @@ impl AgentAdapter for ClaudeAdapter {
             return Ok(None);
         }
 
-        let entry: ClaudeLogEntry = match serde_json::from_str(line) {
+        let entry: CursorLogEntry = match serde_json::from_str(line) {
             Ok(e) => e,
-            Err(_) => return Ok(None),
+            Err(_) => return Ok(self.parse_plain_text_line(line)),
         };
 
         let event_type = match self.detect_event_type(&entry) {
@@ -184,9 +224,11 @@ impl AgentAdapter for ClaudeAdapter {
             timestamp,
             event_type: event_type.clone(),
             agent_id: self.name.clone(),
-            agent_version: "".to_string(), // TODO: extract from logs if available
-            session_id: entry.conversation_id.clone().unwrap_or_default(),
-            project_id: 0, // TODO: resolve from hierarchy
+            agent_version: "".to_string(),
+            session_id: entry.session_id.clone()
+                .or(entry.conversation_id.clone())
+                .unwrap_or_else(|| Uuid::new_v4().to_string()),
+            project_id: 0,
             machine_id: None,
             workspace_id: None,
             legacy_project_id: Some(self.project_id.clone()),
@@ -214,38 +256,44 @@ impl AgentAdapter for ClaudeAdapter {
     }
 
     fn supports_format(&self, sample: &str) -> bool {
-        let entry: ClaudeLogEntry = match serde_json::from_str(sample) {
-            Ok(e) => e,
-            Err(_) => return false,
-        };
-
-        entry.conversation_id.is_some() || 
-        entry.model.is_some() || 
-        entry.message.to_lowercase().contains("claude") || 
-        entry.message.to_lowercase().contains("anthropic")
+        if let Ok(entry) = serde_json::from_str::<CursorLogEntry>(sample) {
+            return entry.session_id.is_some() || 
+                entry.conversation_id.is_some() ||
+                entry.message.to_lowercase().contains("cursor") ||
+                entry.model.is_some();
+        }
+        
+        let lower = sample.to_lowercase();
+        lower.contains("cursor") && (lower.contains("ai") || lower.contains("completion"))
     }
 }
 
 #[derive(Debug, Deserialize)]
-struct ClaudeLogEntry {
+struct CursorLogEntry {
+    #[serde(default = "default_timestamp")]
     timestamp: Value,
     level: Option<String>,
+    #[serde(default)]
     message: String,
     #[serde(rename = "type")]
     event_type: Option<String>,
+    session_id: Option<String>,
     conversation_id: Option<String>,
     model: Option<String>,
     prompt: Option<String>,
     response: Option<String>,
-    tokens_used: Option<i32>,
+    tokens: Option<i32>,
     prompt_tokens: Option<i32>,
-    response_tokens: Option<i32>,
-    tool_name: Option<String>,
-    tool_input: Option<Value>,
-    tool_output: Option<Value>,
-    file_path: Option<String>,
-    action: Option<String>,
+    completion_tokens: Option<i32>,
+    tool: Option<String>,
+    tool_args: Option<Value>,
+    file: Option<String>,
+    operation: Option<String>,
     metadata: Option<HashMap<String, Value>>,
+}
+
+fn default_timestamp() -> Value {
+    Value::Null
 }
 
 #[cfg(test)]
@@ -255,41 +303,40 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[tokio::test]
-    async fn test_claude_adapter_parse_line() {
-        let adapter = ClaudeAdapter::new("test-project".to_string());
+    async fn test_cursor_adapter_parse_line() {
+        let adapter = CursorAdapter::new("test-project".to_string());
 
-        // LLM Request
-        let line = r#"{"timestamp":"2025-10-31T10:00:00Z","type":"llm_request","conversation_id":"conv_123","model":"claude-3-sonnet","prompt":"Write a hello world program","prompt_tokens":5}"#;
+        // JSON LLM Request
+        let line = r#"{"timestamp":"2025-10-31T10:00:00Z","type":"llm_request","session_id":"sess_123","prompt":"Test prompt","prompt_tokens":2}"#;
         let event = adapter.parse_log_line(line).unwrap().unwrap();
         assert_eq!(event.event_type, EVENT_TYPE_LLM_REQUEST);
-        assert_eq!(event.data["prompt"], "Write a hello world program");
+        assert_eq!(event.data["prompt"], "Test prompt");
 
-        // LLM Response
-        let line = r#"{"timestamp":"2025-10-31T10:00:01Z","type":"llm_response","conversation_id":"conv_123","response":"Here's a hello world program","response_tokens":6}"#;
+        // JSON LLM Response
+        let line = r#"{"timestamp":"2025-10-31T10:00:01Z","type":"llm_response","session_id":"sess_123","response":"Test response","completion_tokens":2}"#;
         let event = adapter.parse_log_line(line).unwrap().unwrap();
         assert_eq!(event.event_type, EVENT_TYPE_LLM_RESPONSE);
-        assert_eq!(event.data["response"], "Here's a hello world program");
+        assert_eq!(event.data["response"], "Test response");
 
-        // Tool Use
-        let line = r#"{"timestamp":"2025-10-31T10:00:02Z","type":"tool_use","conversation_id":"conv_123","tool_name":"read_file","tool_input":{"path":"test.txt"}}"#;
+        // Plain text AI-related log
+        let line = "[2025-10-31 10:00:00] INFO Cursor AI completion requested";
         let event = adapter.parse_log_line(line).unwrap().unwrap();
-        assert_eq!(event.event_type, EVENT_TYPE_TOOL_USE);
-        assert_eq!(event.data["toolName"], "read_file");
+        assert_eq!(event.event_type, EVENT_TYPE_USER_INTERACTION);
     }
 
     #[tokio::test]
-    async fn test_claude_adapter_parse_file() {
+    async fn test_cursor_adapter_parse_file() {
         let mut file = NamedTempFile::new().unwrap();
-        let content = r#"{"timestamp":"2025-10-31T10:00:00Z","type":"llm_request","conversation_id":"conv_123","prompt":"Hello","prompt_tokens":1}
-{"timestamp":"2025-10-31T10:00:01Z","type":"llm_response","conversation_id":"conv_123","response":"Hi there!","response_tokens":2}
-{"timestamp":"2025-10-31T10:00:02Z","type":"tool_use","conversation_id":"conv_123","tool_name":"search","tool_input":"test"}
-{"timestamp":"2025-10-31T10:00:03Z","level":"debug","message":"Debug info"}"#;
+        let content = r#"{"timestamp":"2025-10-31T10:00:00Z","type":"llm_request","session_id":"sess_123","prompt":"Hello","prompt_tokens":1}
+{"timestamp":"2025-10-31T10:00:01Z","type":"llm_response","session_id":"sess_123","response":"Hi!","completion_tokens":1}
+[2025-10-31 10:00:02] DEBUG System info
+{"timestamp":"2025-10-31T10:00:03Z","type":"tool_use","tool":"search"}"#;
         file.write_all(content.as_bytes()).unwrap();
 
-        let adapter = ClaudeAdapter::new("test-project".to_string());
+        let adapter = CursorAdapter::new("test-project".to_string());
         let events = adapter.parse_log_file(file.path()).await.unwrap();
 
-        assert_eq!(events.len(), 3);
+        assert!(events.len() >= 3);
         
         let types: Vec<String> = events.iter().map(|e| e.event_type.clone()).collect();
         assert!(types.contains(&EVENT_TYPE_LLM_REQUEST.to_string()));
@@ -298,13 +345,12 @@ mod tests {
     }
 
     #[test]
-    fn test_claude_adapter_supports_format() {
-        let adapter = ClaudeAdapter::new("test-project".to_string());
+    fn test_cursor_adapter_supports_format() {
+        let adapter = CursorAdapter::new("test-project".to_string());
 
-        assert!(adapter.supports_format(r#"{"timestamp":"2025-10-31T10:00:00Z","conversation_id":"conv_123","message":"test"}"#));
-        assert!(adapter.supports_format(r#"{"timestamp":"2025-10-31T10:00:00Z","model":"claude-3-sonnet","message":"test"}"#));
-        assert!(adapter.supports_format(r#"{"timestamp":"2025-10-31T10:00:00Z","message":"Claude is processing"}"#));
-        assert!(!adapter.supports_format("not json"));
-        assert!(!adapter.supports_format(r#"{"timestamp":"2025-10-31T10:00:00Z","level":"info","message":"Generic log"}"#));
+        assert!(adapter.supports_format(r#"{"session_id":"sess_123","message":"test"}"#));
+        assert!(adapter.supports_format(r#"{"model":"gpt-4","message":"test"}"#));
+        assert!(adapter.supports_format("Cursor AI completion requested"));
+        assert!(!adapter.supports_format("Generic log message"));
     }
 }

@@ -13,6 +13,7 @@ pub trait AgentAdapter: Send + Sync {
 
 pub mod claude;
 pub mod copilot;
+pub mod cursor;
 pub mod registry;
 
 pub use registry::Registry;

@@ -1,13 +1,13 @@
 # Devlog
 
-A lightweight Go daemon that collects AI coding agent events and sends them to configurable remote endpoints.
+A lightweight Rust daemon that collects AI coding agent events and sends them to configurable remote endpoints.
 
 ## Features
 
 - 🔍 **Auto-discovery** - Automatically finds AI agent log locations
-- 🔄 **Real-time monitoring** - Watches log files for changes with fsnotify
+- 🔄 **Real-time monitoring** - Watches log files for changes with notify
 - 📦 **Offline buffering** - SQLite buffer for offline operation and retry
-- 🚀 **Single binary** - No runtime dependencies, ~15MB static binary
+- 🚀 **Single binary** - No runtime dependencies, ~10MB static binary
 - 🌍 **Cross-platform** - macOS, Linux, Windows support
 - 🔌 **Multi-agent** - GitHub Copilot, Claude Code, Cursor, and more
 
@@ -25,9 +25,6 @@ A lightweight Go daemon that collects AI coding agent events and sends them to c
 ```bash
 # Build for current platform
 make build
-
-# Build for all platforms
-make build-all
 
 # Binary available at: bin/devlog
 ```
@@ -48,14 +45,8 @@ make build-all
 ### Backfill Historical Logs
 
 ```bash
-# Process last 7 days of Copilot logs
-./bin/devlog backfill run --agent copilot --days 7
-
-# Backfill specific date range
-./bin/devlog backfill run --agent copilot --from 2025-01-01 --to 2025-01-31
-
-# Process all discovered workspaces
-./bin/devlog backfill run --agent copilot --days 30 --all-workspaces
+# Process all Copilot logs in a directory
+./bin/devlog backfill run --agent copilot --path ~/.config/github-copilot/chat_sessions
 
 # Check backfill status
 ./bin/devlog backfill status --agent copilot
@@ -65,18 +56,16 @@ make build-all
 
 ```
 devlog/
-├── cmd/devlog/       # CLI entry point (Cobra)
-├── internal/
-│   ├── adapters/     # Agent-specific log parsers (Copilot, Claude, Cursor)
-│   ├── backfill/     # Historical log processing
-│   ├── buffer/       # SQLite offline event buffer
-│   ├── client/       # HTTP client for remote endpoints
-│   ├── config/       # Configuration management
-│   ├── hierarchy/    # Workspace/project resolution
-│   └── watcher/      # File system watching with fsnotify
-├── pkg/
-│   ├── models/       # Data models
-│   └── types/        # Event types and constants
+├── rust/             # Rust implementation
+│   ├── devlog-cli/       # CLI entry point (clap)
+│   ├── devlog-adapters/  # Agent-specific log parsers
+│   ├── devlog-backfill/  # Historical log processing
+│   ├── devlog-buffer/    # SQLite offline event buffer
+│   ├── devlog-core/      # Shared types and config
+│   ├── devlog-hierarchy/ # Workspace/project resolution
+│   └── devlog-watcher/   # File system watching with notify
+├── cmd/devlog/       # Legacy Go CLI (deprecated)
+├── internal/         # Legacy Go internal packages (deprecated)
 └── configs/          # Default configuration files
 ```
 
@@ -107,6 +96,9 @@ Create a configuration file at `~/.devlog/collector.json`:
     "enabled": true,
     "maxSize": 10000,
     "dbPath": "~/.devlog/buffer.db"
+  },
+  "backfill": {
+    "dbPath": "~/.devlog/backfill.db"
   },
   "agents": {
     "copilot": { "enabled": true, "logPath": "auto" },
@@ -143,35 +135,30 @@ docker compose up -d
 
 ### Prerequisites
 
-- Go 1.24+
+- Rust 1.75+
 - Make
 
 ### Commands
 
 ```bash
 make build         # Build for current platform
-make build-all     # Build for all platforms (macOS, Linux, Windows)
-make test          # Run tests with coverage
-make test-coverage # Generate HTML coverage report
-make lint          # Run golangci-lint
+make test          # Run tests
 make fmt           # Format code
-make dev           # Run with live reload (requires air)
+make lint          # Run clippy
 make install       # Install to /usr/local/bin
 ```
 
-### Project Structure
+### Project Structure (Rust)
 
 | Directory | Description |
 |-----------|-------------|
-| `cmd/devlog` | CLI application entry point |
-| `internal/adapters` | Agent-specific log parsers |
-| `internal/backfill` | Historical log import |
-| `internal/buffer` | SQLite event buffer |
-| `internal/client` | HTTP client with retry logic |
-| `internal/config` | Configuration loading |
-| `internal/hierarchy` | Workspace/project context |
-| `internal/watcher` | File system watcher |
-| `pkg/types` | Shared types and constants |
+| `rust/devlog-cli` | CLI application entry point |
+| `rust/devlog-adapters` | Agent-specific log parsers |
+| `rust/devlog-backfill` | Historical log import |
+| `rust/devlog-buffer` | SQLite event buffer |
+| `rust/devlog-core` | Shared types and constants |
+| `rust/devlog-hierarchy` | Workspace/project context |
+| `rust/devlog-watcher` | File system watcher |
 
 ## Remote Integration
 

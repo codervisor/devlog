@@ -2,15 +2,15 @@ use clap::{Parser, Subcommand, CommandFactory};
 use clap_complete::{generate, Shell};
 use anyhow::Result;
 use devlog_core::{AgentEvent, config::Config};
-use devlog_adapters::{Registry, claude::ClaudeAdapter, copilot::CopilotAdapter};
+use devlog_adapters::{Registry, claude::ClaudeAdapter, copilot::CopilotAdapter, cursor::CursorAdapter};
 use devlog_buffer::{Buffer, Config as BufferConfig};
 use devlog_watcher::{Watcher, Config as WatcherConfig};
-use devlog_backfill::{BackfillManager, Config as BackfillConfig};
+use devlog_backfill::{BackfillManager, Config as BackfillConfig, BackfillOptions};
 use std::sync::Arc;
 use log::{info, error};
 use std::path::PathBuf;
 
-mod server;
+use devlog_cli::server;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -93,6 +93,7 @@ async fn main() -> Result<()> {
             let mut registry = Registry::new();
             registry.register(Arc::new(ClaudeAdapter::new(config.project_id.clone())));
             registry.register(Arc::new(CopilotAdapter::new(config.project_id.clone())));
+            registry.register(Arc::new(CursorAdapter::new(config.project_id.clone())));
             let registry = Arc::new(registry);
 
             let buffer = Arc::new(Buffer::new(BufferConfig {
@@ -144,10 +145,32 @@ async fn main() -> Result<()> {
             // TODO: implement more status checks
         }
         Commands::Backfill { command } => {
+            // Initialize components for backfill
+            let mut registry = Registry::new();
+            registry.register(Arc::new(ClaudeAdapter::new(config.project_id.clone())));
+            registry.register(Arc::new(CopilotAdapter::new(config.project_id.clone())));
+            registry.register(Arc::new(CursorAdapter::new(config.project_id.clone())));
+            let registry = Arc::new(registry);
+
+            let buffer = Arc::new(Buffer::new(BufferConfig {
+                db_path: config.buffer.db_path.clone(),
+                max_size: config.buffer.max_size,
+            }).await?);
+
+            let manager = BackfillManager::new(BackfillConfig {
+                registry: registry.clone(),
+                buffer: buffer.clone(),
+                db_path: config.backfill.db_path.clone(),
+            }).await?;
+
             match command {
                 BackfillCommands::Run { agent, path } => {
                     info!("Running backfill for {} at {}", agent, path.display());
-                    // TODO: implement backfill run
+                    manager.backfill(BackfillOptions {
+                        agent_name: agent,
+                        log_path: path,
+                        batch_size: 100,
+                    }).await?;
                 }
                 BackfillCommands::Status { agent } => {
                     info!("Checking backfill status for {:?}", agent);
